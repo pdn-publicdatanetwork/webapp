@@ -13,6 +13,9 @@ export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 // Données structurées schema.org (SEO et réponses des assistants IA) :
 // le site avec sa recherche interne, et l'organisation éditrice.
+// Un objet par balise ld+json, jamais de tableau en racine : certains lecteurs
+// tiers font r["@context"].toLowerCase() sur le premier script parsé et plantent
+// sur un tableau (alerte TypeError, Safari 26.6).
 const jsonLd = [
   {
     "@context": "https://schema.org",
@@ -45,14 +48,17 @@ export default async function Accueil() {
   let indisponible = false;
   try {
     [mouvements, comptes, fiches] = await Promise.all([derniersMouvements(10), compteAffectations(), compteFiches().catch(() => 0)]);
-  } catch {
+  } ca
+tch {
     indisponible = true;
   }
   const peInconnu = (comptes.europarl ?? 0) === 0; // suivi PE repris le 8 octobre 2026
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\u003c") }} />
+{jsonLd.map((j, i) => (
+        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(j).replace(/</g, "\u003c") }} />
+      ))}
       <h1>Qui travaille pour <span className="surligne">vos élus</span> ?</h1>
       <p className="lead">
         Chaque matin, DataParl&apos; relit les listes officielles des collaborateurs parlementaires et signale
@@ -79,7 +85,8 @@ export default async function Accueil() {
       </p>
 
       <h2>Les derniers mouvements</h2>
-      {indisponible && <p className="erreur">Les données sont momentanément indisponibles.</p>}
+      {indisponible && <p className="erreur">Les données sont momentan
+ément indisponibles.</p>}
       {!indisponible && mouvements.length === 0 && (
         <p className="meta">Aucun mouvement détecté depuis le démarrage du suivi quotidien. Les premiers apparaîtront ici dès le prochain passage.</p>
       )}
@@ -103,7 +110,8 @@ export default async function Accueil() {
         <li><a href="/senatoriales2026"><strong>Sénatoriales 2026</strong><span>Les nouveaux sénateurs, département par département →</span></a></li>
         <li><a href="/vigiparl"><strong>Vigi<span className="surligne-vigi">Parl&apos;</span></strong><span>Le renouvellement des équipes, élu par élu →</span></a></li>
         <li><a href="/mixiparl"><strong>Mixi<span className="surligne-mixi">Parl&apos;</span></strong><span>La mixité femmes-hommes des équipes →</span></a></li>
-        <li><a href="/alertes"><strong>Alertes</strong><span>Être prévenu(e) des mouvements qui vous intéressent →</span></a></li>
+        <li><a href="/alertes"><strong>Alertes</strong><sp
+an>Être prévenu(e) des mouvements qui vous intéressent →</span></a></li>
       </ul>
     </>
   );
