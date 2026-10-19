@@ -103,6 +103,8 @@ export async function proxy(req: NextRequest) {
       path === "/robots.txt" || path === "/manifest.webmanifest";
     const autorise = equipe || technique ||
       path === "/contact" || path === "/api/contact" ||
+      // « Prévenez-moi du retour » : inscription + lien de confirmation.
+      path === "/api/maintenance/prevenir" ||
       // Pages légales requises par le formulaire de contact (politique de
       // confidentialité et mentions) : elles restent consultables.
       path === "/informations-legales" || path.startsWith("/informations-legales/") ||
