@@ -18,6 +18,9 @@ const NAV = [
 // (les liens de navigation, dont « Mon compte », sont dans le menu déroulant ;
 // « Se déconnecter » n'apparaît que si une session existe).
 export function EnTeteSite() {
+  // Mode maintenance : le menu ☰ disparaît — ses liens mènent tous à des pages
+  // coupées. Restent visibles : logo, recherche et pied de page.
+  const maintenance = process.env.MAINTENANCE !== "0";
   const liens = [...NAV, { href: "/mon-compte", label: "Mon compte" }];
   return (
     <header className="site entete-principale">
@@ -26,15 +29,17 @@ export function EnTeteSite() {
         {/* Recherche élus / collaborateurs, présente sur presque toutes les pages. */}
         <BarreRechercheHeader />
         {/* Menu déroulant natif, sans JavaScript, à droite. */}
-        <details className="menu-site">
-          <summary aria-label="Ouvrir le menu de navigation">☰ Menu</summary>
-          <nav aria-label="Navigation principale">
-            {liens.map((l) => (
-              <a key={l.href} href={l.href}>{l.label}</a>
-            ))}
-            <MenuDeconnexion />
-          </nav>
-        </details>
+        {!maintenance && (
+          <details className="menu-site">
+            <summary aria-label="Ouvrir le menu de navigation">☰ Menu</summary>
+            <nav aria-label="Navigation principale">
+              {liens.map((l) => (
+                <a key={l.href} href={l.href}>{l.label}</a>
+              ))}
+              <MenuDeconnexion />
+            </nav>
+          </details>
+        )}
       </div>
     </header>
   );
