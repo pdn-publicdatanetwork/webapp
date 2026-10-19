@@ -33,7 +33,7 @@ export default function Licences() {
             <td>Reproduction autorisée avec mention de la source</td>
           </tr>
           <tr>
-            <td>Internet Archive (Wayback Machine)</td>
+            <td>Internet Archive</td>
             <td>Captures archivées des publications officielles, pour les périodes non couvertes</td>
             <td>Contenus des sources ci-dessus</td>
           </tr>
