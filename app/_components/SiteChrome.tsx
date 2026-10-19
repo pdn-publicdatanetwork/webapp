@@ -1,5 +1,6 @@
 import LogoSite from "./LogoSite";
 import BarreRechercheHeader from "./BarreRechercheHeader";
+import MenuDeconnexion from "./MenuDeconnexion";
 
 export const API_URL = "https://api.dataparl.fr";
 
@@ -14,7 +15,8 @@ const NAV = [
 ];
 
 // En-tête www : logo à gauche, recherche au milieu, menu ☰ à droite
-// (les liens de navigation, dont « Mon compte », sont dans le menu déroulant).
+// (les liens de navigation, dont « Mon compte », sont dans le menu déroulant ;
+// « Se déconnecter » n'apparaît que si une session existe).
 export function EnTeteSite() {
   const liens = [...NAV, { href: "/mon-compte", label: "Mon compte" }];
   return (
@@ -30,6 +32,7 @@ export function EnTeteSite() {
             {liens.map((l) => (
               <a key={l.href} href={l.href}>{l.label}</a>
             ))}
+            <MenuDeconnexion />
           </nav>
         </details>
       </div>
