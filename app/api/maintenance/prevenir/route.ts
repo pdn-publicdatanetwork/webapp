@@ -8,10 +8,10 @@ import { authAdmin } from "@/lib/supabaseAdmin";
 
 // « Prévenez-moi quand le site est de retour » sur la page de maintenance.
 // Double opt-in : un email de confirmation part immédiatement ; l'adresse
-// n'est enregistrée comme abonnée qu'au clic sur le lien qu'il contient.
-// Les adresses tombent dans newsletter_subscribers (source "maintenance") :
-// elles recevront l'email de réouverture, puis les mailings « abonnés »
-// (désinscription en un clic dans chaque message).
+// n'est enregistrée qu'au clic sur le lien qu'il contient.
+// Table dédiée maintenance_prevenus (one-shot) : ces adresses reçoivent
+// uniquement l'email « le site est de retour », pas les mailings newsletter.
+// Visibles dans l'admin → Utilisateurs → « Prévenus maintenance ».
 
 const Email = z.string().trim().email().max(254).transform(normalizeEmail);
 const SITE = "https://www.dataparl.fr";
@@ -34,19 +34,17 @@ export async function POST(req: NextRequest) {
   const db = authAdmin();
   const now = new Date();
 
-  // Déjà abonné (confirmé) : rien à refaire, on le dit sans révéler plus.
-  const { data: deja } = await db.from("newsletter_subscribers").select("confirmed").eq("email", email).maybeSingle();
+  // Déjà confirmé : rien à refaire, on le dit sans révéler plus.
+  const { data: deja } = await db.from("maintenance_prevenus").select("confirmed").eq("email", email).maybeSingle();
   if (deja?.confirmed) return NextResponse.json({ ok: true, deja: true });
 
   const jeton = randomBytes(24).toString("hex");
-  const { error } = await db.from("newsletter_subscribers").upsert(
+  const { error } = await db.from("maintenance_prevenus").upsert(
     {
       email,
       confirmed: false,
       confirm_token_hash: hashJeton(jeton),
       confirm_expires_at: new Date(now.getTime() + EXPIRATION).toISOString(),
-      unsubscribed_at: null,
-      source: "maintenance",
     },
     { onConflict: "email" },
   );
@@ -74,7 +72,7 @@ export async function GET(req: NextRequest) {
   const t = req.nextUrl.searchParams.get("t") ?? "";
   if (!/^[0-9a-f]{48}$/.test(t)) return page("Lien invalide", "Ce lien de confirmation n'est pas valide.", false);
   const db = authAdmin();
-  const { data: sub } = await db.from("newsletter_subscribers").select("id, email, confirmed, confirm_expires_at")
+  const { data: sub } = await db.from("maintenance_prevenus").select("id, email, confirmed, confirm_expires_at")
     .eq("confirm_token_hash", hashJeton(t)).maybeSingle();
   if (!sub) return page("Lien déjà utilisé", "Cette demande a déjà été confirmée, ou le lien a expiré. Tu peux en refaire une depuis la page de maintenance.", true);
   if (sub.confirmed) return page("C'est déjà fait", "Ton adresse est déjà confirmée : tu recevras un email dès le retour du site.", true);
@@ -82,8 +80,8 @@ export async function GET(req: NextRequest) {
     return page("Lien expiré", "Ce lien de confirmation a expiré (48 heures). Relance une inscription depuis la page de maintenance.", false);
   }
   const now = new Date().toISOString();
-  await db.from("newsletter_subscribers").update({
-    confirmed: true, confirmed_at: now, confirm_token_hash: null, confirm_expires_at: null, unsubscribed_at: null,
+  await db.from("maintenance_prevenus").update({
+    confirmed: true, confirmed_at: now, confirm_token_hash: null, confirm_expires_at: null,
   }).eq("id", sub.id);
   await logConsent(sub.email as string, "confirm", "maintenance");
   return page("Adresse confirmée", "Tu recevras un email dès que DataParl' sera de retour. À très vite !", true);
