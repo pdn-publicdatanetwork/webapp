@@ -17,3 +17,5 @@ export default defineConfig({
   // défaut de chaque script reste www.dataparl.fr.
   env: [{ key: "ENVIRONMENT_URL", value: "https://www.dataparl.fr" }],
 });
+
+// deploy trigger 2026-10-19
