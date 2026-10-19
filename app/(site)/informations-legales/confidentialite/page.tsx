@@ -92,17 +92,6 @@ export default function Confidentialite() {
         décrit sur la page <a href="/informations-legales/cookies">Cookies</a>.
       </p>
       <p>
-        Les emails envoyés par DataParl&apos; (depuis les adresses en @dataparl.fr) mesurent leur
-        ouverture et les clics sur leurs liens, via notre prestataire d&apos;envoi Resend, pour vérifier qu&apos;ils sont
-        bien délivrés. Chaque email dispose aussi d&apos;une version en ligne, accessible uniquement par le lien
-        unique qu&apos;il contient.
-      </p>
-      <p>
-        <strong>Liens courts.</strong> Certains liens que nous diffusons (réseaux sociaux, communiqués) passent par une adresse courte
-        DataParl&apos;. À l&apos;ouverture, nous enregistrons la date, le site de provenance, le pays, le type d&apos;appareil et
-        l&apos;adresse IP tronquée (elle ne permet pas de t&apos;identifier), pour compter les ouvertures. Conservation : 13 mois.
-      </p>
-      <p>
         <strong>Journalistes.</strong> Le carnet presse (nom, média, adresse professionnelle) sert à envoyer nos communiqués, sur la base de
         notre intérêt légitime à informer la presse. Chaque communiqué contient un lien de désinscription ; toute personne
         concernée peut aussi écrire à presse@dataparl.fr.
