@@ -83,6 +83,6 @@ export async function GET(req: NextRequest) {
   await db.from("maintenance_prevenus").update({
     confirmed: true, confirmed_at: now, confirm_token_hash: null, confirm_expires_at: null,
   }).eq("id", sub.id);
-  await logConsent(sub.email as string, "confirm", "maintenance");
+  await logConsent(sub.email as string, "confirm", "newsletter");
   return page("Adresse confirmée", "Tu recevras un email dès que DataParl' sera de retour. À très vite !", true);
 }
