@@ -94,7 +94,10 @@ export async function proxy(req: NextRequest) {
   //   - le webhook mail (/api/mail/*, réception Resend qui alimente le webmail) ;
   //   - les assets techniques (_next, icônes) pour un rendu correct de la page.
   if (process.env.MAINTENANCE !== "0") {
-    const equipe = host === `admin.${DOMAINE}` || host === `webmail.${DOMAINE}`;
+    // Espace équipe + liens cliquables depuis les emails (mail/lire/<jeton>,
+    // link/<code>) : les destinataires doivent pouvoir ouvrir les messages.
+    const equipe = host === `admin.${DOMAINE}` || host === `webmail.${DOMAINE}` ||
+      host === `mail.${DOMAINE}` || host === `link.${DOMAINE}`;
     const technique = path.startsWith("/_next/") || path === "/maintenance" ||
       path === "/favicon.ico" || path === "/icon.svg" || path === "/apple-icon" ||
       path === "/robots.txt" || path === "/manifest.webmanifest";
