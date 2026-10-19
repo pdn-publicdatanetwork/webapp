@@ -18,4 +18,4 @@ export default defineConfig({
   env: [{ key: "ENVIRONMENT_URL", value: "https://www.dataparl.fr" }],
 });
 
-// deploy trigger 2026-10-19
+// deploy trigger 2026-10-19c
