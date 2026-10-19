@@ -33,11 +33,6 @@ export default function Licences() {
             <td>Reproduction autorisée avec mention de la source</td>
           </tr>
           <tr>
-            <td>Archives des publications officielles</td>
-            <td>Versions quotidiennes des listes de collaborateurs de l&apos;Assemblée et du Sénat (2015-2024)</td>
-            <td>Réutilisées avec l&apos;accord de leurs producteurs</td>
-          </tr>
-          <tr>
             <td>Internet Archive (Wayback Machine)</td>
             <td>Captures archivées des publications officielles, pour les périodes non couvertes</td>
             <td>Contenus des sources ci-dessus</td>
