@@ -36,6 +36,7 @@ const SECTIONS: Section[] = [
       { chemin: "/users/abonnes", libelle: "Abonnés aux alertes", acces: "comptes" },
       { chemin: "/users/api-keys", libelle: "Clés API", acces: "cles_api" },
       { chemin: "/telechargements", libelle: "Téléchargements Sheets", acces: "comptes" },
+      { chemin: "/maintenance", libelle: "Prévenus maintenance", acces: "comptes" },
     ],
   },
   { chemin: "/journal", libelle: "Journal", acces: "journal" },
