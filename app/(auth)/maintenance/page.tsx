@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import PrevenirForm from "./PrevenirForm";
 
 // Page de maintenance servie par proxy.ts quand le mode est actif
 // (désactivable avec la variable d'environnement MAINTENANCE=0 sur Vercel).
@@ -28,6 +29,15 @@ export default function Maintenance() {
         <div><strong>Mer. 21 oct.</strong><span>Retour prévu le mercredi 21 octobre</span></div>
         <div><strong>100&nbsp;%</strong><span>De vos données conservées</span></div>
         <div><strong>0</strong><span>Mouvement raté&nbsp;: tout sera rattrapé</span></div>
+      </div>
+
+      <div className="card" style={{ marginBottom: 16 }}>
+        <h2 style={{ fontSize: "1.2rem", margin: ".2rem 0 .4rem" }}>Être prévenu·e du retour</h2>
+        <p className="meta" style={{ margin: "0 0 12px" }}>
+          Laisse ton adresse&nbsp;: un email de confirmation arrive dans ta boîte,
+          et tu recevras un message dès que le site est rétabli.
+        </p>
+        <PrevenirForm />
       </div>
 
       <div className="card">
