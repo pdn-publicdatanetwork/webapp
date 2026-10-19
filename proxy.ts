@@ -84,6 +84,34 @@ export async function proxy(req: NextRequest) {
   const host = (req.headers.get("host") ?? "").split(":")[0].toLowerCase();
   const path = req.nextUrl.pathname;
 
+  // ── Mode maintenance ──────────────────────────────────────────────────────
+  // Actif par défaut ; désactivable avec MAINTENANCE=0 dans l'environnement
+  // Vercel (redéploiement inutile si la variable est déjà définie).
+  // Passe tout le public (www, api, media, jobs, raw, mail, link, survey…)
+  // sur la page /maintenance, SAUF :
+  //   - l'espace équipe : admin.dataparl.fr et webmail.dataparl.fr (et /api) ;
+  //   - la page de contact et son API (/contact, /api/contact) ;
+  //   - le webhook mail (/api/mail/*, réception Resend qui alimente le webmail) ;
+  //   - les assets techniques (_next, icônes) pour un rendu correct de la page.
+  if (process.env.MAINTENANCE !== "0") {
+    const equipe = host === `admin.${DOMAINE}` || host === `webmail.${DOMAINE}`;
+    const technique = path.startsWith("/_next/") || path === "/maintenance" ||
+      path === "/favicon.ico" || path === "/icon.svg" || path === "/apple-icon" ||
+      path === "/robots.txt" || path === "/manifest.webmanifest";
+    const autorise = equipe || technique ||
+      path === "/contact" || path === "/api/contact" ||
+      path === "/api/mail" || path.startsWith("/api/mail/");
+    if (!autorise) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/maintenance";
+      url.search = "";
+      const res2 = NextResponse.rewrite(url);
+      res2.headers.set("Retry-After", "3600");
+      return res2;
+    }
+  }
+
+
   const cible = nouvelHote(host);
   if (cible) {
     if (path.startsWith("/api/")) return NextResponse.next();
