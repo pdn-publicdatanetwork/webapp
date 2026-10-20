@@ -68,9 +68,9 @@ export async function modalInbox(): Promise<Record<string, unknown>> {
 }
 
 // Publie (ou rafraîchit) le Home tab de l'utilisateur.
-export async function publierHome(userId: string): Promise<boolean> {
+export async function publierHome(userId: string): Promise<{ ok: boolean; erreur: string }> {
   const bot = process.env.SLACK_BOT_TOKEN ?? "";
-  if (!bot || !userId) return false;
+  if (!bot || !userId) return { ok: false, erreur: "SLACK_BOT_TOKEN ou user_id absent" };
   const etat = await lireMaintenance().catch(() => null);
   const boutonsSite: Record<string, unknown>[] = etat?.active
     ? [{ type: "button", text: { type: "plain_text", text: "🟢 Rétablir le site" }, style: "primary", action_id: "home_maintenance_off" }]
@@ -104,9 +104,11 @@ export async function publierHome(userId: string): Promise<boolean> {
       cache: "no-store",
       signal: AbortSignal.timeout(8000),
     });
-    const j = (await r.json()) as { ok: boolean };
-    return j.ok;
-  } catch { return false; }
+    const j = (await r.json()) as { ok: boolean; error?: string; needed?: string; provided?: string };
+    return { ok: j.ok, erreur: j.ok ? "" : j.error + (j.needed ? " (scope requis : " + j.needed + ", fourni : " + (j.provided ?? "aucun") + ")" : "") };
+  } catch (e) {
+    return { ok: false, erreur: e instanceof Error ? e.message : String(e) };
+  }
 }
 
 // Ouvre un modal depuis une action (bouton) : trigger_id du payload.
