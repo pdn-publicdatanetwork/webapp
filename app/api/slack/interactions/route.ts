@@ -60,8 +60,8 @@ export async function POST(req: Request) {
   const v = charge.view.state?.values ?? {};
   const destination = destinationValide(String((v.destination?.v as { value?: string })?.value ?? ""));
   const texte = String((v.texte?.v as { value?: string })?.value ?? "").trim();
-  const reseaux = valeursCochees(v.reseaux?.v ?? {}, "v");
-  const mode = (valeur(v.mode?.v ?? {}, "v") || "file") as ModePost;
+  const reseaux = valeursCochees((v.reseaux?.v ?? {}) as Record<string, unknown>, "v");
+  const mode = (valeur((v.mode?.v ?? {}) as Record<string, unknown>, "v") || "file") as ModePost;
   const urlReponse = charge.response_url ?? "";
   const qui = charge.user?.name ?? "slack";
 
