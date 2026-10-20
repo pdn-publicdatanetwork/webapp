@@ -57,6 +57,8 @@ export async function POST(req: Request) {
     signal: AbortSignal.timeout(8000),
   });
   const j = (await r.json()) as { ok: boolean; error?: string };
-  if (!j.ok) return NextResponse.json({ text: "Slack : " + (j.error ?? "le formulaire n'a pas pu s'ouvrir") });
-  return NextResponse.json({ text: "" });
+  if (!j.ok) return NextResponse.json({ response_type: "ephemeral", text: "Slack : " + (j.error ?? "le formulaire n'a pas pu s'ouvrir") });
+  // Réponse vide (corps HTTP vide) : un { text: "" } déclenche
+  // « invalid_command_response » côté Slack.
+  return new Response(null, { status: 200 });
 }
