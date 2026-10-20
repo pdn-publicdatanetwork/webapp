@@ -85,7 +85,7 @@ export async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
   // ── Mode maintenance ──────────────────────────────────────────────────────
-  // Actif par défaut ; désactivable avec MAINTENANCE=0 dans l'environnement
+  // Inactif par défaut ; activable avec MAINTENANCE=1 dans l'environnement
   // Vercel (redéploiement inutile si la variable est déjà définie).
   // Passe tout le public (www, api, media, jobs, raw, mail, link, survey…)
   // sur la page /maintenance, SAUF :
@@ -93,7 +93,7 @@ export async function proxy(req: NextRequest) {
   //   - la page de contact et son API (/contact, /api/contact) ;
   //   - le webhook mail (/api/mail/*, réception Resend qui alimente le webmail) ;
   //   - les assets techniques (_next, icônes) pour un rendu correct de la page.
-  if (process.env.MAINTENANCE !== "0") {
+  if (process.env.MAINTENANCE === "1") {
     // Espace équipe + liens cliquables depuis les emails (mail/lire/<jeton>,
     // link/<code>) : les destinataires doivent pouvoir ouvrir les messages.
     const equipe = host === `admin.${DOMAINE}` || host === `webmail.${DOMAINE}` ||
