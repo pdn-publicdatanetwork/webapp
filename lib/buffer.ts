@@ -43,7 +43,7 @@ export type ModePost = "file" | "maintenant" | "brouillon";
 // au réseau (tracking par réseau dans liens_clics).
 export async function creerPost(canal: string, texte: string, mode: ModePost): Promise<{ id: string } | { erreur: string }> {
   const r = await gql(
-    "mutation { createPost(input: { text: " + JSON.stringify(JSON.stringify(texte)) + ", channelId: " + JSON.stringify(JSON.stringify(canal)) + ", schedulingType: automatic, mode: " +
+    "mutation { createPost(input: { text: " + JSON.stringify(texte) + ", channelId: " + JSON.stringify(canal) + ", schedulingType: automatic, mode: " +
       (mode === "maintenant" ? "shareNow" : "addToQueue") + (mode === "brouillon" ? ", saveToDraft: true" : "") + " }) { ... on PostActionSuccess { post { id } } ... on MutationError { message } } }",
   );
   const p = r.createPost as { post?: { id: string }; message?: string };
