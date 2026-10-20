@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 // Commande Slack /post : ouvre un formulaire (modal) qui demande tout —
-// destination, texte, réseaux, mode de publication. À configurer comme
-// /maintenance et /stats, même token :
+// destination (facultative), texte, réseaux, mode de publication. À
+// configurer comme /maintenance et /stats, même token :
 //   https://www.dataparl.fr/api/slack/post?t=<MAINTENANCE_TOKEN>
 // Nécessite SLACK_BOT_TOKEN (Bot User OAuth Token de l'app, xoxb-…)
 // pour ouvrir le modal, et une Interactivity Request URL :
@@ -34,12 +34,12 @@ export async function POST(req: Request) {
       submit: { type: "plain_text", text: "Publier" },
       close: { type: "plain_text", text: "Annuler" },
       blocks: [
-        { type: "input", block_id: "destination", element: { type: "plain_text_input", action_id: "v", placeholder: { type: "plain_text", text: "https://www.dataparl.fr/…" } }, label: { type: "plain_text", text: "Page à partager (destination du lien tracé)" } },
-        { type: "input", block_id: "texte", element: { type: "plain_text_input", action_id: "v", multiline: true, max_length: 500, placeholder: { type: "plain_text", text: "Le texte du post — le lien court est ajouté automatiquement" } }, label: { type: "plain_text", text: "Texte du post" } },
+        { type: "input", optional: true, block_id: "destination", element: { type: "plain_text_input", action_id: "v", placeholder: { type: "plain_text", text: "https://www.dataparl.fr/… (vide = texte seul)" } }, label: { type: "plain_text", text: "Page à partager (facultatif — crée les liens tracés)" } },
+        { type: "input", block_id: "texte", element: { type: "plain_text_input", action_id: "v", multiline: true, max_length: 500, placeholder: { type: "plain_text", text: "Le texte du post — le lien court est ajouté automatiquement si une page est fournie" } }, label: { type: "plain_text", text: "Texte du post" } },
         { type: "input", block_id: "reseaux", element: { type: "checkboxes", action_id: "v", options: [
           { text: { type: "plain_text", text: "X (Twitter)" }, value: "x" },
           { text: { type: "plain_text", text: "Bluesky" }, value: "bsky" },
-        ] }, label: { type: "plain_text", text: "Réseaux (un lien court dédié par réseau est généré pour le tracking)" } },
+        ] }, label: { type: "plain_text", text: "Réseaux (un lien court dédié par réseau est généré si une page est fournie)" } },
         { type: "input", block_id: "mode", element: { type: "radio_buttons", action_id: "v", options: [
           { text: { type: "plain_text", text: "File Buffer (publié selon ton planning)" }, value: "file" },
           { text: { type: "plain_text", text: "Publier immédiatement" }, value: "maintenant" },

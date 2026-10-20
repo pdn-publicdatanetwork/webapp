@@ -7,11 +7,12 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 // Soumission du formulaire /post (Interactivity Request URL de l'app
-// Slack, configurée avec ?t=<MAINTENANCE_TOKEN>). Étapes : génère un code
-// court par réseau choisi (<slug>-x, <slug>-bsky), insère les liens tracés
-// (table liens, même système que /l/daily…), crée les posts Buffer (texte
-// + lien court dédié → clics attribués par réseau dans liens_clics), puis
-// répond la confirmation avec les liens courts.
+// Slack, configurée avec ?t=<MAINTENANCE_TOKEN>). Étapes : si une
+// destination est fournie, génère un code court par réseau choisi
+// (<slug>-x, <slug>-bsky), insère les liens tracés (table liens, même
+// système que /l/daily…), crée les posts Buffer (texte + lien court
+// dédié → clics attribués par réseau dans liens_clics), puis répond la
+// confirmation. Sans destination : post texte seul, pas de lien tracé.
 
 function repondre(urlReponse: string, texte: string) {
   if (!urlReponse) return;
@@ -28,9 +29,11 @@ function valeur(bloc: Record<string, unknown>, action: string): string {
   return e?.value ?? "";
 }
 
-function valeursCochees(bloc: Record<string, unknown>, action: string): string[] {
-  const e = (bloc as { [k: string]: { selected_options?: { value: string }[] } | undefined })[action];
-  return (e?.selected_options ?? []).map((o) => o.value);
+// L'élément d'action (checkboxes) est passé directement : selected_options
+// se lit sur lui, pas sur bloc["v"] une seconde fois.
+function valeursCochees(element: Record<string, unknown>): string[] {
+  const sel = (element as { selected_options?: { value: string }[] }).selected_options;
+  return (sel ?? []).map((o) => o.value);
 }
 
 // Slug lisible depuis la destination (dernier segment du chemin).
@@ -58,14 +61,15 @@ export async function POST(req: Request) {
     return NextResponse.json({});
   }
   const v = charge.view.state?.values ?? {};
-  const destination = destinationValide(String((v.destination?.v as { value?: string })?.value ?? ""));
+  const destinationBrut = String((v.destination?.v as { value?: string })?.value ?? "").trim();
+  const destination = destinationBrut ? destinationValide(destinationBrut) : null;
   const texte = String((v.texte?.v as { value?: string })?.value ?? "").trim();
-  const reseaux = valeursCochees((v.reseaux?.v ?? {}) as Record<string, unknown>, "v");
+  const reseaux = valeursCochees((v.reseaux?.v ?? {}) as Record<string, unknown>);
   const mode = (valeur((v.mode?.v ?? {}) as Record<string, unknown>, "v") || "file") as ModePost;
   const urlReponse = charge.response_url ?? "";
   const qui = charge.user?.name ?? "slack";
 
-  if (!destination) {
+  if (destinationBrut && !destination) {
     return NextResponse.json({ response_action: "errors", errors: { destination: "Adresse https invalide." } });
   }
   if (!texte) {
@@ -76,8 +80,9 @@ export async function POST(req: Request) {
   }
 
   // Code court par réseau : <slug>-x, <slug>-bsky (déjà suivi si collision).
+  // Sans destination, aucun lien n'est créé (post texte seul).
   const db = authAdmin();
-  const base = slugDe(destination);
+  const base = destination ? slugDe(destination) : "";
   const codeDe = async (suffixe: string) => {
     for (let i = 0; i < 5; i++) {
       const code = (base + "-" + suffixe + (i ? "-" + genererCode(3) : "")).slice(0, 40);
@@ -89,8 +94,12 @@ export async function POST(req: Request) {
   };
 
   try {
-    const lignes: { code: string; suffixe: string }[] = [];
+    const lignes: { code: string | null; suffixe: string }[] = [];
     for (const r of reseaux) {
+      if (!destination) {
+        lignes.push({ code: null, suffixe: r });
+        continue;
+      }
       const code = await codeDe(r);
       const { error } = await db.from("liens").insert({ code, destination, titre: texte.slice(0, 200), actif: true });
       if (error) throw new Error("Table liens : " + error.message);
@@ -103,19 +112,20 @@ export async function POST(req: Request) {
     for (const { code, suffixe } of lignes) {
       const service = suffixe === "x" ? "twitter" : "bluesky";
       const canal = canauxDispo.find((c) => c.service === service);
+      const nomReseau = suffixe === "x" ? "X" : "Bluesky";
       if (!canal) {
-        resultats.push("⚠️ " + (suffixe === "x" ? "X" : "Bluesky") + " : aucun canal connecté dans Buffer (publish.buffer.com → Connect Channel) — lien créé : https://link.dataparl.fr/" + code);
+        resultats.push("⚠️ " + nomReseau + " : aucun canal connecté dans Buffer (publish.buffer.com → Connect Channel)" + (code ? " — lien créé : https://link.dataparl.fr/" + code : ""));
         continue;
       }
-      const lienCourt = "https://link.dataparl.fr/" + code;
-      const p = await creerPost(canal.id, texte + "\n" + lienCourt, mode);
-      resultats.push(("id" in p ? "✅" : "⚠️") + " " + (suffixe === "x" ? "X" : "Bluesky") + " : " + ("id" in p ? (mode === "maintenant" ? "publié" : mode === "brouillon" ? "brouillon créé dans Buffer" : "ajouté à la file Buffer") : "erreur : " + p.erreur) + " — " + lienCourt);
+      const lienCourt = code ? "https://link.dataparl.fr/" + code : "";
+      const p = await creerPost(canal.id, code ? texte + "\n" + lienCourt : texte, mode);
+      resultats.push(("id" in p ? "✅" : "⚠️") + " " + nomReseau + " : " + ("id" in p ? (mode === "maintenant" ? "publié" : mode === "brouillon" ? "brouillon créé dans Buffer" : "ajouté à la file Buffer") : "erreur : " + p.erreur) + (lienCourt ? " — " + lienCourt : " (sans lien tracé)"));
     }
 
-    repondre(urlReponse, "📣 Post envoyé par " + qui + " :\n" + resultats.join("\n") + "\nDestination : " + destination);
+    repondre(urlReponse, "📣 Post envoyé par " + qui + " :\n" + resultats.join("\n") + (destination ? "\nDestination : " + destination : "\n(sans lien tracé)"));
     return NextResponse.json({ response_action: "clear" });
   } catch (e) {
     repondre(urlReponse, "Erreur /post : " + (e instanceof Error ? e.message : String(e)));
-    return NextResponse.json({ response_action: "errors", errors: { destination: "Erreur : " + (e instanceof Error ? e.message : String(e)) } });
+    return NextResponse.json({ response_action: "errors", errors: { texte: "Erreur : " + (e instanceof Error ? e.message : String(e)) } });
   }
 }
