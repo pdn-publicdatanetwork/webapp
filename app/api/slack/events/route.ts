@@ -25,7 +25,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ challenge: charge.challenge ?? "" });
   }
   if (charge.type === "event_callback" && charge.event?.type === "app_home_opened") {
-    await publierHome(charge.event.user ?? "");
+    const r = await publierHome(charge.event.user ?? "");
+    if (!r.ok) {
+      // Diagnostic visible : l'erreur exacte de Slack part sur le webhook
+      // #monitoring (incoming webhook, indépendant des scopes du bot).
+      const hook = process.env.SLACK_WEBHOOK_URL ?? "";
+      if (hook) {
+        fetch(hook, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: "⚠️ Home tab DataParl' Console non publié : " + r.erreur }),
+          cache: "no-store",
+        }).catch(() => {});
+      }
+      console.error("home tab", charge.event.user, r.erreur);
+    }
     return NextResponse.json({});
   }
   return NextResponse.json({});
