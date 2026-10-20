@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { EXPEDITEURS, idCourt, lire, lister } from "@/lib/slackMail";
+import { publierHome } from "@/lib/slackHome";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -30,6 +31,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ text: "Non autorisén" }, { status: 401 });
   }
   const args = (params.get("text") ?? "").trim();
+  // Publie le Home tab au passage (repli : l'événement app_home_opened
+  // ne suffit pas si l'app n'est pas réinstallée après config).
+  publierHome(params.get("user_id") ?? "").catch(() => {});
   const mots = args.split(/\s+/).filter(Boolean);
   const cmd = (mots[0] ?? "").toLowerCase();
 

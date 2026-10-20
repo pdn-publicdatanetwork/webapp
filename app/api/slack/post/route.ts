@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publierHome } from "@/lib/slackHome";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,8 @@ export async function POST(req: Request) {
   }
   const trigger = params.get("trigger_id") ?? "";
   if (!trigger) return NextResponse.json({ text: "Requête invalide (trigger_id)." });
+  // Publie le Home tab au passage (repli sans événement app_home_opened).
+  publierHome(params.get("user_id") ?? "").catch(() => {});
 
   const modal = {
     trigger_id: trigger,

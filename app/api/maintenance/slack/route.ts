@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { basculeMaintenance, lireMaintenance } from "@/lib/maintenanceAdmin";
+import { publierHome } from "@/lib/slackHome";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,7 @@ export async function POST(req: Request) {
   }
   const texte = (params.get("text") ?? "").trim().toLowerCase();
   const utilisateur = params.get("user_name") ?? "slack";
+  publierHome(params.get("user_id") ?? "").catch(() => {});
 
   try {
     const etat = await lireMaintenance();

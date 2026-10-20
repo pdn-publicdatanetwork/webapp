@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { blocsStats, collecterStats, texteStats } from "@/lib/slackStats";
+import { publierHome } from "@/lib/slackHome";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -20,6 +21,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ text: "Non autorisé." }, { status: 401 });
   }
   const texte = (params.get("text") ?? "").trim().toLowerCase();
+  publierHome(params.get("user_id") ?? "").catch(() => {});
 
   try {
     const s = await collecterStats();
