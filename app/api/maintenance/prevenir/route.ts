@@ -2,9 +2,10 @@ import { randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { logConsent } from "@/lib/consent";
-import { expedier, hashJeton } from "@/lib/mail";
+import { esc, expedier, hashJeton } from "@/lib/mail";
 import { normalizeEmail } from "@/lib/tokens";
 import { authAdmin } from "@/lib/supabaseAdmin";
+import { copieSlack, SLACK_MAINTENANCE } from "@/lib/slack";
 
 // « Prévenez-moi quand le site est de retour » sur la page de maintenance.
 // Double opt-in : un email de confirmation part immédiatement ; l'adresse
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
     corpsHtml:
       "<p style=\"margin:0 0 12px\">Tu as demandé à être prévenu·e quand DataParl' sera de retour après la maintenance.</p>" +
       "<p style=\"margin:0 0 12px\">Confirme ton adresse en un clic — c'est ce qui prouve que l'adresse est bien la tienne :</p>" +
-      `<p style=\"margin:24px 0\"><a href="${lien}" style=\"display:inline-block;background:#F0444F;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:6px;font-weight:bold\">Confirmer mon adresse</a></p>` +
+      `<p style="margin:24px 0"><a href="${lien}" style="display:inline-block;background:#F0444F;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:6px;font-weight:bold">Confirmer mon adresse</a></p>` +
       "<p style=\"margin:0;color:#4A5670;font-size:14px\">Ce lien expire dans 48 heures. Si tu n'es pas à l'origine de cette demande, ignore cet email : rien ne sera enregistré.</p>",
     text: `Tu as demandé à être prévenu·e quand DataParl' sera de retour. Confirme ton adresse : ${lien}\n\nCe lien expire dans 48 heures. Si tu n'es pas à l'origine de cette demande, ignore cet email.`,
     pied: "Message envoyé par DataParl' suite à une action faite avec ton adresse. Si ce n'est pas toi, ignore-le.",
@@ -84,5 +85,12 @@ export async function GET(req: NextRequest) {
     confirmed: true, confirmed_at: now, confirm_token_hash: null, confirm_expires_at: null,
   }).eq("id", sub.id);
   await logConsent(sub.email as string, "confirm", "newsletter");
+  // Copie de traçabilité vers le canal Slack #inscription-maintenance.
+  await copieSlack(SLACK_MAINTENANCE, {
+    subject: `Inscription maintenance : ${sub.email}`,
+    titre: "Prévenu·e du retour de la maintenance",
+    corpsHtml: `<p>Nouvelle adresse confirmée pour être prévenu·e du retour du site : <strong>${esc(String(sub.email))}</strong></p>`,
+    text: `Nouvelle adresse confirmée pour être prévenu·e du retour du site : ${sub.email}`,
+  });
   return page("Adresse confirmée", "Tu recevras un email dès que DataParl' sera de retour. À très vite !", true);
 }

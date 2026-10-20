@@ -4,6 +4,7 @@ import { clientFingerprint } from "@/lib/consent";
 import { SUJETS } from "@/lib/contact";
 import { CONTACT_INBOX } from "@/lib/env";
 import { esc, expedier } from "@/lib/mail";
+import { copieSlack, SLACK_CONTACT } from "@/lib/slack";
 import { authAdmin } from "@/lib/supabaseAdmin";
 import { normalizeEmail } from "@/lib/tokens";
 import { accuserReception } from "@/lib/webmail";
@@ -53,7 +54,14 @@ export async function POST(req: Request) {
   // 2. Accusé de réception à l'expéditeur.
   await accuserReception({ to: email, from: boite, objet: libelle, extrait: d.message, prenom: d.prenom, contact: true });
 
-  // 3. Copie facultative vers une boîte externe (variable CONTACT_INBOX).
+  // 3. Copie vers le canal Slack #contact (archive de l'équipe).
+  await copieSlack(SLACK_CONTACT, {
+    subject: objet, titre: libelle,
+    corpsHtml: `<p><strong>${esc(d.prenom)} ${esc(d.nom)}</strong> &lt;${esc(email)}&gt;</p><p style="white-space:pre-wrap;line-height:1.6">${esc(d.message)}</p>`,
+    text: `${libelle}\n${d.prenom} ${d.nom} <${email}>\n\n${d.message}`,
+  });
+
+  // 4. Copie facultative vers une boîte externe (variable CONTACT_INBOX).
   if (CONTACT_INBOX) {
     await expedier({
       to: [CONTACT_INBOX], replyTo: email, subject: objet, titre: libelle, type: "transactionnel",
