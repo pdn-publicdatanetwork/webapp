@@ -33,7 +33,8 @@ export async function POST(req: Request) {
   const args = (params.get("text") ?? "").trim();
   // Publie le Home tab au passage (repli : l'événement app_home_opened
   // ne suffit pas si l'app n'est pas réinstallée après config).
-  publierHome(params.get("user_id") ?? "").catch(() => {});
+  const home = await publierHome(params.get("user_id") ?? "");
+  const diag = home.ok ? "" : "\n_(diag Home tab : " + home.erreur + ")_";
   const mots = args.split(/\s+/).filter(Boolean);
   const cmd = (mots[0] ?? "").toLowerCase();
 
@@ -44,10 +45,10 @@ export async function POST(req: Request) {
   if (!cmd || ["recus", "inbox", "envoyes", "sent", "corbeille", "trash"].includes(cmd)) {
     const dossier = ["envoyes", "sent"].includes(cmd) ? "sent" : ["corbeille", "trash"].includes(cmd) ? "trash" : "inbox";
     const messages = await lister(dossier, 12);
-    if (!messages.length) return NextResponse.json({ text: "📭 Dossier " + dossier + " vide." });
+    if (!messages.length) return NextResponse.json({ text: "📭 Dossier " + dossier + " vide." + diag });
     const lignes = messages.map((m) =>
       (m.read ? "• " : "🔴 ") + "`" + idCourt(m.id) + "` " + (dossier === "sent" ? "→ " + m.to_addr : m.from_addr) + " — *" + (m.subject || "(sans objet)") + "* (" + heure(m.date) + ")");
-    return NextResponse.json({ text: "📬 " + messages.length + " derniers (" + dossier + ") :\n" + lignes.join("\n") + "\n`/mail <id court>` pour lire un message." });
+    return NextResponse.json({ text: "📬 " + messages.length + " derniers (" + dossier + ") :\n" + lignes.join("\n") + "\n`/mail <id court>` pour lire un message." + diag });
   }
 
   if (cmd === "envoyer") {
