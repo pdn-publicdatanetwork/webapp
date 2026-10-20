@@ -85,15 +85,15 @@ export async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
   // ── Mode maintenance ──────────────────────────────────────────────────────
-  // Inactif par défaut ; activable avec MAINTENANCE=1 dans l'environnement
-  // Vercel (redéploiement inutile si la variable est déjà définie).
+  // Inactif par défaut ; activable avec MAINTENANCE_ACTIVE=1 dans l'environnement
+  // Vercel (l'ancienne variable MAINTENANCE est ignorée, valeur 1 comprise).
   // Passe tout le public (www, api, media, jobs, raw, mail, link, survey…)
   // sur la page /maintenance, SAUF :
   //   - l'espace équipe : admin.dataparl.fr et webmail.dataparl.fr (et /api) ;
   //   - la page de contact et son API (/contact, /api/contact) ;
   //   - le webhook mail (/api/mail/*, réception Resend qui alimente le webmail) ;
   //   - les assets techniques (_next, icônes) pour un rendu correct de la page.
-  if (process.env.MAINTENANCE === "1") {
+  if (process.env.MAINTENANCE_ACTIVE === "1") {
     // Espace équipe + liens cliquables depuis les emails (mail/lire/<jeton>,
     // link/<code>) : les destinataires doivent pouvoir ouvrir les messages.
     const equipe = host === `admin.${DOMAINE}` || host === `webmail.${DOMAINE}` ||

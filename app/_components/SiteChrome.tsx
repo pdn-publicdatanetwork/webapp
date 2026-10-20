@@ -20,7 +20,7 @@ const NAV = [
 export function EnTeteSite() {
   // Mode maintenance : le menu ☰ disparaît — ses liens mènent tous à des pages
   // coupées. Restent visibles : logo, recherche et pied de page.
-  const maintenance = process.env.MAINTENANCE === "1";
+  const maintenance = process.env.MAINTENANCE_ACTIVE === "1";
   const liens = [...NAV, { href: "/mon-compte", label: "Mon compte" }];
   return (
     <header className="site entete-principale">
