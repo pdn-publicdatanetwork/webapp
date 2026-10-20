@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ text: "📬 /mail — console e-mail :\n• `/mail` : 10 derniers messages reçus\n• `/mail envoyes` · `/mail corbeille`\n• `/mail <id court>` : lire un message\n• `/mail envoyer` : nouveau message (confirmation par bouton avant l'envoi réle)\n• `/mail supprimer <id court>` : déplacer vers la corbeille (confirmation par bouton)" });
   }
 
-  if (["recus", "inbox", "envoyes", "sent", "corbeille", "trash"].includes(cmd)) {
+  if (!cmd || ["recus", "inbox", "envoyes", "sent", "corbeille", "trash"].includes(cmd)) {
     const dossier = ["envoyes", "sent"].includes(cmd) ? "sent" : ["corbeille", "trash"].includes(cmd) ? "trash" : "inbox";
     const messages = await lister(dossier, 12);
     if (!messages.length) return NextResponse.json({ text: "📭 Dossier " + dossier + " vide." });
