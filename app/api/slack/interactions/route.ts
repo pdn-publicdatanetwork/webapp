@@ -38,6 +38,13 @@ function valeursCochees(element: Record<string, unknown>): string[] {
   return (sel ?? []).map((o) => o.value);
 }
 
+// Petite vue de résultat affichée dans le modal après un clic bouton.
+function vueResultat(texte: string) {
+  return { type: "modal", callback_id: "mail_envoi", title: { type: "plain_text", text: "Résultat" },
+    close: { type: "plain_text", text: "Fermer" },
+    blocks: [{ type: "section", text: { type: "mrkdwn", text: texte } }] };
+}
+
 // Slug lisible depuis la destination (dernier segment du chemin).
 function slugDe(destination: string): string {
   try {
@@ -72,12 +79,19 @@ export async function POST(req: Request) {
       let d: { f?: string; a?: string[]; s?: string; t?: string } = {};
       try { d = JSON.parse(act.value ?? "{}"); } catch { return NextResponse.json({ text: "Brouillon illisible — annulé.", replace_original: true }); }
       const r = await envoyerDepuisSlack(charge.user?.name ?? "slack", { from: d.f ?? "", a: d.a ?? [], sujet: d.s ?? "", texte: d.t ?? "" });
-      return NextResponse.json({ text: r.ok ? "✅ Envoyé à " + (d.a ?? []).join(", ") : "⚠️ " + r.erreur, replace_original: true });
+      const resultat = r.ok ? "✅ Envoyé à " + (d.a ?? []).join(", ") : "⚠️ " + r.erreur;
+      if (charge.view) return NextResponse.json({ response_action: "update", view: vueResultat(resultat) });
+      return NextResponse.json({ text: resultat, replace_original: true });
     }
-    if (act.action_id === "mail_envoyer_annuler") return NextResponse.json({ text: "Annulé — rien n'a été envoyé.", replace_original: true });
+    if (act.action_id === "mail_envoyer_annuler") {
+      if (charge.view) return NextResponse.json({ response_action: "update", view: vueResultat("Annulé — rien n'a été envoyé.") });
+      return NextResponse.json({ text: "Annulé — rien n'a été envoyé.", replace_original: true });
+    }
     if (act.action_id === "mail_supprimer_ok") {
       const err = await supprimer(act.value ?? "");
-      return NextResponse.json({ text: err ? "⚠️ " + err : "🗑️ Message déplacé vers la corbeille.", replace_original: true });
+      const msg = err ? "⚠️ " + err : "🗑️ Message déplacé vers la corbeille.";
+      if (charge.view) return NextResponse.json({ response_action: "update", view: vueResultat(msg) });
+      return NextResponse.json({ text: msg, replace_original: true });
     }
     if (act.action_id === "mail_supprimer_annuler") return NextResponse.json({ text: "Annulé — rien n'a été supprimé.", replace_original: true });
     return NextResponse.json({});
@@ -108,7 +122,6 @@ export async function POST(req: Request) {
       type: "modal",
       callback_id: "mail_envoi",
       title: { type: "plain_text", text: "Confirmer l'envoi" },
-      submit: { type: "plain_text", text: "Fermer" },
       close: { type: "plain_text", text: "Annuler" },
       blocks: [
         { type: "section", text: { type: "mrkdwn", text: "*Confirmer l'envoi ?*\nDe : `" + from + "`\nÀ : " + aListe.join(", ") + "\nObjet : *" + sujet + "*" } },
