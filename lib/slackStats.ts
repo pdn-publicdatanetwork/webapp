@@ -56,6 +56,30 @@ async function bluesky(acteur: string): Promise<Bsky> {
   } catch { return null; }
 }
 
+// Buffer (facultatif) : si BUFFER_API_KEY est définie et que les comptes
+// sont connectés dans Buffer, c'est la source privilégiée — une seule clé
+// pour tous les réseaux (X, Bluesky, Mastodon, Threads…). X et Bluesky
+// n'exposent que le compteur d'abonnés courant, même via Buffer.
+type BufferProfils = Map<string, number>; // service → followers
+
+async function bufferAbonnes(): Promise<BufferProfils | null> {
+  const cle = process.env.BUFFER_API_KEY ?? "";
+  if (!cle) return null;
+  try {
+    const r = await fetch("https://api.bufferapp.com/1/profiles.json", {
+      headers: { Authorization: `Bearer ${cle}` }, cache: "no-store", signal: AbortSignal.timeout(5000),
+    });
+    if (!r.ok) return null;
+    const profils = (await r.json()) as { service: string; statistics?: { followers?: number } }[];
+    const m = new Map<string, number>();
+    for (const p of profils ?? []) {
+      const f = p.statistics?.followers;
+      if (typeof f === "number") m.set(p.service, f);
+    }
+    return m.size ? m : null;
+  } catch { return null; }
+}
+
 async function xAbonnes(): Promise<number | null> {
   const handle = process.env.X_HANDLE ?? "";
   if (!handle) return null;
@@ -75,7 +99,7 @@ export async function collecterStats() {
   const auth = authAdmin();
   const data = dataAdmin() as unknown as Db;
 
-  const [pagesJour, pagesVeille, pagesSemaine, dlJour, dlSemaine, chatJour, chatErreurs, nouveauxJour, nouveauxSemaine, actifsJour, contactJour, deblocJour, newsletterConf, alertesActives, oppositions, waActifs, telegram, bsky1, bsky2, x, etat] = await Promise.all([
+  const [pagesJour, pagesVeille, pagesSemaine, dlJour, dlSemaine, chatJour, chatErreurs, nouveauxJour, nouveauxSemaine, actifsJour, contactJour, deblocJour, newsletterConf, alertesActives, oppositions, waActifs, telegram, bsky1, bsky2, x, buffer, etat] = await Promise.all([
     compterSur(auth, "pages_vues", "le", 24),
     (async () => { try { const { count } = await auth.from("pages_vues").select("*", { count: "exact", head: true }).gte("le", depuis(48)).lt("le", depuis(24)); return count ?? null; } catch { return null; } })(),
     compterSur(auth, "pages_vues", "le", 7 * 24),
@@ -96,6 +120,7 @@ export async function collecterStats() {
     bluesky("dataparl.fr"),
     bluesky("jobs.dataparl.fr"),
     xAbonnes(),
+    bufferAbonnes(),
     lireMaintenance().catch(() => null),
   ]);
 
@@ -108,11 +133,21 @@ export async function collecterStats() {
     top = [...compte.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([chemin, vues]) => ({ chemin, vues }));
   } catch { top = []; }
 
+  // Buffer en source privilégiée pour X (followers) et repli Bluesky.
+  let xFinal = x;
+  if (buffer) {
+    if (typeof buffer.get("twitter") === "number") xFinal = buffer.get("twitter") ?? null;
+    const bskyFollowers = buffer.get("bluesky");
+    if (typeof bskyFollowers === "number") {
+      for (const b of [bsky1, bsky2]) if (b && b.followers === null) b.followers = bskyFollowers;
+    }
+  }
+
   return {
     le: new Date().toISOString(),
     site: { pagesJour, pagesVeille, pagesSemaine, top, dlJour, dlSemaine, chatJour, chatErreurs, contactJour, deblocJour },
     comptes: { nouveauxJour, nouveauxSemaine, actifsJour, newsletterConf, alertesActives, oppositions, waActifs },
-    social: { telegram, bsky: [bsky1, bsky2].filter(Boolean) as Bsky[], x },
+    social: { telegram, bsky: [bsky1, bsky2].filter(Boolean) as Bsky[], x: xFinal, buffer: !!buffer },
     maintenance: etat ? { active: etat.active, motif: etat.motif } : null,
   };
 }
@@ -143,7 +178,7 @@ export function blocsStats(s: Stats): Record<string, unknown>[] {
   if (s.site.top.length) {
     blocs.push({ type: "section", text: { type: "mrkdwn", text: `*Top pages 24 h :*\n${s.site.top.map((t, i) => `${i + 1}. ${t.chemin} — ${fm(t.vues)} vues`).join("\n")}` } });
   }
-  blocs.push({ type: "context", elements: [{ type: "mrkdwn", text: `🕒 ${new Date(s.le).toLocaleString("fr-FR")} · ${s.maintenance?.active ? "🔴 maintenance en cours" : "🟢 site ouvert"}${s.maintenance?.motif ? ` — ${s.maintenance.motif}` : ""}` }] });
+  blocs.push({ type: "context", elements: [{ type: "mrkdwn", text: `🕒 ${new Date(s.le).toLocaleString("fr-FR")} · ${s.maintenance?.active ? "🔴 maintenance en cours" : "🟢 site ouvert"}${s.maintenance?.motif ? ` — ${s.maintenance.motif}` : ""}${s.social.buffer ? " · réseaux via Buffer" : ""}` }] });
   return blocs;
 }
 
