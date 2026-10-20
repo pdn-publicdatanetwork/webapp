@@ -3,12 +3,13 @@ import { expedier } from "./mail";
 
 // Copies de traçabilité vers les canaux Slack de l'espace DataParl'. Chaque
 // canal Slack expose une adresse e-mail : tout message envoyé à cette adresse
-// apparaît dans le canal. Les adresses sont surchargeables par l'environnement
-// (Vercel) ; vide = aucune copie.
+// apparaît dans le canal. Les adresses sont configurées dans l'environnement
+// (Vercel : SLACK_CONTACT, SLACK_NEW_USER, SLACK_MAINTENANCE) ; vide ou absente
+// = aucune copie.
 
-export const SLACK_CONTACT = process.env.SLACK_CONTACT ?? "contact-aaaawph43zrpkhqvpphzk37lyi@dataparl.slack.com";
-export const SLACK_NEW_USER = process.env.SLACK_NEW_USER ?? "new-user-aaaawpoeh27fm2ywhviv7e33cq@dataparl.slack.com";
-export const SLACK_MAINTENANCE = process.env.SLACK_MAINTENANCE ?? "inscription-maintenan-aaaawove3uomplj34xm3guiguq@dataparl.slack.com";
+export const SLACK_CONTACT = process.env.SLACK_CONTACT ?? "";
+export const SLACK_NEW_USER = process.env.SLACK_NEW_USER ?? "";
+export const SLACK_MAINTENANCE = process.env.SLACK_MAINTENANCE ?? "";
 
 // Copie non bloquante : un échec d'envoi n'interrompt jamais le flux du site
 // (il est seulement journalisé ; l'information existe déjà dans la webmail ou
