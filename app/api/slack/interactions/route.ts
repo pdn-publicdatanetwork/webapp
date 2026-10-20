@@ -3,25 +3,24 @@ import { CODE, destinationValide, genererCode } from "@/lib/liens";
 import { authAdmin } from "@/lib/supabaseAdmin";
 import { canaux, creerPost, type ModePost } from "@/lib/buffer";
 import { envoyerDepuisSlack, supprimer } from "@/lib/slackMail";
+import { modalEnvoi, modalInbox, modalPost, ouvrirModal, publierHome } from "@/lib/slackHome";
+import { basculeMaintenance } from "@/lib/maintenanceAdmin";
+import { blocsStats, collecterStats } from "@/lib/slackStats";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-// Interactivity Request URL de l'app Slack (configurée avec
-// ?t=<MAINTENANCE_TOKEN>). Trois usages :
-//  - soumission du modal /post (callback post_publication) : codes courts
-//    par réseau, liens tracés, posts Buffer, confirmation ;
-//  - soumission du modal /mail envoyer (callback mail_envoi) : affiche une
-//    confirmation par boutons — l'envoi réel n'a lieu qu'au clic sur
-//    « Envoyer · (block_actions) ;
-//  - boutons de confirmation suppression mail (block_actions).
+// Interactivity Request URL de l'app Slack (?t=<MAINTENANCE_TOKEN>) :
+//  - soumissions des modals /post, /mail envoyer, maintenance (Home tab) ;
+//  - boutons de confirmation d'envoi et de suppression (block_actions) ;
+//  - boutons du Home tab (home_*) qui ouvrent les modals.
 
-function repondre(urlReponse: string, texte: string) {
+function repondre(urlReponse: string, corps: string) {
   if (!urlReponse) return;
   fetch(urlReponse, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ response_type: "in_channel", text: texte }),
+    body: JSON.stringify({ response_type: "in_channel", text: corps }),
     cache: "no-store",
   }).catch(() => {});
 }
@@ -38,23 +37,41 @@ function valeursCochees(element: Record<string, unknown>): string[] {
   return (sel ?? []).map((o) => o.value);
 }
 
-// Petite vue de résultat affichée dans le modal après un clic bouton.
-function vueResultat(texte: string) {
-  return { type: "modal", callback_id: "mail_envoi", title: { type: "plain_text", text: "Résultat" },
-    close: { type: "plain_text", text: "Fermer" },
-    blocks: [{ type: "section", text: { type: "mrkdwn", text: texte } }] };
-}
-
 // Slug lisible depuis la destination (dernier segment du chemin).
 function slugDe(destination: string): string {
   try {
     const chemin = new URL(destination).pathname.replace(/\/$/, "");
     const segments = chemin.split("/").filter(Boolean);
-    let slug = (segments.at(-1) ?? "partage").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 30);
+    let slug = (segments.at(-1) ?? "partage").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+/, "").replace(/-+$/, "").slice(0, 30);
     if (!slug) slug = "partage";
     return slug;
   } catch { return "partage"; }
 }
+
+// Petite vue de résultat affichée dans un modal après un clic bouton.
+function vueResultat(texte: string) {
+  return { type: "modal", callback_id: "resultat", title: { type: "plain_text", text: "Résultat" },
+    close: { type: "plain_text", text: "Fermer" },
+    blocks: [{ type: "section", text: { type: "mrkdwn", text: texte } }] };
+}
+
+// Confirmation d'envoi : modal avec boutons, affiché dans le modal courant.
+function vueConfirmation(draft: string, from: string, aListe: string[], ccListe: string[], sujet: string, texte: string) {
+  const lignes = "*Confirmer l'envoi ?*\nDe : \`" + from + "\`\nÀ : " + aListe.join(", ") + (ccListe.length ? "\nCc : " + ccListe.join(", ") : "") + "\nObjet : *" + sujet + "*";
+  return { type: "modal", callback_id: "mail_confirme",
+    title: { type: "plain_text", text: "Confirmer l'envoi" },
+    close: { type: "plain_text", text: "Annuler" },
+    blocks: [
+      { type: "section", text: { type: "mrkdwn", text: lignes } },
+      { type: "section", text: { type: "mrkdwn", text: "\`\`\`" + texte.slice(0, 800) + (texte.length > 800 ? "\n…" : "") + "\`\`\`" } },
+      { type: "actions", elements: [
+        { type: "button", text: { type: "plain_text", text: "Envoyer" }, style: "primary", action_id: "mail_envoyer_ok", value: draft },
+        { type: "button", text: { type: "plain_text", text: "Annuler" }, action_id: "mail_envoyer_annuler", value: "-" },
+      ] },
+    ] };
+}
+
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 export async function POST(req: Request) {
   const attendu = process.env.MAINTENANCE_TOKEN ?? "";
@@ -66,19 +83,21 @@ export async function POST(req: Request) {
   const charge = JSON.parse(corps.get("payload") ?? "{}") as {
     type?: string;
     view?: { callback_id?: string; state?: { values?: Record<string, Record<string, unknown>> } };
-    response_url?: string;
-    user?: { name?: string };
+    response_url?: string; trigger_id?: string;
+    user?: { name?: string; id?: string };
     actions?: { action_id?: string; value?: string }[];
   };
 
-  // Boutons de confirmation (mail) : c'est ici que l'action réelle a lieu.
+  // Boutons de confirmation et du Home tab (block_actions).
   if (charge.type === "block_actions") {
     const act = charge.actions?.[0];
     if (!act) return NextResponse.json({});
+    const trigger = charge.trigger_id ?? "";
+
     if (act.action_id === "mail_envoyer_ok") {
-      let d: { f?: string; a?: string[]; s?: string; t?: string } = {};
-      try { d = JSON.parse(act.value ?? "{}"); } catch { return NextResponse.json({ text: "Brouillon illisible — annulé.", replace_original: true }); }
-      const r = await envoyerDepuisSlack(charge.user?.name ?? "slack", { from: d.f ?? "", a: d.a ?? [], sujet: d.s ?? "", texte: d.t ?? "" });
+      let d: { f?: string; a?: string[]; c?: string[]; s?: string; t?: string } = {};
+      try { d = JSON.parse(act.value ?? "{}"); } catch { return NextResponse.json({ response_action: "update", view: vueResultat("Brouillon illisible — annulé.") }); }
+      const r = await envoyerDepuisSlack(charge.user?.name ?? "slack", { from: d.f ?? "", a: d.a ?? [], cc: d.c ?? [], sujet: d.s ?? "", texte: d.t ?? "" });
       const resultat = r.ok ? "✅ Envoyé à " + (d.a ?? []).join(", ") : "⚠️ " + r.erreur;
       if (charge.view) return NextResponse.json({ response_action: "update", view: vueResultat(resultat) });
       return NextResponse.json({ text: resultat, replace_original: true });
@@ -93,7 +112,34 @@ export async function POST(req: Request) {
       if (charge.view) return NextResponse.json({ response_action: "update", view: vueResultat(msg) });
       return NextResponse.json({ text: msg, replace_original: true });
     }
-    if (act.action_id === "mail_supprimer_annuler") return NextResponse.json({ text: "Annulé — rien n'a été supprimé.", replace_original: true });
+    if (act.action_id === "mail_supprimer_annuler") {
+      if (charge.view) return NextResponse.json({ response_action: "update", view: vueResultat("Annulé — rien n'a été supprimé.") });
+      return NextResponse.json({ text: "Annulé — rien n'a été supprimé.", replace_original: true });
+    }
+
+    // Home tab : boutons qui ouvrent les modals.
+    if (act.action_id === "home_post") { await ouvrirModal(modalPost(), trigger); return NextResponse.json({}); }
+    if (act.action_id === "home_mail_nouveau") { await ouvrirModal(modalEnvoi(), trigger); return NextResponse.json({}); }
+    if (act.action_id === "home_mail_inbox") { await ouvrirModal(await modalInbox(), trigger); return NextResponse.json({}); }
+    if (act.action_id === "home_stats") {
+      const s = await collecterStats();
+      await ouvrirModal({ type: "modal", callback_id: "resultat", title: { type: "plain_text", text: "Statistiques" }, close: { type: "plain_text", text: "Fermer" }, blocks: blocsStats(s) }, trigger);
+      return NextResponse.json({});
+    }
+    if (act.action_id === "home_maintenance_on") {
+      await ouvrirModal({ type: "modal", callback_id: "maintenance_on",
+        title: { type: "plain_text", text: "Maintenance" },
+        submit: { type: "plain_text", text: "Activer" }, close: { type: "plain_text", text: "Annuler" },
+        blocks: [{ type: "input", optional: true, block_id: "motif", element: { type: "plain_text_input", action_id: "v", max_length: 200, placeholder: { type: "plain_text", text: "ex. mise à jour des données" } }, label: { type: "plain_text", text: "Motif (affiché aux visiteurs)" } }] }, trigger);
+      return NextResponse.json({});
+    }
+    if (act.action_id === "home_maintenance_off") {
+      await ouvrirModal({ type: "modal", callback_id: "maintenance_off",
+        title: { type: "plain_text", text: "Rétablir le site" },
+        submit: { type: "plain_text", text: "Rétablir" }, close: { type: "plain_text", text: "Annuler" },
+        blocks: [{ type: "section", text: { type: "mrkdwn", text: "Confirmer la fin de la maintenance ? Le site redevient accessible." } }] }, trigger);
+      return NextResponse.json({});
+    }
     return NextResponse.json({});
   }
 
@@ -101,37 +147,48 @@ export async function POST(req: Request) {
   const v = charge.view?.state?.values ?? {};
   const urlReponse = charge.response_url ?? "";
   const qui = charge.user?.name ?? "slack";
+  const userId = charge.user?.id ?? "";
 
   // --- /mail envoyer : vérifie puis affiche la confirmation par boutons ---
   if (charge.view?.callback_id === "mail_envoi") {
     const from = String((v.from?.v as { selected_option?: { value: string } })?.selected_option?.value ?? "");
     const aListe = String((v.a?.v as { value?: string })?.value ?? "").split(/[;,]/).map((x) => x.trim()).filter(Boolean);
+    const ccListe = String((v.cc?.v as { value?: string })?.value ?? "").split(/[;,]/).map((x) => x.trim()).filter(Boolean);
     const sujet = String((v.sujet?.v as { value?: string })?.value ?? "").trim().slice(0, 300);
     const texte = String((v.texte?.v as { value?: string })?.value ?? "").trim();
     const erreurs: Record<string, string> = {};
     if (!from) erreurs.from = "Choisis un expéditeur.";
     if (!aListe.length) erreurs.a = "Au moins un destinataire.";
-    if (!aListe.every((x) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x))) erreurs.a = "Destinataire invalide.";
+    if (!aListe.every((x) => EMAIL_RE.test(x))) erreurs.a = "Destinataire invalide.";
+    if (ccListe.length && !ccListe.every((x) => EMAIL_RE.test(x))) erreurs.cc = "Adresse Cc invalide.";
     if (!sujet) erreurs.sujet = "L'objet est vide.";
     if (!texte) erreurs.texte = "Le message est vide.";
     if (Object.keys(erreurs).length) return NextResponse.json({ response_action: "errors", errors: erreurs });
 
-    const draft = JSON.stringify({ f: from, a: aListe, s: sujet, t: texte.slice(0, 1400) });
-    if (draft.length > 2000) return NextResponse.json({ response_action: "errors", errors: { texte: "Message trop long pour la confirmation Slack." } });
-    return NextResponse.json({ response_action: "update", view: {
-      type: "modal",
-      callback_id: "mail_envoi",
-      title: { type: "plain_text", text: "Confirmer l'envoi" },
-      close: { type: "plain_text", text: "Annuler" },
-      blocks: [
-        { type: "section", text: { type: "mrkdwn", text: "*Confirmer l'envoi ?*\nDe : `" + from + "`\nÀ : " + aListe.join(", ") + "\nObjet : *" + sujet + "*" } },
-        { type: "section", text: { type: "mrkdwn", text: "```" + texte.slice(0, 800) + (texte.length > 800 ? "\n…" : "") + "```" } },
-        { type: "actions", elements: [
-          { type: "button", text: { type: "plain_text", text: "Envoyer" }, style: "primary", action_id: "mail_envoyer_ok", value: draft },
-          { type: "button", text: { type: "plain_text", text: "Annuler" }, action_id: "mail_envoyer_annuler", value: "-" },
-        ] },
-      ],
-    } });
+    const draft = JSON.stringify({ f: from, a: aListe, c: ccListe, s: sujet, t: texte.slice(0, 1400) });
+    if (draft.length > 2900) return NextResponse.json({ response_action: "errors", errors: { texte: "Message trop long pour la confirmation Slack." } });
+    return NextResponse.json({ response_action: "update", view: vueConfirmation(draft, from, aListe, ccListe, sujet, texte) });
+  }
+
+  // --- Maintenance (Home tab) : bascule puis rafraîchit le Home ---
+  if (charge.view?.callback_id === "maintenance_on") {
+    const motif = String((v.motif?.v as { value?: string })?.value ?? "").trim();
+    try {
+      await basculeMaintenance(true, "slack:" + qui, motif);
+    } catch (e) {
+      return NextResponse.json({ response_action: "update", view: vueResultat("⚠️ Erreur : " + (e instanceof Error ? e.message : String(e))) });
+    }
+    if (userId) await publierHome(userId);
+    return NextResponse.json({ response_action: "update", view: vueResultat("🔴 Maintenance activée." + (motif ? "\nMotif : " + motif : "")) });
+  }
+  if (charge.view?.callback_id === "maintenance_off") {
+    try {
+      await basculeMaintenance(false, "slack:" + qui);
+    } catch (e) {
+      return NextResponse.json({ response_action: "update", view: vueResultat("⚠️ Erreur : " + (e instanceof Error ? e.message : String(e))) });
+    }
+    if (userId) await publierHome(userId);
+    return NextResponse.json({ response_action: "update", view: vueResultat("🟢 Site rétabli.") });
   }
 
   if (charge.view?.callback_id !== "post_publication") {
@@ -155,8 +212,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ response_action: "errors", errors: { reseaux: "Choisis au moins un réseau." } });
   }
 
-  // Code court par réseau : <slug>-x, <slug>-bsky (déjà suivi si collision).
-  // Sans destination, aucun lien n'est créé (post texte seul).
   const db = authAdmin();
   const base = destination ? slugDe(destination) : "";
   const codeDe = async (suffixe: string) => {
@@ -182,7 +237,6 @@ export async function POST(req: Request) {
       lignes.push({ code, suffixe: r });
     }
 
-    // Buffer : un post par réseau, avec SON lien court (tracking dédié).
     const resultats: string[] = [];
     const canauxDispo = await canaux();
     for (const { code, suffixe } of lignes) {

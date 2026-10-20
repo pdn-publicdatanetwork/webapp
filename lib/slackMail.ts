@@ -1,9 +1,12 @@
 import "server-only";
 import { authAdmin } from "@/lib/supabaseAdmin";
+import { gabarit, texteVersHtml } from "@/lib/gabarit";
 
 // Console Slack /mail : lecture, envoi et suppression des e-mails de la
 // table emails (dataparl-auth) — même base que le webmail de l'admin.
 // Authentifiée par MAINTENANCE_TOKEN (?t=…), pas par une session admin.
+// Envoi réel : Resend + gabarit officiel DataParl' (lib/gabarit.ts), puis
+// rangement dans emails et trace d'audit.
 
 export const EXPEDITEURS = ["hello@dataparl.fr", "contact@dataparl.fr", "presse@dataparl.fr", "rgpd@dataparl.fr", "support@dataparl.fr", "it@dataparl.fr"];
 
@@ -50,24 +53,23 @@ export async function supprimer(prefixe: string): Promise<string | null> {
   return error ? error.message : null;
 }
 
-function esc(s: string): string {
-  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
-}
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
-function texteVersHtml(t: string): string {
-  return t.split(/\n\n/).map((p) => '<p style="margin:0 0 16px">' + esc(p).replace(/\n/g, "<br>") + "</p>").join("");
-}
-
-// Envoi réel (après confirmation par bouton) : Resend + rangement dans emails.
-export async function envoyerDepuisSlack(qui: string, b: { from: string; a: string[]; sujet: string; texte: string }): Promise<{ ok: true } | { ok: false; erreur: string }> {
+// Envoi réel (après confirmation par bouton) : Resend + gabarit officiel.
+export async function envoyerDepuisSlack(qui: string, b: { from: string; a: string[]; cc?: string[]; sujet: string; texte: string }): Promise<{ ok: true } | { ok: false; erreur: string }> {
   const from = b.from.toLowerCase();
   if (!EXPEDITEURS.includes(from)) return { ok: false, erreur: "adresse d'expédition non autorisée" };
+  const cc = (b.cc ?? []).map((x) => x.trim().toLowerCase()).filter((x) => EMAIL_RE.test(x));
   const key = process.env.RESEND_API_KEY ?? "";
   if (!key) return { ok: false, erreur: "RESEND_API_KEY absente sur Vercel" };
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: "Bearer " + key, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: '"DataParl\'" <' + from + ">", to: b.a, subject: b.sujet, html: texteVersHtml(b.texte), text: b.texte }),
+    body: JSON.stringify({
+      from: '"DataParl\'" <' + from + ">",
+      to: b.a, cc: cc.length ? cc : undefined, subject: b.sujet,
+      html: gabarit({ titre: b.sujet, corpsHtml: texteVersHtml(b.texte) }), text: b.texte,
+    }),
     cache: "no-store",
     signal: AbortSignal.timeout(10000),
   });
@@ -79,11 +81,12 @@ export async function envoyerDepuisSlack(qui: string, b: { from: string; a: stri
   const resendId = ((await r.json()) as { id: string }).id;
   await authAdmin().from("emails").insert({
     direction: "out", communication_type: "webmail", from_addr: from, to_addr: b.a.join(", "),
-    subject: b.sujet, body_text: b.texte, body_html: texteVersHtml(b.texte),
+    cc_addr: cc.length ? cc.join(", ") : null, subject: b.sujet, body_text: b.texte,
+    body_html: gabarit({ titre: b.sujet, corpsHtml: texteVersHtml(b.texte) }),
     folder: "sent", read: true, source: "resend", date: new Date().toISOString(),
   });
   try {
-    await authAdmin().from("admin_audit").insert({ github_login: "slack:" + qui, action: "webmail.slack_envoi", cible: resendId, details: { from, to: b.a, subject: b.sujet } });
+    await authAdmin().from("admin_audit").insert({ github_login: "slack:" + qui, action: "webmail.slack_envoi", cible: resendId, details: { from, to: b.a, cc, subject: b.sujet } });
   } catch { /* audit facultatif : ne pas bloquer l'envoi */ }
   return { ok: true };
 }
