@@ -2,6 +2,7 @@ import { z } from "zod";
 import { audit } from "@/lib/adminAuth";
 import { avecAdmin, corps, erreur } from "@/lib/adminRoute";
 import { authAdmin } from "@/lib/supabaseAdmin";
+import { basculeMaintenance, lireMaintenance } from "@/lib/maintenanceAdmin";
 
 // Inscriptions « prévenez-moi du retour » collectées sur la page de
 // maintenance (table maintenance_prevenus, one-shot : ces adresses ne
@@ -23,7 +24,24 @@ export async function GET(req: Request) {
     const { data: prevenus, count, error } = await req1;
     if (error) throw error;
     const confirme = (prevenus ?? []).filter((x) => x.confirmed).length;
-    return { total: count ?? 0, confirme, page, par_page: PAGE, prevenus: prevenus ?? [] };
+    const etat = await lireMaintenance();
+    return { total: count ?? 0, confirme, page, par_page: PAGE, prevenus: prevenus ?? [], etat, betterstack: !!process.env.BETTERSTACK_API_KEY };
+  }, "comptes");
+}
+
+// Bascule de la maintenance : coupe/rouvre le site (table maintenance_etat,
+// effective en ≤ 30 s via le proxy et dpchat), synchronise la page de statut
+// Better Stack (status.dataparl.fr) et envoie une copie Slack.
+const Bascule = z.object({ active: z.boolean(), motif: z.string().max(300).optional() });
+
+export async function PUT(req: Request) {
+  return avecAdmin(req, async (a) => {
+    const p = Bascule.safeParse(await corps(req));
+    if (!p.success) return erreur(400, "requête invalide");
+    const par = (a as { email?: string }).email ?? "admin";
+    const r = await basculeMaintenance(p.data.active, par, p.data.motif);
+    await audit(a, "maintenance.bascule", p.data.active ? "on" : "off");
+    return r;
   }, "comptes");
 }
 

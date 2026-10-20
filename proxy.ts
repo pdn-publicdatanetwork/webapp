@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { cheminsInactifs } from "./lib/pagesEtat";
 import { estInactif } from "./lib/pagesRegistre";
+import { maintenanceActive } from "./lib/maintenance";
 
 // Routage par sous-domaine (un seul déploiement pour tous les hôtes) :
 //   www.dataparl.fr         site public ; /api -> api.dataparl.fr
@@ -85,15 +86,16 @@ export async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
   // ── Mode maintenance ──────────────────────────────────────────────────────
-  // Inactif par défaut ; activable avec MAINTENANCE_ACTIVE=1 dans l'environnement
-  // Vercel (l'ancienne variable MAINTENANCE est ignorée, valeur 1 comprise).
+  // Pilotée par la table maintenance_etat (bascule depuis l'admin ou la
+  // commande Slack /maintenance, effective en ≤ 30 s, sans redéploiement) ;
+  // MAINTENANCE_ACTIVE=1 (Vercel) force la coupure en dernier recours.
   // Passe tout le public (www, api, media, jobs, raw, mail, link, survey…)
   // sur la page /maintenance, SAUF :
   //   - l'espace équipe : admin.dataparl.fr et webmail.dataparl.fr (et /api) ;
   //   - la page de contact et son API (/contact, /api/contact) ;
   //   - le webhook mail (/api/mail/*, réception Resend qui alimente le webmail) ;
   //   - les assets techniques (_next, icônes) pour un rendu correct de la page.
-  if (process.env.MAINTENANCE_ACTIVE === "1") {
+  if (await maintenanceActive()) {
     // Espace équipe + liens cliquables depuis les emails (mail/lire/<jeton>,
     // link/<code>) : les destinataires doivent pouvoir ouvrir les messages.
     const equipe = host === `admin.${DOMAINE}` || host === `webmail.${DOMAINE}` ||
@@ -105,6 +107,8 @@ export async function proxy(req: NextRequest) {
       path === "/contact" || path === "/api/contact" ||
       // « Prévenez-moi du retour » : inscription + lien de confirmation.
       path === "/api/maintenance/prevenir" ||
+      // Commande Slack de bascule : doit rester joignable pour rouvrir le site.
+      path === "/api/maintenance/slack" ||
       // Pages légales requises par le formulaire de contact (politique de
       // confidentialité et mentions) : elles restent consultables.
       path === "/informations-legales" || path.startsWith("/informations-legales/") ||

@@ -12,5 +12,5 @@ import { useHoteJobs } from "./useHoteJobs";
 export default function EnteteSiteRoute() {
   const chemin = usePathname() ?? "";
   const jobs = useHoteJobs() || chemin === "/jobs" || chemin.startsWith("/jobs/");
-  return jobs ? <EnTeteJobs /> : <EnTeteSite />;
+  return jobs ? <EnTeteJobs /> : <EnTeteSite maintenance={chemin === "/maintenance"} />;
 }

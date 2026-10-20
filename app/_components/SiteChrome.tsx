@@ -17,10 +17,11 @@ const NAV = [
 // En-tête www : logo à gauche, recherche au milieu, menu ☰ à droite
 // (les liens de navigation, dont « Mon compte », sont dans le menu déroulant ;
 // « Se déconnecter » n'apparaît que si une session existe).
-export function EnTeteSite() {
+export function EnTeteSite({ maintenance = false }: { maintenance?: boolean }) {
   // Mode maintenance : le menu ☰ disparaît — ses liens mènent tous à des pages
-  // coupées. Restent visibles : logo, recherche et pied de page.
-  const maintenance = process.env.MAINTENANCE_ACTIVE === "1";
+  // coupées. Restent visibles : logo, recherche et pied de page. Sur www,
+  // EnteteSiteRoute le déduit du chemin (le proxy réécrit tout vers
+  // /maintenance quand la maintenance est active).
   const liens = [...NAV, { href: "/mon-compte", label: "Mon compte" }];
   return (
     <header className="site entete-principale">

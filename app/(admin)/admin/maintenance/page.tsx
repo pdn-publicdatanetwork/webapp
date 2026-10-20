@@ -4,13 +4,23 @@ import { useAdmin } from "@/app/_components/admin/Porte";
 import Pagination from "@/app/_components/admin/Pagination";
 import { dateHeure, useRessource } from "@/app/_components/admin/utils";
 
-// Inscriptions « prévenez-moi du retour » de la page de maintenance.
-// One-shot : ces adresses reçoivent uniquement l'email « le site est de
-// retour » — elles ne sont pas dans les abonnés newsletter.
+// Maintenance : carte de bascule du site (couper / rouvrir, synchronisée avec
+// status.dataparl.fr) et inscriptions « prévenez-moi du retour » (one-shot :
+// ces adresses ne reçoivent uniquement l'email « le site est de retour »).
 
 type Prevenu = {
   id: string; email: string; confirmed: boolean;
   confirmed_at: string | null; created_at: string; notified_at: string | null; source: string;
+};
+
+type Etat = {
+  active: boolean; ouvert_le: string | null; ferme_le: string | null;
+  par: string | null; motif: string | null;
+};
+
+type Donnees = {
+  total: number; confirme: number; par_page: number; prevenus: Prevenu[];
+  etat: Etat; betterstack: boolean;
 };
 
 export default function PrevenusMaintenance() {
@@ -18,9 +28,27 @@ export default function PrevenusMaintenance() {
   const [q, setQ] = useState("");
   const [recherche, setRecherche] = useState("");
   const [page, setPage] = useState(0);
-  const { data, err, recharger } = useRessource<{ total: number; confirme: number; par_page: number; prevenus: Prevenu[] }>(
+  const [motif, setMotif] = useState("");
+  const [message, setMessage] = useState("");
+  const [occupe, setOccupe] = useState(false);
+  const { data, err, recharger } = useRessource<Donnees>(
     "/api/admin/maintenance", { q: recherche, page },
   );
+
+  async function basculer(active: boolean) {
+    if (!confirm(active ? "Couper tout le site public (maintenance) ?" : "Rouvrir le site ?")) return;
+    setOccupe(true);
+    setMessage("");
+    try {
+      const r = await api("/api/admin/maintenance", { method: "PUT", body: { active, motif: motif || undefined } }) as
+        { betterstack?: { ok: boolean; message: string } } | undefined;
+      setMessage(r?.betterstack?.message ?? "Bascule enregistrée.");
+      recharger();
+    } catch (e) {
+      setMessage("Erreur : " + String(e));
+    }
+    setOccupe(false);
+  }
 
   async function supprimer(email: string) {
     if (!confirm(`Supprimer l'inscription de ${email} ?`)) return;
@@ -44,9 +72,37 @@ export default function PrevenusMaintenance() {
 
   return (
     <>
-      <h1>Prévenus maintenance</h1>
+      <h1>Maintenance</h1>
       <p className="meta">
-        Adresses collectées sur la page de maintenance (« être prévenu·e du retour »).
+        Bascule instantanée du site public (effective en moins de 30 s) : le proxy
+        et le chat suivent la table d'état ; la page de statut Better Stack
+        (status.dataparl.fr) et le canal Slack sont mis à jour en même temps.
+      </p>
+      <div className="defile"><table className="stats">
+        <thead><tr><th>État du site</th><th>Dernière bascule</th><th>Actions</th></tr></thead>
+        <tbody><tr>
+          <td>{data?.etat.active ? <span className="erreur">🔴 Maintenance active</span> : <span className="ok">🟢 Site ouvert</span>}</td>
+          <td className="meta">
+            {data && (data.etat.active ? dateHeure(data.etat.ouvert_le) : dateHeure(data.etat.ferme_le))}
+            {data?.etat.par ? ` — ${data.etat.par}` : ""}
+          </td>
+          <td>
+            <input type="text" placeholder="Motif (affiché sur status.dataparl.fr)" value={motif} onChange={(e) => setMotif(e.target.value)} />
+            {" "}
+            {data?.etat.active
+              ? <button disabled={occupe} onClick={() => basculer(false)}>Rouvrir le site</button>
+              : <button disabled={occupe} onClick={() => basculer(true)}>Couper le site</button>}
+          </td>
+        </tr></tbody>
+      </table></div>
+      {message && <p className="meta">{message}</p>}
+      {data && !data.betterstack && (
+        <p className="meta">⚠️ BETTERSTACK_API_KEY absente sur Vercel : la bascule du site fonctionne, mais status.dataparl.fr n'est pas synchronisé.</p>
+      )}
+
+      <h2>Prévenus maintenance</h2>
+      <p className="meta">
+        Adresses collectées sur la page de maintenance (« être prévenu du retour »).
         Elles recevront uniquement l&apos;email d&apos;annonce de la réouverture, rien d&apos;autre.
       </p>
       <form onSubmit={(e) => { e.preventDefault(); setPage(0); setRecherche(q); }} className="barre-recherche">
