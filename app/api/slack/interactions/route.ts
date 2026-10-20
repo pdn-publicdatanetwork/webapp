@@ -2,24 +2,26 @@ import { NextResponse } from "next/server";
 import { CODE, destinationValide, genererCode } from "@/lib/liens";
 import { authAdmin } from "@/lib/supabaseAdmin";
 import { canaux, creerPost, type ModePost } from "@/lib/buffer";
+import { envoyerDepuisSlack, supprimer } from "@/lib/slackMail";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-// Soumission du formulaire /post (Interactivity Request URL de l'app
-// Slack, configurée avec ?t=<MAINTENANCE_TOKEN>). Étapes : si une
-// destination est fournie, génère un code court par réseau choisi
-// (<slug>-x, <slug>-bsky), insère les liens tracés (table liens, même
-// système que /l/daily…), crée les posts Buffer (texte + lien court
-// dédié → clics attribués par réseau dans liens_clics), puis répond la
-// confirmation. Sans destination : post texte seul, pas de lien tracé.
+// Interactivity Request URL de l'app Slack (configurée avec
+// ?t=<MAINTENANCE_TOKEN>). Trois usages :
+//  - soumission du modal /post (callback post_publication) : codes courts
+//    par réseau, liens tracés, posts Buffer, confirmation ;
+//  - soumission du modal /mail envoyer (callback mail_envoi) : affiche une
+//    confirmation par boutons — l'envoi réel n'a lieu qu'au clic sur
+//    « Envoyer · (block_actions) ;
+//  - boutons de confirmation suppression mail (block_actions).
 
 function repondre(urlReponse: string, texte: string) {
   if (!urlReponse) return;
   fetch(urlReponse, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ response_type: "in_channel", text: texte }),
+    body: JSON.stringify({ response_type: "in_channel", texte: texte }),
     cache: "no-store",
   }).catch(() => {});
 }
@@ -41,7 +43,7 @@ function slugDe(destination: string): string {
   try {
     const chemin = new URL(destination).pathname.replace(/\/$/, "");
     const segments = chemin.split("/").filter(Boolean);
-    let slug = (segments.at(-1) ?? "partage").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 30);
+    let slug = (segments.at(-1) ?? "partage").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^+|-+$/g, "").slice(0, 30);
     if (!slug) slug = "partage";
     return slug;
   } catch { return "partage"; }
@@ -55,19 +57,84 @@ export async function POST(req: Request) {
   }
   const corps = new URLSearchParams(await req.text());
   const charge = JSON.parse(corps.get("payload") ?? "{}") as {
-    type?: string; view?: { callback_id?: string; state?: { values?: Record<string, Record<string, unknown>> } }; response_url?: string; user?: { name?: string };
+    type?: string;
+    view?: { callback_id?: string; state?: { values?: Record<string, Record<string, unknown>> } };
+    response_url?: string;
+    user?: { name?: string };
+    actions?: { action_id?: string; value?: string }[];
   };
-  if (charge.type !== "view_submission" || charge.view?.callback_id !== "post_publication") {
+
+  // Boutons de confirmation (mail) : c'est ici que l'action réelle a lieu.
+  if (charge.type === "block_actions") {
+    const act = charge.actions?.[0];
+    if (!act) return NextResponse.json({});
+    if (act.action_id === "mail_envoyer_ok") {
+      let d: { f?: string; a?: string[]; s?: string; t?: string } = {};
+      try { d = JSON.parse(act.value ?? "{}"); } catch { return NextResponse.json({ text: "Brouillon illisible — annulé.", replace_original: true }); }
+      const r = await envoyerDepuisSlack(charge.user?.name ?? "slack", { from: d.f ?? "", a: d.a ?? [], sujet: d.s ?? "", texte: d.t ?? "" });
+      return NextResponse.json({ text: r.ok ? "✅ Envoyé à " + (d.a ?? []).join(", ") : "⚠️ " + r.erreur, replace_original: true });
+    }
+    if (act.action_id === "mail_envoyer_annuler") return NextResponse.json({ text: "Annulé — rien n'a été envoyé.", replace_original: true });
+    if (act.action_id === "mail_supprimer_ok") {
+      const err = await supprimer(act.value ?? "");
+      return NextResponse.json({ text: err ? "⚠️ " + err : "🗑️ Message déplacé vers la corbeille.", replace_original: true });
+    }
+    if (act.action_id === "mail_supprimer_annuler") return NextResponse.json({ text: "Annulé — rien n'a été supprimé.", replace_original: true });
     return NextResponse.json({});
   }
-  const v = charge.view.state?.values ?? {};
+
+  if (charge.type !== "view_submission") return NextResponse.json({});
+  const v = charge.view?.state?.values ?? {};
+  const urlReponse = charge.response_url ?? "";
+  const qui = charge.user?.name ?? "slack";
+
+  // --- /mail envoyer : vérifie puis affiche la confirmation par boutons ---
+  if (charge.view?.callback_id === "mail_envoi") {
+    const from = String((v.from?.v as { selected_option?: { value: string } })?.selected_option?.value ?? "");
+    const aListe = String((v.a?.v as { value?: string })?.value ?? "").split(/[;,]/).map((x) => x.trim()).filter(Boolean);
+    const sujet = String((v.sujet?.v as { value?: string })?.value ?? "").trim().slice(0, 300);
+    const texte = String((v.texte?.v as { value?: string })?.value ?? "").trim();
+    const erreurs: Record<string, string> = {};
+    if (!from) erreurs.from = "Choisis un expéditeur.";
+    if (!aListe.length) erreurs.a = "Au moins un destinataire.";
+    if (!aListe.every((x) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x))) erreurs.a = "Destinataire invalide.";
+    if (!sujet) erreurs.sujet = "L'objet est vide.";
+    if (!texte) erreurs.texte = "Le message est vide.";
+    if (Object.keys(erreurs).length) return NextResponse.json({ response_action: "errors", errors: erreurs });
+
+    const draft = JSON.stringify({ f: from, a: aListe, s: sujet, t: texte.slice(0, 1400) });
+    if (draft.length > 2000) return NextResponse.json({ response_action: "errors", errors: { texte: "Message trop long pour la confirmation Slack." } });
+    if (urlReponse) {
+      fetch(urlReponse, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          response_type: "ephemeral",
+          blocks: [
+            { type: "section", text: { type: "mrkdwn", text: "*Confirmer l'envoi ?*\nDe : `" + from + "`\nÀ : " + aListe.join(", ") + "\nObjet : *" + sujet + "*" } },
+            { type: "section", text: { type: "mrkdwn", text: "```" + texte.slice(0, 800) + (texte.length > 800 ? "\n…" : "") + "```" } },
+            { type: "actions", elements: [
+              { type: "button", text: { type: "plain_text", text: "Envoyer ✅" }, style: "primary", action_id: "mail_envoyer_ok", value: draft },
+              { type: "button", text: { type: "plain_text", text: "Annuler" }, action_id: "mail_envoyer_annuler", value: "-" },
+            ] },
+          ],
+        }),
+        cache: "no-store",
+      }).catch(() => {});
+    }
+    return NextResponse.json({ response_action: "clear" });
+  }
+
+  if (charge.view?.callback_id !== "post_publication") {
+    return NextResponse.json({});
+  }
+
+  // --- /post : publication réseaux ---
   const destinationBrut = String((v.destination?.v as { value?: string })?.value ?? "").trim();
   const destination = destinationBrut ? destinationValide(destinationBrut) : null;
   const texte = String((v.texte?.v as { value?: string })?.value ?? "").trim();
   const reseaux = valeursCochees((v.reseaux?.v ?? {}) as Record<string, unknown>);
   const mode = (valeur((v.mode?.v ?? {}) as Record<string, unknown>, "v") || "file") as ModePost;
-  const urlReponse = charge.response_url ?? "";
-  const qui = charge.user?.name ?? "slack";
 
   if (destinationBrut && !destination) {
     return NextResponse.json({ response_action: "errors", errors: { destination: "Adresse https invalide." } });
