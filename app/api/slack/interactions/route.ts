@@ -104,25 +104,21 @@ export async function POST(req: Request) {
 
     const draft = JSON.stringify({ f: from, a: aListe, s: sujet, t: texte.slice(0, 1400) });
     if (draft.length > 2000) return NextResponse.json({ response_action: "errors", errors: { texte: "Message trop long pour la confirmation Slack." } });
-    if (urlReponse) {
-      fetch(urlReponse, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          response_type: "ephemeral",
-          blocks: [
-            { type: "section", text: { type: "mrkdwn", text: "*Confirmer l'envoi ?*\nDe : `" + from + "`\nÀ : " + aListe.join(", ") + "\nObjet : *" + sujet + "*" } },
-            { type: "section", text: { type: "mrkdwn", text: "```" + texte.slice(0, 800) + (texte.length > 800 ? "\n…" : "") + "```" } },
-            { type: "actions", elements: [
-              { type: "button", text: { type: "plain_text", text: "Envoyer ✅" }, style: "primary", action_id: "mail_envoyer_ok", value: draft },
-              { type: "button", text: { type: "plain_text", text: "Annuler" }, action_id: "mail_envoyer_annuler", value: "-" },
-            ] },
-          ],
-        }),
-        cache: "no-store",
-      }).catch(() => {});
-    }
-    return NextResponse.json({ response_action: "clear" });
+    return NextResponse.json({ response_action: "update", view: {
+      type: "modal",
+      callback_id: "mail_envoi",
+      title: { type: "plain_text", text: "Confirmer l'envoi" },
+      submit: { type: "plain_text", text: "Fermer" },
+      close: { type: "plain_text", text: "Annuler" },
+      blocks: [
+        { type: "section", text: { type: "mrkdwn", text: "*Confirmer l'envoi ?*\nDe : `" + from + "`\nÀ : " + aListe.join(", ") + "\nObjet : *" + sujet + "*" } },
+        { type: "section", text: { type: "mrkdwn", text: "```" + texte.slice(0, 800) + (texte.length > 800 ? "\n…" : "") + "```" } },
+        { type: "actions", elements: [
+          { type: "button", text: { type: "plain_text", text: "Envoyer" }, style: "primary", action_id: "mail_envoyer_ok", value: draft },
+          { type: "button", text: { type: "plain_text", text: "Annuler" }, action_id: "mail_envoyer_annuler", value: "-" },
+        ] },
+      ],
+    } });
   }
 
   if (charge.view?.callback_id !== "post_publication") {
