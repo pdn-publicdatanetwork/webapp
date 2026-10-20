@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { demandeDe, enregistrerDeblocage, journaliserRappel, pubActive } from "@/lib/deblocage";
 import { APPLIXIR_API_KEY, secret } from "@/lib/env";
 import { jetonValide, lireRappel, rappelValide } from "@/lib/pub";
+import { copieSlack, SLACK_CONTACT } from "@/lib/slack";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,12 @@ async function traiter(params: Record<string, string>) {
   // Sans identifiant de transaction, le jeton (usage unique) en tient lieu.
   const etat = await enregistrerDeblocage(u.userId, u.cible, r.tid || `jeton:${r.userId}`);
   await journaliserRappel(true, etat, r.userId, r.tid);
+  // Copie Slack (canal contact) : une fiche vient d'être débloquée par pub.
+  await copieSlack(SLACK_CONTACT, {
+    subject: "Fiche débloquée (vidéo récompensée)",
+    corpsHtml: `<p>Une fiche vient d'être débloquée via une publicité regardée en entier.</p><p>Cible : <code>${u.cible}</code></p>`,
+    text: `Fiche débloquée (vidéo récompensée) — cible ${u.cible}`,
+  });
   return new NextResponse("ok", { status: 200 });
 }
 
