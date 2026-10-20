@@ -50,6 +50,10 @@ export default function Maintenance() {
           Une question urgente&nbsp;? Passez par notre{" "}
           <a href="/contact">formulaire de contact</a>, on répond dès que la remise en route est faite.
         </p>
+        <p className="meta" style={{ margin: 0 }}>
+          Suivre l&apos;avancement en temps réel&nbsp;:{" "}
+          <a href="https://status.dataparl.fr/" rel="noopener">page de statut</a>.
+        </p>
       </div>
     </div>
   );
