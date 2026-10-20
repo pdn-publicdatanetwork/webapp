@@ -147,7 +147,7 @@ export async function collecterStats() {
     le: new Date().toISOString(),
     site: { pagesJour, pagesVeille, pagesSemaine, top, dlJour, dlSemaine, chatJour, chatErreurs, contactJour, deblocJour },
     comptes: { nouveauxJour, nouveauxSemaine, actifsJour, newsletterConf, alertesActives, oppositions, waActifs },
-    social: { telegram, bsky: [bsky1, bsky2].filter(Boolean) as Bsky[], x: xFinal, buffer: !!buffer },
+    social: { telegram, bsky: [bsky1, bsky2].filter((b): b is NonNullable<Bsky> => !!b), x: xFinal, buffer: !!buffer },
     maintenance: etat ? { active: etat.active, motif: etat.motif } : null,
   };
 }
