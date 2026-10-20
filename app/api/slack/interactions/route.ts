@@ -21,7 +21,7 @@ function repondre(urlReponse: string, texte: string) {
   fetch(urlReponse, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ response_type: "in_channel", texte: texte }),
+    body: JSON.stringify({ response_type: "in_channel", text: texte }),
     cache: "no-store",
   }).catch(() => {});
 }
@@ -43,7 +43,7 @@ function slugDe(destination: string): string {
   try {
     const chemin = new URL(destination).pathname.replace(/\/$/, "");
     const segments = chemin.split("/").filter(Boolean);
-    let slug = (segments.at(-1) ?? "partage").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^+|-+$/g, "").slice(0, 30);
+    let slug = (segments.at(-1) ?? "partage").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 30);
     if (!slug) slug = "partage";
     return slug;
   } catch { return "partage"; }
