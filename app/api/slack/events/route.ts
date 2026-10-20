@@ -26,15 +26,15 @@ export async function POST(req: Request) {
   }
   if (charge.type === "event_callback" && charge.event?.type === "app_home_opened") {
     const r = await publierHome(charge.event.user ?? "");
-    if (!r.ok) {
-      // Diagnostic visible : l'erreur exacte de Slack part sur le webhook
-      // #monitoring (incoming webhook, indépendant des scopes du bot).
-      const hook = process.env.SLACK_WEBHOOK_URL ?? "";
-      if (hook) {
+    // Accusé de réception de diagnostic : chaque ouverture du Home tab
+    // poste un message sur #monitoring (succès ou échec) — permet de
+    // distinguer « événement jamais reçu » (rien) d'un échec de publication.
+    const hook = process.env.SLACK_WEBHOOK_URL ?? "";
+    if (hook) {
         fetch(hook, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: "⚠️ Home tab DataParl' Console non publié : " + r.erreur }),
+          body: JSON.stringify({ text: r.ok ? "✅ Home tab publié pour " + (charge.event.user ?? "?") : "⚠️ Home tab DataParl' Console non publié : " + r.erreur }),
           cache: "no-store",
         }).catch(() => {});
       }
