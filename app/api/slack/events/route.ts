@@ -31,15 +31,14 @@ export async function POST(req: Request) {
     // distinguer « événement jamais reçu » (rien) d'un échec de publication.
     const hook = process.env.SLACK_WEBHOOK_URL ?? "";
     if (hook) {
-        fetch(hook, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: r.ok ? "✅ Home tab publié pour " + (charge.event.user ?? "?") : "⚠️ Home tab DataParl' Console non publié : " + r.erreur }),
-          cache: "no-store",
-        }).catch(() => {});
-      }
-      console.error("home tab", charge.event.user, r.erreur);
+      fetch(hook, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: r.ok ? "✅ Home tab publié pour " + (charge.event.user ?? "?") : "⚠️ Home tab DataParl' Console non publié : " + r.erreur }),
+        cache: "no-store",
+      }).catch(() => {});
     }
+    if (!r.ok) console.error("home tab", charge.event.user, r.erreur);
     return NextResponse.json({});
   }
   return NextResponse.json({});
