@@ -344,6 +344,16 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
   }
 
   if (host === `www.${DOMAINE}`) {
+    // Espaces privés servis sur www (connexion, compte, préférences,
+    // désinscription) : robots.txt les exclut déjà du crawl ; l'en-tête HTTP
+    // X-Robots-Tag verrouille l'indexation même si un lien fuit ailleurs.
+    if (path === "/connexion" || path === "/mon-compte" || path.startsWith("/mon-compte/") ||
+        path.startsWith("/preferences") || path.startsWith("/desinscription")) {
+      const res = NextResponse.next();
+      res.headers.set("X-Robots-Tag", "noindex, nofollow");
+      return res;
+    }
+
     if (path === "/api" || path === "/api/") return vers(req, `api.${DOMAINE}`, "/", 308);
     // DataParl' Jobs vit sur son sous-domaine, sans préfixe /jobs.
     if (path === "/jobs" || path.startsWith("/jobs/")) {
@@ -364,9 +374,9 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
     }
     if (path.startsWith("/admin")) {
       const cible = (path.replace(/^\/admin/, "") || "/").replace(/\/$/, "") || "/";
-      return vers(req, `admin.${DOMAINE}`, nouvelCheminAdmin(cible) ?? cible, 307);
+      return protege(vers(req, `admin.${DOMAINE}`, nouvelCheminAdmin(cible) ?? cible, 307));
     }
-    if (path.startsWith("/webmail")) return vers(req, `webmail.${DOMAINE}`, path.replace(/^\/webmail/, "") || "/", 307);
+    if (path.startsWith("/webmail")) return protege(vers(req, `webmail.${DOMAINE}`, path.replace(/^\/webmail/, "") || "/", 307));
     if (path.startsWith("/espace-api")) return vers(req, `api.${DOMAINE}`, path.replace(/^\/espace-api/, "") || "/", 308);
   }
 
