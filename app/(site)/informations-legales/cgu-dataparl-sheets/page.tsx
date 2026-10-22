@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { CONTACT_URL, MISE_A_JOUR } from "../maj";
+import { CONTACT_URL } from "../maj";
+
+import { HistoriqueTexte, VERSIONS } from "../historique";
 
 export const metadata: Metadata = { title: "CGU DataParl' Sheets" };
 
@@ -9,7 +11,7 @@ export default function CguSheets() {
   return (
     <>
       <h1>CGU DataParl&apos; <span className="surligne">Sheets</span></h1>
-      <p className="meta">Dernière mise à jour : {MISE_A_JOUR}</p>
+      <HistoriqueTexte versions={VERSIONS.cguSheets} />
 
       <h2>1. Objet</h2>
       <p>

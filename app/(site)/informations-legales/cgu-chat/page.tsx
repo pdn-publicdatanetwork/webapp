@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { HistoriqueTexte, VERSIONS } from "../historique";
+
 export const metadata: Metadata = { title: "CGU DataParl' Chat" };
 
 // Conditions d'utilisation du chat conversationnel DataParl' (assistant
@@ -15,6 +17,7 @@ export default function CguChat() {
         automatisé répondant aux questions sur DataParl&apos; et les données parlementaires.
         Version 1.0 — en vigueur depuis le 10 octobre 2026.
       </p>
+      <HistoriqueTexte versions={VERSIONS.cguChat} />
 
       <h2>1. Accès au service</h2>
       <p>

@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { CONTACT_URL } from "../maj";
 
-export const metadata: Metadata = { title: "Conditions d'utilisation" };
+import { HistoriqueTexte, VERSIONS } from "../historique";
 
-const MISE_A_JOUR_PAGE = "22 octobre 2026";
+export const metadata: Metadata = { title: "Conditions d'utilisation" };
 
 export default function CGU() {
   return (
     <>
       <h1>Conditions <span className="surligne">d&apos;utilisation</span></h1>
-      <p className="meta">Dernière mise à jour : {MISE_A_JOUR_PAGE}</p>
+      <HistoriqueTexte versions={VERSIONS.cgu} />
 
       <h2>1. Objet</h2>
       <p>

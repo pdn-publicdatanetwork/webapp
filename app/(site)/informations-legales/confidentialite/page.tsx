@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { CONTACT_RGPD } from "../maj";
 
-export const metadata: Metadata = { title: "Données personnelles" };
+import { HistoriqueTexte, VERSIONS } from "../historique";
 
-const MISE_A_JOUR_PAGE = "22 octobre 2026";
+export const metadata: Metadata = { title: "Données personnelles" };
 
 export default function Confidentialite() {
   return (
     <>
       <h1>Données <span className="surligne">personnelles</span></h1>
-      <p className="meta">Dernière mise à jour : {MISE_A_JOUR_PAGE}</p>
+      <HistoriqueTexte versions={VERSIONS.confidentialite} />
       <p>
         DataParl&apos; traite deux sortes de données personnelles : celles des personnes qui utilisent le site
         (compte, alertes, API, contact), et celles des personnes citées dans les données publiées (élus et

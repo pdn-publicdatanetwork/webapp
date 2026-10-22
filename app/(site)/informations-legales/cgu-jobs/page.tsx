@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { CONTACT_URL, MISE_A_JOUR } from "../maj";
+import { CONTACT_URL } from "../maj";
+
+import { HistoriqueTexte, VERSIONS } from "../historique";
 
 export const metadata: Metadata = { title: "Conditions d'utilisation — DataParl' Jobs" };
 
@@ -9,7 +11,7 @@ export default function CGUJobs() {
       <h1>
         Conditions d&apos;utilisation <span className="surligne">DataParl&apos; Jobs</span>
       </h1>
-      <p className="meta">Dernière mise à jour : {MISE_A_JOUR}</p>
+      <HistoriqueTexte versions={VERSIONS.cguJobs} />
       <p className="meta">
         L&apos;éditeur, l&apos;hébergement et les conditions générales du site sont ceux des{" "}
         <a href="/informations-legales/mentions-legales">mentions légales</a> et des{" "}

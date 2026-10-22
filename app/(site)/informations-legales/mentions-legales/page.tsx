@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { CONTACT_URL, MISE_A_JOUR } from "../maj";
+import { CONTACT_URL } from "../maj";
+
+import { HistoriqueTexte, VERSIONS } from "../historique";
 
 export const metadata: Metadata = { title: "Mentions légales" };
 
@@ -7,7 +9,7 @@ export default function MentionsLegales() {
   return (
     <>
       <h1>Mentions <span className="surligne">légales</span></h1>
-      <p className="meta">Dernière mise à jour : {MISE_A_JOUR}</p>
+      <HistoriqueTexte versions={VERSIONS.mentions} />
 
       <h2>Éditeur</h2>
       <p>

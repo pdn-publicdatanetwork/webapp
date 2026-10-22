@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { MISE_A_JOUR } from "../maj";
+
+import { HistoriqueTexte, VERSIONS } from "../historique";
 
 export const metadata: Metadata = { title: "Conditions d'utilisation de l'API" };
 
@@ -7,7 +8,7 @@ export default function CGUAPI() {
   return (
     <>
       <h1>Conditions d&apos;utilisation de <span className="surligne">l&apos;API</span></h1>
-      <p className="meta">Dernière mise à jour : {MISE_A_JOUR}</p>
+      <HistoriqueTexte versions={VERSIONS.cguApi} />
       <p>
         Ces conditions complètent les <a href="/informations-legales/cgu">conditions générales d&apos;utilisation</a>.
         La documentation est sur <a href="https://api.dataparl.fr/docs">api.dataparl.fr/docs</a>.
