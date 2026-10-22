@@ -60,7 +60,7 @@ export function PiedDePage({ api = false }: { api?: boolean }) {
           </nav>
         ) : (
           <nav aria-label="Plan du site">
-            <a href="/methode">Méthode</a>
+            <a href="https://status.dataparl.fr">Statut</a>
             <a href="/a-propos">À propos</a>
             <a href="/sitemap">Plan du site</a>
             <a href="/informations-legales">Informations légales</a>
