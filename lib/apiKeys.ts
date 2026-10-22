@@ -6,6 +6,7 @@ import { randomToken, sha256 } from "./tokens";
 // stockée ; la clé en clair n'est montrée qu'une fois, à la création.
 
 export const MAX_CLES = 1;
+export const IP_QUOTA_JOUR = 200;
 
 export async function genererCle(): Promise<{ cle: string; prefixe: string; hash: string }> {
   const cle = `dp_${randomToken(24)}`;
@@ -20,6 +21,10 @@ export function cleDepuisRequete(req: Request): string | null {
   return null;
 }
 
+export function ipDepuisRequete(req: Request): string | null {
+  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
+}
+
 export type Verdict =
   | { ok: true; cleId: string; requetes: number; quota: number }
   | { ok: false; status: 401 | 429 | 503; message: string; requetes?: number; quota?: number };
@@ -29,10 +34,11 @@ export async function consommer(req: Request): Promise<Verdict> {
   if (!cle || cle.length > 80) {
     return { ok: false, status: 401, message: "clé API requise : en-tête Authorization: Bearer <clé> (gratuite, à demander sur https://api.dataparl.fr/request-access)" };
   }
-  const { data, error } = await authAdmin().rpc("api_consommer", { p_hash: await sha256(cle) });
+  const { data, error } = await authAdmin().rpc("api_consommer", { p_hash: await sha256(cle), p_ip: ipDepuisRequete(req) });
   if (error || !data?.[0]) return { ok: false, status: 503, message: "vérification de la clé impossible, réessaie" };
-  const r = data[0] as { ok: boolean; cle_valide: boolean; requetes: number; quota: number; cle_id: string | null };
+  const r = data[0] as { ok: boolean; cle_valide: boolean; requetes: number; quota: number; cle_id: string | null; ip_depasse: boolean; ip_requetes: number; ip_quota: number };
   if (!r.cle_valide) return { ok: false, status: 401, message: "clé API invalide ou révoquée" };
+  if (r.ip_depasse) return { ok: false, status: 429, message: `limite de ${r.ip_quota} requêtes/jour par adresse IP atteinte, remise à zéro à minuit (heure de Paris)`, requetes: r.requetes, quota: r.quota };
   if (!r.ok) return { ok: false, status: 429, message: "quota du jour atteint, remise à zéro à minuit (heure de Paris)", requetes: r.requetes, quota: r.quota };
   return { ok: true, cleId: r.cle_id!, requetes: r.requetes, quota: r.quota };
 }
