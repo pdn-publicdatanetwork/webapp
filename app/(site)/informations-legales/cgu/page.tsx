@@ -42,6 +42,14 @@ export default function CGU() {
         L&apos;utilisateur peut exporter ses données ou supprimer son compte à tout moment depuis{" "}
         <a href="/mon-compte">Mon compte</a>.
       </p>
+      <p>
+        <strong>Suppression du compte.</strong> La suppression est immédiate et définitive : le compte ne permet plus de se
+        connecter et les réglages et abonnements associés sont effacés. Pour assurer la sécurité du service et conserver un
+        historique fiable des comptes, DataParl&apos; garde un enregistrement minimal de chaque compte supprimé
+        (identifiant, adresse email, dates de création et de suppression). Cet enregistrement ne donne accès à aucune donnée
+        du compte et ne permet pas de le recréer. Le détail figure sur la page{" "}
+        <a href="/informations-legales/confidentialite">Données personnelles</a>.
+      </p>
 
       <h2>4. Alertes par email</h2>
       <p>
