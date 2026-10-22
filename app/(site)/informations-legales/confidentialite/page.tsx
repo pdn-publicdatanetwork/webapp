@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
-import { CONTACT_RGPD, MISE_A_JOUR } from "../maj";
+import { CONTACT_RGPD } from "../maj";
 
 export const metadata: Metadata = { title: "Données personnelles" };
+
+const MISE_A_JOUR_PAGE = "22 octobre 2026";
 
 export default function Confidentialite() {
   return (
     <>
       <h1>Données <span className="surligne">personnelles</span></h1>
-      <p className="meta">Dernière mise à jour : {MISE_A_JOUR}</p>
+      <p className="meta">Dernière mise à jour : {MISE_A_JOUR_PAGE}</p>
       <p>
         DataParl&apos; traite deux sortes de données personnelles : celles des personnes qui utilisent le site
         (compte, alertes, API, contact), et celles des personnes citées dans les données publiées (élus et
@@ -34,7 +36,7 @@ export default function Confidentialite() {
             <td>Jusqu&apos;à la suppression du compte, ou 3 ans sans connexion</td>
           </tr>
           <tr>
-            <td>Identifiant du compte, adresse email, dates de création et de suppression (journal des comptes)</td>
+            <td>Enregistrement minimal des comptes supprimés (identifiant, adresse email, dates de création et de suppression)</td>
             <td>Conserver un historique fiable des créations et suppressions de comptes ; sécurité du service</td>
             <td>Intérêt légitime</td>
             <td>Conservé sans limite de durée, y compris après la suppression du compte ; ne donne accès à aucune donnée</td>
@@ -81,10 +83,9 @@ export default function Confidentialite() {
         <strong>Suppression du compte et des données.</strong> La suppression du compte depuis{" "}
         <a href="/mon-compte">Mon compte</a> efface les données associées (réglages d&apos;alertes, abonnements) et
         le compte ne permet plus de se connecter. Pour des raisons de sécurité et de tenue d&apos;un historique fiable
-        des comptes, DataParl&apos; conserve un enregistrement minimal de chaque compte supprimé : identifiant,
-        adresse email, dates de création et de suppression. Cet enregistrement n&apos;est pas accessible
-        publiquement, ne permet ni de se reconnecter, ni de recréer le compte, ni d&apos;accéder à d&apos;autres
-        données, et n&apos;est utilisé ni pour de la publicité ni pour du démarchage.
+        des comptes, DataParl&apos; conserve un enregistrement minimal de chaque compte supprimé. Cet enregistrement
+        n&apos;est pas accessible publiquement, ne permet ni de se reconnecter, ni de recréer le compte, ni
+        d&apos;accéder à d&apos;autres données, et n&apos;est utilisé ni pour de la publicité ni pour du démarchage.
       </p>
       <p>
         <strong>Mesure d&apos;audience et publicité.</strong> Par défaut, aucune mesure d&apos;audience et aucune

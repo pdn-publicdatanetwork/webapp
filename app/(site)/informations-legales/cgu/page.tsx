@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
-import { CONTACT_URL, MISE_A_JOUR } from "../maj";
+import { CONTACT_URL } from "../maj";
 
 export const metadata: Metadata = { title: "Conditions d'utilisation" };
+
+const MISE_A_JOUR_PAGE = "22 octobre 2026";
 
 export default function CGU() {
   return (
     <>
       <h1>Conditions <span className="surligne">d&apos;utilisation</span></h1>
-      <p className="meta">Dernière mise à jour : {MISE_A_JOUR}</p>
+      <p className="meta">Dernière mise à jour : {MISE_A_JOUR_PAGE}</p>
 
       <h2>1. Objet</h2>
       <p>
@@ -45,10 +47,9 @@ export default function CGU() {
       <p>
         <strong>Suppression du compte.</strong> La suppression est immédiate et définitive : le compte ne permet plus de se
         connecter et les réglages et abonnements associés sont effacés. Pour assurer la sécurité du service et conserver un
-        historique fiable des comptes, DataParl&apos; garde un enregistrement minimal de chaque compte supprimé
-        (identifiant, adresse email, dates de création et de suppression). Cet enregistrement ne donne accès à aucune donnée
-        du compte et ne permet pas de le recréer. Le détail figure sur la page{" "}
-        <a href="/informations-legales/confidentialite">Données personnelles</a>.
+        historique fiable des comptes, DataParl&apos; garde un enregistrement minimal de chaque compte supprimé. Cet
+        enregistrement ne donne accès à aucune donnée du compte et ne permet pas de le recréer. Le détail figure sur la
+        page <a href="/informations-legales/confidentialite">Données personnelles</a>.
       </p>
 
       <h2>4. Alertes par email</h2>
