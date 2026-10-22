@@ -3,14 +3,14 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { sessionActuelle } from "@/lib/supabaseBrowser";
-import { lire } from "@/lib/consentement";
 
 // Trace minimal du parcours des COMPTES CONNECTÉS, pour l'amélioration du
 // site : route seule (jamais les paramètres d'URL, donc jamais d'identifiant
 // dans l'adresse), conservation 90 jours (purge côté serveur), accès réservé
-// aux administrateurs (module Journal). Les visiteurs anonymes ne sont tracés
-// ICI que s'ils ont consenti à la mesure d'audience (localStorage uuid,
-// jamais associé à un compte) — sinon la promesse « sans pistage » tient.
+// aux administrateurs (module Journal).
+// Les visiteurs SANS compte sont aussi tracés (vues_anonymes : uuid local
+// localStorage, jamais associé à un compte) — décision de l'éditeur du
+// 22/10/2026 : traçage actif pour tous, sans condition de consentement.
 // Dédoublonnage : une même route consécutive n'est comptée qu'une fois
 // (les allers-retours rapides ne polluent pas le parcours).
 // L'origine enregistrée : page précédente interne, ou referer externe
@@ -54,9 +54,8 @@ export default function PageTrace() {
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${s.access_token}` },
             body: corps,
           });
-        } else if (lire()?.mesure) {
-          // visiteur anonyme ayant consenti à la mesure d'audience :
-          // parcours pseudonymisé (uuid local, jamais associé à un compte)
+        } else {
+          // visiteur sans compte : parcours pseudonymisé (uuid local)
           await fetch("/api/vues-anonymes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
