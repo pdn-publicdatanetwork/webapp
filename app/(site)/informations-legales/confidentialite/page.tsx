@@ -34,6 +34,12 @@ export default function Confidentialite() {
             <td>Jusqu&apos;à la suppression du compte, ou 3 ans sans connexion</td>
           </tr>
           <tr>
+            <td>Identifiant du compte, adresse email, dates de création et de suppression (journal des comptes)</td>
+            <td>Conserver un historique fiable des créations et suppressions de comptes ; sécurité du service</td>
+            <td>Intérêt légitime</td>
+            <td>Conservé sans limite de durée, y compris après la suppression du compte ; ne donne accès à aucune donnée</td>
+          </tr>
+          <tr>
             <td>Réglages d&apos;alertes : chambres, types de mouvement, groupes, élus suivis, fréquence</td>
             <td>Envoyer les alertes</td>
             <td>Consentement</td>
@@ -71,6 +77,15 @@ export default function Confidentialite() {
           </tr>
         </tbody>
       </table>
+      <p>
+        <strong>Suppression du compte et des données.</strong> La suppression du compte depuis{" "}
+        <a href="/mon-compte">Mon compte</a> efface les données associées (réglages d&apos;alertes, abonnements) et
+        le compte ne permet plus de se connecter. Pour des raisons de sécurité et de tenue d&apos;un historique fiable
+        des comptes, DataParl&apos; conserve un enregistrement minimal de chaque compte supprimé : identifiant,
+        adresse email, dates de création et de suppression. Cet enregistrement n&apos;est pas accessible
+        publiquement, ne permet ni de se reconnecter, ni de recréer le compte, ni d&apos;accéder à d&apos;autres
+        données, et n&apos;est utilisé ni pour de la publicité ni pour du démarchage.
+      </p>
       <p>
         <strong>Mesure d&apos;audience et publicité.</strong> Par défaut, aucune mesure d&apos;audience et aucune
         publicité : les seuls cookies déposés sans accord sont strictement nécessaires au service. Si
