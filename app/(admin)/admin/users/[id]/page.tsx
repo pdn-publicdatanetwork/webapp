@@ -6,12 +6,13 @@ import { dateHeure, useRessource } from "@/app/_components/admin/utils";
 type Cle = { id: string; nom: string; prefixe: string; quota_jour: number; created_at: string; last_used_at: string | null; revoked_at: string | null };
 type Usage = { key_id: string; jour: string; requetes: number };
 type JournalApi = { id: number; key_id: string; journalise_le: string; endpoint: string; methode: string | null; parametres: string | null; ip: string | null; user_agent: string | null; statut: number | null; duree_ms: number | null; erreur: string | null };
-type Vue = { id: number; chemin: string; le: string };
+type Vue = { id: number; chemin: string; le: string; ip: string | null; origine: string | null };
+type Connexion = { le: string; ip: string | null; user_agent: string | null; appareil: string | null; fournisseur: string | null };
 type Evenement = { evenement: string; email: string; created_at_compte: string; supprime_le: string | null; journalise_le: string };
 type Telechargement = { feuille: string; lignes: number; cree_le: string; ip: string | null };
 type Data = {
   compte: { id: string; email: string | null; nom: string | null; cree_le: string; derniere_connexion: string | null; fournisseurs: string[] };
-  cles: Cle[]; usage: Usage[]; journal: JournalApi[]; vues: Vue[]; evenements: Evenement[]; telechargements: Telechargement[];
+  cles: Cle[]; usage: Usage[]; journal: JournalApi[]; vues: Vue[]; connexions: Connexion[]; evenements: Evenement[]; telechargements: Telechargement[];
   stats: { requetes_api_total: number; pages_vues: number; telechargements: number };
 };
 
@@ -31,6 +32,7 @@ export default function Utilisateur() {
         <p className="meta">
           {data.stats.requetes_api_total} requête(s) API cumulée(s) · {data.stats.pages_vues} page(s) vues (500 max affichées) · {data.stats.telechargements} export(s) Sheets
         </p>
+        <p className="meta">Replays Clarity associés au compte via le tag <code>dp_user_id</code> (si le visiteur a consenti à la mesure d'audience).</p>
 
         <h2>Clés API</h2>
         <div className="defile"><table className="stats">
@@ -66,13 +68,31 @@ export default function Utilisateur() {
               </tbody>
             </table></div>}
 
+        <h2>Connexions</h2>
+        {data.connexions.length === 0
+          ? <p className="meta">Aucune connexion journalisée (journal actif depuis le 22/10/2026).</p>
+          : <div className="defile"><table className="stats">
+              <thead><tr><th>Quand</th><th>Appareil</th><th>Fournisseur</th><th>IP</th><th>User-agent</th></tr></thead>
+              <tbody>{data.connexions.map((c, i) => (
+                <tr key={i}>
+                  <td className="meta">{dateHeure(c.le)}</td>
+                  <td className="meta">{c.appareil ?? "–"}</td>
+                  <td className="meta">{c.fournisseur ?? "–"}</td>
+                  <td className="meta">{c.ip ?? "–"}</td>
+                  <td className="meta">{c.user_agent ?? "–"}</td>
+                </tr>))}
+              </tbody>
+            </table></div>}
+
         <h2>Pages vues sur le site</h2>
         <div className="defile"><table className="stats">
-          <thead><tr><th>Quand</th><th>Page</th></tr></thead>
+          <thead><tr><th>Quand</th><th>Page</th><th>Venant de</th><th>IP</th></tr></thead>
           <tbody>{data.vues.map((v) => (
             <tr key={v.id}>
               <td className="meta">{dateHeure(v.le)}</td>
               <td><Link href={v.chemin}>{v.chemin}</Link></td>
+              <td className="meta">{v.origine ? (/^\//.test(v.origine) ? <Link href={v.origine}>{v.origine}</Link> : v.origine) : "–"}</td>
+              <td className="meta">{v.ip ?? "–"}</td>
             </tr>))}
           </tbody>
         </table></div>

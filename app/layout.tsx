@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import BandeauCookies from "./_components/BandeauCookies";
 import PageTrace from "./_components/PageTrace";
+import JournalConnexion from "./_components/JournalConnexion";
 import "./globals.css";
 
 // Polices auto-hébergées par next/font : préchargées, avec une police de
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },
     ],
-    apple: [{ url: "/apple-icon", sizes: "180", type: "image/png" }],
+    apple: [{ url: "/apple-icon", sizes: "180x180", type: "image/png" }],
   },
   // Application web sur l'écran d'accueil iOS : titre affiché sous l'icône.
   appleWebApp: { capable: true, statusBarStyle: "default", title: "DataParl'" },
@@ -98,6 +99,9 @@ j=d.createElement(s),dl=l!=''?'&l='+l:'';j.async=true;j.src=
         {/* Parcours des comptes connectés (route seule, 90 jours, admin
             uniquement) : voir app/_components/PageTrace.tsx. */}
         <PageTrace />
+        {/* Journal des connexions des comptes (IP, appareil) + association
+            Clarity : voir app/_components/JournalConnexion.tsx. */}
+        <JournalConnexion />
       </body>
     </html>
   );

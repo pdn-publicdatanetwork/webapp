@@ -6,8 +6,10 @@ export const dynamic = "force-dynamic";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 // GET /api/admin/user?id=<uuid> : fiche complète d'un compte — clés API et
-// consommation, journal des requêtes API, pages vues, téléchargements Sheets,
-// événements de cycle de vie du compte.
+// consommation, journal des requêtes API, connexions (IP, appareil), pages
+// vues (avec origine et IP), téléchargements Sheets, événements de cycle de
+// vie du compte. Le compte est aussi associé à Clarity (tag dp_user_id) :
+// ses replays sont filtrables par ce tag dans le dashboard Clarity.
 export async function GET(req: Request) {
   return avecAdmin(req, async () => {
     const id = new URL(req.url).searchParams.get("id") ?? "";
@@ -32,8 +34,11 @@ export async function GET(req: Request) {
           .select("id, key_id, journalise_le, endpoint, methode, parametres, ip, user_agent, statut, duree_ms, erreur")
           .in("key_id", ids).order("journalise_le", { ascending: false }).limit(500)
       : { data: [] as Record<string, unknown>[] };
+    const { data: connexions } = await db.from("journal_connexions")
+      .select("le, ip, user_agent, appareil, fournisseur")
+      .eq("user_id", id).order("le", { ascending: false }).limit(200);
     const { data: vues } = await db.from("pages_vues")
-      .select("id, chemin, le").eq("user_id", id).order("le", { ascending: false }).limit(500);
+      .select("id, chemin, le, ip, origine").eq("user_id", id).order("le", { ascending: false }).limit(500);
     const { data: evenements } = await db.from("audit_comptes")
       .select("evenement, email, created_at_compte, supprime_le, journalise_le")
       .eq("user_id", id).order("journalise_le", { ascending: false }).limit(50);
@@ -49,7 +54,7 @@ export async function GET(req: Request) {
         fournisseurs: (u.identities ?? []).map((i) => i.provider),
       },
       cles: cles ?? [], usage: usage ?? [], journal: journal ?? [], vues: vues ?? [],
-      evenements: evenements ?? [], telechargements: telechargements ?? [],
+      connexions: connexions ?? [], evenements: evenements ?? [], telechargements: telechargements ?? [],
       stats: { requetes_api_total: totalApi, pages_vues: vues?.length ?? 0, telechargements: telechargements?.length ?? 0 },
     };
   }, "comptes");
