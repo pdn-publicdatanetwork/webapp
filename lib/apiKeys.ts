@@ -21,7 +21,7 @@ export function cleDepuisRequete(req: Request): string | null {
 }
 
 export type Verdict =
-  | { ok: true; requetes: number; quota: number }
+  | { ok: true; cleId: string; requetes: number; quota: number }
   | { ok: false; status: 401 | 429 | 503; message: string; requetes?: number; quota?: number };
 
 export async function consommer(req: Request): Promise<Verdict> {
@@ -31,8 +31,8 @@ export async function consommer(req: Request): Promise<Verdict> {
   }
   const { data, error } = await authAdmin().rpc("api_consommer", { p_hash: await sha256(cle) });
   if (error || !data?.[0]) return { ok: false, status: 503, message: "vérification de la clé impossible, réessaie" };
-  const r = data[0] as { ok: boolean; cle_valide: boolean; requetes: number; quota: number };
+  const r = data[0] as { ok: boolean; cle_valide: boolean; requetes: number; quota: number; cle_id: string | null };
   if (!r.cle_valide) return { ok: false, status: 401, message: "clé API invalide ou révoquée" };
   if (!r.ok) return { ok: false, status: 429, message: "quota du jour atteint, remise à zéro à minuit (heure de Paris)", requetes: r.requetes, quota: r.quota };
-  return { ok: true, requetes: r.requetes, quota: r.quota };
+  return { ok: true, cleId: r.cle_id!, requetes: r.requetes, quota: r.quota };
 }
