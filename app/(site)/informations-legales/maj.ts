@@ -1,5 +1,6 @@
-// Date de dernière mise à jour des textes légaux (à changer à chaque modification).
-export const MISE_A_JOUR = "13 octobre 2026";
+// Les dates de mise à jour des textes légaux vivent dans historique.tsx
+// (VERSIONS : une entrée par page, la version en vigueur d'abord ; ajouter
+// une entrée à chaque modification d'un texte).
 // Toutes les demandes passent par le formulaire de contact unique.
 export const CONTACT_URL = "/contact";
 export const CONTACT_RGPD = "/contact?sujet=rgpd";

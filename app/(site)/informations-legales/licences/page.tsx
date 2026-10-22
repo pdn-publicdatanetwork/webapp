@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { MISE_A_JOUR } from "../maj";
+
+import { HistoriqueTexte, VERSIONS } from "../historique";
 
 export const metadata: Metadata = { title: "Licences et réutilisation" };
 
@@ -7,7 +8,7 @@ export default function Licences() {
   return (
     <>
       <h1>Licences et <span className="surligne">réutilisation</span></h1>
-      <p className="meta">Dernière mise à jour : {MISE_A_JOUR}</p>
+      <HistoriqueTexte versions={VERSIONS.licences} />
       <p>
         DataParl&apos; ne produit pas l&apos;information à la source : il la relit, la met en forme et la rend
         comparable dans le temps. Tout ce qui est publié peut être réutilisé, dans les conditions ci-dessous.

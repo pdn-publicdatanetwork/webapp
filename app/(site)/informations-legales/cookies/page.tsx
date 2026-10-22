@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { MISE_A_JOUR } from "../maj";
+
+import { HistoriqueTexte, VERSIONS } from "../historique";
 
 export const metadata: Metadata = { title: "Cookies" };
 
@@ -7,7 +8,7 @@ export default function Cookies() {
   return (
     <>
       <h1><span className="surligne">Cookies</span></h1>
-      <p className="meta">Dernière mise à jour : {MISE_A_JOUR}</p>
+      <HistoriqueTexte versions={VERSIONS.cookies} />
       <p>
         Par défaut, les seuls cookies déposés sont strictement nécessaires au service : ils sont dispensés de
         consentement (article 82 de la loi Informatique et libertés). La mesure d&apos;audience et la publicité
