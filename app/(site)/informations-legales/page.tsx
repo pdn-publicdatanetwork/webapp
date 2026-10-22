@@ -18,7 +18,7 @@ const RUBRIQUES = [
     titre: "Données et confidentialité",
     pages: [
       { href: "/informations-legales/confidentialite", nom: "Données personnelles", desc: "Données traitées, finalités, droits RGPD" },
-      { href: "/informations-legales/cookies", nom: "Cookies", desc: "Ce qui est stocké sur l&apos;appareil, et pourquoi" },
+      { href: "/informations-legales/cookies", nom: "Cookies", desc: "Ce qui est stocké sur l'appareil, et pourquoi" },
     ],
   },
   {
