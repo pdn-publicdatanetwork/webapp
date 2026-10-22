@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { cheminsInactifs } from "./lib/pagesEtat";
 import { estInactif } from "./lib/pagesRegistre";
 import { maintenanceActive } from "./lib/maintenance";
+import { estPageReseaux, journaliserVueReseaux } from "./lib/vuesReseaux";
 
 // Routage par sous-domaine (un seul déploiement pour tous les hôtes) :
 //   www.dataparl.fr         site public ; /api -> api.dataparl.fr
@@ -84,6 +85,22 @@ function protege(res: NextResponse): NextResponse {
 export async function proxy(req: NextRequest) {
   const host = (req.headers.get("host") ?? "").split(":")[0].toLowerCase();
   const path = req.nextUrl.pathname;
+
+  // ── Journal des pages WhatsApp/Telegram ────────────────────────────────────
+  // Les pages qui affichent les liens des canaux (Daily Telegram/WhatsApp) sont
+  // consultées par des visiteurs sans compte : chaque vue est enregistrée
+  // (heure, IP, navigateur, provenance) dans la table vues_reseaux, visible
+  // dans l'admin → Journal → Vues canaux. Conservation 13 mois. Silencieux :
+  // une erreur d'écriture ne bloque jamais la page.
+  if (host === `www.${DOMAINE}` && estPageReseaux(path)) {
+    const xff = req.headers.get("x-forwarded-for") ?? "";
+    await journaliserVueReseaux({
+      chemin: path,
+      ip: (xff.split(",")[0] || req.headers.get("x-real-ip") || "").trim().slice(0, 60),
+      userAgent: (req.headers.get("user-agent") ?? "").slice(0, 300),
+      referer: (req.headers.get("referer") ?? "").slice(0, 300),
+    });
+  }
 
   // ── Mode maintenance ──────────────────────────────────────────────────────
   // Pilotée par la table maintenance_etat (bascule depuis l'admin ou la
@@ -366,5 +383,5 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)"].replace("/robots.txt/sitemap.xml", "/robots.txt|sitemap.xml")
 };
