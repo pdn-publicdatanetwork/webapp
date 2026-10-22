@@ -313,6 +313,10 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
   // (invitation après quelques minutes, jeton ?j=…). Une seule page ; le
   // reste du domaine revient vers www. Jamais indexé.
   if (host === `survey.${DOMAINE}`) {
+    // Les API du questionnaire (enregistrement des réponses) sont servies
+    // telles quelles : sans ça, le POST du formulaire suivait une 308 vers
+    // www et n'atteignait jamais l'API (0 réponse enregistrée depuis le 07/10).
+    if (path.startsWith("/api/")) return NextResponse.next();
     if (path === "/" || path === "") {
       const url = req.nextUrl.clone();
       url.pathname = "/enquete";
