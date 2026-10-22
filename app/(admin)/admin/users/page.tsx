@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 import { LIBELLE_ROLE } from "@/app/_components/admin/EnTete";
 import type { Role } from "@/app/_components/admin/Porte";
@@ -14,7 +15,7 @@ export default function Comptes() {
   return (
     <>
       <h1>Comptes utilisateurs</h1>
-      <p className="meta">Les personnes qui ont un compte sur dataparl.fr : ce sont les destinataires possibles d&apos;un mailing.</p>
+      <p className="meta">Les personnes qui ont un compte sur dataparl.fr : ce sont les destinataires possibles d&apos;un mailing. Cliquer sur un compte pour voir toutes ses requêtes.</p>
       {err && <p className="erreur">{err}</p>}
       {data && <>
         <p className="meta">{data.total} compte(s)</p>
@@ -23,7 +24,7 @@ export default function Comptes() {
           <tbody>{data.comptes.map((c) => (
             <tr key={c.id}>
               <td>{c.nom || <span className="meta">–</span>}</td>
-              <td>{c.email}{c.equipe && <> <span className={`badge-role ${c.equipe}`}>{LIBELLE_ROLE[c.equipe]}</span></>}</td>
+              <td><Link href={`/admin/users/${c.id}`}>{c.email}</Link>{c.equipe && <> <span className={`badge-role ${c.equipe}`}>{LIBELLE_ROLE[c.equipe]}</span></>}</td>
               <td className="meta">{libellesFournisseurs(c.fournisseurs).join(" · ") || "–"}</td>
               <td className="meta">{c.alerte ? `${c.alerte.active ? "" : "(inactive) "}${c.alerte.frequence === "hebdomadaire" ? "Weekly" : "Daily"}` : "–"}</td>
               <td className="meta">{dateHeure(c.cree_le)}</td><td className="meta">{dateHeure(c.derniere_connexion)}</td>
