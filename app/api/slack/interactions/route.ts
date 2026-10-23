@@ -3,9 +3,10 @@ import { CODE, destinationValide, genererCode } from "@/lib/liens";
 import { authAdmin } from "@/lib/supabaseAdmin";
 import { canaux, creerPost, type ModePost } from "@/lib/buffer";
 import { envoyerDepuisSlack, supprimer } from "@/lib/slackMail";
-import { modalEnvoi, modalInbox, modalPost, ouvrirModal, publierHome } from "@/lib/slackHome";
+import { modalEnvoi, modalInbox, modalPost, modalRechercheCompte, ouvrirModal, publierHome } from "@/lib/slackHome";
 import { basculeMaintenance } from "@/lib/maintenanceAdmin";
 import { blocsStats, collecterStats } from "@/lib/slackStats";
+import { abonnes, cles, comptes, enquete, fiche, telechargements } from "@/lib/slackData";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -13,7 +14,9 @@ export const maxDuration = 60;
 // Interactivity Request URL de l'app Slack (?t=<MAINTENANCE_TOKEN>) :
 //  - soumissions des modals /post, /mail envoyer, maintenance (Home tab) ;
 //  - boutons de confirmation d'envoi et de suppression (block_actions) ;
-//  - boutons du Home tab (home_*) qui ouvrent les modals.
+//  - boutons du Home tab (home_*) qui ouvrent les modals, y compris la
+//    section Données (comptes, fiche compte, abonnés, clés API,
+//    téléchargements, enquête — lecture seule).
 
 function repondre(urlReponse: string, corps: string) {
   if (!urlReponse) return;
@@ -53,6 +56,11 @@ function vueResultat(texte: string) {
   return { type: "modal", callback_id: "resultat", title: { type: "plain_text", text: "Résultat" },
     close: { type: "plain_text", text: "Fermer" },
     blocks: [{ type: "section", text: { type: "mrkdwn", text: texte } }] };
+}
+
+// Vue de données (section Données du Home tab) : blocs de lib/slackData en modal.
+function vueDonnees(titre: string, blocs: Record<string, unknown>[]) {
+  return { type: "modal", callback_id: "resultat", title: { type: "plain_text", text: titre.slice(0, 24) }, close: { type: "plain_text", text: "Fermer" }, blocks: blocs };
 }
 
 // Confirmation d'envoi : modal avec boutons, affiché dans le modal courant.
@@ -126,6 +134,13 @@ export async function POST(req: Request) {
       await ouvrirModal({ type: "modal", callback_id: "resultat", title: { type: "plain_text", text: "Statistiques" }, close: { type: "plain_text", text: "Fermer" }, blocks: blocsStats(s) }, trigger);
       return NextResponse.json({});
     }
+    // Home tab : section Données (lecture seule, mêmes sources que l'admin).
+    if (act.action_id === "home_data_users") { await ouvrirModal(vueDonnees("Comptes", await comptes(Number(act.value ?? "0") || 0)), trigger); return NextResponse.json({}); }
+    if (act.action_id === "home_data_recherche") { await ouvrirModal(modalRechercheCompte(), trigger); return NextResponse.json({}); }
+    if (act.action_id === "home_data_abonnes") { await ouvrirModal(vueDonnees("Abonnés", await abonnes("")), trigger); return NextResponse.json({}); }
+    if (act.action_id === "home_data_cles") { await ouvrirModal(vueDonnees("Clés API", await cles()), trigger); return NextResponse.json({}); }
+    if (act.action_id === "home_data_telechargements") { await ouvrirModal(vueDonnees("Téléchargements", await telechargements("")), trigger); return NextResponse.json({}); }
+    if (act.action_id === "home_data_survey") { await ouvrirModal(vueDonnees("Enquête", await enquete("")), trigger); return NextResponse.json({}); }
     if (act.action_id === "home_maintenance_on") {
       await ouvrirModal({ type: "modal", callback_id: "maintenance_on",
         title: { type: "plain_text", text: "Maintenance" },
@@ -148,6 +163,17 @@ export async function POST(req: Request) {
   const urlReponse = charge.response_url ?? "";
   const qui = charge.user?.name ?? "slack";
   const userId = charge.user?.id ?? "";
+
+  // --- Données : recherche d'un compte, fiche en lecture seule ---
+  if (charge.view?.callback_id === "data_recherche") {
+    const q = String((v.q?.v as { value?: string })?.value ?? "").trim();
+    if (!q) return NextResponse.json({ response_action: "errors", errors: { q: "Indique un e-mail ou un identifiant." } });
+    try {
+      return NextResponse.json({ response_action: "update", view: vueDonnees("Fiche compte", await fiche(q.slice(0, 100))) });
+    } catch (e) {
+      return NextResponse.json({ response_action: "errors", errors: { q: e instanceof Error ? e.message : String(e) } });
+    }
+  }
 
   // --- /mail envoyer : vérifie puis affiche la confirmation par boutons ---
   if (charge.view?.callback_id === "mail_envoi") {
