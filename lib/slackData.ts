@@ -88,12 +88,14 @@ export async function fiche(q: string): Promise<Bloc[]> {
   const meta = u.user_metadata ?? {};
   const nom = [meta.prenom, meta.nom].filter(Boolean).join(" ") || meta.full_name || meta.name || "–";
 
-  const [{ data: cles }, { data: connexions }, { data: vues }, { data: enquete }] = await Promise.all([
+  // Comptage head:true : le total est dans count, pas dans data — déstructuré
+  // hors du Promise.all, sinon TypeScript le type comme un tableau.
+  const { count: nbVues } = await db.from("pages_vues").select("id", { count: "exact", head: true }).eq("user_id", id);
+  const [{ data: cles }, { data: connexions }, { data: enquete }] = await Promise.all([
     db.from("api_keys").select("id, nom, prefixe, quota_jour, last_used_at, revoked_at")
       .eq("user_id", id).order("last_used_at", { ascending: false, nullsFirst: false }),
     db.from("journal_connexions").select("le, ip, appareil, fournisseur")
       .eq("user_id", id).order("le", { ascending: false }).limit(5),
-    db.from("pages_vues").select("id", { count: "exact", head: true }).eq("user_id", id),
     db.from("survey_reponses").select("id, repondu_le, note_global")
       .eq("user_id", id).order("cree_le", { ascending: false }).limit(3),
   ]);
@@ -112,7 +114,7 @@ export async function fiche(q: string): Promise<Bloc[]> {
 
   const morceaux: Bloc[] = [
     entete(`👤 ${u.email}`),
-    section(`*Nom :* ${nom}\n*Créé le :* ${dh(u.created_at)}\n*Dernière connexion :* ${dh(u.last_sign_in_at)}\n*Pages vues :* ${vues?.count ?? 0}\n*Id :* \`${u.id}\``),
+    section(`*Nom :* ${nom}\n*Créé le :* ${dh(u.created_at)}\n*Dernière connexion :* ${dh(u.last_sign_in_at)}\n*Pages vues :* ${nbVues ?? 0}\n*Id :* \`${u.id}\``),
   ];
   if (blocsCles.length) morceaux.push(section(`*🔑 Clés API*\n${blocsCles.join("\n")}`));
   if (blocsConn.length) morceaux.push(section(`*🖥 Dernières connexions*\n${blocsConn.join("\n")}`));
