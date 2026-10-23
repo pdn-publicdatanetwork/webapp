@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import ListeElus, { CHAMBRE_LONG } from "@/app/_components/ListeElus";
 import IndicateursGroupe from "./IndicateursGroupe";
+import EquipeGroupe from "./EquipeGroupe";
 import { elusDuGroupe, groupesExistants } from "@/lib/collectifsData";
 import { mandaturesExistantes, type MandatureExistante } from "@/lib/mandaturesData";
 import { CHAMBRE_COURTE, hrefParti, groupeDepuisSlug, slugCollectif } from "@/lib/collectifs";
@@ -125,6 +126,9 @@ export default async function FicheGroupe({ params }: Props) {
       )}
       {/* Indicateurs citables : phrase canonique datée + JSON-LD Dataset (GEO) */}
       <IndicateursGroupe chambre={g.chambre} sigle={g.groupe} />
+
+      {/* Équipe du groupe : secrétaire général, adjoints, collaborateurs de groupe */}
+      <EquipeGroupe chambre={g.chambre} sigle={g.groupe} />
 
       <h2>Les élus du groupe</h2>
       <ListeElus elus={elus} afficher="groupe" />

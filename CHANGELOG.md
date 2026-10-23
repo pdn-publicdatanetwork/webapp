@@ -2,6 +2,15 @@
 
 Historique des évolutions de la webapp DataParl' (dataparl.fr).
 
+## 2026-10-19
+
+- **Fiches groupes : « L'équipe du groupe » (PR #36)** : nouvelle section sur
+  les fiches de groupes (secrétaire général, adjoints, collaborateurs de
+  groupe), alimentée par la table Supabase `equipes_groupes` (sources
+  officielles, datées, avec niveau de confiance) ; au Parlement européen, les
+  assistants « (groupement) » déjà en base complètent l'affichage. Suivi des
+  collectes restantes : issue #37.
+
 ## 2026-10-14
 
 - **Perf CPU (PR #28)** : allongement des délais `revalidate` ISR — 24 h pour
@@ -23,7 +32,7 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
 - Monitoring : heartbeat Better Stack sur le cron des alertes
   (`BETTERSTACK_HEARTBEAT_URL`), browser check Checkly « parcours public »,
   identifiant Clarity (`NEXT_PUBLIC_CLARITY_ID`).
-- Page interstitiale `acces-ressource` entre data.gouv.fr et la connexion.
+- Page interstitielle `acces-ressource` entre data.gouv.fr et la connexion.
 
 > Note : l'historique antérieur de ce fichier a été perdu lors d'un commit
 > défectueux (13/10). Les entrées ci-dessus reconstituent l'essentiel ;
