@@ -3,9 +3,10 @@ import { lireMaintenance } from "./maintenanceAdmin";
 import { EXPEDITEURS, lister, idCourt } from "./slackMail";
 
 // Home tab de l'app Slack « DataParl' Console » : une vraie interface avec
-// des sections (Site, Publication, E-mail) et des boutons, à la place des
-// seules slash commands. Publiée par views.publish à l'ouverture (événement
-// app_home_opened → /api/slack/events) et rafraîchie après chaque action.
+// des sections (Site, Publication, E-mail, Données) et des boutons, à la
+// place des seules slash commands. Publiée par views.publish à l'ouverture
+// (événement app_home_opened → /api/slack/events) et rafraîchie après chaque
+// action.
 
 export function modalPost(): Record<string, unknown> {
   return {
@@ -45,6 +46,20 @@ export function modalEnvoi(): Record<string, unknown> {
   };
 }
 
+// Modal de recherche d'un compte (Données → 🔍 Fiche compte).
+export function modalRechercheCompte(): Record<string, unknown> {
+  return {
+    type: "modal", callback_id: "data_recherche",
+    title: { type: "plain_text", text: "Fiche compte" },
+    submit: { type: "plain_text", text: "Chercher" },
+    close: { type: "plain_text", text: "Annuler" },
+    blocks: [
+      { type: "input", block_id: "q", element: { type: "plain_text_input", action_id: "v", placeholder: { type: "plain_text", text: "adresse e-mail du compte, ou son identifiant" } }, label: { type: "plain_text", text: "Compte à afficher" } },
+      { type: "context", elements: [{ type: "mrkdwn", text: "Équivaut à la fiche /admin/users/<id> — clés API, connexions, téléchargements, enquête. Lecture seule." }] },
+    ],
+  };
+}
+
 function heure(iso: string): string {
   try {
     return new Date(iso).toLocaleString("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
@@ -79,7 +94,7 @@ export async function publierHome(userId: string): Promise<{ ok: boolean; erreur
     type: "home", name: "default",
     blocks: [
       { type: "header", text: { type: "plain_text", text: "Console DataParl'" } },
-      { type: "context", elements: [{ type: "mrkdwn", text: "Pilote le site, les publications et les e-mails — les slash commands (/maintenance, /stats, /post, /mail) restent disponibles." }] },
+      { type: "context", elements: [{ type: "mrkdwn", text: "Pilote le site, les publications, les e-mails et les données — les slash commands (/maintenance, /stats, /post, /mail, /sql) restent disponibles." }] },
       { type: "section", text: { type: "mrkdwn", text: "*🛠 Site*\n" + (etat?.active ? "🔴 Maintenance en cours" + (etat.motif ? " — " + etat.motif : "") : "🟢 Site ouvert") } },
       { type: "actions", elements: [
         ...boutonsSite,
@@ -93,6 +108,17 @@ export async function publierHome(userId: string): Promise<{ ok: boolean; erreur
       { type: "actions", elements: [
         { type: "button", text: { type: "plain_text", text: "Nouveau message" }, style: "primary", action_id: "home_mail_nouveau" },
         { type: "button", text: { type: "plain_text", text: "📥 Boîte de réception" }, action_id: "home_mail_inbox" },
+      ] },
+      { type: "section", text: { type: "mrkdwn", text: "*📊 Données (lecture seule)*" } },
+      { type: "actions", elements: [
+        { type: "button", text: { type: "plain_text", text: "👥 Comptes" }, action_id: "home_data_users" },
+        { type: "button", text: { type: "plain_text", text: "🔍 Fiche compte" }, action_id: "home_data_recherche" },
+        { type: "button", text: { type: "plain_text", text: "📬 Abonnés" }, action_id: "home_data_abonnes" },
+      ] },
+      { type: "actions", elements: [
+        { type: "button", text: { type: "plain_text", text: "🔑 Clés API" }, action_id: "home_data_cles" },
+        { type: "button", text: { type: "plain_text", text: "⬇️ Téléchargements" }, action_id: "home_data_telechargements" },
+        { type: "button", text: { type: "plain_text", text: "📋 Enquête" }, action_id: "home_data_survey" },
       ] },
     ],
   };

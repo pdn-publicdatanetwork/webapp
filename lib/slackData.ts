@@ -1,13 +1,13 @@
 import "server-only";
 import { authAdmin, dataAdmin } from "./supabaseAdmin";
 
-// Commande Slack /sql — requêtes préparées en lecture seule sur les mêmes
-// données que les pages de l'espace admin : comptes, fiche compte, abonnés
-// newsletter, clés API, téléchargements Sheets, enquête utilisateurs.
-// Aucune écriture depuis Slack : les actions sensibles (révocation de clé,
-// quotas, désinscription, renvoi d'invitation) restent dans l'admin
-// authentifié (OTP). Réponses éphémères : seule la personne qui tape la
-// commande voit les données.
+// Données de l'espace admin accessibles depuis Slack (onglet Accueil →
+// section Données, et commande /sql en complément) : comptes, fiche compte,
+// abonnés newsletter, clés API, téléchargements Sheets, enquête
+// utilisateurs. Requêtes préparées en lecture seule — aucune écriture depuis
+// Slack : les actions sensibles (révocation de clé, quotas, désinscription,
+// renvoi d'invitation) restent dans l'admin authentifié (OTP). Les modals du
+// Home tab ne sont visibles que de la personne qui clique.
 
 type Bloc = Record<string, unknown>;
 
@@ -25,7 +25,7 @@ function dh(iso: string | null | undefined): string {
   });
 }
 
-// ——— Aide ———————————————————————————————————————————————————————
+// ——— Aide (commande /sql) ——————————————————————————————————
 
 function aide(): Bloc[] {
   return [
@@ -38,7 +38,7 @@ function aide(): Bloc[] {
       "• `/sql telechargements [feuille]` — exports DataParl' Sheets\n" +
       "• `/sql survey [id]` — enquête utilisateurs (moyennes, ou le détail d'une réponse)",
     ),
-    contexte("Lecture seule — les modifications se font dans l'admin authentifié. Réponses éphémères, visibles de vous seul."),
+    contexte("Les mêmes données sont aussi dans l'onglet Accueil de l'app, section Données. Lecture seule."),
   ];
 }
 
@@ -46,7 +46,7 @@ function aide(): Bloc[] {
 
 type Compte = { id: string; email: string; created_at: string; last_sign_in_at: string | null };
 
-async function comptes(page: number): Promise<Bloc[]> {
+export async function comptes(page: number): Promise<Bloc[]> {
   const db = authAdmin();
   const { data, count, error } = await db
     .from("comptes_utilisateurs")
@@ -61,13 +61,13 @@ async function comptes(page: number): Promise<Bloc[]> {
   return [
     entete(`👥 Comptes — ${count ?? 0} au total`),
     section(lignes.join("\n") || "Aucun compte sur cette page."),
-    contexte(`\`/sql user <email ou id>\` pour la fiche complète · page ${page + 1}/${pages}`),
+    contexte(`Fiche complète : bouton 🔍 Fiche compte de l'accueil · page ${page + 1}/${pages} · /sql users <n°> pour changer de page`),
   ];
 }
 
 // ——— Fiche d'un compte (/admin/users/[id]) ————————————————————
 
-async function fiche(q: string): Promise<Bloc[]> {
+export async function fiche(q: string): Promise<Bloc[]> {
   const db = authAdmin();
   let id = q;
   if (!UUID.test(q)) {
@@ -126,7 +126,7 @@ async function fiche(q: string): Promise<Bloc[]> {
 
 type Abonne = { email: string; confirmed: boolean; subscribed_at: string; unsubscribed_at: string | null };
 
-async function abonnes(arg: string): Promise<Bloc[]> {
+export async function abonnes(arg: string): Promise<Bloc[]> {
   const page = /^\d+$/.test(arg) ? Number(arg) : 0;
   const q = /^\d+$/.test(arg) ? "" : arg.toLowerCase().replace(/[%,()*]/g, "");
   const db = authAdmin();
@@ -152,13 +152,13 @@ async function abonnes(arg: string): Promise<Bloc[]> {
   return [
     entete(`📬 Abonnés — ${count ?? 0} au total`),
     section(lignes.join("\n") || "Aucun abonné."),
-    contexte(`\`/sql abonnes <adresse>\` pour filtrer · page ${page + 1}/${pages}`),
+    contexte(`Filtre par adresse : /sql abonnes <adresse> · page ${page + 1}/${pages}`),
   ];
 }
 
 // ——— Clés API (/admin/users/api-keys) —————————————————————————
 
-async function cles(): Promise<Bloc[]> {
+export async function cles(): Promise<Bloc[]> {
   const db = authAdmin();
   const { data, error } = await db
     .from("api_keys")
@@ -196,7 +196,7 @@ async function cles(): Promise<Bloc[]> {
 
 type Tele = { cree_le: string; feuille: string; lignes: number; email: string | null; ip: string | null; user_agent: string | null };
 
-async function telechargements(feuille: string): Promise<Bloc[]> {
+export async function telechargements(feuille: string): Promise<Bloc[]> {
   let req = dataAdmin()
     .from("telechargements")
     .select("cree_le, feuille, lignes, email, ip, user_agent")
@@ -211,7 +211,7 @@ async function telechargements(feuille: string): Promise<Bloc[]> {
   return [
     entete("⬇️ Derniers téléchargements Sheets"),
     section(lignes.join("\n") || "Aucun téléchargement."),
-    contexte("`/sql telechargements <feuille>` pour filtrer · 15 derniers (500 dans l'admin)"),
+    contexte("Filtre par feuille : /sql telechargements <feuille> · 15 derniers (500 dans l'admin)"),
   ];
 }
 
@@ -222,7 +222,7 @@ type Reponse = {
   note_global: number | null; commentaire: string | null; cree_le: string; repondu_le: string | null;
 };
 
-async function enquete(id: string): Promise<Bloc[]> {
+export async function enquete(id: string): Promise<Bloc[]> {
   const db = authAdmin();
   if (id) {
     let req = db.from("survey_reponses")
@@ -232,7 +232,7 @@ async function enquete(id: string): Promise<Bloc[]> {
     const { data, error } = await req;
     if (error) throw new Error(`survey_reponses : ${error.message}`);
     const r = (data ?? [])[0] as Reponse | undefined;
-    if (!r) throw new Error("Réponse introuvable — `/sql survey` pour la liste.");
+    if (!r) throw new Error("Réponse introuvable — liste complète via /sql survey ou l'accueil.");
     const NOTE = (n: number | null) => (n === null ? "–" : `${n}/5`);
     return [
       entete("📋 Réponse à l'enquête"),
@@ -270,11 +270,11 @@ async function enquete(id: string): Promise<Bloc[]> {
   ];
   if (lignes.length) blocs.push(section(lignes.join("\n")));
   if (derniersCommentaires.length) blocs.push(section(`*Derniers commentaires*\n${derniersCommentaires.join("\n>\n")}`));
-  blocs.push(contexte("`/sql survey <id>` pour le détail d'une réponse"));
+  blocs.push(contexte("Détail d'une réponse : /sql survey <id> (id court accepté)"));
   return blocs;
 }
 
-// ——— Aiguillage —————————————————————————————————————————————————
+// ——— Aiguillage (commande /sql) ———————————————————————————————
 
 export async function executerSql(texte: string): Promise<Bloc[]> {
   const morceaux = texte.trim().split(/\s+/).filter(Boolean);
