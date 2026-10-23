@@ -3,6 +3,7 @@
   "crons": [
     { "path": "/api/cron/alertes", "schedule": "30 7 * * *" },
     { "path": "/api/cron/notion", "schedule": "0 8 * * *" },
-    { "path": "/api/cron/slack-digest", "schedule": "45 7 * * *" }
+    { "path": "/api/cron/slack-digest", "schedule": "45 7 * * *" },
+    { "path": "/api/cron/enquete", "schedule": "30 10 * * *" }
   ]
 }
