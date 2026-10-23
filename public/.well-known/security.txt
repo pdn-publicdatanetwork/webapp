@@ -1,0 +1,5 @@
+Contact: mailto:hello@cavaparlement.eu
+Expires: 2027-10-21T23:00:00.000Z
+Preferred-Languages: fr, en
+Canonical: https://www.dataparl.fr/.well-known/security.txt
+Policy: https://www.dataparl.fr/confidentialite

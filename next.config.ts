@@ -2,10 +2,19 @@ import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
 
 const securityHeaders = [
+  // HSTS : force HTTPS pendant 1 an, sous-domaines inclus.
+  // "preload" volontairement omis pour l'instant (engageant, lent à annuler) :
+  // à activer après validation sur hstspreload.org.
+  { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "X-Frame-Options", value: "DENY" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()" },
+  // CSP en mode Report-Only d'abord : mesurer les violations réelles
+  // (GA4/GTM, Clarity, AdSense, Sentry, Supabase) avant activation effective.
+  // Étape 2 : rapport vers un endpoint (Sentry ou /api/csp-report).
+  // Étape 3 : basculer en Content-Security-Policy + nonces middleware.
+  { key: "Content-Security-Policy-Report-Only", value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.clarity.ms https://pagead2.googlesyndication.com https://*.google.com https://vercel.live; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.sentry.io https://*.google-analytics.com https://*.analytics.google.com https://*.clarity.ms https://vercel.live; frame-src https://googleads.g.doubleclick.net https://vercel.live; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests" },
 ];
 
 const config: NextConfig = {
