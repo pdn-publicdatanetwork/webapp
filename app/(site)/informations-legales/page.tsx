@@ -27,6 +27,12 @@ const RUBRIQUES = [
       { href: "/informations-legales/licences", nom: "Licences et réutilisation", desc: "Sources officielles, open data, conditions de réutilisation" },
     ],
   },
+  {
+    titre: "Sécurité",
+    pages: [
+      { href: "/informations-legales/phishing", nom: "Phishing", desc: "Reconnaître un courriel frauduleux, vérifier expéditeur et liens" },
+    ],
+  },
 ];
 
 export default function InformationsLegales() {

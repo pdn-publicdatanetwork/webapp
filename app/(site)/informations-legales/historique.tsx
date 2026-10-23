@@ -19,6 +19,7 @@ export const VERSIONS: Record<string, VersionTexte[]> = {
   cookies: [{ date: "22 octobre 2026" }],
   licences: [{ date: "22 octobre 2026" }],
   mentions: [{ date: "22 octobre 2026" }],
+  phishing: [{ date: "23 octobre 2026" }],
 };
 
 // Bandeau de version en tête de chaque page légale : la version en vigueur
