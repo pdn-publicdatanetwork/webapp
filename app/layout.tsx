@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },
     ],
-    apple: [{ url: "/apple-icon", sizes: "180x180", type: "image/png" }],
+    apple: [{ url: "/apple-icon", sizes: "180", type: "image/png" }],
   },
   // Application web sur l'écran d'accueil iOS : titre affiché sous l'icône.
   appleWebApp: { capable: true, statusBarStyle: "default", title: "DataParl'" },
@@ -49,33 +49,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});`,
           }}
         />
-        {/* Google Analytics 4 (gtag.js, G-GC1JD019GY) : mesure d'audience,
-            chargée après les défauts de consentement ci-dessus — tant que le
-            visiteur n'a pas accepté, GA4 ne dépose aucun cookie (Consent Mode v2). */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-GC1JD019GY" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `gtag('js', new Date());
-gtag('config', 'G-GC1JD019GY');`,
-          }}
-        />
-        {/* Google AdSense (ca-pub-6168263680630864) : chargé ici, APRÈS les
-            défauts Consent Mode v2 ci-dessus. AdSense respecte ces signaux :
-            sans consentement publicitaire explicite (bandeau, lib/consentement.ts),
-            aucun cookie n'est déposé et aucune annonce n'est personnalisée.
-            Le même id que chargerPub() évite toute double injection. */}
-        <script
-          id="adsense-dataparl"
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6168263680630864"
-          crossOrigin="anonymous"
-        />
+        {/* Google Analytics 4 : PAS de gtag.js en direct. GA4 (G-GC1JD019GY)
+            est déployé via une balise du conteneur GTM seul — fin de la double
+            mesure (~450 Ko de scripts en moins au chargement). */}
+        {/* Google AdSense (ca-pub-6168263680630864) : PAS chargé ici. Le script
+            publicitaire n'est injecté qu'après un consentement publicitaire
+            explicite (lib/consentement.ts, appelé par le bandeau) — jamais pour
+            un visiteur qui n'a pas répondu ou a tout refusé, conformément à la
+            promesse du bandeau. Cela allège aussi le chargement des pages
+            (~220 Ko de scripts publicitaires évités par défaut). */}
         {/* Google Tag Manager (GTM-KW3MJMTK) : le plus haut possible dans le head. */}
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!=''?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-KW3MJMTK');`,
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-KW3MJMTK');`,
           }}
         />
       </head>
