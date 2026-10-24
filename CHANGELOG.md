@@ -1,12 +1,47 @@
 # Changelog
 
-Tous les changements notables de ce projet sont documentés ici. Le format
-suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et la
-versionnement [SemVer](https://semver.org/lang/fr/).
+Historique des évolutions de la webapp DataParl' (dataparl.fr).
 
-## [Non publié]
+## 2026-10-19
+
+- **Fiches groupes : « L'équipe du groupe » (PR #36)** : nouvelle section sur
+  les fiches de groupes (secrétaire général, adjoints, collaborateurs de
+  groupe), alimentée par la table Supabase `equipes_groupes` (sources
+  officielles, datées, avec niveau de confiance) ; au Parlement européen, les
+  assistants « (groupement) » déjà en base complètent l'affichage. Suivi des
+  collectes restantes : issue #37.
+
+## 2026-10-14
+
+- **Perf CPU (PR #28)** : allongement des délais `revalidate` ISR — 24 h pour
+  les fiches parlementaires/collaborateurs, listes, hubs, gouv, groupes, partis,
+  sénatoriales, sitemaps et images opengraph ; 1 h pour mouvements et daily ;
+  10 min pour sheets et search. Divise par ~24 les régénérations SSR de fond
+  (limite Fluid Active CPU du plan Vercel atteinte en octobre).
+- **Revalidation à la demande (PR #29)** : endpoint `POST /api/revalidate`
+  protégé par `REVALIDATE_SECRET`, appelé par le workflow « Synchro Supabase »
+  du dépôt collaborateurs après le run du matin — les pages vitrines se
+  rafraîchissent au bon moment, sans burst de CPU.
+- **Sitemap permanences (PR #27)** : page `/parlementaires/map` (carte des
+  permanences) inscrite au registre des pages et au sitemap.
+- **Fix build** : retrait d'une ligne parasite en tête de
+  `lib/pagesRegistre.ts` qui cassait le build Turbopack.
+
+## 2026-10-13
+
+- Monitoring : heartbeat Better Stack sur le cron des alertes
+  (`BETTERSTACK_HEARTBEAT_URL`), browser check Checkly « parcours public »,
+  identifiant Clarity (`NEXT_PUBLIC_CLARITY_ID`).
+- Page interstitielle `acces-ressource` entre data.gouv.fr et la connexion.
+
+## 2026 — historique reconstitué (avant le 2026-10-13)
+
+> Note : l'historique antérieur de ce fichier a été perdu lors d'un commit
+> défectueux (13/10). Les entrées ci-dessous le reconstituent d'après les
+> messages de commits (`git log --oneline`).
 
 ### Ajouté
+
 - Trombinoscopes et listes de collaborateurs interactifs : recherche,
   filtre par initiale, tri des colonnes, groupement par élu, pagination,
   initiales sur les cartes ; état vide explicatif pour le Parlement
@@ -49,7 +84,6 @@ versionnement [SemVer](https://semver.org/lang/fr/).
   de route.
 - OpenAPI 1.2.0 : contrat complet après audit + script d'audit Python
   (`scripts/audit_openapi.py`).
-
 - Page « lexique des collaborateurs parlementaires » (`/lexique`) :
   définitions en une phrase — collaborateur de député, régime du Sénat,
   assistants accrédités et locaux du Parlement européen, groupements, tiers
@@ -61,8 +95,6 @@ versionnement [SemVer](https://semver.org/lang/fr/).
   guide des pages réponses de DataParl' pour les assistants IA et les
   agents (listes de collaborateurs, tiers payants, prestataires, VigiParl',
   MixiParl', méthode et sources).
-
-
 - Pages « par scrutin de renouvellement » au Sénat : `/groupe/senat/serie-1/2023`,
   `/groupe/senat/serie-2/2020`… et par groupe (`/groupe/senat-lr/serie-1/2023`) —
   les sénateurs élus lors de chaque scrutin organisé depuis 2010 (2011 et 2014
@@ -75,7 +107,7 @@ versionnement [SemVer](https://semver.org/lang/fr/).
   parlementaires, groupes et mandatures, VigiParl', MixiParl', et
   sénatoriales 2026 pour le Sénat). Synonymes en redirection :
   `/assemblee-nationale` → `/an` ; `/EP`,
-  `/parlement-européen` et `/parlement-europeen` → `/pe`.
+  `/parlement-europeen` et `/parlement-europeen` → `/pe`.
 - Pages d'accueil des collaborateurs par chambre (`/collab/an`,
   `/collab/senat`, `/collab/pe`) : liste complète des
   collaborateurs en poste de chaque chambre (`/collab/pe/liste`…),
@@ -108,6 +140,7 @@ versionnement [SemVer](https://semver.org/lang/fr/).
   utilisateurs). Table : scripts/survey.sql.
 
 ### Modifié
+
 - Perf : AdSense (`ca-pub-6168263680630864`) chargé uniquement après
   consentement via `chargerPub()` (~220 Ko évités par défaut) ; GA4
   (G-GC1JD019GY) déployé via le conteneur GTM (GTM-KW3MJMTK) seul, plus
@@ -115,7 +148,6 @@ versionnement [SemVer](https://semver.org/lang/fr/).
   moins au chargement).
 - Sitemap XML et plan du site : `/collab/parti`, pages Turnover par
   chambre, trombinoscopes, classements, `/donnees` et `/reutilisations`.
-
 - SEO « liste des collaborateurs » : titres, H1 et réponses directes
   chiffrées (effectif en poste, mois et date de génération calculés) sur
   `/collab`, `/collab/an`, `/collab/senat`, `/collab/pe`,
@@ -125,8 +157,6 @@ versionnement [SemVer](https://semver.org/lang/fr/).
 - `/collab/liste` : correction du texte d'introduction, de la pagination
   et de la clé des lignes du tableau qui affichaient littéralement
   `${…}` (expressions jamais évaluées) depuis la création de la page.
-
-
 - Plan du site (`/sitemap`) et `sitemap.xml` : ajout des pages du Parlement
   européen — tiers payants, prestataires, réseau des collaborateurs, et une
   URL par fiche structure dans le plan XML.

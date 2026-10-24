@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { DM_Sans, Spectral } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import BandeauCookies from "./_components/BandeauCookies";
+import PageTrace from "./_components/PageTrace";
+import JournalConnexion from "./_components/JournalConnexion";
 import "./globals.css";
 
 // Polices auto-hébergées par next/font : préchargées, avec une police de
@@ -19,15 +22,14 @@ export const metadata: Metadata = {
   openGraph: { siteName: "DataParl'", locale: "fr_FR", type: "website" },
   // Cartes de partage (X, LinkedIn, Bluesky, Facebook, messageries) : grande image par défaut.
   twitter: { card: "summary_large_image" },
-  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 } },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-snippet": -1, "max-image-preview": "large" } },
   formatDetection: { telephone: false },
-  // Favicons : ICO (32), SVG vectoriel, et icône tactile iOS 180 (app/apple-icon.tsx).
+  // Favicons : SVG vectoriel et icône tactile iOS 180 (app/apple-icon.tsx) — monogramme Σ'.
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "32", type: "image/x-icon" },
       { url: "/icon.svg", type: "image/svg+xml" },
     ],
-    apple: [{ url: "/apple-icon", sizes: "180x180", type: "image/png" }],
+    apple: [{ url: "/apple-icon", sizes: "180", type: "image/png" }],
   },
   // Application web sur l'écran d'accueil iOS : titre affiché sous l'icône.
   appleWebApp: { capable: true, statusBarStyle: "default", title: "DataParl'" },
@@ -47,16 +49,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});`,
           }}
         />
+        {/* Google Analytics 4 : PAS de gtag.js en direct. GA4 (G-GC1JD019GY)
+            est déployé via une balise du conteneur GTM seul — fin de la double
+            mesure (~450 Ko de scripts en moins au chargement). */}
         {/* Google AdSense (ca-pub-6168263680630864) : PAS chargé ici. Le script
             publicitaire n'est injecté qu'après un consentement publicitaire
             explicite (lib/consentement.ts, appelé par le bandeau) — jamais pour
             un visiteur qui n'a pas répondu ou a tout refusé, conformément à la
             promesse du bandeau. Cela allège aussi le chargement des pages
             (~220 Ko de scripts publicitaires évités par défaut). */}
-        {/* Google Tag Manager (GTM-KW3MJMTK) : le plus haut possible dans le
-            head. Seul script de mesure chargé : GA4 (G-GC1JD019GY) est déployé
-            via une balise du conteneur GTM, pas via gtag.js en direct — fin de la
-            double mesure (~450 Ko de scripts en moins au chargement). */}
+        {/* Google Tag Manager (GTM-KW3MJMTK) : le plus haut possible dans le head. */}
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -81,6 +83,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         {/* Vercel Analytics : pages vues sans cookie ni identificateur
             cross-site, cohérent avec la promesse « sans pistage ». */}
         <Analytics />
+        {/* Vercel Speed Insights : mesure des performances web (Core Web Vitals). */}
+        <SpeedInsights />
+        {/* Parcours des comptes connectés (route seule, 90 jours, admin
+            uniquement) : voir app/_components/PageTrace.tsx. */}
+        <PageTrace />
+        {/* Journal des connexions des comptes (IP, appareil) + association
+            Clarity : voir app/_components/JournalConnexion.tsx. */}
+        <JournalConnexion />
       </body>
     </html>
   );
