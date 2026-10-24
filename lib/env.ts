@@ -50,12 +50,18 @@ export const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID ?? "";
 // Base Notion des communiqués de presse (CMS headless) — voir lib/notion.ts.
 type Secret =
   | "AUTH_SUPABASE_SERVICE_ROLE_KEY" | "DATA_SUPABASE_SERVICE_ROLE_KEY" | "RESEND_API_KEY" | "CONSENT_SALT"
-  | "ADMIN_VAULT_KEY" | "ADMIN_OTP_SECRET" | "RESEND_WEBHOOK_SECRET" | "APPLIXIR_SECRET" | "CRON_SECRET" | "NOTION_TOKEN";
+  | "ADMIN_VAULT_KEY" | "ADMIN_OTP_SECRET" | "RESEND_WEBHOOK_SECRET" | "APPLIXIR_SECRET" | "CRON_SECRET" | "NOTION_TOKEN"
+  | "POSTMARK_SERVER_TOKEN" | "MAILGUN_API_KEY";
 
 export function secret(name: Secret): string {
   const v = process.env[name];
   if (!v) throw new Error(`Variable d'environnement manquante : ${name}`);
   return v;
+}
+
+// Secret optionnel (relais de secours de lib/mail.ts) : vide = relais désactivé.
+export function secretOptionnel(name: Secret): string {
+  return process.env[name] ?? "";
 }
 
 // Base des liens tracés. www.dataparl.fr/l fonctionne d'emblée ; passer à
