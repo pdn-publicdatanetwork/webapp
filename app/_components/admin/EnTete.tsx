@@ -16,6 +16,7 @@ type Section = { chemin: string; libelle: string; acces?: Acces; entrees?: Entre
 const SECTIONS: Section[] = [
   { chemin: "/", libelle: "Tableau de bord", acces: ["admin", "editeur"] },
   { chemin: "/contact", libelle: "Contact", acces: "formulaires" },
+  { chemin: "/crm", libelle: "CRM", acces: "crm" },
   {
     chemin: "/content", libelle: "Contenu", entrees: [
       { chemin: "/content/sitemap", libelle: "Plan du site", acces: "contenu_sitemap" },
