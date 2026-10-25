@@ -6,6 +6,7 @@ export type Role = "admin" | "editeur" | "utilisateur";
 export const MODULES = [
   { cle: "boites_communes", libelle: "Emails génériques", detail: "hello@, contact@, presse@, rgpd@… dans la messagerie", defaut: ["editeur"] },
   { cle: "formulaires", libelle: "Formulaires", detail: "Messages de contact et oppositions", defaut: ["editeur"] },
+  { cle: "crm", libelle: "CRM", detail: "Vue 360° par e-mail : comptes, contacts, newsletter, alertes, enquête, presse et suivi", defaut: ["editeur"] },
   { cle: "elus", libelle: "Élus", detail: "Biographies, mandats et fonctions des élus (édition manuelle)", defaut: ["editeur"] },
   { cle: "jorf", libelle: "JORF", detail: "Balayage du Journal officiel : gouvernements et cabinets ministériels", defaut: ["editeur"] },
   { cle: "comptes", libelle: "Comptes et abonnés", detail: "Liste des utilisateurs et des abonnés aux alertes", defaut: ["editeur"] },
