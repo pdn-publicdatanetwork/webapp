@@ -1,0 +1,20 @@
+name: Sync contacts -> Listmonk (CRM campagnes)
+on:
+  schedule:
+    - cron: "30 6,18 * * *"   # 2x/jour (07:30 / 19:30 Paris)
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node infra/listmonk/sync-listmonk.mjs
+        env:
+          SUPABASE_AUTH_URL: ${{ secrets.SUPABASE_AUTH_URL }}
+          SUPABASE_AUTH_SERVICE_KEY: ${{ secrets.SUPABASE_AUTH_SERVICE_KEY }}
+          LISTMONK_URL: ${{ secrets.LISTMONK_URL }}
+          LISTMONK_TOKEN: ${{ secrets.LISTMONK_TOKEN }}
+          LISTMONK_LIST_ID: ${{ vars.LISTMONK_LIST_ID || '1' }}

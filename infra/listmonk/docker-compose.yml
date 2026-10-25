@@ -1,0 +1,49 @@
+# Stack Listmonk — CRM campagnes de DataParl' (crm.dataparl.fr).
+# Dimensionnée pour Oracle Cloud Always Free : VM.Standard.E2.1.Micro
+# (1 Go RAM) suffit largement (listmonk ~57 Mo + postgres alpine).
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: listmonk
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?à définir dans .env}
+      POSTGRES_DB: listmonk
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U listmonk"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  listmonk:
+    image: listmonk/listmonk:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9000:9000"   # jamais exposé direct : passer par le reverse proxy (Caddy)
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      LISTMONK_app__address: "0.0.0.0:9000"
+      LISTMONK_db__host: db
+      LISTMONK_db__user: listmonk
+      LISTMONK_db__password: ${POSTGRES_PASSWORD}
+      LISTMONK_db__database: listmonk
+      LISTMONK_db__port: 5432
+      # SMTP Resend — les campagnes partent de dataparl.fr via Forge.
+      LISTMONK_smtp__enabled: "true"
+      LISTMONK_smtp__host: "smtp.resend.com"
+      LISTMONK_smtp__port: "587"
+      LISTMONK_smtp__username: "resend"
+      LISTMONK_smtp__password: ${RESEND_API_KEY:?à définir dans .env}
+      LISTMONK_smtp__max_conns: "4"
+      LISTMONK_smtp__max_msg: "10"
+      LISTMONK_smtp__hello_hostname: "crm.dataparl.fr"
+    volumes:
+      - config:/listmonk/config
+
+volumes:
+  db:
+  config:
