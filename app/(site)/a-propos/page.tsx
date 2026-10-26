@@ -77,7 +77,7 @@ export default function APropos() {
         <li>Les données viennent des <strong>listes officielles</strong> publiées par l&apos;Assemblée nationale, le Sénat et le Parlement européen, complétées par les archives publiées au JORF.</li>
         <li>Tout est sourcé : chaque chiffre affiché renvoie à sa source, la <a href="/methode">méthode</a> est publiée en détail et datée.</li>
         <li>Les données sont publiées sous <strong>licence ODbL</strong> : libre réutilisation avec mention.</li>
-        <li>Le financement est indépendant : pas de publicité partisane, pas de revente de données nominatives à des fins de ciblage.</li>
+        <li>Le financement est indépendant : pas de publicité partisane, pas de revente de données nominatives à des fins de ciblage. Détail des coûts et de l&apos;affectation des revenus : <a href="/notice/ads">notice publicité</a>.</li>
       </ul>
 
       <h2>Nos réseaux sociaux</h2>

@@ -56,7 +56,7 @@ export default async function Alertes() {
       <ul className="atouts">
         <li><strong>Vérifié chaque matin</strong><span>sur les listes officielles de l&apos;Assemblée nationale, du Sénat et du Parlement européen.</span></li>
         <li><strong>Daily ou Weekly</strong><span>DataParl&apos; Daily les jours où quelque chose bouge pour vous, ou DataParl&apos; Weekly, le récapitulatif du lundi.</span></li>
-        <li><strong>Gratuit, sans pub</strong><span>désinscription en un clic depuis chaque message.</span></li>
+        <li><strong>Gratuit, sans pub dans les mails</strong><span>désinscription en un clic depuis chaque message. <a href="/notice/ads">La publicité du site</a>, en toute transparence.</span></li>
         {n >= SEUIL_COMPTEUR && <li><strong>{n.toLocaleString("fr-FR")} lecteurs</strong><span>reçoivent déjà leurs alertes.</span></li>}
       </ul>
 
