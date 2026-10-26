@@ -17,6 +17,24 @@ declare global {
   }
 }
 
+// Espaces internes (admin.dataparl.fr, webmail.dataparl.fr, mail.dataparl.fr,
+// ou chemins /admin et /webmail servis sur www) : aucune mesure, aucun
+// consentement demandé. GTM, le bandeau et les scripts tiers ne chargent pas
+// là — c'était le conteneur GTM qui affichait la bulle Google « Paramètres
+// concernant la confidentialité et les cookies » (Funding Choices) sur
+// l'admin et le webmail.
+export function espaceInterne(): boolean {
+  if (typeof window === "undefined") return false;
+  const h = window.location.hostname;
+  return (
+    h.startsWith("admin.") ||
+    h.startsWith("webmail.") ||
+    h.startsWith("mail.") ||
+    window.location.pathname.startsWith("/admin") ||
+    window.location.pathname.startsWith("/webmail")
+  );
+}
+
 // Actualise les signaux Consent Mode v2 (et pousse un événement « consentement »,
 // utilisable comme déclencheur dans GTM).
 function maj(e: Record<string, "granted" | "denied">) {

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { cookieStorage } from "@/lib/cookieStorage";
-import { appliquer, chargerClarity, chargerPub, enregistrer, lire } from "@/lib/consentement";
+import { appliquer, chargerClarity, chargerPub, enregistrer, espaceInterne, lire } from "@/lib/consentement";
 
 // Bandeau de consentement maison (pas une bannière Google) : recueille l'accord
 // pour la mesure d'audience et la publicité, et transmet les signaux Consent
@@ -9,6 +9,7 @@ import { appliquer, chargerClarity, chargerPub, enregistrer, lire } from "@/lib/
 // acceptée) et Microsoft Clarity (si mesure d'audience acceptée) sont
 // injectés — jamais avant. Trois choix en bas : « Autoriser », « Gérer les
 // options » et « Tout refuser » (accessible sans ouvrir les options).
+// Espaces internes (admin, webmail) : rien ne s'affiche, rien ne se charge.
 
 export default function BandeauCookies() {
   const [visible, setVisible] = useState(false);
@@ -16,6 +17,7 @@ export default function BandeauCookies() {
   const [choix, setChoix] = useState({ mesure: true, pub: true });
 
   useEffect(() => {
+    if (espaceInterne()) return;
     const c = lire();
     if (c) {
       // Déjà choisi : appliquer à chaque page (les défauts « denied » du layout
@@ -43,9 +45,9 @@ export default function BandeauCookies() {
       <p id="cookies-titre" className="titre">Cookies, à ton choix.</p>
       <p>
         Seul ce qui sert à te garder connecté(e) est enregistré sans accord. Pour le reste, tu choisis :
-        la <strong>mesure d&apos;audience</strong> (savoir quelles pages sont lues) et la{" "}
-        <strong>publicité</strong> (annonces Google adaptées à tes centres d&apos;intérêt).
-        Rien n&apos;est activé sans ton accord, et tu peux refuser les deux.
+        la <strong>mesure d'audience</strong> (savoir quelles pages sont lues) et la{" "}
+        <strong>publicité</strong> (annonces Google adaptées à tes centres d'intérêt).
+        Rien n'est activé sans ton accord, et tu peux refuser les deux.
       </p>
       <p><a href="/informations-legales/cookies">Lire la politique cookie</a></p>
 
@@ -54,7 +56,7 @@ export default function BandeauCookies() {
           <div className="consentement-options">
             <label>
               <input type="checkbox" checked={choix.mesure} onChange={(e) => setChoix({ ...choix, mesure: e.target.checked })} />
-              <span><strong>Mesure d&apos;audience</strong>Statistiques de fréquentation, anonymes si refusés</span>
+              <span><strong>Mesure d'audience</strong>Statistiques de fréquentation, anonymes si refusés</span>
             </label>
             <label>
               <input type="checkbox" checked={choix.pub} onChange={(e) => setChoix({ ...choix, pub: e.target.checked })} />

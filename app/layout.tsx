@@ -3,6 +3,7 @@ import { DM_Sans, Spectral } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import BandeauCookies from "./_components/BandeauCookies";
+import TagsGoogle from "./_components/TagsGoogle";
 import PageTrace from "./_components/PageTrace";
 import JournalConnexion from "./_components/JournalConnexion";
 import "./globals.css";
@@ -29,13 +30,13 @@ export const metadata: Metadata = {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },
     ],
-    apple: [{ url: "/apple-icon", sizes: "180", type: "image/png" }],
+    apple: [{ url: "/apple-icon", sizes: "180x180", type: "image/png" }],
   },
   // Application web sur l'écran d'accueil iOS : titre affiché sous l'icône.
   appleWebApp: { capable: true, statusBarStyle: "default", title: "DataParl'" },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: React.ReactNode) {
   return (
 
     <html lang="fr" className={`${dmSans.variable} ${spectral.variable}`}>
@@ -58,28 +59,19 @@ gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personali
             un visiteur qui n'a pas répondu ou a tout refusé, conformément à la
             promesse du bandeau. Cela allège aussi le chargement des pages
             (~220 Ko de scripts publicitaires évités par défaut). */}
-        {/* Google Tag Manager (GTM-KW3MJMTK) : le plus haut possible dans le head. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-KW3MJMTK');`,
-          }}
-        />
+        {/* Google Tag Manager (GTM-KW3MJMTK) : PLUS injecté ici. Il était chargé
+            sur TOUTES les pages, y compris admin.dataparl.fr et
+            webmail.dataparl.fr, où un tag du conteneur (message de consentement
+            Google / Funding Choices) affichait la bulle « Paramètres concernant
+            la confidentialité et les cookies ». Le conteneur est désormais
+            chargé côté client par TagsGoogle, uniquement sur les espaces
+            publics (lib/consentement.ts → espaceInterne). */}
       </head>
       <body>
-        {/* Google Tag Manager (noscript) : juste après l'ouverture du body. */}
-        <noscript>
-          <iframe
-            src="https://www.googletagmanager.com/ns.html?id=GTM-KW3MJMTK"
-            height={0}
-            width={0}
-            style={{ display: "none", visibility: "hidden" }}
-          />
-        </noscript>
         {children}
         <BandeauCookies />
+        {/* Google Tag Manager : espaces publics uniquement (voir TagsGoogle). */}
+        <TagsGoogle />
         {/* Vercel Analytics : pages vues sans cookie ni identificateur
             cross-site, cohérent avec la promesse « sans pistage ». */}
         <Analytics />
