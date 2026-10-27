@@ -5,7 +5,7 @@ import { index, PAGES_API, reponseXml, urlset } from "@/lib/sitemaps";
 export const revalidate = 86400;
 
 // /sitemap.xml selon l'hôte :
-//   www.dataparl.fr  index des plans (pages, parlementaires, jours) ;
+//   www.dataparl.fr  index des plans (pages, parlementaires, collaborateurs, jours) ;
 //   api.dataparl.fr  pages du site de l'API.
 export async function GET() {
   const host = ((await headers()).get("host") ?? "").split(":")[0].toLowerCase();
@@ -18,6 +18,7 @@ export async function GET() {
   return reponseXml(index([
     { loc: `${base}/sitemap-pages.xml`, lastmod: jour },
     { loc: `${base}/sitemap-parlementaires.xml`, lastmod: jour },
+    { loc: `${base}/sitemap-collaborateurs.xml`, lastmod: jour },
     { loc: `${base}/sitemap-daily.xml`, lastmod: jour },
   ]));
 }
