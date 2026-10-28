@@ -32,8 +32,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     return {
       title: `${nom}${f.groupe ? ` (${f.groupe})` : ""} : ses collaborateurs, bio et mandats`, description,
       alternates: { canonical: url },
-      openGraph: { siteName: "DataParl'", title: `${nom} · DataParl'`, description, url, type: "profile", images: photo ? [{ url: photo, width: 400, height: 400, alt: `Photo officielle de ${nom}` }] : undefined },
-      twitter: { card: "summary_large_image", title: `${nom} · DataParl'`, description, images: photo ? [photo] : undefined },
+      // og:image : la carte de partage 1200×630 générée par opengraph-image.tsx
+      // (charte du site, nom de l'élu) prend le dessus sur une photo 400×400.
+      openGraph: { siteName: "DataParl'", title: `${nom} · DataParl'`, description, url, type: "profile" },
+      twitter: { card: "summary_large_image", title: `${nom} · DataParl'`, description },
     };
   }
   const e = await eluDepuisId(id).catch(() => null);
