@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.dataparl.fr"),
   title: { default: "DataParl' : le Parlement, pièce par pièce", template: "%s | DataParl'" },
   description:
-    "Arrivées, départs et transferts des collaborateurs des députés, sénateurs et eurodéputés, d'après les publications officielles. Gratuit, sans pub, sans pistage.",
+    "Arrivées, départs et transferts des collaborateurs des députés, sénateurs et eurodéputés, d'après les publications officielles. Gratuit, sans pistage, publicité soumise à consentement.",
   applicationName: "DataParl'",
   openGraph: { siteName: "DataParl'", locale: "fr_FR", type: "website" },
   // Cartes de partage (X, LinkedIn, Bluesky, Facebook, messageries) : grande image par défaut.

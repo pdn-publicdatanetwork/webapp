@@ -58,6 +58,7 @@ export const PAGES: PageSite[] = [
   { chemin: "/espace-api/docs", titre: "Documentation API", sitemap: true },
   { chemin: "/espace-api/donnees", titre: "Données de l'API", sitemap: true },
   { chemin: "/contact", titre: "Contact", sitemap: true },
+  { chemin: "/notice/ads", titre: "Notice · publicité", sitemap: true },
   { chemin: "/informations-legales", titre: "Informations légales", verrou: "Pages obligatoires", dynamique: "mentions, CGU, confidentialité, cookies, licences", sitemap: true },
   { chemin: "/sitemap", titre: "Plan du site", sitemap: true },
   { chemin: "/connexion", titre: "Connexion", verrou: "Nécessaire aux comptes" },
