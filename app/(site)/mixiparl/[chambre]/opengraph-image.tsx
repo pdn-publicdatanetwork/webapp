@@ -25,7 +25,7 @@ export default async function Image({ params }: { params: Promise<{ chambre: str
   return carteEluOg({
     module: "MixiParl'", accent: "#B794FF",
     nom: nomAffiche(e.nom),
-    role: "la mixité de l'équiperole,
+    role: "la mixité de l'équipe",
     chiffres: [
       stat ? { valeur: String(stat.effectif), legende: "collaborateurs aujourd'hui" } : null,
       pf === null ? null : { valeur: pct(pf), legende: "de femmes dans l'équipe" },

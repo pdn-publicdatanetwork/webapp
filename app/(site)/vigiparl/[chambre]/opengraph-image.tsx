@@ -24,7 +24,7 @@ export default async function Image({ params }: { params: Promise<{ chambre: str
   return carteEluOg({
     module: "VigiParl'", accent: "#FF6B7D",
     nom: nomAffiche(e.nom),
-    role: "VigiParl' · le renouvellement de l'équiperole,
+    role: "le renouvellement de l'équipe",
     chiffres: [
       stat ? { valeur: String(stat.effectif), legende: "collaborateurs aujourd'hui" } : null,
       stat ? { valeur: String(stat.departs_12m), legende: "départs sur 12 mois" } : null,
