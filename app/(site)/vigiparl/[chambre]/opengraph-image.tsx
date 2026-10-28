@@ -1,8 +1,10 @@
 import { carteEluOg, imageOg, TAILLE_OG } from "@/lib/og";
 import { eluDepuisId, statsElu } from "@/lib/elus";
+import { parlementaireDepuisId } from "@/lib/referentiel";
 import { historiqueMensuel } from "@/lib/indicateurs";
+import { photoAbsolue } from "@/lib/media";
 import { pct, tauxTurnover } from "@/lib/stats";
-import { nomAffiche } from "@/lib/format";
+import { CHAMBRE_LONG, nomAffiche } from "@/lib/format";
 
 export const alt = "VigiParl' : le renouvellement des équipes parlementaires";
 export const size = TAILLE_OG;
@@ -16,15 +18,17 @@ export default async function Image({ params }: { params: Promise<{ chambre: str
   if (id === "an" || id === "senat" || id === "pe") return GENERIQUE();
   const e = await eluDepuisId(id).catch(() => null);
   if (!e) return GENERIQUE();
-  const [stat, hist] = await Promise.all([
+  const [stat, hist, f] = await Promise.all([
     statsElu(e).catch(() => null),
     historiqueMensuel(e).catch(() => ({ points: [], debutSuivi: null })),
+    parlementaireDepuisId(id).catch(() => null),
   ]);
   const t = stat ? tauxTurnover(stat) : null;
   return carteEluOg({
     module: "VigiParl'", accent: "#FF6B7D",
     nom: nomAffiche(e.nom),
-    role: "le renouvellement de l'équipe",
+    role: f ? CHAMBRE_LONG[f.chambre] + (f.groupe ? ` · groupe ${f.groupe}` : "") : "le renouvellement de l'équipe",
+    photoUrl: f ? photoAbsolue(f.chambre, f.slug, 400) : undefined,
     chiffres: [
       stat ? { valeur: String(stat.effectif), legende: "collaborateurs aujourd'hui" } : null,
       stat ? { valeur: String(stat.departs_12m), legende: "départs sur 12 mois" } : null,
