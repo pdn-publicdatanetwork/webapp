@@ -12,6 +12,7 @@ import { pubActive } from "@/lib/deblocage";
 import BioComplete from "./BioComplete";
 import PubGoogle from "@/app/_components/PubGoogle";
 import CrayonEdition from "@/app/_components/CrayonEdition";
+import BlocRetenir from "@/app/_components/BlocRetenir";
 
 export const revalidate = 86400;
 type Props = { params: Promise<{ id: string }> };
@@ -267,6 +268,9 @@ export default async function Bio({ params }: Props) {
         <a className="btn secondaire" href={`${ficheUrl}/historique`}>Historique des collaborateurs</a>
       </p>
       <PubGoogle />
+      {/* Rétention : proposer les alertes email après une lecture de bio
+          (l'inscription aux alertes inclut la newsletter). */}
+      <BlocRetenir />
       {f.url_officielle && (
         <p className="meta">Sources officielles : <a href={f.url_officielle}>fiche institutionnelle</a> · données DataParl&apos; mises à jour chaque jour.</p>
       )}

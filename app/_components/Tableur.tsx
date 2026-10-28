@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { sessionActuelle } from "@/lib/supabaseBrowser";
+import BlocRetenir from "./BlocRetenir";
 
 // DataParl' Sheets — tableur maison, sans serveur : la grille vit dans le
 // navigateur (sauvegarde automatique en localStorage), les données de base
@@ -195,6 +196,7 @@ export default function Tableur({ id, provenance, entetes, donnees, lectureSeule
   const [page, setPage] = useState(0);
   const [recherche, setRecherche] = useState("");
   const [plein, setPlein] = useState(false);
+  const [exporte, setExporte] = useState(false);
   const zone = useRef<HTMLDivElement>(null);
   const champRecherche = useRef<HTMLInputElement>(null);
 
@@ -296,6 +298,7 @@ export default function Tableur({ id, provenance, entetes, donnees, lectureSeule
     a.download = `dataparl.fr-${id}.csv`;
     a.click();
     URL.revokeObjectURL(a.href);
+    setExporte(true);
     // Journal du téléchargement (compte ou visiteur anonyme, + IP), côté serveur.
     sessionActuelle().then((s) => {
       fetch("/api/sheets/telechargement", {
@@ -393,6 +396,10 @@ export default function Tableur({ id, provenance, entetes, donnees, lectureSeule
           ? "Feuille en lecture seule : seule l'équipe DataParl' peut modifier une grille. Les données peuvent être exportées en CSV (source dataparl.fr)."
           : "Formules : =SOMME(A2:A19), =MOYENNE(B2:B19), =MIN, =MAX, =NB, références (=B2*2), opérations + - * / ^. Ligne 1 : en-têtes. Les modifications sont conservées dans le navigateur de l'équipe."}
       </p>
+
+      {/* Rétention : l'export réussi est LE moment de forte valeur — proposer
+          les alertes email juste après (inscription newsletter incluse). */}
+      {exporte && <BlocRetenir compact />}
     </div>
   );
 }
