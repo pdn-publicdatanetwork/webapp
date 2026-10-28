@@ -1,20 +1,35 @@
-import { imageOg, TAILLE_OG } from "@/lib/og";
+import { carteEluOg, imageOg, TAILLE_OG } from "@/lib/og";
 import { parlementaireDepuisId } from "@/lib/referentiel";
-import { prenomNom } from "@/lib/format";
+import { eluDepuisFiche, statsElu } from "@/lib/elus";
+import { historiqueMensuel } from "@/lib/indicateurs";
+import { photoAbsolue } from "@/lib/media";
+import { CHAMBRE_LONG, prenomNom } from "@/lib/format";
 
 export const alt = "Fiche parlementaire DataParl'";
 export const size = TAILLE_OG;
 export const contentType = "image/png";
 export const revalidate = 86400;
 
-// Carte de partage 1200×630 au nom de l'élu pour toute fiche parlementaire
-// (fiche, /bio, /historique) : même charte que le reste du site.
 export default async function Image({ params }: { params: Promise<{ id: string }> }) {
   const id = decodeURIComponent((await params).id);
   const f = await parlementaireDepuisId(id).catch(() => null);
-  const nom = f ? prenomNom(f.prenom, f.nom) : "Parlementaire";
-  return imageOg({
-    surtitre: "Fiche parlementaire · équipe de collaborateurs",
-    legende: `${nom} : son équipe de collaborateurs, ses arrivées, ses départs et ses mandats`,
+  if (!f) return imageOg({ surtitre: "Fiche parlementaire · équipe de collaborateurs", legende: "Parlementaire : son équipe de collaborateurs, ses mouvements et ses mandats" });
+  const e = eluDepuisFiche(f);
+  const [stat, hist] = await Promise.all([
+    statsElu(e).catch(() => null),
+    historiqueMensuel(e).catch(() => ({ points: [], debutSuivi: null })),
+  ]);
+  return carteEluOg({
+    module: "DataParl'", accent: "#FFD23F",
+    nom: prenomNom(f.prenom, f.nom),
+    role: CHAMBRE_LONG[f.chambre] + (f.groupe ? ` · groupe ${f.groupe}` : ""),
+    photoUrl: photoAbsolue(f.chambre, f.slug, 400),
+    chiffres: [
+      stat ? { valeur: String(stat.effectif), legende: "collaborateurs aujourd'hui" } : null,
+      stat ? { valeur: String(stat.departs_12m), legende: "départs sur 12 mois" } : null,
+      stat ? { valeur: String(stat.departs_total), legende: "départs depuis le début du suivi" } : null,
+    ].filter((x): x is { valeur: string; legende: string } => !!x),
+    serie: hist.points.map((p) => p.femmes + p.hommes),
+    serieLegende: "Effectif de l'équipe, fin de mois" + (hist.debutSuivi ? ` · suivi depuis ${hist.debutSuivi}` : ""),
   });
 }
