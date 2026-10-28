@@ -8,6 +8,7 @@ import { cabinetsDeCollab, ministresParIds } from "@/lib/gouvernement";
 import { finEffective, periode } from "@/lib/gouvernementTypes";
 import ParcoursCollab from "./ParcoursCollab";
 import PubGoogle from "@/app/_components/PubGoogle";
+import BlocRetenir from "@/app/_components/BlocRetenir";
 
 // Fraîcheur horaire : le balayage JORF du matin (cron ~07:10 UTC) apparaît
 // sur le site dans la journée (avant : 24 h).
@@ -117,6 +118,10 @@ export default async function FicheCollab({ params }: Props) {
       {/* Annonce display AdSense : après le contenu, avant les fiches liées.
           Aucun espace réservé tant que NEXT_PUBLIC_ADSENSE_SLOT n’est pas défini. */}
       <PubGoogle />
+
+      {/* Rétention : après une lecture de fiche, proposer les alertes email
+          (l'inscription aux alertes inclut la newsletter). */}
+      <BlocRetenir />
 
       <p className="meta" style={{ marginTop: 32 }}>
         Fiche établie d&apos;après les listes officielles de collaborateurs publiées par l&apos;Assemblée nationale et le Sénat.
