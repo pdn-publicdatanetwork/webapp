@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       title: `${nom}${f.groupe ? ` (${f.groupe})` : ""} : ses collaborateurs, bio et mandats`, description,
       alternates: { canonical: url },
       openGraph: { siteName: "DataParl'", title: `${nom} · DataParl'`, description, url, type: "profile", images: photo ? [{ url: photo, width: 400, height: 400, alt: `Photo officielle de ${nom}` }] : undefined },
-      twitter: { card: "summary", title: `${nom} · DataParl'`, description, images: photo ? [photo] : undefined },
+      twitter: { card: "summary_large_image", title: `${nom} · DataParl'`, description, images: photo ? [photo] : undefined },
     };
   }
   const e = await eluDepuisId(id).catch(() => null);
