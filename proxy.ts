@@ -376,6 +376,12 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
         return vers(req, host, "/collab/pe/" + path.slice("/collab/".length), 308);
       }
     }
+    // Anciens formats d'URL de fiche parlementaire avec suffixe de chambre ou
+    // de législature (ex. /parlementaires/124760-0, /parlementaires/PA720334-8)
+    // découverts par Google : redirection 308 vers la fiche sans suffixe, au
+    // lieu d'un 404 (Search Console : « Introuvable (404) »).
+    const suffixeFiche = path.match(/^\/parlementaires\/([^/]+)-\d+$/);
+    if (suffixeFiche) return vers(req, host, "/parlementaires/" + suffixeFiche[1], 308);
     if (path.startsWith("/admin")) {
       const cible = (path.replace(/^\/admin/, "") || "/").replace(/\/$/, "") || "/";
       return protege(vers(req, `admin.${DOMAINE}`, nouvelCheminAdmin(cible) ?? cible, 307));
