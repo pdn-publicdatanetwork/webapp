@@ -11,7 +11,7 @@ export const size = TAILLE_OG;
 export const contentType = "image/png";
 export const revalidate = 86400;
 
-const GENERIQUE = () => imageOg({ surtitre: "MixiParl' · le renouvellement des équipes", accent: "#B794FF", legende: "Les équipes parlementaires sont-elles mixtes ?" });
+const GENERIQUE = () => imageOg({ surtitre: "MixiParl' · la mixité des équipes", accent: "#B794FF", legende: "Les équipes parlementaires sont-elles mixtes ?" });
 
 export default async function Image({ params }: { params: Promise<{ chambre: string }> }) {
   const id = decodeURIComponent((await params).chambre);
@@ -26,13 +26,12 @@ export default async function Image({ params }: { params: Promise<{ chambre: str
   const pf = stat ? partFemmes(stat) : null;
   const tm = stat ? tauxMixite(stat) : null;
   return carteEluOg({
-    module: "MixiParl'", accent: "#FF6B7D",
+    module: "MixiParl'", accent: "#B794FF",
     nom: nomAffiche(e.nom),
     role: f ? CHAMBRE_LONG[f.chambre] + (f.groupe ? ` · groupe ${f.groupe}` : "") : "la mixité de l'équipe",
     photoUrl: f ? photoAbsolue(f.chambre, f.slug, 400) : undefined,
     chiffres: [
       stat ? { valeur: String(stat.effectif), legende: "collaborateurs aujourd'hui" } : null,
-      stat ? { valeur: String(stat.departs_12m), legende: "départs sur 12 mois" } : null,
       pf === null ? null : { valeur: pct(pf), legende: "de femmes dans l'équipe" },
       tm === null ? null : { valeur: pct(tm), legende: "de mixité (100 % à 50/50)" },
     ].filter((x): x is { valeur: string; legende: string } => !!x),
