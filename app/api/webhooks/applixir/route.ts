@@ -11,6 +11,10 @@ export const dynamic = "force-dynamic";
 // JSON). Seul ce rappel signé avec le secret partagé débloque une fiche.
 async function traiter(params: Record<string, string>) {
   if (!pubActive()) return new NextResponse("désactivé", { status: 404 });
+  // Ping de test du tableau de bord (requête sans aucun paramètre) : répondre
+  // 200 pour que la vérification de callback passe, sans journaliser d'erreur
+  // ni débloquer quoi que ce soit (aucun paramètre = rien à valider).
+  if (Object.keys(params).length === 0) return new NextResponse("ok", { status: 200 });
   const r = lireRappel(params);
   if (!rappelValide(r, APPLIXIR_API_KEY, secret("APPLIXIR_SECRET"))) {
     // Noms des paramètres reçus (jamais leurs valeurs) pour diagnostiquer un format inattendu.
