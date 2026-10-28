@@ -1,6 +1,7 @@
 import LogoSite from "./LogoSite";
 import BarreRechercheHeader from "./BarreRechercheHeader";
 import MenuDeconnexion from "./MenuDeconnexion";
+import LiensVigiMixi from "./LiensVigiMixi";
 
 export const API_URL = "https://api.dataparl.fr";
 
@@ -9,8 +10,6 @@ const NAV = [
   { href: "/mouvements", label: "Mouvements" },
   { href: "/collab", label: "Collaborateurs" },
   { href: "/parlementaires", label: "Parlementaires" },
-  { href: "/vigiparl", label: "VigiParl'" },
-  { href: "/mixiparl", label: "MixiParl'" },
   { href: "/alertes", label: "Alertes" },
 ];
 
@@ -37,6 +36,8 @@ export function EnTeteSite({ maintenance = false }: { maintenance?: boolean }) {
               {liens.map((l) => (
                 <a key={l.href} href={l.href}>{l.label}</a>
               ))}
+              {/* VigiParl’ / MixiParl’ : pointent sur l’élu courant depuis une fiche */}
+              <LiensVigiMixi />
               <MenuDeconnexion />
             </nav>
           </details>
