@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import ListeElus from "@/app/_components/ListeElus";
-import { departementsExistants, elusDuDepartement } from "@/lib/collectifsData";
+import { anciensDuDepartement, departementsExistants, elusDuDepartement } from "@/lib/collectifsData";
 import { hrefDepartement } from "@/lib/collectifs";
 import { nomDepartement, slugDepartement } from "@/lib/senatorialesClassement";
 
@@ -32,6 +32,7 @@ export default async function FicheDepartement({ params }: Props) {
     );
   }
   const elus = await elusDuDepartement(nom).catch(() => []);
+  const anciens = await anciensDuDepartement(nom).catch(() => []);
 
   const jsonLd = {
     "@context": "https://schema.org", "@type": "ItemList",
@@ -63,6 +64,29 @@ export default async function FicheDepartement({ params }: Props) {
       </p>
       <h2>Les élus</h2>
       <ListeElus elus={elus} afficher="departement" />
+
+      {anciens.length > 0 && (
+        <>
+          <h2>Anciens élus de {nom}</h2>
+          <p className="meta">
+            {anciens.length} parlementaire{anciens.length > 1 ? "s" : ""} ayant siégé pour {nom}, dont le mandat est terminé :
+            fiche conservée avec l&apos;équipe et le parcours complets.
+          </p>
+          <ul className="gouvernement">
+            {anciens.map((e) => (
+              <li key={e.personne_id + e.chambre}>
+                <a href={`/parlementaires/${encodeURIComponent(e.slug)}`}>
+                  {e.prenom} {e.nom}
+                </a>
+                <span className="meta">
+                  {" · "}{e.chambre === "assemblee" ? "ex-député" : e.chambre === "senat" ? "ex-sénateur" : "ex-député européen"}
+                  {e.groupe ? ` · groupe ${e.groupe}` : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </>
   );
 }

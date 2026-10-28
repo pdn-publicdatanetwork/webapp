@@ -65,3 +65,12 @@ export async function elusDuDepartement(nom: string): Promise<EluCollectif[]> {
     new URLSearchParams({ select: COLS, actif: "eq.true", or: `(departement.ilike.*${nom.replace(/[(),]/g, "")}*,circonscription.ilike.*${nom.replace(/[(),]/g, "")}*)`, order: "chambre,nom,prenom" }), 3600);
   return brut.filter((r) => nomDepartement(r.departement || r.circonscription).localeCompare(nom, "fr") === 0);
 }
+// Anciens élus d'un département (fiches inactives : mandats terminés). Ils
+// restent des fiches utiles en recherche longue traîne : les lister crée des
+// liens internes vers des pages sinon découvertes seulement via le sitemap
+// (Search Console : « Détectée, actuellement non indexée »).
+export async function anciensDuDepartement(nom: string): Promise<EluCollectif[]> {
+  const brut = await dataQueryTout<EluCollectif>("parlementaires",
+    new URLSearchParams({ select: COLS, actif: "eq.false", or: `(departement.ilike.*${nom.replace(/[(),]/g, "")}*,circonscription.ilike.*${nom.replace(/[(),]/g, "")}*)`, order: "chambre,nom,prenom" }), 3600);
+  return brut.filter((r) => nomDepartement(r.departement || r.circonscription).localeCompare(nom, "fr") === 0);
+}
