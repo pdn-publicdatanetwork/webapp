@@ -65,7 +65,7 @@ export default function DonneesConfidentialite() {
         <button className="secondaire" onClick={exporter}>Exporter mes données</button>{" "}
         <button className="danger" onClick={supprimer} disabled={enCours}>Supprimer mon compte</button>
         <p className="meta">
-          La suppression efface ton compte, tes alertes, tes clés API et — si ta fiche collaborateur y est associée —
+          La suppression efface ton compte, tes alertes, tes clés API et, si ta fiche collaborateur y est associée,
           la fiche complétée (profil CV, photo, éléments déclarés). La trace de tes consentements est conservée 3 ans,
           comme prévu par la <a href="/informations-legales/confidentialite">politique de données personnelles</a>.
         </p>

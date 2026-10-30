@@ -7,7 +7,7 @@ import { CHAMBRE_LONG, nomAffiche, prenomNom } from "@/lib/format";
 import { sessionActuelle } from "@/lib/supabaseBrowser";
 import StyleCompte from "../style-compte";
 
-// Mes alertes : tout le réglage du contenu des alertes parlementaires —
+// Mes alertes : tout le réglage du contenu des alertes parlementaires :
 // fréquences, chambres, types, mais aussi groupes, familles et élus
 // suivis (autocomplétion, comme sur /alertes). Le canal (activer/arrêter
 // les alertes, newsletter, suivi) se gère dans Communications.
@@ -65,7 +65,7 @@ export default function MesAlertes() {
   }, [elus, compacts]);
   const libelleGroupe = (v: string) => {
     const f = FAMILLES.find((x) => x.code === v);
-    if (f) return `${f.code} · ${f.libelle}`;
+    if (f) return `${f.code} : ${f.libelle}`;
     const fam = ["assemblee", "senat", "europarl"].map((c) => familleDe(c, v)).find(Boolean);
     return fam ? `${v} (${fam.code})` : v;
   };
@@ -129,13 +129,13 @@ export default function MesAlertes() {
       <section className="section-compte">
         <h2>Alertes parlementaires</h2>
         <p className="meta" style={{ marginTop: 0 }}>
-          Alertes envoyées à <strong>{compte.email}</strong> · {r.actives ? "actives" : "arrêtées"}
-          {!r.actives && <> — réactive-les dans <a href="/mon-compte/communications">Communications</a></>}
+          Alertes envoyées à <strong>{compte.email}</strong>, {r.actives ? "actives" : "arrêtées"}
+          {!r.actives && <>, réactive-les dans <a href="/mon-compte/communications">Communications</a></>}
         </p>
 
         <p><strong>Fréquence</strong></p>
-        <label className="check"><input type="checkbox" checked={r.frequences.includes("quotidienne")} onChange={() => setR({ ...r, frequences: r.frequences.includes("quotidienne") ? r.frequences.filter((f) => f !== "quotidienne") : [...r.frequences, "quotidienne"] })} /> Daily — chaque jour où il y a du mouvement</label>
-        <label className="check"><input type="checkbox" checked={r.frequences.includes("hebdomadaire")} onChange={() => setR({ ...r, frequences: r.frequences.includes("hebdomadaire") ? r.frequences.filter((f) => f !== "hebdomadaire") : [...r.frequences, "hebdomadaire"] })} /> Weekly — le récapitulatif du lundi</label>
+        <label className="check"><input type="checkbox" checked={r.frequences.includes("quotidienne")} onChange={() => setR({ ...r, frequences: r.frequences.includes("quotidienne") ? r.frequences.filter((f) => f !== "quotidienne") : [...r.frequences, "quotidienne"] })} /> Daily : chaque jour où il y a du mouvement</label>
+        <label className="check"><input type="checkbox" checked={r.frequences.includes("hebdomadaire")} onChange={() => setR({ ...r, frequences: r.frequences.includes("hebdomadaire") ? r.frequences.filter((f) => f !== "hebdomadaire") : [...r.frequences, "hebdomadaire"] })} /> Weekly : le récapitulatif du lundi</label>
 
         <p><strong>Chambres suivies</strong></p>
         {CHAMBRES.map((c) => (

@@ -11,7 +11,7 @@ function appareil(agent: string | null): string {
   if (!agent) return "Appareil inconnu";
   const sys = /Windows/.test(agent) ? "Windows" : /Macintosh|Mac OS/.test(agent) ? "Mac" : /iPhone|iPad/.test(agent) ? "iPhone/iPad" : /Android/.test(agent) ? "Android" : /Linux/.test(agent) ? "Linux" : "Appareil inconnu";
   const nav = /Edg\//.test(agent) ? "Edge" : /OPR|Opera/.test(agent) ? "Opera" : /Firefox/.test(agent) ? "Firefox" : /Chrome/.test(agent) ? "Chrome" : /Safari/.test(agent) ? "Safari" : "navigateur inconnu";
-  return sys + " · " + nav;
+  return sys + " " + nav;
 }
 
 export default function MonActivite() {
@@ -75,9 +75,9 @@ export default function MonActivite() {
           <ul style={{ paddingLeft: 18, margin: 0 }}>
             {lignes.map((l, i) => (
               <li key={l.cree_le + i} style={{ margin: "8px 0" }}>
-                <strong>{fmt.format(new Date(l.cree_le))}</strong> — {appareil(l.agent)}
-                {l.ip ? <span className="meta"> · {l.ip}</span> : null}
-                {i === 0 ? <span className="meta"> · cet appareil, maintenant</span> : null}
+                <strong>{fmt.format(new Date(l.cree_le))}</strong>, {appareil(l.agent)}
+                {l.ip ? <span className="meta"> ({l.ip})</span> : null}
+                {i === 0 ? <span className="meta"> (cet appareil, maintenant)</span> : null}
               </li>
             ))}
           </ul>

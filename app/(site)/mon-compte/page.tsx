@@ -35,7 +35,7 @@ function Icone({ nom }: { nom: string }) {
   return (<svg {...p}><path d="M9 8l-4 4 4 4" /><path d="M15 8l4 4-4 4" /><path d="M13 6l-2 12" /></svg>);
 }
 
-// Mon compte : le centre du compte, à la manière du compte Google — grand
+// Mon compte : le centre du compte, à la manière du compte Google : grand
 // avatar et salutation, puis une liste aérée de rubriques avec icône et
 // chevron. Les rubriques en préparation (Achats) ne sont proposées qu'à
 // l'équipe ; Se déconnecter ferme la liste, dans le même système de
@@ -47,7 +47,7 @@ export default function MonCompte() {
 
   const appel = useCallback(
     // Le jeton est relu à chaque appel : la session en mémoire peut être
-    // expirée (onglet en arrière-plan) — sessionActuelle() la rafraîchit.
+    // expirée (onglet en arrière-plan) ; sessionActuelle() la rafraîchit.
     async (url: string, init: RequestInit = {}) => {
       const s = await sessionActuelle();
       return fetch(url, { ...init, headers: { ...(init.headers ?? {}), Authorization: `Bearer ${s?.access_token}` } });
@@ -100,7 +100,7 @@ export default function MonCompte() {
   const initiale = (compte.prenom || compte.email)[0].toUpperCase();
   const nomComplet = [compte.prenom, compte.nom].filter(Boolean).join(" ");
   const resumeAlertes = compte.alertes.actives
-    ? compte.alertes.chambres.map((c) => CHAMBRES.find((x) => x.v === c)?.l ?? c).join(" · ")
+    ? compte.alertes.chambres.map((c) => CHAMBRES.find((x) => x.v === c)?.l ?? c).join(", ")
     : "Aucune alerte pour l'instant";
 
   const rubriques = [
@@ -134,7 +134,7 @@ export default function MonCompte() {
           {compte.prenom ? `Bonjour ${compte.prenom}` : "Mon compte"}
         </p>
         <p className="meta" style={{ margin: "6px 0 0", fontSize: 14 }}>
-          {compte.email} — compte créé le {fmt.format(new Date(compte.cree_le))}
+          {compte.email}, compte créé le {fmt.format(new Date(compte.cree_le))}
         </p>
       </section>
 
