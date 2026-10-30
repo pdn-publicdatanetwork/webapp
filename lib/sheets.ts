@@ -26,8 +26,8 @@ export const FEUILLES: FeuilleDef[] = [
   {
     id: "vigiparl-annual-chart",
     titre: "Renouvellement annuel des équipes",
-    description: "Effectifs au 1er janvier, arrivées et départs comptés ou exclus (fin ou début de mandat), taux de renouvellement — année par année, chambre par chambre.",
-    provenance: "Table stats_annuelles (API DataParl'/Supabase) · méthode VigiParl'",
+    description: "Effectifs au 1er janvier, arrivées et départs comptés ou exclus (fin ou début de mandat), taux de renouvellement : année par année, chambre par chambre.",
+    provenance: "Table stats_annuelles (API DataParl'/Supabase), méthode VigiParl'",
     colonnes: [
       { cle: "an", label: "Année", genre: "entier" },
       { cle: "chambre", label: "Chambre", genre: "texte" },
@@ -56,8 +56,8 @@ export const FEUILLES: FeuilleDef[] = [
   {
     id: "mixiparl-annual-chart",
     titre: "Mixité annuelle des équipes",
-    description: "Nombre d'équipes, équipes non mixtes et taux de mixité moyen (100 % à 50/50) — année par année, chambre par chambre.",
-    provenance: "Vue stats_mixite_annuelle (API DataParl'/Supabase) · méthode MixiParl'",
+    description: "Nombre d'équipes, équipes non mixtes et taux de mixité moyen (100 % à 50/50) : année par année, chambre par chambre.",
+    provenance: "Vue stats_mixite_annuelle (API DataParl'/Supabase), méthode MixiParl'",
     colonnes: [
       { cle: "an", label: "Année", genre: "entier" },
       { cle: "chambre", label: "Chambre", genre: "texte" },
@@ -77,7 +77,7 @@ export const FEUILLES: FeuilleDef[] = [
     id: "gouvernements-2017-2026",
     titre: "Membres des gouvernements 2017 → aujourd'hui",
     description: "Premier ministre, ministres, ministres délégués et secrétaires d'État de chaque gouvernement, une ligne par personne et par période.",
-    provenance: "Table ministres (API DataParl'/Supabase) · JORF et archives",
+    provenance: "Table ministres (API DataParl'/Supabase), JORF et archives",
     colonnes: [
       { cle: "debut", label: "Début", genre: "texte" },
       { cle: "fin", label: "Fin", genre: "texte" },
@@ -100,8 +100,8 @@ export const FEUILLES: FeuilleDef[] = [
   {
     id: "parlementaires",
     titre: "Parlementaires (2017 → aujourd'hui)",
-    description: "Députés, sénateurs et eurodéputés français : identité, circonscription, groupe et premier mandat — une ligne par parlementaire.",
-    provenance: "Table parlementaires (API DataParl'/Supabase) · données ouvertes AN, Sénat, Parlement européen",
+    description: "Députés, sénateurs et eurodéputés français : identité, circonscription, groupe et premier mandat : une ligne par parlementaire.",
+    provenance: "Table parlementaires (API DataParl'/Supabase), données ouvertes AN, Sénat, Parlement européen",
     colonnes: [
       { cle: "chambre", label: "Chambre", genre: "texte" },
       { cle: "civilite", label: "Civ.", genre: "texte" },
@@ -127,7 +127,7 @@ export const FEUILLES: FeuilleDef[] = [
     id: "mouvements-recents",
     titre: "Derniers mouvements",
     description: `Les ${n(2000)} mouvements les plus récents : arrivées, départs et transferts de collaborateurs parlementaires.`,
-    provenance: "Table mouvements (API DataParl'/Supabase) · suivi quotidien et archives",
+    provenance: "Table mouvements (API DataParl'/Supabase), suivi quotidien et archives",
     colonnes: [
       { cle: "date_event", label: "Date", genre: "texte" },
       { cle: "chambre", label: "Chambre", genre: "texte" },
@@ -149,9 +149,9 @@ export const FEUILLES: FeuilleDef[] = [
   },
   {
     id: "mixiparl-elus-an",
-    titre: "Mixité des équipes · Assemblée nationale, élu par élu",
+    titre: "Mixité des équipes, Assemblée nationale, élu par élu",
     description: "Le classement MixiParl' des députés : part de femmes et taux de mixité de l'équipe de chacun, de la plus mixte à la moins mixte.",
-    provenance: "Vue stats_turnover_elus (API DataParl'/Supabase) · méthode MixiParl'",
+    provenance: "Vue stats_turnover_elus (API DataParl'/Supabase), méthode MixiParl'",
     colonnes: [
       { cle: "rang", label: "Rang", genre: "entier" },
       { cle: "elu", label: "Élu", genre: "texte" },
@@ -166,9 +166,9 @@ export const FEUILLES: FeuilleDef[] = [
   },
   {
     id: "mixiparl-elus-senat",
-    titre: "Mixité des équipes · Sénat, élu par élu",
+    titre: "Mixité des équipes, Sénat, élu par élu",
     description: "Le classement MixiParl' des sénateurs : part de femmes et taux de mixité de l'équipe de chacun, de la plus mixte à la moins mixte.",
-    provenance: "Vue stats_turnover_elus (API DataParl'/Supabase) · méthode MixiParl'",
+    provenance: "Vue stats_turnover_elus (API DataParl'/Supabase), méthode MixiParl'",
     colonnes: [
       { cle: "rang", label: "Rang", genre: "entier" },
       { cle: "elu", label: "Élu", genre: "texte" },
@@ -184,7 +184,7 @@ export const FEUILLES: FeuilleDef[] = [
     {
       id: "liste_collab_dataparl",
       titre: "Liste des collaborateurs parlementaires en poste",
-      description: "Tous les collaborateurs directs des \u00e9lus fran\u00e7ais actuellement en poste, toutes chambres confondues : nom, \u00e9lu employeur, chambre et fonction — la liste de r\u00e9f\u00e9rence, mise \u00e0 jour quotidiennement.",
+      description: "Tous les collaborateurs directs des \u00e9lus fran\u00e7ais actuellement en poste, toutes chambres confondues : nom, \u00e9lu employeur, chambre et fonction : la liste de r\u00e9f\u00e9rence, mise \u00e0 jour quotidiennement.",
       provenance: "Table periodes en cours (API DataParl'/Supabase) \u00b7 listes officielles AN, S\u00e9nat, Parlement europ\u00e9en",
       colonnes: [
         { cle: "collab", label: "Collaborateur", genre: "texte" },

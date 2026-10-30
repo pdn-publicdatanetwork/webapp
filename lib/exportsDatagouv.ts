@@ -14,7 +14,7 @@ export type ExportDef = { entetes: string[]; charger: () => Promise<LigneExport[
 
 const CHAMBRE_LONG: Record<string, string> = { assemblee: "Assemblée nationale", senat: "Sénat", europarl: "Parlement européen" };
 
-// — Départements → régions (Code officiel géographique) —
+// : Départements → régions (Code officiel géographique) :
 const REGIONS: Record<string, readonly string[]> = {
   "Auvergne-Rhône-Alpes": ["Ain", "Allier", "Ardèche", "Cantal", "Drôme", "Haute-Loire", "Haute-Savoie", "Isère", "Loire", "Puy-de-Dôme", "Rhône", "Savoie"],
   "Bourgogne-Franche-Comté": ["Côte-d'Or", "Doubs", "Haute-Saône", "Jura", "Nièvre", "Saône-et-Loire", "Territoire de Belfort", "Yonne"],
@@ -40,7 +40,7 @@ const DEPT_VERS_REGION: Record<string, string> = {};
 for (const [region, depts] of Object.entries(REGIONS)) for (const d of depts) DEPT_VERS_REGION[d] = region;
 const regionDu = (departement: string | null): string => (departement && DEPT_VERS_REGION[departement]) || "";
 
-// — Types des données lues —
+// : Types des données lues :
 type Periode = { collab_id: string; chambre: string; elu_id: string; elu_nom: string; debut: string | null; fin: string | null; en_cours: boolean; fonction: string | null };
 type Collab = { collab_id: string; prenom: string; nom: string; genre: string | null };
 type Parlementaire = { elu_id: string; chambre: string; civilite: string; prenom: string; nom: string; circonscription: string | null; departement: string | null; groupe: string | null; groupe_libelle: string | null; premier_mandat: string | null; actif: boolean };
@@ -50,7 +50,7 @@ type Mouvement = { date_event: string; chambre: string; type: string; collab_pre
 const param = (o: Record<string, string>) => new URLSearchParams(o);
 const enCours = (a: Appartenance) => (a.fin ?? "") === "";
 
-// — Base commune : périodes en cours + collaborateurs + parlementaires —
+// : Base commune : périodes en cours + collaborateurs + parlementaires :
 type Base = {
   periodes: Periode[];
   noms: Map<string, string>;
@@ -78,7 +78,7 @@ const nomParti = (sigle: string) => NOMS_COMPLETS[sigle] ?? sigle;
 const typeCommission = new Set(["commission", "commission_enquete", "commission_speciale"]);
 const estBureauCommission = (f: string) => /pr[ée]sident|vice|rapporteur/i.test(f);
 
-// — Registre des exports « collaborateurs » (/assets/collab/<slug>.csv) —
+// : Registre des exports « collaborateurs » (/assets/collab/<slug>.csv) :
 export const EXPORTS_COLLAB: Record<string, ExportDef> = {
   an: chambre("assemblee"),
   senat: chambre("senat"),
@@ -215,7 +215,7 @@ function segmentation(ligne: (b: Base, p: Periode) => LigneExport, entetes: stri
   };
 }
 
-// — Registre des exports « parlementaires » (/assets/parl/<slug>.csv) —
+// : Registre des exports « parlementaires » (/assets/parl/<slug>.csv) :
 async function parlementairesTous(): Promise<Parlementaire[]> {
   return dataQueryTout<Parlementaire>("parlementaires", param({ select: "elu_id,chambre,civilite,prenom,nom,circonscription,departement,groupe,groupe_libelle,premier_mandat,actif", order: "chambre,nom.asc" }));
 }
@@ -283,7 +283,7 @@ export const EXPORTS_PARL: Record<string, ExportDef> = {
   },
 };
 
-// — Réponse CSV générique : verrou compte, CORS www, BOM UTF-8 —
+// : Réponse CSV générique : verrou compte, CORS www, BOM UTF-8 :
 export async function servirCSV(req: Request, file: string, exportsDisponibles: Record<string, ExportDef>, prefixe: string): Promise<Response> {
   const user = await utilisateur(req);
   if (!user) {

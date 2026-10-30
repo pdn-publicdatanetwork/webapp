@@ -5,7 +5,7 @@ import { dataQueryTout } from "./data";
 // collaborateurs de groupe, collectés depuis les sites officiels des groupes
 // et les annuaires des assemblées (nouvelle table `equipes_groupes`).
 // Au Parlement européen, les assistants « (groupement) » déjà chargés dans
-// `affectations` complètent l'équipe — on ne les duplique pas.
+// `affectations` complètent l'équipe : on ne les duplique pas.
 
 export type MembreEquipeGroupe = {
   chambre: string; groupe: string;

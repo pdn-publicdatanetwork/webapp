@@ -21,7 +21,7 @@ export function normaliserTel(saisie: string): string | null {
   return `33${m[1]}${m[2]}`;
 }
 
-// Inscrit (ou réactive) un abonné et renvoie le jeton de désinscription —
+// Inscrit (ou réactive) un abonné et renvoie le jeton de désinscription :
 // en clair une seule fois, ici, pour construire le lien ; seul son hash est
 // conservé. La réinscription régénère le jeton (un seul actif par numéro).
 export async function inscrireWa(tel: string): Promise<string> {

@@ -19,12 +19,12 @@ export async function rechercherSite(q: string, limite = 8): Promise<Resultat[]>
   const blocs: Resultat[][] = [
     elus.map((e) => ({
       valeur: `elu:${e.slug}`, libelle: prenomNom(e.prenom, e.nom), groupe: "Élus",
-      detail: [e.groupe, CHAMBRE[e.chambre], e.actif ? "" : "ancien mandat"].filter(Boolean).join(" · "),
+      detail: [e.groupe, CHAMBRE[e.chambre], e.actif ? "" : "ancien mandat"].filter(Boolean).join(", "),
       href: `/parlementaires/${encodeURIComponent(e.slug)}`,
     })),
     collabs.map((c) => ({
       valeur: `collab:${c.slug}`, libelle: prenomNom(c.prenom, c.nom), groupe: "Collaborateurs",
-      detail: [c.genre === "F" ? "Collaboratrice" : "Collaborateur", c.chambres.split(" ").map((x) => CHAMBRE[x]).join(", "), c.actif ? "en poste" : `jusqu'en ${c.derniere_date.slice(0, 4)}`].filter(Boolean).join(" · "),
+      detail: [c.genre === "F" ? "Collaboratrice" : "Collaborateur", c.chambres.split(" ").map((x) => CHAMBRE[x]).join(", "), c.actif ? "en poste" : `jusqu'en ${c.derniere_date.slice(0, 4)}`].filter(Boolean).join(", "),
       href: `/collab/${encodeURIComponent(c.slug)}`,
     })),
     groupes.map((g) => ({

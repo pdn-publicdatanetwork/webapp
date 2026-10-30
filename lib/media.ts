@@ -1,7 +1,7 @@
 // Photos des élus servies par DataParl' : media.dataparl.fr/<chambre>/<id>_<credit>_<taille>.png
 // (aussi sous www.dataparl.fr/media/…). `credit` nomme le détenteur de l'image :
 // an (Assemblée nationale), senat (Sénat), pe (Parlement européen), gouv
-// (Gouvernement, d'après info.gouv.fr — le photographe est crédité sur la page).
+// (Gouvernement, d'après info.gouv.fr : le photographe est crédité sur la page).
 // Sans dépendance (testé).
 export const CODE_CHAMBRE: Record<string, "an" | "senat" | "pe" | "gouv"> = { assemblee: "an", senat: "senat", europarl: "pe", gouvernement: "gouv" };
 export const CHAMBRE_DE_CODE: Record<string, "assemblee" | "senat" | "europarl" | "gouvernement"> = { an: "assemblee", senat: "senat", pe: "europarl", gouv: "gouvernement" };
@@ -45,7 +45,7 @@ export function sourceAutorisee(url: string): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// Logos des groupes parlementaires — media.dataparl.fr/groupes/<sigle>-<chambre>-<législature>.png
+// Logos des groupes parlementaires : media.dataparl.fr/groupes/<sigle>-<chambre>-<législature>.png
 // Ex. dem-an-XVIIe.png (groupe Dem, Assemblée nationale, XVIIe législature).
 // Source des logos de l'AN : Datan (datan.fr), qui les publie par législature.
 // ---------------------------------------------------------------------------

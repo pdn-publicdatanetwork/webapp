@@ -1,12 +1,12 @@
 // Journal des vues des pages mentionnant les canaux WhatsApp et Telegram
 // (DataParl' Daily) : chaque consultation de ces pages est enregistrée côté
-// serveur — horodatage, adresse IP, navigateur, page d'origine — dans la
+// serveur : horodatage, adresse IP, navigateur, page d'origine : dans la
 // table `vues_reseaux` (projet Supabase dataparl-auth). Consultation réservée
 // à l'admin (Journal → Vues canaux) ; conservation 13 mois (durée CNIL des
 // logs techniques), purge automatique déclenchée ici.
 //
 // Utilisé depuis proxy.ts (middleware) : pas d'import "server-only", accès
-// REST direct par fetch, compatible Edge — même principe que lib/maintenance.
+// REST direct par fetch, compatible Edge : même principe que lib/maintenance.
 
 import { AUTH_SUPABASE_URL, secret } from "./env";
 
@@ -43,7 +43,7 @@ export async function journaliserVueReseaux(vue: Vue): Promise<void> {
       signal: AbortSignal.timeout(4000),
     });
     // Purge : au-delà de 13 mois, effacé. Lancée environ une fois sur 50
-    // vues — largement suffisant à ce volume, jamais coûteux.
+    // vues : largement suffisant à ce volume, jamais coûteux.
     if (Math.random() < 0.02) {
       const limite = new Date(Date.now() - 13 * 30.44 * 86400_000).toISOString();
       await fetch(`${AUTH_SUPABASE_URL}/rest/v1/vues_reseaux?le=lt.${limite}`, {

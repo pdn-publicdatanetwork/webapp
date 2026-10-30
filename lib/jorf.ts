@@ -7,7 +7,7 @@ import { cleNom } from "./format.ts";
 // cabinets ministériels (directeurs, chefs de cabinet, conseillers…).
 //
 // Aucune dépendance : le zip est lu à la main (zlib natif), le XML est
-// analysé par expression régulière — le format DILA est régulier.
+// analysé par expression régulière : le format DILA est régulier.
 // Source : https://www.data.gouv.fr/…/jorf-les-donnees-de-l-edition-lois-et-decrets…
 // (Premier ministre / DILA, réutilisation libre).
 
@@ -103,7 +103,7 @@ function personnesDuTexte(metaSm: string): { civilite: "M." | "Mme"; prenom: str
 // Fonctions de cabinet citées dans les décrets, avec leurs adjectifs usuels
 // (« conseiller parlementaire », « conseillère technique presse »…). La
 // correspondance la plus longue gagne : c'est elle qui devient la fonction
-// enregistrée — plus de « conseiller » générique qui noie les titres réels.
+// enregistrée : plus de « conseiller » générique qui noie les titres réels.
 const ADJECTIFS_FONCTION = "(?:\\s+(?:technique[s]?|parlementaire[s]?|social(?:e|es)?|spéciale?|politique[s]?|numérique|digitale|de\\s+presse|communication|territoriale[s]?|européen(?:ne|nes)?|agricole|juridique))*";
 const FONCTION_CABINET_RX = new RegExp(
   "\\b(adjoint(?:e)?\\s+au\\s+directeur(?:\\s+d(?:e|u)\\s+cabinet)?|direct(?:eur|rice)(?:\\s+adjoint(?:e)?)?\\s+d(?:e|u)\\s+cabinet|chef(?:fe)?(?:\\s+adjoint(?:e)?)?\\s+d(?:e|u)\\s+cabinet|charg[ée]e?\\s+de\\s+mission|conseill(?:er|ère))" + ADJECTIFS_FONCTION,
@@ -133,7 +133,7 @@ const CIBLES: RegExp[] = [
   new RegExp(`\\bauprès\\s+(?:du|de\\s+la|de\\s+l')\\s*(${TITRE_MINISTERIEL})`, "iu"),
 ];
 
-// Nettoyage de l'intitulé capté : on tronque au premier greffon parasite —
+// Nettoyage de l'intitulé capté : on tronque au premier greffon parasite :
 // la fonction du nommé si elle suit l'intitulé, les compléments de lieu ou
 // de durée. NB : \b ne fonctionne pas après une lettre accentuée (« chargé »
 // finit par un « é », non-mot en JS), on exige donc une espace ou une fin.
@@ -147,14 +147,14 @@ const nettoyerTitre = (s: string, fonction: string | null): string => {
   return t.replace(/[\s,:;]+$/, "").replace(/\s+/g, " ").trim();
 };
 
-// Ministre de rattachement nommé dans le décret — et immédiatement qualifié :
+// Ministre de rattachement nommé dans le décret : et immédiatement qualifié :
 // « directeur du cabinet de Mme Marina FERRARI, ministre des sports ». Sans
 // qualification on refuse : c'est en attrapant des « M. X » croisés dans un
 // arrêté quelconque que des rattachements fantômes étaient créés.
 const MINISTRE_NOMME = /(?:auprès|chez|cabinet)\s+d(?:e\s+la|e|u|')\s*(?:M\.|Mme|Madame|Monsieur)\s+([A-ZÉÈ][\p{L}'’-]+)\s+([A-ZÉÈ][\p{L}'’-]+(?:\s+[A-ZÉÈ][\p{L}'’-]+)?),?\s*(?=(?:(?:Premier\s+)?ministre|secrétaire\s+d'[ée]tat|garde\s+des\s+sceaux))/u;
 
 // Titre ministériel directement après le nom d'une personne : la seule
-// preuve qu'on a affaire à un membre du Gouvernement — « Mme FERRARI,
+// preuve qu'on a affaire à un membre du Gouvernement : « Mme FERRARI,
 // ministre des sports », « M. LECORNU, Premier ministre », « est nommé
 // secrétaire d'État à… ». Les mentions d'un ministre dans la signature ou
 // l'exposé d'un arrêté préfectoral ne qualifient plus la personne.
@@ -169,7 +169,7 @@ const nomApostrophe = (prenom: string, nom: string): RegExp => {
 // nominatives concernant les ministres et les cabinets ministériels.
 //
 // Garde-fous (2026-10-13) : une mesure n'est retenue que si le décret
-// qualifie explicitement la personne — titre ministériel directement après
+// qualifie explicitement la personne : titre ministériel directement après
 // son nom pour un ministre, intitulé de cabinet cité ou ministre nommé et
 // qualifié pour un membre de cabinet. Les nominations préfectorales («
 // directeur de cabinet du préfet de… »), de l'Élysée (« …du président de la

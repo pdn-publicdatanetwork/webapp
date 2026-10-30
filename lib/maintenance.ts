@@ -1,5 +1,5 @@
 // État public de la maintenance (table maintenance_etat, dataparl-auth) :
-// lecture avec la clé publique, gardée 30 s en mémoire — la bascule depuis
+// lecture avec la clé publique, gardée 30 s en mémoire : la bascule depuis
 // l'admin ou Slack est effective en moins de 30 s, sans redéploiement.
 // Filet de sécurité : MAINTENANCE_ACTIVE=1 (Vercel) force la maintenance,
 // même si la base est injoignable. En cas d'erreur de lecture : dernier
