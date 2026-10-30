@@ -2,7 +2,7 @@ import "server-only";
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import type { Admin } from "./adminAuth";
 import { nouveauJetonPreferences } from "./consent";
-import { LIENS_BASE, secret } from "./env";
+import { LIENS_BASE, MAIL_WEB_URL, secret } from "./env";
 import { esc, texteVersHtml } from "./gabarit";
 import { expedier, piedOptIn } from "./mail";
 import { authAdmin } from "./supabaseAdmin";
@@ -109,8 +109,8 @@ export async function envoyerCommunique(a: Admin, c: Communique, destinataires: 
 export type Audience = "abonnes" | "comptes";
 
 // Destinataires d'un mailing. « abonnes » : personnes ayant consenti aux
-// communications (désinscription dans chaque message). « comptes » : tous les
-// comptes, pour un message de service (CGU, incident, changement du service).
+// communications (désinscription dans chaque message). « comptes » : tous
+// les comptes, pour un message de service (CGU, incident, changement du service).
 export async function destinatairesMailing(audience: Audience): Promise<string[]> {
   const db = authAdmin();
   if (audience === "abonnes") {
@@ -141,8 +141,9 @@ export async function envoyerMailing(a: Admin, m: { objet: string; texte: string
     let stop: string | undefined;
     if (m.audience === "abonnes" && !test) {
       const jeton = await nouveauJetonPreferences(email);
-      pied = piedOptIn(`${SITE}/preferences?id=${jeton}`, `${SITE}/desinscription?id=${jeton}`);
-      stop = `${SITE}/api/desinscription?id=${jeton}`;
+      // Liens de consentement sur mail.dataparl.fr, comme pour les alertes.
+      pied = piedOptIn(`${MAIL_WEB_URL}/preferences?id=${jeton}`, `${MAIL_WEB_URL}/desinscription?id=${jeton}`);
+      stop = `${MAIL_WEB_URL}/api/desinscription?id=${jeton}`;
     }
     const r = await expedier({
       from: "hello@dataparl.fr", replyTo: "hello@dataparl.fr", to: [email], subject: `${test ? "[Test] " : ""}${m.objet}`, titre: m.objet,
