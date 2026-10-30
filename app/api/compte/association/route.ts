@@ -5,8 +5,8 @@ import { ADRESSE_ASSOCIER, creerDemande, statutDemande } from "@/lib/association
 export const dynamic = "force-dynamic";
 
 // Association compte ↔ fiche collaborateur : GET statut, POST création de
-// demande (renvoie objet + code pour le mailto prérempli). L'utilisateur ne
-// voit jamais les règles de validation côté serveur.
+// demande (renvoie objet + code + domaine attendu pour le mailto prérempli).
+// L'utilisateur ne voit jamais les règles de validation côté serveur.
 
 export async function GET(req: Request) {
   const u = await utilisateur(req);
@@ -24,6 +24,6 @@ export async function POST(req: Request) {
   const r = await creerDemande(u.id, slug);
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: 400 });
   return NextResponse.json({
-    adresse: ADRESSE_ASSOCIER, objet: r.objet, code: r.code, expireLe: r.expireLe,
+    adresse: ADRESSE_ASSOCIER, objet: r.objet, code: r.code, expireLe: r.expireLe, domaine: r.domaine,
   });
 }
