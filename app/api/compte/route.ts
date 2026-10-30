@@ -8,16 +8,18 @@ export const dynamic = "force-dynamic";
 
 // GET : profil, méthodes de connexion et réglage des alertes. Le prénom et
 // le nom viennent des métadonnées du compte (saisies à la création ou
-// modifiées depuis Informations personnelles).
+// modifiées depuis Informations personnelles). `equipe` : membre actif de
+// l'équipe (rubriques en préparation réservées).
 export async function GET(req: Request) {
   const user = await utilisateur(req);
   if (!user) return NextResponse.json({ error: "non connecté" }, { status: 401 });
   const email = normalizeEmail(user.email!);
   const db = authAdmin();
-  const [{ data: prefs }, { data: subs }] = await Promise.all([
+  const [{ data: prefs }, { data: subs }, { data: staff }] = await Promise.all([
     db.from("communication_preferences").select("alertes_enabled, newsletter_enabled, tracking_optout").eq("email", email).maybeSingle(),
     db.from("alert_subscriptions").select("frequence, frequences, chambres, types, groupes, elus, partis, commissions, active, prenom, nom").eq("email", email)
       .order("created_at", { ascending: false }).limit(1),
+    db.from("staff").select("role, actif").eq("user_id", user.id).maybeSingle(),
   ]);
   const sub = subs?.[0];
   const meta = (user.user_metadata ?? {}) as { prenom?: string; nom?: string };
@@ -28,6 +30,7 @@ export async function GET(req: Request) {
     prenom: meta.prenom ?? sub?.prenom ?? "",
     nom: meta.nom ?? sub?.nom ?? "",
     suivi_optout: prefs?.tracking_optout === true,
+    equipe: !!staff?.actif,
     alertes: {
       actives: !!prefs?.alertes_enabled && !!sub?.active,
       frequences: sub && (sub.frequences ?? []).length ? sub.frequences : [sub?.frequence ?? "quotidienne"],
