@@ -707,25 +707,35 @@ main .wrap [contenteditable="true"] { outline: 2px dashed color-mix(in srgb, var
 .chiffres.hero { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 26px 0 10px; }
 .chiffres.hero div { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
 .icone-chiffre { display: inline-flex; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 10px; background: color-mix(in srgb, var(--jaune) 40%, transparent); color: #071A41; margin-bottom: 8px; flex: none; }
-/* Derniers mouvements : pastilles colorées et hover léger */
-.accueil-mouvements ul.mouvements li { padding: 12px 10px; border-radius: 10px; transition: background .15s ease; }
-.accueil-mouvements ul.mouvements li:hover { background: color-mix(in srgb, var(--bleu) 5%, transparent); }
-.accueil-mouvements .badge { display: inline-block; text-align: center; padding: 3px 10px; border-radius: 999px; }
-.badge.arrivee { background: color-mix(in srgb, var(--arrivee) 12%, transparent); }
-.badge.depart { background: color-mix(in srgb, var(--depart) 12%, transparent); }
-.badge.transfert { background: color-mix(in srgb, var(--transfert) 12%, transparent); }
-.actions-accueil { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+/* Derniers mouvements : point coloré + libellé, hiérarchie claire */
+ul.mouvements-list { list-style: none; padding: 0; margin: 0; }
+ul.mouvements-list li.mouvement { display: flex; gap: 1rem; align-items: flex-start; padding-bottom: 1.25rem; border-bottom: 1px solid var(--line); }
+ul.mouvements-list li.mouvement:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+ul.mouvements-list .mouvement-type { display: flex; align-items: center; gap: .4rem; font-size: .8rem; font-weight: 600; min-width: 78px; padding-top: .2rem; color: var(--muted); white-space: nowrap; }
+ul.mouvements-list .mouvement-type .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+ul.mouvements-list .mouvement-type.arrivee .dot { background: #3B82F6; }
+ul.mouvements-list .mouvement-type.depart .dot { background: #EF4444; }
+ul.mouvements-list .mouvement-type.transfert .dot { background: #8B5CF6; }
+ul.mouvements-list .mouvement-content { flex: 1; min-width: 0; }
+ul.mouvements-list .mouvement-main { margin: 0 0 .25rem; line-height: 1.45; }
+ul.mouvements-list .mouvement-main a.collab { font-weight: 700; color: var(--ink); text-decoration: none; }
+ul.mouvements-list .mouvement-main a.elu { color: var(--ink); text-decoration: none; }
+ul.mouvements-list .mouvement-main a.collab:hover, ul.mouvements-list .mouvement-main a.elu:hover { text-decoration: underline; }
+ul.mouvements-list .groupe { color: var(--muted); }
+ul.mouvements-list .mouvement-meta { margin: 0; font-size: .82rem; color: var(--muted); }
+@media (max-width: 640px) { ul.mouvements-list .mouvement-type { min-width: 68px; } }
+.actions-accueil { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 2rem; }
 .actions-accueil .btn { margin-top: 0; }
 /* Carte alertes email, légèrement mise en avant */
-.accueil-alerte { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 30px; max-width: none; border-left: 4px solid var(--jaune); }
+.accueil-alerte { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 30px; max-width: none; background: color-mix(in srgb, var(--jaune) 8%, var(--card)); border-color: color-mix(in srgb, var(--jaune) 35%, var(--line)); }
 .accueil-alerte p { margin: 4px 0 0; color: var(--muted); }
 .accueil-alerte .btn { margin: 0; }
 /* Grille Explorer : 8 cartes (4 colonnes desktop, 2 tablette, 1 mobile) */
 ul.explorer { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .explorer a { display: block; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--card); text-decoration: none; color: var(--ink); transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
-.explorer a:hover, .explorer a:focus-visible { border-color: color-mix(in srgb, var(--bleu) 45%, transparent); box-shadow: 0 6px 18px rgba(7, 26, 65, .08); transform: translateY(-1px); }
+.explorer a:hover, .explorer a:focus-visible { border-color: color-mix(in srgb, var(--bleu) 22%, transparent); box-shadow: 0 4px 12px rgba(7, 26, 65, .05); }
 .explorer strong { display: block; margin-bottom: 2px; }
-.explorer a > span:last-child { color: var(--muted); font-size: .88rem; }
+.explorer a > span:last-child { display: block; color: var(--muted); font-size: .88rem; }
 @media (max-width: 1023px) {
   ul.explorer { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .chiffres.hero { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -737,3 +747,16 @@ ul.explorer { list-style: none; padding: 0; margin: 0; display: grid; grid-templ
   .accueil-alerte { flex-direction: column; align-items: flex-start; }
   main { padding-top: 20px; }
 }
+
+/* ── Accueil v2, retours : logos officiels et wordmarks ─────────────────── */
+.explorer .icone-chiffre { width: 32px; height: 32px; border-radius: 8px; background: color-mix(in srgb, var(--line) 35%, transparent); color: var(--ink); margin-bottom: 10px; }
+.chiffres.hero img.logo-org { display: block; height: 32px; width: auto; max-width: 150px; object-fit: contain; margin-bottom: 12px; align-self: flex-start; }
+@media (prefers-color-scheme: dark) {
+  /* Les logos officiels (bleus sur fond transparent) passent sur une pastille claire en mode nuit. */
+  .chiffres.hero img.logo-org { background: #FFFDF5; border-radius: 6px; padding: 4px 6px; }
+}
+.marque-carte { display: flex; align-items: center; height: 32px; font-family: var(--font-spectral), "Spectral", serif; font-weight: 700; font-size: 1.25rem; line-height: 1.15; margin-bottom: 10px; white-space: nowrap; }
+
+/* Cartes de chiffres cliquables (pages chambre /an, /senat, /pe) */
+.chiffres.hero a.chiffre-carte { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; border: 1px solid var(--line); border-radius: var(--radius-card); padding: 14px 18px; background: var(--card); text-decoration: none; color: inherit; transition: border-color .15s ease, box-shadow .15s ease; }
+.chiffres.hero a.chiffre-carte:hover, .chiffres.hero a.chiffre-carte:focus-visible { border-color: color-mix(in srgb, var(--bleu) 25%, transparent); box-shadow: 0 4px 12px rgba(7, 26, 65, .05); }

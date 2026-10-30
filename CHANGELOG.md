@@ -15,6 +15,39 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
   hovers légers, transitions courtes, grille responsive (4 / 2 / 1 colonnes),
   chiffres et mouvements toujours dynamiques (ISR 300 s).
 
+- **Accueil v2, retours design** : suppression du liseré jaune sur la carte
+  « Recevoir les mouvements par email » (fond très léger à la place), logos
+  officiels des institutions sur les cartes de chiffres (Assemblée nationale,
+  Sénat, Parlement européen — SVG dans `public/logos/`), wordmarks VigiParl' et
+  MixiParl' en lieu et place des icônes génériques dans la grille Explorer, et
+  badges arrivée / départ / transfert plus contrastés.
+
+- **Accueil v2, retours (2)** : description des cartes VigiParl' et MixiParl'
+  repoussée sous le wordmark (fin du texte collé au nom), hauteur des logos
+  officiels harmonisée (32 px, retrait identique), badges arrivée / départ /
+  transfert renforcés (32 %), hover des cartes Explorer adouci (bordure bleue
+  plus discrète, ombre légère, sans translation).
+
+- **Accueil v2, retours (3)** : section « Derniers mouvements » refaite —
+  badges compacts et contrastés, nom du collaborateur en gras, élu + groupe en
+  texte secondaire, chambre + date très discrets, séparations fines entre
+  lignes (fin des gros blocs arrondis) ; section « Explorer » homogénéisée —
+  icônes sobres identiques dans des pastilles neutres (fin du jaune massif),
+  descriptions de longueur uniforme, wordmarks VigiParl' / MixiParl' alignés
+  sur la même hauteur que les icônes.
+
+- **Accueil v2, retours (4)** : « Derniers mouvements » passe aux pastilles
+  discrètes — point coloré (bleu #3B82F6 / rouge #EF4444 / violet #8B5CF6,
+  spécifiques à l'accueil) + libellé « Arrivée / Départ / Transfert » en texte
+  normal, fin des badges. Hiérarchie conservée : collaborateur en gras, élu +
+  groupe en secondaire, chambre + date sur une ligne discrète, séparations
+  fines entre les lignes.
+
+- **Accueil v2, retours (5)** : les cartes de chiffres de l'Assemblée
+  nationale, du Sénat et du Parlement européen sont cliquables (routes
+  canoniques `/an`, `/senat`, `/pe`), avec un hover discret assorti aux cartes
+  Explorer ; la carte « collaborateurs suivis » reste statique.
+
 ## 2026-10-19
 
 - **Fiches groupes : « L'équipe du groupe » (PR #36)** : nouvelle section sur
