@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Autocompletion, { type Option } from "@/app/_components/Autocompletion";
 import { sessionActuelle } from "@/lib/supabaseBrowser";
 import { dateHeure } from "@/app/_components/admin/utils";
@@ -20,6 +20,7 @@ async function appel(url: string, init?: RequestInit) {
 export default function Formulaire() {
   // Slug prérempli via ?slug=… : lu en client dans un effet (pas de
   // useSearchParams, qui exige une boundary Suspense et casse le prérendu).
+  const pieceInput = useRef<HTMLInputElement>(null);
   const [fiche, setFiche] = useState<Fiche | null>(null);
   const [demande, setDemande] = useState<{ adresse: string; objet: string; code: string; expireLe: string; domaine: string } | null>(null);
   const [statut, setStatut] = useState<Statut>(null);
@@ -135,27 +136,31 @@ export default function Formulaire() {
           <button className="lien" onClick={() => { setFiche(null); setDemande(null); }}>changer de fiche</button>
           <br />
           <button onClick={demanderCode} disabled={chargement}>
-            {chargement ? "…" : "Recevoir l&apos;e-mail de vérification"}
+            {chargement ? "…" : "Recevoir l’e-mail de vérification"}
           </button>
         </p>
       )}
       {erreur && <p className="erreur">{erreur}</p>}
 
       {demande && s !== "verifie" && (
-        <>
-          <h2>Envoyez l&apos;e-mail depuis votre adresse professionnelle</h2>
+        <div className="card">
+          <h2 style={{ marginTop: 0 }}>Envoyez l&apos;e-mail depuis votre adresse professionnelle</h2>
           <p>
             L&apos;adresse attendue pour votre fiche est en <code>@{demande.domaine}</code>.
+            L&apos;e-mail est entièrement prérempli : cliquez, puis « Envoyer ».
           </p>
-          <p>L&apos;e-mail est entièrement prérempli : cliquez, puis « Envoyer ».</p>
           <p>
             <a className="bouton" href={mailto ?? "#"}>Ouvrir l&apos;e-mail prérempli</a>
           </p>
-          <p className="meta">
-            Objet : {demande.objet} · Code : <code>{demande.code}</code> · valable jusqu&apos;au {dateHeure(demande.expireLe)}.
+          <div className="meta" style={{ lineHeight: 1.9 }}>
+            <div>Objet : <code>{demande.objet}</code></div>
+            <div>Code : <code>{demande.code}</code></div>
+            <div>Valable jusqu&apos;au {dateHeure(demande.expireLe)}</div>
+          </div>
+          <p className="meta" style={{ marginBottom: 0 }}>
             Sans modification de l&apos;objet ni du code, la vérification est quasi immédiate.
           </p>
-        </>
+        </div>
       )}
 
       {demande && s === "attente_email" && (
@@ -186,21 +191,19 @@ export default function Formulaire() {
             Elle n&apos;est jamais publiée : elle sert uniquement à la vérification, l&apos;équipe la supprime
             après décision (30 jours maximum) et vous répond sous 48 h.
           </p>
-          <p>
-            <label className="bouton">
-              Joindre une pièce justificative
-              <input
-                type="file" hidden
-                accept="application/pdf,image/jpeg,image/png"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) envoyerPiece(f);
-                  e.target.value = "";
-                }}
-              />
-            </label>
-          </p>
-          {pieceEnvoi && <p className="meta">Envoi en cours…</p>}
+          <input
+            ref={pieceInput}
+            type="file" hidden
+            accept="application/pdf,image/jpeg,image/png"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) envoyerPiece(f);
+              e.target.value = "";
+            }}
+          />
+          <button type="button" onClick={() => pieceInput.current?.click()} disabled={pieceEnvoi}>
+            {pieceEnvoi ? "Envoi en cours…" : "Joindre une pièce justificative"}
+          </button>
           {pieceErr && <p className="erreur">{pieceErr}</p>}
           {pieceMsg && <p className="card">{pieceMsg}</p>}
         </>
