@@ -9,6 +9,8 @@ import { normalizeEmail, sha256 } from "./tokens";
 // professionnelle parlementaire. Le webhook Resend (email.received) déclenche
 // traiterEmailAssociation(). Jamais de validation automatique partielle :
 // tout écart va en revue manuelle côté admin (/admin/users/matchprofile).
+// Fallback sans adresse parlementaire : dépôt d'une pièce justificative
+// (statut piece_jointe), revue admin, purge à la décision ou sous 30 jours.
 
 export const ADRESSE_ASSOCIER = "associer@dataparl.fr"; // à ajouter chez Resend (inbound)
 const EXPIRATION_H = 48;
@@ -196,6 +198,6 @@ export async function deciderManuellement(
 export async function demandesATraiter(): Promise<DemandeAssociation[]> {
   const { data } = await authAdmin().from("associations_fiches")
     .select("id, collab_slug, collab_id, statut, echecs, gel_jusqu_a, expire_le, verifie_le")
-    .in("statut", ["a_traiter", "gele"]).order("cree_le", { ascending: false }).limit(100);
+    .in("statut", ["a_traiter", "gele", "piece_jointe"]).order("cree_le", { ascending: false }).limit(100);
   return data ?? [];
 }
