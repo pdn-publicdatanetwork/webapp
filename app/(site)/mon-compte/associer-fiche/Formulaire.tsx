@@ -112,7 +112,7 @@ export default function Formulaire() {
           <button className="lien" onClick={() => { setFiche(null); setDemande(null); }}>changer de fiche</button>
           <br />
           <button onClick={demanderCode} disabled={chargement}>
-            {chargement ? "…" : "Recevoir l'e-mail de vérification"}
+            {chargement ? "…" : "Recevoir l&apos;e-mail de vérification"}
           </button>
         </p>
       )}
@@ -148,12 +148,6 @@ export default function Formulaire() {
           Une demande est déjà en cours (expire le {dateHeure(statut.expire_le)}). Relancez-la pour recevoir un nouveau code.
         </p>
       )}
-
-      <h2>Vous n&apos;avez pas d&apos;adresse parlementaire ?</h2>
-      <p>
-        (ancien collaborateur, etc.) Écrivez-nous via le <a href="/contact">formulaire de contact</a> en
-        précisant votre fiche : nous vous indiquerons la marche à suivre au cas par cas.
-      </p>
     </>
   );
 }
