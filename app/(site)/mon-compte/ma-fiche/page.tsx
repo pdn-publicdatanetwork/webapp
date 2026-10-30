@@ -7,7 +7,8 @@ import styles from "./maFiche.module.css";
 // Ma fiche : éditeur du profil CV déclaratif, section par section (façon
 // LinkedIn) : ajout et édition en place, champs adaptés à chaque rubrique,
 // publication immédiate (éléments futurs publiés automatiquement à leur
-// date d'effet). Import d'un CV PDF : l'IA de DataParl' Chat propose des
+// date d'effet). Import d'un CV PDF : possible après acceptation des CGU
+// du Chat (case cochée, consentement enregistré) ; l'IA propose des
 // entrées, rien n'est publié sans validation. Photo de profil : recadrage
 // carré dans le navigateur (aucun envoi avant validation), publication
 // immédiate, suppression à tout moment. « Tout supprimer » retire la
@@ -114,6 +115,7 @@ export default function MaFiche() {
   const [photoBusy, setPhotoBusy] = useState(false);
   const [photoErreur, setPhotoErreur] = useState("");
   const [crop, setCrop] = useState<Crop | null>(null);
+  const [cguOk, setCguOk] = useState(false);
   const [importBusy, setImportBusy] = useState(false);
   const [propositions, setPropositions] = useState<Propositions | null>(null);
   const cvInput = useRef<HTMLInputElement>(null);
@@ -185,6 +187,8 @@ export default function MaFiche() {
 
   // Import du CV : lecture locale en base64, envoi au serveur qui interroge
   // l'IA de DataParl' Chat ; les propositions reviennent pour validation.
+  // L'acceptation des CGU (case cochée) part avec la requête et est
+  // enregistrée côté serveur : preuve de consentement horodatée.
   async function importerCv(fichier: File) {
     if (fichier.type !== "application/pdf") return setErreur("Seul un PDF peut être importé.");
     const pdf = await new Promise<string>((res, rej) => {
@@ -198,7 +202,7 @@ export default function MaFiche() {
     setErreur("");
     const { ok, data } = await appel("/api/ma-fiche/import", {
       method: "POST",
-      body: JSON.stringify({ pdf }),
+      body: JSON.stringify({ pdf, accepte_cgu: cguOk }),
     });
     setImportBusy(false);
     if (!ok || !data.propositions) {
@@ -432,14 +436,14 @@ export default function MaFiche() {
       )}
 
       <div className={styles.importZone}>
-        <button onClick={() => cvInput.current?.click()} disabled={importBusy}>
+        <button onClick={() => cvInput.current?.click()} disabled={importBusy || !cguOk}>
           {importBusy ? "Lecture de votre CV…" : "Importer mon CV (PDF)"}
         </button>
-        <span className={styles.importNote}>
-          L&apos;IA de DataParl&apos; lit le CV et propose des entrées : vous validez ce que vous voulez publier.
-          Le fichier n&apos;est pas conservé. En important un CV, vous acceptez les{" "}
-          <a href="/informations-legales/cgu-chat">CGU du Chat DataParl&apos;</a>.
-        </span>
+        <label className={styles.cguCase}>
+          <input type="checkbox" checked={cguOk} onChange={(e) => setCguOk(e.target.checked)} />
+          <span>En important un CV, vous acceptez les{" "}
+            <a href="/informations-legales/cgu-chat" target="_blank" rel="noopener noreferrer">CGU du Chat DataParl&apos;</a>.</span>
+        </label>
         <input ref={cvInput} type="file" accept="application/pdf" hidden
           onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) importerCv(f); }} />
       </div>
