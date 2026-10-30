@@ -52,9 +52,10 @@ export default function Connexion() {
   const [cgu, setCgu] = useState(false);
   const [prenom, setPrenom] = useState("");
   const [nom, setNom] = useState("");
-  const [etape, setEtape] = useState<"choix" | "email" | "code">("choix");
+  const [etape, setEtape] = useState<"choix" | "email" | "code" | "mdp">("choix");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
+  const [mdp, setMdp] = useState("");
   const [message, setMessage] = useState("");
   const [enCours, setEnCours] = useState(false);
   const [surAdmin, setSurAdmin] = useState(false);
@@ -173,6 +174,18 @@ export default function Connexion() {
     if (error) setMessage("Code incorrect ou expiré.");
   }
 
+  // Connexion par mot de passe : disponible pour les comptes qui en ont
+  // défini un (Sécurité et connexion, mon compte).
+  async function connexionMotDePasse(e: React.FormEvent) {
+    e.preventDefault();
+    if (bloque) return setMessage(motif);
+    setEnCours(true);
+    setMessage("");
+    const { error } = await authBrowser().auth.signInWithPassword({ email, password: mdp });
+    setEnCours(false);
+    if (error) setMessage("Adresse ou mot de passe incorrect. Si tu n'as pas encore de mot de passe, demande un code par email.");
+  }
+
   return (
     <div className="auth">
       <div className="marque">Data<span className="surligne">Parl&apos;</span> <span className="auth-mot">Auth</span></div>
@@ -202,7 +215,7 @@ export default function Connexion() {
           </label>
         )}
 
-        {etape !== "code" && (
+        {etape !== "code" && etape !== "mdp" && (
           <>
             {surAdmin ? (
               <>
@@ -234,9 +247,16 @@ export default function Connexion() {
         )}
 
         {etape === "choix" && (
-          <button className="fournisseur" onClick={() => setEtape("email")} disabled={bloque}>
-            Continuer avec un email
-          </button>
+          <>
+            <button className="fournisseur" onClick={() => setEtape("email")} disabled={bloque}>
+              Continuer avec un email
+            </button>
+            {!surAdmin && (
+              <button className="fournisseur" onClick={() => setEtape("mdp")} disabled={bloque}>
+                Continuer avec un mot de passe
+              </button>
+            )}
+          </>
         )}
 
         {etape === "email" && (
@@ -256,6 +276,19 @@ export default function Connexion() {
             <button type="submit" disabled={enCours} style={{ width: "100%" }}>Valider</button>
             <p className="meta" style={{ marginTop: 12 }}>
               <button type="button" className="lien" onClick={() => { setEtape("email"); setCode(""); }}>Changer d&apos;adresse</button>
+            </p>
+          </form>
+        )}
+
+        {etape === "mdp" && (
+          <form onSubmit={connexionMotDePasse}>
+            <label htmlFor="email">Adresse email</label>
+            <input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" autoFocus />
+            <label htmlFor="mdp">Mot de passe</label>
+            <input id="mdp" type="password" required value={mdp} onChange={(e) => setMdp(e.target.value)} autoComplete="current-password" />
+            <button type="submit" disabled={enCours || bloque} style={{ width: "100%" }}>Se connecter</button>
+            <p className="meta" style={{ marginTop: 12 }}>
+              <button type="button" className="lien" onClick={() => { setEtape("email"); setMdp(""); }}>Recevoir un code plutôt</button>
             </p>
           </form>
         )}
