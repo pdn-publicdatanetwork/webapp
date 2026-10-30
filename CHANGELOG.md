@@ -43,6 +43,11 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
   groupe en secondaire, chambre + date sur une ligne discrète, séparations
   fines entre les lignes.
 
+- **Accueil v2, retours (5)** : les cartes de chiffres de l'Assemblée
+  nationale, du Sénat et du Parlement européen sont cliquables (routes
+  canoniques `/an`, `/senat`, `/pe`), avec un hover discret assorti aux cartes
+  Explorer ; la carte « collaborateurs suivis » reste statique.
+
 ## 2026-10-19
 
 - **Fiches groupes : « L'équipe du groupe » (PR #36)** : nouvelle section sur

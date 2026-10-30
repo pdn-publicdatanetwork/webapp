@@ -95,13 +95,15 @@ export default async function Accueil() {
 
   // Chiffres clés : logos officiels des trois institutions (public/logos/),
   // icône simple pour les collaborateurs suivis.
-  const chiffres: { icone?: string; logo?: string; alt?: string; valeur: string; libelle: string }[] = [
+  // Les cartes des trois institutions pointent vers leurs pages chambre (routes
+  // canoniques /an, /senat, /pe — les autres graphies sont des redirections).
+  const chiffres: { icone?: string; logo?: string; alt?: string; href?: string; valeur: string; libelle: string }[] = [
     { icone: IC_UTILISATEURS, valeur: fr(total), libelle: "collaborateurs suivis" },
-    { logo: "/logos/assemblee-nationale.svg", alt: "Assemblée nationale", valeur: fr(comptes.assemblee ?? 0), libelle: "à l'Assemblée nationale" },
-    { logo: "/logos/senat.svg", alt: "Sénat", valeur: fr(comptes.senat ?? 0), libelle: "au Sénat" },
+    { href: "/an", logo: "/logos/assemblee-nationale.svg", alt: "Assemblée nationale", valeur: fr(comptes.assemblee ?? 0), libelle: "à l'Assemblée nationale" },
+    { href: "/senat", logo: "/logos/senat.svg", alt: "Sénat", valeur: fr(comptes.senat ?? 0), libelle: "au Sénat" },
     peInconnu
-      ? { logo: "/logos/parlement-europeen.svg", alt: "Parlement européen", valeur: "–", libelle: "au Parlement européen (suivi repris le 8 octobre 2026)" }
-      : { logo: "/logos/parlement-europeen.svg", alt: "Parlement européen", valeur: fr(comptes.europarl ?? 0), libelle: "au Parlement européen" },
+      ? { href: "/pe", logo: "/logos/parlement-europeen.svg", alt: "Parlement européen", valeur: "–", libelle: "au Parlement européen (suivi repris le 8 octobre 2026)" }
+      : { href: "/pe", logo: "/logos/parlement-europeen.svg", alt: "Parlement européen", valeur: fr(comptes.europarl ?? 0), libelle: "au Parlement européen" },
   ];
 
   // Descriptions courtes et de longueur homogène (une ligne chacune).
@@ -128,15 +130,20 @@ export default async function Accueil() {
           Suivi chaque matin des mouvements des collaborateurs parlementaires, en France et en Europe.
         </p>
         <div className="chiffres hero">
-          {chiffres.map((c, i) => (
-            <div key={i}>
-              {c.logo
-                ? <img className="logo-org" src={c.logo} alt={c.alt ?? ""} height={32} loading="lazy" />
-                : <span className="icone-chiffre"><Ic d={c.icone ?? ""} /></span>}
-              <strong>{c.valeur}</strong>
-              <span>{c.libelle}</span>
-            </div>
-          ))}
+          {chiffres.map((c, i) => {
+            const corps = (
+              <>
+                {c.logo
+                  ? <img className="logo-org" src={c.logo} alt={c.alt ?? ""} height={32} loading="lazy" />
+                  : <span className="icone-chiffre"><Ic d={c.icone ?? ""} /></span>}
+                <strong>{c.valeur}</strong>
+                <span>{c.libelle}</span>
+              </>
+            );
+            return c.href
+              ? <a key={i} className="chiffre-carte" href={c.href}>{corps}</a>
+              : <div key={i} className="chiffre-carte">{corps}</div>;
+          })}
         </div>
         <p className="meta">
           L&apos;effectif du Sénat tient compte du renouvellement partiel des sénatoriales 2026
