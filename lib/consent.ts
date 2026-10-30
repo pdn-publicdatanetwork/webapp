@@ -1,6 +1,7 @@
 import "server-only";
 import { headers } from "next/headers";
 import { PRIVACY_VERSION, secret } from "./env";
+import { bouton, expedier, piedObligatoire } from "./mail";
 import { authAdmin } from "./supabaseAdmin";
 import { randomToken, sha256 } from "./tokens";
 
@@ -77,4 +78,54 @@ export async function desinscrire(email: string): Promise<void> {
   await db.from("alert_subscriptions").update({ active: false, updated_at: now }).eq("email", email);
   await db.from("newsletter_subscribers").update({ unsubscribed_at: now }).eq("email", email);
   await logConsent(email, "unsubscribe", "alertes");
+  // Accusé de réception (comptes@dataparl.fr) : confirme l'action, y compris
+  // quand elle vient du lien en un clic des webmails. Une erreur d'envoi ne
+  // doit jamais faire échouer la désinscription elle-même.
+  try {
+    await accuserDesinscription(email);
+  } catch (e) {
+    console.error("accusé désinscription", e);
+  }
+}
+
+// Accusé de réception de la désinscription, depuis comptes@dataparl.fr — le
+// même expéditeur que les mails de compte. Confirme l'action (bonne pratique
+// RGPD : preuve en cas de contestation) et sert aussi bien au clic sur le
+// bouton de la page qu'au lien en un clic (RFC 8058) des webmails. Pas
+// d'en-tête List-Unsubscribe : ce n'est pas un envoi en liste.
+export async function accuserDesinscription(email: string): Promise<void> {
+  await expedier({
+    from: "comptes@dataparl.fr",
+    to: [email],
+    subject: "Désinscription confirmée",
+    titre: "C'est noté",
+    corpsHtml: [
+      '<p style="margin:0 0 18px;font-size:16px;line-height:1.6">Bonjour,</p>',
+      '<p style="margin:0 0 18px;font-size:16px;line-height:1.6">Ta désinscription est confirmée : tu ne recevras plus les alertes ni les autres messages DataParl'.</p>',
+      bouton("https://www.dataparl.fr/mon-compte", "Réactiver depuis mon compte"),
+      '<p style="margin:0;font-size:14px;color:#475569">Si ce n'est pas toi qui as demandé cette désinscription, reconnecte-toi à ton compte pour l'annuler.</p>',
+    ].join(""),
+    text: "Bonjour,\n\nTa désinscription est confirmée : tu ne recevras plus les alertes ni les autres messages DataParl'.\n\nRéactiver depuis mon compte : https://www.dataparl.fr/mon-compte\n\nSi ce n'est pas toi qui as demandé cette désinscription, reconnecte-toi à ton compte pour l'annuler.",
+    pied: piedObligatoire(),
+    type: "transactionnel",
+  });
+}
+
+// Accusé de réception d'un changement de préférences (comptes@dataparl.fr).
+// prefsUrl : le lien signé encore valable, pour revoir les réglages.
+export async function accuserPreferences(email: string, prefsUrl: string): Promise<void> {
+  await expedier({
+    from: "comptes@dataparl.fr",
+    to: [email],
+    subject: "Tes préférences sont enregistrées",
+    titre: "C'est noté",
+    corpsHtml: [
+      '<p style="margin:0 0 18px;font-size:16px;line-height:1.6">Bonjour,</p>',
+      '<p style="margin:0 0 18px;font-size:16px;line-height:1.6">Tes préférences d'alertes DataParl' sont enregistrées. Le prochain envoi suivra tes nouveaux réglages.</p>',
+      bouton(prefsUrl, "Revoir mes préférences"),
+    ].join(""),
+    text: "Bonjour,\n\nTes préférences d'alertes DataParl' sont enregistrées. Le prochain envoi suivra tes nouveaux réglages.\n\nRevoir mes préférences : " + prefsUrl,
+    pied: piedObligatoire(),
+    type: "transactionnel",
+  });
 }

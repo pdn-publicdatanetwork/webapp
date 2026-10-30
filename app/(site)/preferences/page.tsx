@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { emailDepuisJeton, logConsent } from "@/lib/consent";
+import { accuserPreferences, emailDepuisJeton, logConsent } from "@/lib/consent";
+import { MAIL_WEB_URL } from "@/lib/env";
 import { Bouton, Carte, styles } from "@/lib/pagesConsent";
 import { authAdmin } from "@/lib/supabaseAdmin";
 
@@ -29,6 +30,13 @@ async function enregistrer(formData: FormData) {
   if (sub?.length) await db.from("alert_subscriptions").update(valeurs).eq("id", sub[0].id);
   else await db.from("alert_subscriptions").insert({ email, ...valeurs });
   await logConsent(email, actif ? "prefs_update" : "unsubscribe", "alertes");
+  // Accusé de réception (comptes@dataparl.fr) ; un échec d'envoi ne doit pas
+  // faire échouer l'enregistrement des préférences.
+  try {
+    await accuserPreferences(email, MAIL_WEB_URL + "/preferences?id=" + encodeURIComponent(id));
+  } catch (e) {
+    console.error("accusé préférences", e);
+  }
   redirect(`/preferences?id=${encodeURIComponent(id)}&etat=ok`);
 }
 
