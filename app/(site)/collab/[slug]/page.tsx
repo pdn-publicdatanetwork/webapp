@@ -53,7 +53,19 @@ export default async function FicheCollab({ params }: Props) {
   return (
     <>
       <p className="meta" style={{ marginBottom: 0 }}>{role} · {c.chambres.split(" ").map((x) => CHAMBRE_LONG[x]).join(", ")}</p>
-      <h1>{nom}</h1>
+      {/* Photo de profil déclarée par l'intéressé (Ma fiche) : visible à côté
+          du nom ; rien n'est affiché si la personne n'en a pas publiée. */}
+      <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+        {c.photo_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={c.photo_url}
+            alt={"Photo de " + nom}
+            style={{ width: 72, height: 72, borderRadius: "50%", objectFit: "cover", border: "1px solid var(--line)", flex: "none", background: "var(--bg)" }}
+          />
+        ) : null}
+        <h1 style={{ margin: 0 }}>{nom}</h1>
+      </div>
       <p className="lead">
         {c.actif ? "En poste aujourd'hui." : `Dernière présence connue : ${moisAnnee(c.derniere_date)}.`}{" "}
         {c.n_elus > 1 ? `A travaillé pour ${c.n_elus} élus` :
@@ -121,7 +133,7 @@ export default async function FicheCollab({ params }: Props) {
       )}
 
       {/* Annonce display AdSense : après le contenu, avant les fiches liées.
-          Aucun espace réservé tant que NEXT_PUBLIC_ADSENSE_SLOT n’est pas défini. */}
+          Aucun espace réservé tant que NEXT_PUBLIC_ADSENSE_SLOT n'est pas défini. */}
       <PubGoogle />
 
       {/* Rétention : après une lecture de fiche, proposer les alertes email
