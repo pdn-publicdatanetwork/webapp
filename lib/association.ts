@@ -55,7 +55,7 @@ function domaineDe(email: string): string {
 
 // Nom affiché de la fiche : « Prenom Nom » plutôt que le slug technique
 // (jamais montré tel quel à la personne). Repli à partir du slug
-// « nom_prenom___00006779 » si la fiche n'est pas disponible.
+// « nom_prenomtest___00006779 » si la fiche n'est pas disponible.
 function libelleFiche(prenom: string | null | undefined, nom: string | null | undefined, slug: string): string {
   const p = (prenom ?? "").trim();
   const n = (nom ?? "").trim();
@@ -139,7 +139,19 @@ async function adresseDe(user_id: string): Promise<string | null> {
 // demande et, si besoin, la marche à suivre. Best-effort, jamais bloquant.
 // Expéditeur comptes@dataparl.fr, signés « L'équipe DataParl' » ; la fiche
 // est désignée par son nom affiché, jamais par le slug technique.
-const SIGNATURE_HTML = "<p style=\"margin-top:24px;color:#4A5670\">— L'équipe DataParl'</p>";
+const SIGNATURE_HTML = '<p style="margin:24px 0 0;color:#475569">L\'équipe DataParl\'</p>';
+const PIED_AUTO = "Cet e-mail a été envoyé automatiquement : merci de ne pas y répondre. Une question ? <a href=\"" + SITE_URL + "/contact\" style=\"color:#164DFF\">Écris-nous via le formulaire de contact</a>.";
+const PIED_AUTO_TXT = "Cet e-mail a été envoyé automatiquement : merci de ne pas y répondre.";
+
+// Badge de statut (pilule jaune pâle) sous le titre de l'e-mail.
+function badgeStatut(libelle: string): string {
+  return '<p style="margin:0 0 16px"><span style="display:inline-block;background:#FEF9C3;color:#0F172A;font-size:13px;font-weight:600;border-radius:999px;padding:5px 12px">' + esc(libelle) + "</span></p>";
+}
+
+// Bloc « Fiche demandée » : surtitre discret, nom en grand.
+function blocFiche(fiche: string, surtitre: string): string {
+  return '<div style="background:#FEF9C3;border-left:4px solid #FFD23F;border-radius:8px;padding:14px 16px;margin:0 0 18px"><p style="margin:0 0 2px;font-size:13px;color:#475569">' + esc(surtitre) + '</p><p style="margin:0;font-size:19px;font-weight:700;color:#0F172A">' + esc(fiche) + "</p></div>";
+}
 
 async function accuseValidation(user_id: string, fiche: string): Promise<void> {
   const email = await adresseDe(user_id);
@@ -151,11 +163,14 @@ async function accuseValidation(user_id: string, fiche: string): Promise<void> {
     subject: "Votre fiche DataParl' est associée à votre compte",
     titre: "Fiche associée",
     corpsHtml:
-      "<p>Bonne nouvelle : votre demande d'association a été validée. La fiche <strong>" + esc(fiche) + "</strong> est désormais rattachée à votre compte.</p>" +
+      badgeStatut("Fiche associée à votre compte") +
+      blocFiche(fiche, "Votre fiche") +
+      "<p>Votre demande d'association a été validée : cette fiche est désormais rattachée à votre compte.</p>" +
       bouton(SITE_URL + "/mon-compte/ma-fiche", "Compléter mon profil CV") +
       "<p>Vous pouvez y importer votre CV (l'IA propose une mise en forme que vous validez point par point), ajouter une photo et présenter votre parcours comme vous l'entendez.</p>" +
       SIGNATURE_HTML,
-    text: "Bonne nouvelle : votre demande d'association a été validée. La fiche " + fiche + " est désormais rattachée à votre compte. Complétez votre profil CV : " + SITE_URL + "/mon-compte/ma-fiche\n\n— L'équipe DataParl'",
+    text: "Bonne nouvelle : votre demande d'association a été validée. La fiche " + fiche + " est désormais rattachée à votre compte. Complétez votre profil CV : " + SITE_URL + "/mon-compte/ma-fiche\n\nL'équipe DataParl'\n\n" + PIED_AUTO_TXT,
+    pied: PIED_AUTO,
     type: "transactionnel",
   }).catch((e) => console.error("accuse validation", String(e).slice(0, 200)));
 }
@@ -170,10 +185,13 @@ async function accuseReception(user_id: string, fiche: string): Promise<void> {
     subject: "Votre demande d'association est en vérification",
     titre: "Vérification en cours",
     corpsHtml:
-      "<p>Nous avons bien reçu votre demande pour la fiche <strong>" + esc(fiche) + "</strong>. La vérification prend un peu plus de temps : notre équipe l'examine et vous répond sous 48 h.</p>" +
+      badgeStatut("En cours · réponse sous 48 h") +
+      blocFiche(fiche, "Fiche demandée") +
+      "<p>Nous avons bien reçu votre demande. La vérification prend un peu plus de temps : notre équipe l'examine et vous répond sous 48 heures.</p>" +
       "<p>Vous pouvez suivre l'avancement à tout moment depuis « Mon compte ».</p>" +
       SIGNATURE_HTML,
-    text: "Nous avons bien reçu votre demande pour la fiche " + fiche + ". La vérification prend un peu plus de temps : notre équipe l'examine et vous répond sous 48 h.\n\n— L'équipe DataParl'",
+    text: "Nous avons bien reçu votre demande pour la fiche " + fiche + ". La vérification prend un peu plus de temps : notre équipe l'examine et vous répond sous 48 heures.\n\nL'équipe DataParl'\n\n" + PIED_AUTO_TXT,
+    pied: PIED_AUTO,
     type: "transactionnel",
   }).catch((e) => console.error("accuse reception", String(e).slice(0, 200)));
 }
@@ -188,11 +206,19 @@ async function accuseRefus(user_id: string, fiche: string, gele: boolean): Promi
     subject: gele ? "Vos demandes d'association DataParl' sont suspendues" : "Votre demande d'association n'a pas abouti",
     titre: gele ? "Demandes suspendues" : "Demande non aboutie",
     corpsHtml: gele
-      ? "<p>Après plusieurs tentatives depuis une adresse inattendue, les demandes d'association pour la fiche <strong>" + esc(fiche) + "</strong> sont suspendues pendant 30 jours.</p><p>Si vous êtes bien la personne concernée, passez par le formulaire de contact : nous vérifierons votre identité au cas par cas.</p>" + bouton(SITE_URL + "/contact", "Nous écrire") + SIGNATURE_HTML
-      : "<p>La vérification de la fiche <strong>" + esc(fiche) + "</strong> n'a pas pu aboutir : l'e-mail reçu ne correspond pas à l'adresse professionnelle attendue.</p><p>La marche à suivre :</p><ol><li>Relancez la demande depuis la page « Associer ma fiche », puis envoyez l'e-mail prérempli <strong>depuis votre adresse professionnelle parlementaire</strong>, sans modifier l'objet ni le code.</li><li>Si vous n'avez plus accès à cette adresse (fin de collaboration, par exemple), la même page permet de joindre une pièce justificative (badge ou carte AN/Sénat, contrat de travail, capture de votre messagerie interne). Notre équipe vous répond sous 48 h.</li><li>En cas de blocage persistant, écrivez-nous via le formulaire de contact.</li></ol>" + bouton(SITE_URL + "/mon-compte/associer-fiche", "Reprendre la vérification") + SIGNATURE_HTML,
+      ? badgeStatut("Suspendues pendant 30 jours") +
+        blocFiche(fiche, "Fiche demandée") +
+        "<p>Après plusieurs tentatives depuis une adresse inattendue, les demandes d'association pour cette fiche sont suspendues pendant 30 jours.</p>" +
+        "<p>Si vous êtes bien la personne concernée, passez par le formulaire de contact : nous vérifierons votre identité au cas par cas.</p>" +
+        bouton(SITE_URL + "/contact", "Nous écrire") + SIGNATURE_HTML
+      : badgeStatut("Non aboutie") +
+        blocFiche(fiche, "Fiche demandée") +
+        "<p>La vérification n'a pas pu aboutir : l'e-mail reçu ne correspond pas à l'adresse professionnelle attendue.</p><p>La marche à suivre :</p><ol style="margin:0 0 16px;padding:0 0 0 22px"><li style="margin:0 0 6px">Relancez la demande depuis la page « Associer ma fiche », puis envoyez l'e-mail prérempli <strong>depuis votre adresse professionnelle parlementaire</strong>, sans modifier l'objet ni le code.</li><li style="margin:0 0 6px">Si vous n'avez plus accès à cette adresse (fin de collaboration, par exemple), la même page permet de joindre une pièce justificative (badge ou carte AN/Sénat, contrat de travail, capture de votre messagerie interne). Notre équipe vous répond sous 48 h.</li><li>En cas de blocage persistant, écrivez-nous via le formulaire de contact.</li></ol>" +
+        bouton(SITE_URL + "/mon-compte/associer-fiche", "Reprendre la vérification") + SIGNATURE_HTML,
     text: gele
-      ? "Après plusieurs tentatives depuis une adresse inattendue, les demandes d'association pour la fiche " + fiche + " sont suspendues pendant 30 jours. Passez par le formulaire de contact : " + SITE_URL + "/contact\n\n— L'équipe DataParl'"
-      : "La vérification de la fiche " + fiche + " n'a pas pu aboutir. Relancez la demande depuis " + SITE_URL + "/mon-compte/associer-fiche et envoyez l'e-mail prérempli depuis votre adresse professionnelle parlementaire, sans modifier l'objet ni le code. Sans accès à cette adresse, joignez une pièce justificative depuis la même page (réponse sous 48 h).\n\n— L'équipe DataParl'",
+      ? "Après plusieurs tentatives depuis une adresse inattendue, les demandes d'association pour la fiche " + fiche + " sont suspendues pendant 30 jours. Passez par le formulaire de contact : " + SITE_URL + "/contact\n\nL'équipe DataParl'\n\n" + PIED_AUTO_TXT
+      : "La vérification de la fiche " + fiche + " n'a pas pu aboutir. Relancez la demande depuis " + SITE_URL + "/mon-compte/associer-fiche et envoyez l'e-mail prérempli depuis votre adresse professionnelle parlementaire, sans modifier l'objet ni le code. Sans accès à cette adresse, joignez une pièce justificative depuis la même page (réponse sous 48 h).\n\nL'équipe DataParl'\n\n" + PIED_AUTO_TXT,
+    pied: PIED_AUTO,
     type: "transactionnel",
   }).catch((e) => console.error("accuse refus", String(e).slice(0, 200)));
 }

@@ -171,9 +171,10 @@ export async function expedier(m: Message): Promise<Resultat> {
   return { ok: false, error: `envoi refusé par tous les fournisseurs : ${erreurs.join(" ; ")}` };
 }
 
+// Bouton d'action : navy, arrondi 8px, hauteur confortable (mobile).
 export function bouton(url: string, libelle: string): string {
   const e = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
-  return `<p style="margin:24px 0"><a href="${e(url)}" style="display:inline-block;background:#F0444F;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:6px;font-weight:bold">${e(libelle)}</a></p>`;
+  return `<p style="margin:24px 0"><a href="${e(url)}" style="display:inline-block;background:#0F172A;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 24px;border-radius:8px">${e(libelle)}</a></p>`;
 }
 
 export function piedObligatoire(): string {
