@@ -353,7 +353,7 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
     return vers(req, `www.${DOMAINE}`, "/", 308);
   }
 
-  for (const espace de ["admin", "webmail"] as const) {
+  for (const espace of ["admin", "webmail"] as const) {
     if (host !== `${espace}.${DOMAINE}`) continue;
     let res: NextResponse;
     if (path.startsWith("/api/") || path.startsWith(`/${espace}`) || path === "/connexion") res = NextResponse.next();
@@ -381,8 +381,7 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
     if (path === "/api" || path === "/api/") return vers(req, `api.${DOMAINE}`, "/", 308);
     // DataParl' Jobs vit sur son sous-domaine, sans le préfixe /jobs.
     if (path === "/jobs" || path.startsWith("/jobs/")) {
-  
-    const cibleJobs = path === "/jobs" ? "/" : path.slice("/jobs".length) || "/";
+      const cibleJobs = path === "/jobs" ? "/" : path.slice("/jobs".length) || "/";
       return vers(req, `jobs.${DOMAINE}`, cibleJobs, 308);
     }
     // Le tableur vit sur media.dataparl.fr.
