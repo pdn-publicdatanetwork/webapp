@@ -47,7 +47,7 @@
 }
 
 /* Partage : pastilles toutes de la même hauteur (liens et boutons),
-   alignées sur la même ligne de base. */
+   alignées sur leur bord haut (le bouton natif décale la ligne de base). */
 .partager {
   display: flex;
   align-items: center;
@@ -61,10 +61,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  vertical-align: top;
+  appearance: none;
   font: inherit;
   font-size: .8rem;
   line-height: 1;
-  height: 32px;
+  height: 28px;
   padding: 0 13px;
   border-radius: 999px;
   border: 1px solid var(--line);
@@ -72,7 +74,6 @@
   color: var(--ink);
   cursor: pointer;
   text-decoration: none;
-  margin: 0;
 }
 
 .partager a:hover,
