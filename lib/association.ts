@@ -1,6 +1,7 @@
 import "server-only";
 import { authAdmin } from "./supabaseAdmin";
-import { collaborateurDepuisSlug } from "./referentiel";
+import { dataQuery } from "./data";
+import type { Collaborateur } from "./referentiel";
 import { normalizeEmail, sha256 } from "./tokens";
 import { copieSlack, SLACK_CONTACT } from "./slack";
 import { expedier, bouton, esc } from "./mail";
@@ -59,7 +60,7 @@ function variantesLocales(prenom: string, nom: string): Set<string> {
   return new Set([`${p}${n}`, `${n}${p}`].map((x) => x.replace(/[^a-z0-9]/g, "")));
 }
 
-// Code court non ambigu (jamais de O/0/I/1/L) : DP-XXXXX, à usage unique.
+// Fiche fraîche (jamais mise en cache) : le contrôle d'identité de\n// l'association ne doit pas dépendre d'une lecture potentiellement\n// périmée (fiche renommée ou créée récemment).\nasync function ficheFraiche(slug: string): Promise<Collaborateur | null> {\n  const m = slug.match(/([0-9a-f]{8})$/);\n  if (!m) return null;\n  const { rows } = await dataQuery<Collaborateur>("collaborateurs", new URLSearchParams({ select: "*", collab_id: `eq.${m[1]}`, limit: "1" }), 0);\n  return rows[0] ?? null;\n}\n\n// Code court non ambigu (jamais de O/0/I/1/L) : DP-XXXXX, à usage unique.
 function codeCourt(): string {
   const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
   let s = "";
@@ -165,7 +166,7 @@ async function journal(user_id: string, collab_id: string, evenement: string, de
 export async function creerDemande(
   userId: string, slug: string,
 ): Promise<{ ok: true; objet: string; code: string; expireLe: string; domaine: string } | { ok: false; error: string }> {
-  const c = await collaborateurDepuisSlug(slug).catch(() => null);
+  const c = await ficheFraiche(slug).catch(() => null);
   if (!c) return { ok: false, error: "fiche introuvable" };
   const db = authAdmin();
   const { data: existante } = await db.from("associations_fiches")
@@ -230,7 +231,7 @@ export async function traiterEmailAssociation(m: {
     return true;
   }
   const expiree = new Date(demande.expire_le).getTime() < Date.now();
-  const fiche = await collaborateurDepuisSlug(slug).catch(() => null);
+  const fiche = await ficheFraiche(slug).catch(() => null);
   const attendus = new Set(domainesAttendusFiche(slug, fiche?.chambres ?? ""));
   const domaineOk = attendus.has(domaineDe(m.from));
   const nomOk = fiche ? variantesLocales(fiche.prenom, fiche.nom).has(localNettoie(m.from)) : false;
