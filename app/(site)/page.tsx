@@ -32,7 +32,12 @@ const jsonLd = [
     name: "DataParl'",
     url: "https://www.dataparl.fr",
     logo: "https://www.dataparl.fr/icon.svg",
-    description: "Projet civique de suivi des collaborateurs parlementaires français, d'après les publicatiexport default async function Accueil() {
+    description: "Projet civique de suivi des collaborateurs parlementaires français, d'après les publications officielles.",
+    contactPoint: { "@type": "ContactPoint", contactType: "customer support", url: "https://www.dataparl.fr/contact" },
+  },
+];
+
+export default async function Accueil() {
   let mouvements: MouvementAffiche[] = [];
   let comptes: Record<string, number> = {};
   let indisponible = false;
