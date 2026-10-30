@@ -126,6 +126,8 @@ export default function Communications() {
   const carte = { border: "1px solid rgba(15, 23, 42, 0.12)", borderRadius: 10, padding: "14px 16px" };
   const titre = { display: "block", fontWeight: 600, fontSize: 15, color: "#1A1A1A" };
   const desc = { display: "block", fontSize: 14, color: "#5C5C5C", marginTop: 2 };
+  // Petit bouton secondaire, aligné à droite en bas de la carte alertes.
+  const btnCrit = { display: "inline-block", padding: "5px 12px", border: "1px solid rgba(15, 23, 42, 0.18)", borderRadius: 8, fontSize: 13, fontWeight: 500, color: "#1A1A1A", textDecoration: "none" };
 
   return (
     <div className="etroit">
@@ -154,7 +156,9 @@ export default function Communications() {
                 <span style={desc}>Daily et/ou Weekly, selon tes réglages</span>
               </span>
             </label>
-            <p className="meta" style={{ margin: "10px 0 0", paddingLeft: 26 }}><a href="/mon-compte/alertes">Gérer les critères dans Mes alertes →</a></p>
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10 }}>
+              <a href="/mon-compte/alertes" style={btnCrit}>Gérer les critères</a>
+            </div>
             {!compte.alertes.actives && alertesActives && (
               <div style={{ marginTop: 10, paddingLeft: 26 }}>
                 <label style={{ display: "block", margin: "6px 0" }}><input type="checkbox" checked={cgu} onChange={(e) => setCgu(e.target.checked)} /> J'accepte les <a href="/informations-legales/cgu">conditions d'utilisation</a></label>
