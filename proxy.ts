@@ -19,9 +19,11 @@ import { estPageReseaux, journaliserVueReseaux } from "./lib/vuesReseaux";
 //   webmail.dataparl.fr    /x -> /webmail/x, sauf /connexion et /api/*
 //   mail.dataparl.fr        /lire/<jeton> (version en ligne des emails), le reste -> www
 //   link.dataparl.fr        /<code> -> /l/<code> (liens tracés), le reste -> www
-//   media.dataparl.fr       photos des élus et des ministres (/an|senat|pe|gouv)/…, le tableur
-//                           DataParl' Sheets (/sheets/*, /search), l'export SVG
-//                           du réseau (/assets/pe/reseau) et les exports CSV
+//   media.dataparl.fr       photos des élus et des ministres (/an|senat|pe|gouv)/…,
+//                           photos de profil déclarées des collaborateurs
+//                           (/cldb/<collab_id>.<ext>), le tableur DataParl' Sheets
+//                           (/sheets/*, /search), l'export SVG du réseau
+//                           (/assets/pe/reseau) et les exports CSV
 //                           (/assets/collab/{an,senat,pe}.csv) ; tout autre
 //                           chemin : message de 15 s puis bascule vers www
 //   raw.dataparl.fr        /schemas/*.json (schémas de données bruts) ; le reste -> www
@@ -235,6 +237,15 @@ export async function proxy(req: NextRequest) {
       url.pathname = `/media${path}`;
       return NextResponse.rewrite(url);
     }
+    // media.dataparl.fr/cldb/<collab_id>.<ext> : photo de profil déclarée par
+    // un collaborateur (Ma fiche), servie par la webapp depuis le bucket
+    // photos-profils. L'intéressé peut la remplacer ou la retirer à tout
+    // moment (la route répond alors 404).
+    if (/^\/cldb\/[0-9a-f]{8}\.(png|jpe?g|webp)$/.test(path)) {
+      const url = req.nextUrl.clone();
+      url.pathname = `/media${path}`;
+      return NextResponse.rewrite(url);
+    }
     if (path.startsWith("/photo-credit")) return vers(req, `www.${DOMAINE}`, "/", 307);
     // media.dataparl.fr/assets/collab/{an,senat,pe}.csv : export CSV brut des
     // collaborateurs d'une chambre, généré par la webapp (app/assets/collab).
@@ -300,7 +311,7 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
     if (path === "/icon.svg" || path === "/apple-icon") {
       const url = req.nextUrl.clone();
       url.pathname = `/raw${path}`;
-      return NextResponse.rewrite(url);
+      return protege(NextResponse.rewrite(url));
     }
     return vers(req, `www.${DOMAINE}`, path, 308);
   }
@@ -359,7 +370,7 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
     }
 
     if (path === "/api" || path === "/api/") return vers(req, `api.${DOMAINE}`, "/", 308);
-    // DataParl' Jobs vit sur son sous-domaine, sans préfixe /jobs.
+    // DataParl' Jobs vit sur son sous-domaine, sans le préfixe /jobs.
     if (path === "/jobs" || path.startsWith("/jobs/")) {
   
     const cibleJobs = path === "/jobs" ? "/" : path.slice("/jobs".length) || "/";
