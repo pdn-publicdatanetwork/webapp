@@ -8,10 +8,11 @@ import styles from "./maFiche.module.css";
 // LinkedIn) : ajout et édition en place, champs adaptés à chaque rubrique,
 // publication immédiate (éléments futurs publiés automatiquement à leur
 // date d'effet). Import d'un CV PDF : l'IA de DataParl' Chat propose des
-// entrées, rien n'est publié sans validation. Photo de profil : upload
-// libre, suppression immédiate. « Tout supprimer » retire la rubrique du
-// site immédiatement ; le contenu est conservé en sauvegarde interne,
-// restaurable sur demande.
+// entrées, rien n'est publié sans validation. Photo de profil : recadrage
+// carré dans le navigateur (aucun envoi avant validation), publication
+// immédiate, suppression à tout moment. « Tout supprimer » retire la
+// rubrique du site immédiatement ; le contenu est conservé en sauvegarde
+// interne, restaurable sur demande.
 
 type Declaration = {
   id: string; collab_id: string; categorie: string; libelle: string;
@@ -26,6 +27,7 @@ type Etat = {
 type Champs = { libelle: string; precision_text: string; periode: string; visible_a_partir_de: string };
 type Proposition = { libelle: string; precision_text: string | null; periode: string | null; visible_a_partir_de?: string | null };
 type Propositions = { formation: Proposition[]; carriere: Proposition[]; autre_activite: Proposition[]; langues: Proposition[] };
+type Crop = { src: string; l: number; h: number; x: number; y: number; s: number };
 
 const VIDE: Champs = { libelle: "", precision_text: "", periode: "", visible_a_partir_de: "" };
 
@@ -110,10 +112,14 @@ export default function MaFiche() {
   const [confirmation, setConfirmation] = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoErreur, setPhotoErreur] = useState("");
+  const [crop, setCrop] = useState<Crop | null>(null);
   const [importBusy, setImportBusy] = useState(false);
   const [propositions, setPropositions] = useState<Propositions | null>(null);
   const cvInput = useRef<HTMLInputElement>(null);
   const photoInput = useRef<HTMLInputElement>(null);
+  const cadre = useRef<HTMLDivElement>(null);
+  const drag = useRef<{ px: number; py: number; x: number; y: number; s: number; mode: "deplacer" | "taille" } | null>(null);
 
   const rafraichir = useCallback(async () => {
     const { ok, data } = await appel("/api/ma-fiche");
@@ -198,6 +204,7 @@ export default function MaFiche() {
     if (!ok || !data.propositions) {
       return setErreur(
         data.error === "cv_illisible" ? "CV illisible : essayez un PDF en texte plutôt qu'un scan."
+          : data.error === "import non configuré" ? "L'import de CV n'est pas encore activé sur DataParl', réessayez plus tard."
           : data.error === "pdf invalide ou trop volumineux (5 Mo max)" ? data.error
           : "Import impossible pour le moment. Réessayez dans un instant.",
       );
@@ -234,11 +241,83 @@ export default function MaFiche() {
     rafraichir();
   }
 
-  // Photo de profil : upload direct (FormData), aperçu immédiat.
+  // Photo de profil : l'image choisie reste dans le navigateur ; elle est
+  // recadrée en carré (512 px, JPEG) et n'est envoyée qu'au clic sur
+  // « Utiliser cette photo ». Une photo lourde devient donc légère.
+  function choisirPhoto(fichier: File) {
+    setPhotoErreur("");
+    if (!/image\/(jpeg|png|webp)/.test(fichier.type)) return setPhotoErreur("Format non accepté : JPEG, PNG ou WebP.");
+    if (fichier.size > 25 * 1024 * 1024) return setPhotoErreur("Photo trop lourde : choisissez un fichier de moins de 25 Mo.");
+    const src = URL.createObjectURL(fichier);
+    const img = new Image();
+    img.onload = () => {
+      const s = Math.min(1, img.naturalHeight / img.naturalWidth);
+      setCrop({ src, l: img.naturalWidth, h: img.naturalHeight, x: (1 - s) / 2, y: (1 - s * img.naturalWidth / img.naturalHeight) / 2, s });
+    };
+    img.onerror = () => { URL.revokeObjectURL(src); setPhotoErreur("Fichier image illisible."); };
+    img.src = src;
+  }
+
+  // Sélection carrée : déplacement au doigt ou à la souris, redimensionnement
+  // par la poignée (coin bas droit). Coordonnées en fractions de l'image.
+  function debutDrag(e: React.PointerEvent, mode: "deplacer" | "taille") {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!crop) return;
+    drag.current = { px: e.clientX, py: e.clientY, x: crop.x, y: crop.y, s: crop.s, mode };
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+  }
+
+  function pendantDrag(e: React.PointerEvent) {
+    const d = drag.current;
+    const r = cadre.current?.getBoundingClientRect();
+    if (!d || !r || !crop) return;
+    const dx = (e.clientX - d.px) / r.width;
+    const dy = (e.clientY - d.py) / r.height;
+    if (d.mode === "deplacer") {
+      setCrop({
+        ...crop,
+        x: Math.min(Math.max(0, d.x + dx), 1 - crop.s),
+        y: Math.min(Math.max(0, d.y + dy), 1 - crop.s * crop.l / crop.h),
+      });
+    } else {
+      const s = Math.min(Math.min(1, crop.h / crop.l), Math.max(0.1, d.s + Math.max(dx, dy)));
+      setCrop({ ...crop, s, x: Math.min(crop.x, 1 - s), y: Math.min(crop.y, 1 - s * crop.l / crop.h) });
+    }
+  }
+
+  function finDrag() { drag.current = null; }
+
+  function annulerCrop() {
+    if (crop) URL.revokeObjectURL(crop.src);
+    setCrop(null);
+    setPhotoErreur("");
+  }
+
+  function validerCrop() {
+    if (!crop) return;
+    const c = document.createElement("canvas");
+    c.width = 512; c.height = 512;
+    const ctx = c.getContext("2d");
+    if (!ctx) { setPhotoErreur("Recadrage impossible sur ce navigateur."); return; }
+    const img = new Image();
+    img.onload = () => {
+      const cote = crop.s * crop.l;
+      ctx.drawImage(img, crop.x * crop.l, crop.y * crop.h, cote, cote, 0, 0, 512, 512);
+      c.toBlob(async (b) => {
+        URL.revokeObjectURL(crop.src);
+        setCrop(null);
+        if (!b) return setPhotoErreur("Recadrage impossible sur ce navigateur.");
+        await envoyerPhoto(new File([b], "photo.jpg", { type: "image/jpeg" }));
+      }, "image/jpeg", 0.9);
+    };
+    img.onerror = () => setPhotoErreur("Recadrage impossible sur ce navigateur.");
+    img.src = crop.src;
+  }
+
   async function envoyerPhoto(fichier: File) {
-    if (fichier.size > 2 * 1024 * 1024) return setErreur("Photo trop lourde (2 Mo max).");
     setPhotoBusy(true);
-    setErreur("");
+    setPhotoErreur("");
     const s = await sessionActuelle();
     const fd = new FormData();
     fd.append("photo", fichier);
@@ -250,7 +329,7 @@ export default function MaFiche() {
     const d = await r.json().catch(() => ({}));
     setPhotoBusy(false);
     if (r.ok) setPhotoUrl(d.photo_url ?? null);
-    else setErreur(d.error ?? "Photo refusée.");
+    else setPhotoErreur(d.error ?? "Photo refusée.");
   }
 
   async function retirerPhoto() {
@@ -295,15 +374,16 @@ export default function MaFiche() {
             <div className={styles.avatarVide} aria-hidden>👤</div>
           )}
           <div className={styles.photoActions}>
-            <button onClick={() => photoInput.current?.click()} disabled={photoBusy}>
+            <button onClick={() => photoInput.current?.click()} disabled={photoBusy || !!crop}>
               {photoUrl ? "Changer la photo" : "Ajouter une photo"}
             </button>
             {photoUrl && (
               <button className="lien" onClick={retirerPhoto} disabled={photoBusy}>Retirer la photo</button>
             )}
             <input ref={photoInput} type="file" accept="image/jpeg,image/png,image/webp" hidden
-              onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) envoyerPhoto(f); }} />
-            <span className="meta" style={{ fontSize: ".78rem" }}>JPEG, PNG ou WebP · 2 Mo max · visible sur votre fiche</span>
+              onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) choisirPhoto(f); }} />
+            <span className="meta" style={{ fontSize: ".78rem" }}>JPEG, PNG ou WebP · recadrée en carré · visible sur votre fiche</span>
+            {photoErreur && <p className={styles.photoErreur} role="alert">{photoErreur}</p>}
           </div>
         </div>
         <div className={styles.avancement}>
@@ -316,6 +396,40 @@ export default function MaFiche() {
         </div>
         <a className="meta" href={`/collab/${encodeURIComponent(etat.association?.collab_slug ?? "")}`}>Voir ma fiche publique ↗</a>
       </div>
+
+      {crop && (
+        <div className={styles.cropVoile} role="dialog" aria-label="Recadrer la photo">
+          <div className={styles.cropBoite}>
+            <h2 style={{ margin: "0 0 8px", fontSize: "1.1rem" }}>Recadrer la photo</h2>
+            <p className="meta" style={{ margin: "0 0 12px" }}>
+              Déplacez le carré sur votre visage, tirez la poignée du coin pour l&apos;ajuster.
+              Seule la zone sélectionnée est envoyée.
+            </p>
+            <div ref={cadre} className={styles.cropCadre}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={crop.src} alt="Aperçu de la photo" className={styles.cropImage} draggable={false} />
+              <div className={styles.cropSelection}
+                style={{
+                  left: crop.x * 100 + "%",
+                  top: crop.y * 100 + "%",
+                  width: crop.s * 100 + "%",
+                  height: (crop.s * crop.l / crop.h) * 100 + "%",
+                }}
+                onPointerDown={(e) => debutDrag(e, "deplacer")}
+                onPointerMove={pendantDrag}
+                onPointerUp={finDrag}
+                onPointerCancel={finDrag}>
+                <span className={styles.cropPoignee}
+                  onPointerDown={(e) => debutDrag(e, "taille")} />
+              </div>
+            </div>
+            <div className={styles.actions} style={{ marginTop: 14 }}>
+              <button onClick={validerCrop} disabled={photoBusy}>{photoBusy ? "Envoi…" : "Utiliser cette photo"}</button>{" "}
+              <button className={styles.lien} onClick={annulerCrop} disabled={photoBusy}>Annuler</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className={styles.importZone}>
         <button onClick={() => cvInput.current?.click()} disabled={importBusy}>

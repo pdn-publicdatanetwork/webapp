@@ -51,6 +51,12 @@
   gap: 2px;
 }
 
+.photoErreur {
+  margin: 4px 0 0;
+  color: var(--erreur, #b3261e);
+  font-size: .85rem;
+}
+
 .avancement {
   flex: 1;
   min-width: 180px;
@@ -265,6 +271,67 @@
 
 .propositions .actions {
   margin-top: 12px;
+}
+
+/* Recadrage de la photo de profil : voile plein écran, aperçu local
+   (aucun envoi avant validation), sélection carrée déplaçable. */
+.cropVoile {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, .55);
+}
+
+.cropBoite {
+  max-width: min(92vw, 560px);
+  max-height: 92vh;
+  overflow: auto;
+  padding: 18px 20px;
+  border-radius: var(--radius-card, 10px);
+  background: var(--card);
+  border: 1px solid var(--line);
+}
+
+.cropCadre {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.cropImage {
+  display: block;
+  max-width: min(86vw, 520px);
+  max-height: 55vh;
+  -webkit-user-drag: none;
+}
+
+.cropSelection {
+  position: absolute;
+  outline: 2px solid var(--corail);
+  outline-offset: -1px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, .45);
+  cursor: move;
+  touch-action: none;
+}
+
+.cropPoignee {
+  position: absolute;
+  right: -9px;
+  bottom: -9px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--corail);
+  background: var(--card);
+  cursor: nwse-resize;
+  touch-action: none;
 }
 
 .zoneSensible {
