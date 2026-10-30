@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Autocompletion, { type Option } from "@/app/_components/Autocompletion";
 import { sessionActuelle } from "@/lib/supabaseBrowser";
 import { dateHeure } from "@/app/_components/admin/utils";
 
 type Statut = { statut: string; collab_slug: string | null; gel_jusqu_a: string | null; expire_le: string | null } | null;
+type Fiche = { slug: string; nom?: string; detail?: string };
 
 async function appel(url: string, init?: RequestInit) {
   const s = await sessionActuelle();
@@ -18,7 +20,7 @@ async function appel(url: string, init?: RequestInit) {
 export default function Formulaire() {
   // Slug prérempli via ?slug=… : lu en client dans un effet (pas de
   // useSearchParams, qui exige une boundary Suspense et casse le prérendu).
-  const [slug, setSlug] = useState("");
+  const [fiche, setFiche] = useState<Fiche | null>(null);
   const [demande, setDemande] = useState<{ adresse: string; objet: string; code: string; expireLe: string } | null>(null);
   const [statut, setStatut] = useState<Statut>(null);
   const [erreur, setErreur] = useState("");
@@ -31,17 +33,26 @@ export default function Formulaire() {
 
   useEffect(() => {
     const s = new URLSearchParams(window.location.search).get("slug");
-    if (s && /^[a-z0-9_]{3,120}$/.test(s)) setSlug(s);
+    if (s && /^[a-z0-9_]{3,120}$/.test(s)) setFiche({ slug: s });
     rafraichir();
     // Rafraîchissement léger tant qu'une demande est en attente.
     const t = setInterval(rafraichir, 15000);
     return () => clearInterval(t);
   }, [rafraichir]);
 
+  function choisir(o: Option | null) {
+    setErreur("");
+    setDemande(null);
+    if (o && o.valeur.startsWith("collab:")) {
+      setFiche({ slug: o.valeur.slice("collab:".length), nom: o.libelle, detail: o.detail });
+    }
+  }
+
   async function demanderCode() {
+    if (!fiche) return;
     setErreur(""); setChargement(true);
     const { ok, data } = await appel("/api/compte/association", {
-      method: "POST", body: JSON.stringify({ slug }),
+      method: "POST", body: JSON.stringify({ slug: fiche.slug }),
     });
     setChargement(false);
     if (!ok) return setErreur(data.error ?? "erreur");
@@ -76,21 +87,35 @@ export default function Formulaire() {
       )}
 
       <h2>Votre fiche</h2>
-      <p className="meta">
-        Sur votre fiche dataparl.fr, cliquez « C&apos;est votre fiche ? » pour arriver ici avec la fiche
-        préremplie, ou collez la fin de l&apos;adresse (ex. gallicher_matthieu3afd22df).
-      </p>
-      <input
-        value={slug} onChange={(e) => setSlug(e.target.value.trim())}
-        placeholder="adresse de la fiche (ex. gallicher_matthieu3afd22df)"
-        style={{ width: "100%", maxWidth: 420 }}
-        disabled={s === "verifie" || s === "gele"}
-      />
-      <p>
-        <button onClick={demanderCode} disabled={!slug || chargement || s === "verifie" || s === "gele"}>
-          {chargement ? "…" : "Recevoir l'e-mail de vérification"}
-        </button>
-      </p>
+
+      {s !== "verifie" && s !== "gele" && !fiche && (
+        <>
+          <p className="meta">Tapez votre nom pour retrouver votre fiche.</p>
+          <div className="recherche-globale">
+            <Autocompletion
+              source="collabs"
+              placeholder="Votre nom…"
+              ariaLabel="Rechercher votre fiche collaborateur"
+              onChoix={choisir}
+            />
+          </div>
+        </>
+      )}
+
+      {fiche && s !== "verifie" && s !== "gele" && (
+        <p className="card">
+          <strong>{fiche.nom || "Fiche sélectionnée"}</strong>
+          {fiche.detail && <> <span className="meta">{fiche.detail}</span><br /></>}
+          {!fiche.nom && <> <span className="meta">référence : {fiche.slug}</span><br /></>}
+          <a href={`/collab/${encodeURIComponent(fiche.slug)}`}>voir la fiche</a>
+          {" · "}
+          <button className="lien" onClick={() => { setFiche(null); setDemande(null); }}>changer de fiche</button>
+          <br />
+          <button onClick={demanderCode} disabled={chargement}>
+            {chargement ? "…" : "Recevoir l'e-mail de vérification"}
+          </button>
+        </p>
+      )}
       {erreur && <p className="erreur">{erreur}</p>}
 
       {demande && s !== "verifie" && (
