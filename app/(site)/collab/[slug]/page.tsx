@@ -8,6 +8,8 @@ import { cabinetsDeCollab, ministresParIds } from "@/lib/gouvernement";
 import { finEffective, periode } from "@/lib/gouvernementTypes";
 import ParcoursCollab from "./ParcoursCollab";
 import ProfilCV from "./ProfilCV";
+import Partager from "./Partager";
+import styles from "./fiche.module.css";
 import PubGoogle from "@/app/_components/PubGoogle";
 import BlocRetenir from "@/app/_components/BlocRetenir";
 
@@ -74,6 +76,8 @@ export default async function FicheCollab({ params }: Props) {
  ` depuis ${c.premiere_date.slice(0, 4)}` : ""}.
       </p>
 
+      <Partager slug={c.slug} nom={nom} />
+
       {commeElu && (
         <p className="card" style={{ maxWidth: "none" }}>
           {nom} a aussi été {commeElu.actif ? "élu(e)" : "parlementaire"} :{" "}
@@ -86,27 +90,38 @@ export default async function FicheCollab({ params }: Props) {
         </p>
       )}
 
-      {actuelles.length > 0 && (
-        <>
-          <h2>Aujourd&apos;hui</h2>
-          <ul className="organes">
-            {actuelles.map((p, i) => {
-              const f = fiches.find((x) => x.chambre === p.chambre && x.elu_id === p.elu_id);
-              const eluNom = f ? prenomNom(f.prenom, f.nom) : nomAffiche(p.elu_nom);
-              return (
-                <li key={i}>
-                  {p.fonction || (c.genre === "F" ? "Collaboratrice" : "Collaborateur")} de{" "}
-                  {f ? <a href={`/parlementaires/${encodeURIComponent(f.slug)}`}>{eluNom}</a> : eluNom}
-                  <span className="meta"> · {CHAMBRE_LONG[p.chambre]}{f?.groupe ? ` · ${f.groupe}` : ""} · {libellePeriode(p)}</span>
-                </li>
-              );
-            })}
-          </ul>
-        </>
-      )}
+      {/* Parcours certifié : sources officielles AN/Sénat, vérifié par
+          DataParl'. Visuellement distinct du profil CV déclaré. */}
+      <section className={styles.bloc}>
+        <div className={styles.enteteBloc}>
+          <h2>Parcours</h2>
+          <span className={`${styles.badge} ${styles.badgeOfficiel}`}>✓ Certifié DataParl&apos; · listes officielles</span>
+        </div>
+        <p className="meta" style={{ margin: "2px 0 14px" }}>
+          Chaque poste provient des listes officielles de l&apos;Assemblée nationale et du Sénat, vérifiées par DataParl&apos;.
+        </p>
 
-      <h2>Parcours</h2>
-      <ParcoursCollab id={c.collab_id} suite={`/collab/${c.slug}`} />
+        {actuelles.length > 0 && (
+          <>
+            <h3>Aujourd&apos;hui</h3>
+            <ul className="organes">
+              {actuelles.map((p, i) => {
+                const f = fiches.find((x) => x.chambre === p.chambre && x.elu_id === p.elu_id);
+                const eluNom = f ? prenomNom(f.prenom, f.nom) : nomAffiche(p.elu_nom);
+                return (
+                  <li key={i}>
+                    {p.fonction || (c.genre === "F" ? "Collaboratrice" : "Collaborateur")} de{" "}
+                    {f ? <a href={`/parlementaires/${encodeURIComponent(f.slug)}`}>{eluNom}</a> : eluNom}
+                    <span className="meta"> · {CHAMBRE_LONG[p.chambre]}{f?.groupe ? ` · ${f.groupe}` : ""} · {libellePeriode(p)}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        )}
+
+        <ParcoursCollab id={c.collab_id} suite={`/collab/${c.slug}`} />
+      </section>
 
       {/* Profil CV déclaré par l'intéressé : rubrique séparée, réservée aux
           comptes, jamais mélangée aux parcours sourcés AN/Sénat. */}
