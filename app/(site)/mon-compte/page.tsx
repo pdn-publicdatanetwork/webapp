@@ -30,6 +30,7 @@ function Icone({ nom }: { nom: string }) {
   if (nom === "bouclier") return (<svg {...p}><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z" /></svg>);
   if (nom === "cloche") return (<svg {...p}><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2H4.5z" /><path d="M10 20a2 2 0 0 0 4 0" /></svg>);
   if (nom === "document") return (<svg {...p}><path d="M7 3h7l4 4v14H7z" /><path d="M14 3v4h4" /></svg>);
+  if (nom === "enveloppe") return (<svg {...p}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></svg>);
   return (<svg {...p}><path d="M9 8l-4 4 4 4" /><path d="M15 8l4 4-4 4" /><path d="M13 6l-2 12" /></svg>);
 }
 
@@ -103,7 +104,7 @@ export default function MonCompte() {
   const rubriques = [
     { titre: "Informations personnelles", resume: nomComplet || "Prénom et nom du compte", href: "/mon-compte/informations", icone: "personne" },
     { titre: "Sécurité et connexion", resume: "Mot de passe, validation en deux étapes, clés d'accès, activité", href: "/mon-compte/securite", icone: "cadenas" },
-    { titre: "Données et confidentialité", resume: "Newsletter, suivi, export et suppression", href: "/mon-compte/preferences", icone: "bouclier" },
+    { titre: "Communications", resume: "Newsletter, alertes par email et suivi des e-mails", href: "/mon-compte/communications", icone: "enveloppe" },
     { titre: "Mes alertes", resume: resumeAlertes, href: "/mon-compte/alertes", icone: "cloche" },
     { titre: "Ma fiche collaborateur", resume: "Le profil CV publié sur dataparl.fr", href: "/mon-compte/ma-fiche", icone: "document" },
     { titre: "Mon espace API", resume: "Ta clé API, sa consommation et la documentation", href: "https://api.dataparl.fr/mon-espace-api", icone: "code", externe: true },
@@ -144,7 +145,11 @@ export default function MonCompte() {
         ))}
       </div>
 
-      <p style={{ marginTop: 24, fontSize: 14 }}><button className="lien" onClick={deconnexion}>Se déconnecter</button></p>
+      <p style={{ marginTop: 24, fontSize: 14 }}>
+        <button className="lien" onClick={deconnexion}>Se déconnecter</button>
+        <br />
+        <a className="lien" href="/mon-compte/preferences">Données et confidentialité</a>
+      </p>
     </div>
   );
 }

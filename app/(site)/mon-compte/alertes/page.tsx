@@ -4,9 +4,9 @@ import type { Session } from "@supabase/supabase-js";
 import { sessionActuelle } from "@/lib/supabaseBrowser";
 import StyleCompte from "../style-compte";
 
-// Mes alertes : le réglage des alertes parlementaires du compte. Réglages
-// fins (élus, groupes, commissions) : page /alertes ; newsletter et suivi :
-// Données et confidentialité (préférences).
+// Mes alertes : le contenu des alertes parlementaires — fréquences,
+// chambres suivies, types de mouvement. Le canal email (activer/arrêter
+// les alertes, newsletter, suivi) se gère dans Communications.
 type Freq = "quotidienne" | "hebdomadaire";
 type Alertes = { actives: boolean; frequences: Freq[]; chambres: string[]; types: string[]; groupes: string[]; elus: string[]; partis: string[]; commissions: string[] };
 type Compte = { email: string; alertes: Alertes };
@@ -25,12 +25,9 @@ const TYPES = [
 export default function MesAlertes() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [compte, setCompte] = useState<Compte | null>(null);
-  const [actives, setActives] = useState(false);
   const [frequences, setFrequences] = useState<Freq[]>(["quotidienne"]);
   const [chambres, setChambres] = useState<string[]>([]);
   const [types, setTypes] = useState<string[]>([]);
-  const [cgu, setCgu] = useState(false);
-  const [consentement, setConsentement] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; texte: string } | null>(null);
   const [enCours, setEnCours] = useState(false);
 
@@ -50,7 +47,6 @@ export default function MesAlertes() {
       if (!r.ok) return setMessage({ ok: false, texte: "Impossible de charger tes alertes." });
       const c: Compte = await r.json();
       setCompte(c);
-      setActives(c.alertes.actives);
       setFrequences(c.alertes.frequences.length ? c.alertes.frequences : ["quotidienne"]);
       setChambres(c.alertes.chambres);
       setTypes(c.alertes.types);
@@ -75,22 +71,22 @@ export default function MesAlertes() {
   async function enregistrer() {
     setEnCours(true);
     setMessage(null);
-    const dejaActives = compte!.alertes.actives;
-    const r = await appel("/api/compte/alertes", {
+    const a = compte!.alertes;
+    const r = await appel("/api/compute/alertes".replace("compute", "compte"), {
       method: "PUT",
       body: JSON.stringify({
-        actives,
+        // Le canal (on/off) se gère dans Communications : on conserve
+        // l'état actuel, on n'enregistre que le contenu.
+        actives: a.actives,
         frequences: frequences.length ? frequences : ["quotidienne"],
         chambres: chambres.length ? chambres : ["assemblee", "senat"],
         types: types.length ? types : ["arrivee", "depart", "transfert"],
-        groupes: compte!.alertes.groupes,
-        elus: compte!.alertes.elus,
-        partis: compte!.alertes.partis,
-        commissions: compte!.alertes.commissions,
-        // Déjà abonné : le consentement initial vaut. Nouvelle activation :
-        // il faut les deux cases.
-        cgu: dejaActives || cgu,
-        consentement: dejaActives || consentement,
+        groupes: a.groupes,
+        elus: a.elus,
+        partis: a.partis,
+        commissions: a.commissions,
+        cgu: a.actives,
+        consentement: a.actives,
       }),
     });
     setEnCours(false);
@@ -98,33 +94,7 @@ export default function MesAlertes() {
       const body = await r.json().catch(() => ({}));
       return setMessage({ ok: false, texte: (body as { error?: string }).error ?? "Enregistrement impossible, réessaie." });
     }
-    setCompte({ ...compte!, alertes: { ...compte!.alertes, actives } });
-    setCgu(false);
-    setConsentement(false);
-    setMessage({ ok: true, texte: "Alertes enregistrées." });
-  }
-
-  async function arreter() {
-    if (!window.confirm("Ne plus recevoir les alertes parlementaires ? La newsletter et les autres réglages ne sont pas touchés.")) return;
-    setEnCours(true);
-    const r = await appel("/api/compte/alertes", {
-      method: "PUT",
-      body: JSON.stringify({
-        actives: false,
-        frequences: frequences.length ? frequences : ["quotidienne"],
-        chambres: chambres.length ? chambres : ["assemblee", "senat"],
-        types: types.length ? types : ["arrivee", "depart", "transfert"],
-        groupes: compte!.alertes.groupes,
-        elus: compte!.alertes.elus,
-        partis: compte!.alertes.partis,
-        commissions: compte!.alertes.commissions,
-      }),
-    });
-    setEnCours(false);
-    if (!r.ok) return setMessage({ ok: false, texte: "Arrêt impossible, réessaie." });
-    setActives(false);
-    setCompte({ ...compte!, alertes: { ...compte!.alertes, actives: false } });
-    setMessage({ ok: true, texte: "C'est noté : tes alertes sont arrêtées." });
+    setMessage({ ok: true, texte: "Réglages des alertes enregistrés." });
   }
 
   return (
@@ -136,36 +106,27 @@ export default function MesAlertes() {
 
       <section className="section-compte">
         <h2>Alertes parlementaires</h2>
-        <label style={{ display: "block", margin: "10px 0" }}><input type="checkbox" checked={actives} onChange={(e) => setActives(e.target.checked)} /> Recevoir les alertes</label>
-        {actives && (
-          <>
-            <p><strong>Fréquence</strong></p>
-            <label style={{ display: "block", margin: "6px 0" }}><input type="checkbox" checked={frequences.includes("quotidienne")} onChange={() => setFrequences((f) => cocheFreq(f, "quotidienne"))} /> DataParl' Daily — chaque jour où il y a du mouvement</label>
-            <label style={{ display: "block", margin: "6px 0" }}><input type="checkbox" checked={frequences.includes("hebdomadaire")} onChange={() => setFrequences((f) => cocheFreq(f, "hebdomadaire"))} /> DataParl' Weekly — le récapitulatif du lundi</label>
-            <p><strong>Chambres suivies</strong></p>
-            {CHAMBRES.map((c) => (
-              <label key={c.v} style={{ display: "block", margin: "6px 0" }}><input type="checkbox" checked={chambres.includes(c.v)} onChange={() => setChambres((x) => coche(x, c.v))} /> {c.l}</label>
-            ))}
-            <p><strong>Types de mouvement</strong></p>
-            {TYPES.map((t) => (
-              <label key={t.v} style={{ display: "block", margin: "6px 0" }}><input type="checkbox" checked={types.includes(t.v)} onChange={() => setTypes((x) => coche(x, t.v))} /> {t.l}</label>
-            ))}
-            {!compte.alertes.actives && (
-              <>
-                <label style={{ display: "block", margin: "14px 0 6px" }}><input type="checkbox" checked={cgu} onChange={(e) => setCgu(e.target.checked)} /> J'accepte les <a href="/informations-legales/cgu">conditions d'utilisation</a></label>
-                <label style={{ display: "block", margin: "6px 0" }}><input type="checkbox" checked={consentement} onChange={(e) => setConsentement(e.target.checked)} /> Je consens à recevoir les e-mails DataParl'</label>
-              </>
-            )}
-          </>
+        {!compte.alertes.actives && (
+          <p className="meta">Tes alertes sont actuellement arrêtées : réactive-les dans <a href="/mon-compte/communications">Communications</a> pour recevoir le Daily et le Weekly.</p>
         )}
+        <p><strong>Fréquence</strong></p>
+        <label style={{ display: "block", margin: "6px 0" }}><input type="checkbox" checked={frequences.includes("quotidienne")} onChange={() => setFrequences((f) => cocheFreq(f, "quotidienne"))} /> Daily — chaque jour où il y a du mouvement</label>
+        <label style={{ display: "block", margin: "6px 0" }}><input type="checkbox" checked={frequences.includes("hebdomadaire")} onChange={() => setFrequences((f) => cocheFreq(f, "hebdomadaire"))} /> Weekly — le récapitulatif du lundi</label>
+        <p><strong>Chambres suivies</strong></p>
+        {CHAMBRES.map((c) => (
+          <label key={c.v} style={{ display: "block", margin: "6px 0" }}><input type="checkbox" checked={chambres.includes(c.v)} onChange={() => setChambres((x) => coche(x, c.v))} /> {c.l}</label>
+        ))}
+        <p><strong>Types de mouvement</strong></p>
+        {TYPES.map((t) => (
+          <label key={t.v} style={{ display: "block", margin: "6px 0" }}><input type="checkbox" checked={types.includes(t.v)} onChange={() => setTypes((x) => coche(x, t.v))} /> {t.l}</label>
+        ))}
         <p style={{ marginTop: 14 }}>
-          <button className="btn" onClick={enregistrer} disabled={enCours}>Enregistrer</button>{" "}
-          {compte.alertes.actives && <button className="danger" onClick={arreter} disabled={enCours}>Arrêter mes alertes</button>}
+          <button className="btn" onClick={enregistrer} disabled={enCours}>Enregistrer</button>
         </p>
         <p className="meta">
           <a href="/alertes">Critères avancés (élus suivis, groupes, commissions) →</a>
           <br />
-          Newsletter et suivi : <a href="/mon-compte/preferences">Données et confidentialité</a>
+          Activer ou arrêter les alertes, la newsletter et le suivi : <a href="/mon-compte/communications">Communications</a>
         </p>
       </section>
     </div>
