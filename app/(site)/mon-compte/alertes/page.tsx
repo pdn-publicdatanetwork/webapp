@@ -90,6 +90,10 @@ export default function MesAlertes() {
   };
 
   async function enregistrer() {
+    // TypeScript ne propage pas le garde-fou if (!r) dans les closures :
+    // on fige l'état au moment de l'appel.
+    if (!r) return;
+    const regles: Alertes = r;
     setEnCours(true);
     setMessage(null);
     const res = await appel("/api/compte/alertes", {
@@ -97,16 +101,16 @@ export default function MesAlertes() {
       body: JSON.stringify({
         // Le canal (on/off) se gère dans Communications : on conserve
         // l'état actuel, on n'enregistre que le contenu.
-        actives: r.actives,
-        frequences: r.frequences.length ? r.frequences : ["quotidienne"],
-        chambres: r.chambres.length ? r.chambres : ["assemblee", "senat"],
-        types: r.types.length ? r.types : ["arrivee", "depart", "transfert"],
-        groupes: r.groupes,
-        elus: r.elus,
-        partis: r.partis,
-        commissions: r.commissions,
-        cgu: r.actives,
-        consentement: r.actives,
+        actives: regles.actives,
+        frequences: regles.frequences.length ? regles.frequences : ["quotidienne"],
+        chambres: regles.chambres.length ? regles.chambres : ["assemblee", "senat"],
+        types: regles.types.length ? regles.types : ["arrivee", "depart", "transfert"],
+        groupes: regles.groupes,
+        elus: regles.elus,
+        partis: regles.partis,
+        commissions: regles.commissions,
+        cgu: regles.actives,
+        consentement: regles.actives,
       }),
     });
     setEnCours(false);
