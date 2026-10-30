@@ -84,7 +84,7 @@ export default function DonneesConfidentialite() {
   return (
     <div className="etroit">
       <h1>Données et <span className="surligne">confidentialité</span></h1>
-      <p><a className="lien" href="/mon-compte">← Mon compte</a></p>
+      <p className="meta"><a className="lien" href="/mon-compte">Compte</a> / Données et confidentialité</p>
       {message && <p className={message.ok ? "ok" : "erreur"} role="status">{message.texte}</p>}
 
       <section className="section-compte">

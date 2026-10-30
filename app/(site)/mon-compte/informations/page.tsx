@@ -66,7 +66,7 @@ export default function Informations() {
   return (
     <div className="etroit">
       <h1>Informations <span className="surligne">personnelles</span></h1>
-      <p><a className="lien" href="/mon-compte">← Mon compte</a></p>
+      <p className="meta"><a className="lien" href="/mon-compte">Compte</a> / Informations personnelles</p>
       {message && <p className={message.ok ? "ok" : "erreur"} role="status">{message.texte}</p>}
 
       <section className="section-compte">
@@ -94,7 +94,6 @@ export default function Informations() {
             <p><button className="btn" type="submit" disabled={enCours}>Enregistrer</button></p>
           </form>
         )}
-        <p className="meta">Ces informations personnifient tes e-mails DataParl' (Daily, Weekly, accusés de réception).</p>
       </section>
     </div>
   );

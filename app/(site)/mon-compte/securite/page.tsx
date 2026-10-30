@@ -163,7 +163,7 @@ export default function Securite() {
   return (
     <div className="etroit">
       <h1>Sécurité et <span className="surligne">connexion</span></h1>
-      <p><a className="lien" href="/mon-compte">← Mon compte</a></p>
+      <p className="meta"><a className="lien" href="/mon-compte">Compte</a> / Sécurité et connexion</p>
       {message && <p className={message.ok ? "ok" : "erreur"} role="status">{message.texte}</p>}
 
       <section className="section-compte">

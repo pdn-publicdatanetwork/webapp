@@ -129,7 +129,7 @@ export default function MesAlertes() {
   return (
     <div className="etroit">
       <h1>Mes <span className="surligne">alertes</span></h1>
-      <p><a className="lien" href="/mon-compte">← Mon compte</a></p>
+      <p className="meta"><a className="lien" href="/mon-compte">Compte</a> / Mes alertes</p>
       {message && <p className={message.ok ? "ok" : "erreur"} role="status">{message.texte}</p>}
 
       <section className="section-compte">

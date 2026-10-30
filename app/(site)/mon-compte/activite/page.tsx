@@ -62,7 +62,7 @@ export default function MonActivite() {
   return (
     <div className="etroit">
       <h1>Mon <span className="surligne">activité</span></h1>
-      <p><a className="lien" href="/mon-compte/securite">← Sécurité et connexion</a></p>
+      <p className="meta"><a className="lien" href="/mon-compte">Compte</a> / Mon activité</p>
       {message && <p className={message.ok ? "ok" : "erreur"} role="status">{message.texte}</p>}
 
       <section className="section-compte">
