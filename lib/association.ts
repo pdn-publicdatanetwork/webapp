@@ -6,6 +6,7 @@ import { normalizeEmail, sha256 } from "./tokens";
 import { copieSlack, SLACK_CONTACT } from "./slack";
 import { expedier, bouton, esc } from "./mail";
 import { SITE_URL } from "./env";
+import { retirerFicheCollab } from "./profilDeclare";
 
 // Association entre un compte DataParl' et sa fiche collaborateur.
 // Vérification par e-mail : depuis son compte, la personne génère un code à
@@ -380,6 +381,9 @@ export async function deciderManuellement(
     action === "refuser" ? { statut: "refuse" } :
     { statut: "refuse", verifie_par: null, verifie_le: null, email_preuve: null };
   await db.from("associations_fiches").update({ ...maj, maj_le: new Date().toISOString() }).eq("id", demande.id);
+  // Dissociation : la fiche complétée part du site (photo supprimée du
+  // bucket, profil CV retiré), comme annoncé à la personne dans Ma fiche.
+  if (action === "dissocier") await retirerFicheCollab(demande.user_id, demande.collab_id).catch((e) => console.error("dissocier", String(e).slice(0, 200)));
   await journal(demande.user_id, demande.collab_id, `manuel_${action}`, { par: admin.userId }, libelle);
   if (action === "valider") await accuseValidation(demande.user_id, libelle, f?.prenom ?? null);
   if (action === "refuser") await accuseRefus(demande.user_id, libelle, false, f?.prenom ?? null);
