@@ -8,7 +8,7 @@ export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "Départements : tous les élus, de l'Assemblée au Parlement européen",
-  description: "Une fiche par département : ses députés, ses sénateurs, ses députés européens — et pour chaque élu, son équipe de collaborateurs suivie par DataParl'.",
+  description: "Une fiche par département : ses députés, ses sénateurs, ses députés européens, et pour chaque élu, son équipe de collaborateurs suivie par DataParl'.",
   alternates: { canonical: "/departement" },
 };
 
@@ -28,7 +28,7 @@ export default async function IndexDepartements() {
           </li>
         ))}
       </ul>
-      <p className="meta"><Link href="/parlementaires">Voir tous les parlementaires</Link> · <Link href="/senatoriales2026">Sénatoriales 2026</Link></p>
+      <p className="meta"><Link href="/parlementaires">Voir tous les parlementaires</Link>, <Link href="/senatoriales2026">Sénatoriales 2026</Link></p>
     </>
   );
 }

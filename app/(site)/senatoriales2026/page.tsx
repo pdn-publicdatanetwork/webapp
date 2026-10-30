@@ -50,7 +50,7 @@ export default async function Senatoriales2026() {
         Le {libelleElection()}, une partie du Sénat a été renouvelée : dans chaque département concerné,
         les grands électeurs ont désigné 178 sénateurs pour six ans. Voici, département par département,
         les élus qui entrent au Palais du Luxembourg, ceux qui y sont réélus, ceux qui le quittent, leur groupe
-        politique — et leur équipe de collaborateurs, suivie chaque jour par DataParl&apos;.
+        politique, et leur équipe de collaborateurs, suivie chaque jour par DataParl&apos;.
       </p>
 
       <div className="chiffres">
@@ -75,7 +75,7 @@ export default async function Senatoriales2026() {
           {departements.map((d) => (
             <li key={d.slug}>
               <a href={`/senatoriales2026/${d.slug}`}>{d.nom}</a>
-              <span className="meta"> · {d.nouveaux.length} nouveau{d.nouveaux.length > 1 ? "x" : ""} sénateur{d.nouveaux.length > 1 ? "s" : ""}{d.reelus.length ? `, ${d.reelus.length} réélu${d.reelus.length > 1 ? "s" : ""}` : ""}{d.sortants.length ? `, ${d.sortants.length} sortant${d.sortants.length > 1 ? "s" : ""}` : ""}</span>
+              <span className="meta">, {d.nouveaux.length} nouveau{d.nouveaux.length > 1 ? "x" : ""} sénateur{d.nouveaux.length > 1 ? "s" : ""}{d.reelus.length ? `, ${d.reelus.length} réélu${d.reelus.length > 1 ? "s" : ""}` : ""}{d.sortants.length ? `, ${d.sortants.length} sortant${d.sortants.length > 1 ? "s" : ""}` : ""}</span>
             </li>
           ))}
         </ul>
@@ -85,8 +85,8 @@ export default async function Senatoriales2026() {
       <p>
         Le Sénat est renouvelé par moitié : chaque scrutin, comme en {SCRUTIN_2026.annee}, renouvelle l&apos;une des
         deux séries de sénateurs pour un mandat de six ans. L&apos;élection se fait au suffrage indirect universel :
-        ce sont les « grands électeurs » du département — députés et conseillers départementaux, régionaux et
-        municipaux, ou leurs délégués — qui votent. Le mode de scrutin dépend du nombre de sièges du département :
+        ce sont les « grands électeurs » du département (députés et conseillers départementaux, régionaux et
+        municipaux, ou leurs délégués) qui votent. Le mode de scrutin dépend du nombre de sièges du département :
         scrutin majoritaire à deux tours pour les départements qui élisent un à quatre sénateurs, représentation
         proportionnelle avec prime majoritaire au-delà.
       </p>
@@ -94,11 +94,11 @@ export default async function Senatoriales2026() {
         DataParl&apos; complète ces résultats avec ce que les sources officielles ne donnent pas : pour chaque nouveau
         sénateur, la liste de ses collaborateurs parlementaires, les arrivées et les départs dans son équipe, et pour
         chaque sortant, l&apos;historique complet de son mandat. Chaque fiche relie aussi le parcours des personnes qui
-        changent de chambre — un député devenu sénateur, un collaborateur devenu parlementaire.
+        changent de chambre : un député devenu sénateur, un collaborateur devenu parlementaire.
       </p>
       <p className="meta">
-        Voir aussi : <a href="https://www.resultats-elections.interieur.gouv.fr/Senatoriales2026/nouvelle_assemblee/index.html" target="_blank" rel="noopener noreferrer">les résultats officiels du ministère de l&apos;Intérieur</a> · <a href="/parlementaires">tous les parlementaires</a> · <a href="/mouvements/senat">les mouvements
-        au Sénat</a> · <a href="/vigiparl/senat/parlementaires">VigiParl&apos; au Sénat</a>
+        Voir aussi : <a href="https://www.resultats-elections.interieur.gouv.fr/Senatoriales2026/nouvelle_assemblee/index.html" target="_blank" rel="noopener noreferrer">les résultats officiels du ministère de l&apos;Intérieur</a>, <a href="/parlementaires">tous les parlementaires</a>, <a href="/mouvements/senat">les mouvements
+        au Sénat</a>, <a href="/vigiparl/senat/parlementaires">VigiParl&apos; au Sénat</a>
       </p>
     </>
   );

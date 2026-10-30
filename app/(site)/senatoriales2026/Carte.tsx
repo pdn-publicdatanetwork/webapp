@@ -3,7 +3,7 @@
 // Carte cliquable et zoomable : les départements métropolitains (contours de
 // lib/carteDepartements.ts) en bleu lorsqu'ils sont renouvelés aux sénatoriales
 // 2026, et le bandeau outre-mer (lib/carteOutreMer.ts) : DROM et COM dessinés
-// sous la métropole — bleus et cliquables quand ils sont renouvelés, gris
+// sous la métropole : bleus et cliquables quand ils sont renouvelés, gris
 // sinon. Les Français de l'étranger restent listés sous la carte.
 import { useState } from "react";
 import { DEPARTEMENTS } from "@/lib/carteDepartements";

@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!nom) return { title: "Département" };
   return {
     title: `Élus de ${nom} : députés, sénateurs, députés européens`,
-    description: `Tous les élus de ${nom} : députés à l'Assemblée nationale, sénateurs, députés européens — leurs fiches, leurs biographies, leurs groupes et leurs équipes de collaborateurs.`,
+    description: `Tous les élus de ${nom} : députés à l'Assemblée nationale, sénateurs, députés européens : leurs fiches, leurs biographies, leurs groupes et leurs équipes de collaborateurs.`,
     alternates: { canonical: `/departement/${slug}` },
   };
 }
@@ -51,16 +51,16 @@ export default async function FicheDepartement({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(filAriane).replace(/</g, "\\u003c") }} />
       <p className="meta" style={{ marginTop: 0 }}>
-        <a href="/senatoriales2026">← Sénatoriales 2026</a> · <Link href="/departement">← Tous les départements</Link>
+        <a href="/senatoriales2026">← Sénatoriales 2026</a>, <Link href="/departement">← Tous les départements</Link>
       </p>
       <h1>Élus de <span className="surligne">{nom}</span></h1>
       <p className="lead">
-        Les {elus.length} élu{elus.length > 1 ? "s" : ""} de {nom} — députés, sénateurs, députés européens — avec
+        Les {elus.length} élu{elus.length > 1 ? "s" : ""} de {nom} (députés, sénateurs, députés européens) avec
         pour chacun sa fiche, sa biographie, son groupe politique et l&apos;équipe de ses collaborateurs.
       </p>
       <p className="meta">
         Voir aussi : <a href={`/senatoriales2026/${slug}`}>le scrutin 2026 en {nom}</a>
-        {" "}<Link href="/parlementaires">· tous les parlementaires</Link>
+        <Link href="/parlementaires">, tous les parlementaires</Link>
       </p>
       <h2>Les élus</h2>
       <ListeElus elus={elus} afficher="departement" />
@@ -79,8 +79,8 @@ export default async function FicheDepartement({ params }: Props) {
                   {e.prenom} {e.nom}
                 </a>
                 <span className="meta">
-                  {" · "}{e.chambre === "assemblee" ? "ex-député" : e.chambre === "senat" ? "ex-sénateur" : "ex-député européen"}
-                  {e.groupe ? ` · groupe ${e.groupe}` : ""}
+                  {", "}{e.chambre === "assemblee" ? "ex-député" : e.chambre === "senat" ? "ex-sénateur" : "ex-député européen"}
+                  {e.groupe ? `, groupe ${e.groupe}` : ""}
                 </span>
               </li>
             ))}

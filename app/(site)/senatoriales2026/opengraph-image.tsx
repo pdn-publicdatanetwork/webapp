@@ -1,6 +1,6 @@
 import { imageOg, TAILLE_OG } from "@/lib/og";
 
-export const alt = "Sénatoriales 2026 · DataParl'";
+export const alt = "Sénatoriales 2026 : DataParl'";
 export const size = TAILLE_OG;
 export const contentType = "image/png";
 

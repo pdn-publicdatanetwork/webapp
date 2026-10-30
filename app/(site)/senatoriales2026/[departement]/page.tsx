@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: titre, description,
     alternates: { canonical: `/senatoriales2026/${d.slug}` },
-    openGraph: { siteName: "DataParl'", title: `${titre} · DataParl'`, description, url: `https://www.dataparl.fr/senatoriales2026/${d.slug}`, type: "article" },
+    openGraph: { siteName: "DataParl'", title: `${titre}, DataParl'`, description, url: `https://www.dataparl.fr/senatoriales2026/${d.slug}`, type: "article" },
   };
 }
 
@@ -41,13 +41,13 @@ function CarteSenateur({ s, reelu }: { s: Senateur; reelu?: boolean }) {
         </div>
         <p className="meta" style={{ margin: "2px 0" }}>
           {s.election ? `Élu${s.civilite === "Mme" ? "e" : ""} le ${libelleElection()}` : ""}
-          {s.groupe && !sansGroupe(s.groupe) ? ` · groupe ${s.groupe}` : s.liste ? ` · liste « ${s.liste} »` : ""}
+          {s.groupe && !sansGroupe(s.groupe) ? `, groupe ${s.groupe}` : s.liste ? `, liste « ${s.liste} »` : ""}
         </p>
         {s.slug && (
           <p className="meta" style={{ margin: 0 }}>
             <a href={`/parlementaires/${encodeURIComponent(s.slug)}/bio`}>Biographie</a>
-            {!sansGroupe(s.groupe) && hrefGroupe("senat", s.groupe) && <a href={hrefGroupe("senat", s.groupe)!}> · Fiche groupe {s.groupe} au Sénat</a>}
-            {!sansGroupe(s.groupe) && hrefParti(s.groupe) && <a href={hrefParti(s.groupe)!}> · Fiche parti {s.groupe}</a>}
+            {!sansGroupe(s.groupe) && hrefGroupe("senat", s.groupe) && <a href={hrefGroupe("senat", s.groupe)!}>, Fiche groupe {s.groupe} au Sénat</a>}
+            {!sansGroupe(s.groupe) && hrefParti(s.groupe) && <a href={hrefParti(s.groupe)!}>, Fiche parti {s.groupe}</a>}
           </p>
         )}
         {hrefDepartement(s.departement, slugDepartement) && (
@@ -86,7 +86,7 @@ export default async function DepartementSenatoriales({ params }: Props) {
       <p className="lead">
         Le {libelleElection()}, les grands électeurs du département ont élu
         {" "}{elus} sénateur{elus > 1 ? "s" : ""} pour six ans. Retrouvez ci-dessous les élus qui entrent
-        au Sénat, ceux qui y sont réélus, les sénateurs qui le quittent, leurs groupes politiques —
+        au Sénat, ceux qui y sont réélus, les sénateurs qui le quittent, leurs groupes politiques,
         et pour chacun, son équipe de collaborateurs suivie par DataParl&apos;.
       </p>
 
@@ -104,7 +104,7 @@ export default async function DepartementSenatoriales({ params }: Props) {
           <h2>Les sénateurs réélus en {d.nom}</h2>
           <p className="meta">
             Déjà sénateurs avant ce scrutin, ils ont été reconduit{d.reelus.length > 1 ? "s" : ""} dans leurs fonctions
-            pour six ans — leur mandat précédent prend fin, le nouveau commence.
+            pour six ans : leur mandat précédent prend fin, le nouveau commence.
           </p>
           <div className="grille-senateurs">
             {d.reelus.map((s) => <CarteSenateur key={s.personne_id} s={s} reelu />)}
@@ -124,8 +124,8 @@ export default async function DepartementSenatoriales({ params }: Props) {
                 <td>
                   <a href={`/parlementaires/${encodeURIComponent(s.slug)}`}>{prenomNom(s.prenom, s.nom)}</a>
                 </td>
-                <td>{s.debut ? moisAnnee(s.debut) : "—"}</td>
-                <td>{s.fin ? moisAnnee(s.fin) : "—"}</td>
+                <td>{s.debut ? moisAnnee(s.debut) : "inconnue"}</td>
+                <td>{s.fin ? moisAnnee(s.fin) : "inconnue"}</td>
               </tr>
             ))}
           </tbody>
@@ -136,12 +136,12 @@ export default async function DepartementSenatoriales({ params }: Props) {
       <p>
         Chaque nouveau sénateur installe un cabinet parlementaire : collaborateurs, assistants de groupe, attachés
         parlementaires. DataParl&apos; relit chaque semaine les listes officielles publiées par le Sénat pour suivre
-        qui entre dans ces équipes, qui les quitte, et quels collaborateurs passent d&apos;un élu à l&apos;autre —
+        qui entre dans ces équipes, qui les quitte, et quels collaborateurs passent d&apos;un élu à l&apos;autre,
         y compris entre l&apos;Assemblée nationale et le Sénat.
       </p>
       <p className="meta">
-        <a href="/mouvements/senat">Les mouvements au Sénat</a> · <a href="/collab">Rechercher un collaborateur</a> ·{" "}
-        <a href="/senatoriales2026">Tous les départements</a> ·{" "}
+        <a href="/mouvements/senat">Les mouvements au Sénat</a>, <a href="/collab">Rechercher un collaborateur</a>,{" "}
+        <a href="/senatoriales2026">Tous les départements</a>,{" "}
         <a href="https://www.resultats-elections.interieur.gouv.fr/Senatoriales2026/nouvelle_assemblee/index.html" target="_blank" rel="noopener noreferrer">Résultats officiels (ministère de l&apos;Intérieur)</a>
       </p>
     </>

@@ -20,7 +20,7 @@ export default async function CreditPhoto({ searchParams }: { searchParams: Prom
   const elu = valide && m![1] !== "gouv" ? await parlementaireDepuisId(f!.id).catch(() => null) : null;
   const fiche = elu && elu.chambre === CHAMBRE_DE_CODE[m![1]] ? elu : null;
   // Membre du Gouvernement : le segment du nom est le profil info.gouv.fr
-  // (infogouv_slug) — la fiche correspondante vit sous /gouv/m/<id>.
+  // (infogouv_slug) : la fiche correspondante vit sous /gouv/m/<id>.
   const ministre = valide && m![1] === "gouv"
     ? (await dataQuery<{ id: string; prenom: string; nom: string }>("ministres",
         new URLSearchParams({ select: "id,prenom,nom", infogouv_slug: "eq." + f!.id, order: "debut.desc", limit: "1" }), 3600)
@@ -42,9 +42,9 @@ export default async function CreditPhoto({ searchParams }: { searchParams: Prom
       </p>
       {valide && <p className="meta">Fichier : <span className="mono">{m![2]}</span>. Le segment <span className="mono">_{f!.credit}_</span> du nom indique l&apos;institution détentrice de la photo.</p>}
       <p>
-        {fiche && <><a href={`${SITE}/parlementaires/${encodeURIComponent(fiche.slug)}`}>Voir la fiche de {prenomNom(fiche.prenom, fiche.nom)}</a> · </>}
-        {ministre && <><a href={`${SITE}/gouv/m/${encodeURIComponent(ministre.id)}`}>Voir la fiche de {prenomNom(ministre.prenom, ministre.nom)}</a> · </>}
-        <a href={`${SITE}/`}>Accueil de DataParl&apos;</a> · <a href={`${SITE}/informations-legales/mentions-legales`}>Mentions légales</a>
+        {fiche && <><a href={`${SITE}/parlementaires/${encodeURIComponent(fiche.slug)}`}>Voir la fiche de {prenomNom(fiche.prenom, fiche.nom)}</a>, </>}
+        {ministre && <><a href={`${SITE}/gouv/m/${encodeURIComponent(ministre.id)}`}>Voir la fiche de {prenomNom(ministre.prenom, ministre.nom)}</a>, </>}
+        <a href={`${SITE}/`}>Accueil de DataParl&apos;</a>, <a href={`${SITE}/informations-legales/mentions-legales`}>Mentions légales</a>
       </p>
     </div>
   );

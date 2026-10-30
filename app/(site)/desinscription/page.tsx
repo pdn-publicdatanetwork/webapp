@@ -78,7 +78,7 @@ export default async function Desinscription({ searchParams }: { searchParams: P
   }
   return (
     <Carte titre="Mes communications">
-      <p style={styles.texte}>Choisis ce que tu veux arrêter — tout, ou une seule communication :</p>
+      <p style={styles.texte}>Choisis ce que tu veux arrêter, tout ou une seule communication :</p>
       <form action={toutArreter} style={{ margin: "24px 0 8px" }}>
         <input type="hidden" name="id" value={id} />
         <Bouton>Tout arrêter</Bouton>
