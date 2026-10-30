@@ -138,6 +138,13 @@ export default function MonCompte() {
       </section>
 
       <section className="section-compte">
+        <h2>Ma fiche collaborateur</h2>
+        <p>Le profil CV déclaré sur votre fiche : formations, expériences, langues et photo, publiés sur dataparl.fr.</p>
+        <a className="btn secondaire" href="/mon-compte/ma-fiche">Gérer Ma fiche</a>{" "}
+        <a className="btn secondaire" href="/mon-compte/associer-fiche">Associer ma fiche</a>
+      </section>
+
+      <section className="section-compte">
         <h2>Mes alertes</h2>
         <p>
           {compte.alertes.actives

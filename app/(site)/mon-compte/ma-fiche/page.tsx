@@ -322,7 +322,9 @@ export default function MaFiche() {
           {importBusy ? "Lecture de votre CV…" : "Importer mon CV (PDF)"}
         </button>
         <span className={styles.importNote}>
-          L&apos;IA de DataParl&apos; lit le CV et propose des entrées : vous validez ce que vous voulez publier. Le fichier n&apos;est pas conservé.
+          L&apos;IA de DataParl&apos; lit le CV et propose des entrées : vous validez ce que vous voulez publier.
+          Le fichier n&apos;est pas conservé. En important un CV, vous acceptez les{" "}
+          <a href="/informations-legales/cgu-chat">CGU du Chat DataParl&apos;</a>.
         </span>
         <input ref={cvInput} type="file" accept="application/pdf" hidden
           onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) importerCv(f); }} />
