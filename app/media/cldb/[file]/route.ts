@@ -4,9 +4,9 @@ export const dynamic = "force-dynamic";
 
 // Photos de profil déclarées par les collaborateurs (Ma fiche), servies sur
 // media.dataparl.fr/cldb/<collab_id>.<ext> via la règle proxy. L'image vit
-// dans le bucket privé d'écriture photos-profils : cette route est le seul
-// chemin de lecture public, sans exposer l'URL Supabase. Le fichier est
-// toujours celui publié par l'intéressé (remplacé ou retiré par lui).
+// dans le bucket d'écriture serveur photos-profils : cette route est le seul
+// chemin de lecture public, sans exposer l'URL Supabase. Le fichier servi
+// est toujours celui publié par l'intéressé (remplacé ou retiré par lui).
 
 const BUCKET = "photos-profils";
 const EXT_MIME: Record<string, string> = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp" };
@@ -18,8 +18,8 @@ export async function GET(_req: Request, ctx: { params: Promise<{ file: string }
   const collabId = m[1];
 
   const db = dataAdmin();
-  // Le format peut avoir changé depuis l'URL mise en cache (jpg → png) :
-  // on sert le fichier présent, quel que soit son format.
+  // Le format peut avoir changé depuis la mise en cache de l'URL (jpg -> png) :
+  // on sert le fichier présent dans le bucket, quel que soit son format.
   const { data: listing } = await db.storage.from(BUCKET).list("", { search: collabId });
   const nom = (listing ?? []).map((f) => f.name).find((n) => n.startsWith(collabId + "."));
   if (!nom) return new Response("introuvable", { status: 404 });
