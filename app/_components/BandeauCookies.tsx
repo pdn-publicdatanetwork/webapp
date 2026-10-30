@@ -7,7 +7,7 @@ import { appliquer, chargerClarity, chargerPub, enregistrer, espaceInterne, lire
 // pour la mesure d'audience et la publicité, et transmet les signaux Consent
 // Mode v2 à GTM. C'est aussi ici que les scripts AdSense (si publicité
 // acceptée) et Microsoft Clarity (si mesure d'audience acceptée) sont
-// injectés — jamais avant. Trois choix en bas : « Autoriser », « Gérer les
+// injectés, jamais avant. Trois choix en bas : « Autoriser », « Gérer les
 // options » et « Tout refuser » (accessible sans ouvrir les options).
 // Espaces internes (admin, webmail) : rien ne s'affiche, rien ne se charge.
 

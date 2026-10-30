@@ -9,7 +9,7 @@ import JournalConnexion from "./_components/JournalConnexion";
 import "./globals.css";
 
 // Polices auto-hébergées par next/font : préchargées, avec une police de
-// repli aux métriques ajustées — le texte n'est jamais reflowé au chargement
+// repli aux métriques ajustées : le texte n'est jamais reflowé au chargement
 // (fin du décalage de mise en page mesuré par Lighthouse, CLS 0,27).
 const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400", "600", "700"], variable: "--font-dm-sans", display: "swap" });
 const spectral = Spectral({ subsets: ["latin"], weight: ["600", "700"], variable: "--font-spectral", display: "swap" });
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-snippet": -1, "max-image-preview": "large" } },
   formatDetection: { telephone: false },
-  // Favicons : SVG vectoriel et icône tactile iOS 180 (app/apple-icon.tsx) — monogramme Σ'.
+  // Favicons : SVG vectoriel et icône tactile iOS 180 (app/apple-icon.tsx) : monogramme Σ'.
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },
@@ -51,11 +51,11 @@ gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personali
           }}
         />
         {/* Google Analytics 4 : PAS de gtag.js en direct. GA4 (G-GC1JD019GY)
-            est déployé via une balise du conteneur GTM seul — fin de la double
+            est déployé via une balise du conteneur GTM seul : fin de la double
             mesure (~450 Ko de scripts en moins au chargement). */}
         {/* Google AdSense (ca-pub-6168263680630864) : PAS chargé ici. Le script
             publicitaire n'est injecté qu'après un consentement publicitaire
-            explicite (lib/consentement.ts, appelé par le bandeau) — jamais pour
+            explicite (lib/consentement.ts, appelé par le bandeau) : jamais pour
             un visiteur qui n'a pas répondu ou a tout refusé, conformément à la
             promesse du bandeau. Cela allège aussi le chargement des pages
             (~220 Ko de scripts publicitaires évités par défaut). */}

@@ -48,7 +48,7 @@ export default function ReglageAlertes() {
   }, [elus, compacts]);
   const libelleGroupe = (v: string) => {
     const f = FAMILLES.find((x) => x.code === v);
-    if (f) return `${f.code} · ${f.libelle}`;
+    if (f) return `${f.code} : ${f.libelle}`;
     const fam = ["assemblee", "senat", "europarl"].map((c) => familleDe(c, v)).find(Boolean);
     return fam ? `${v} (${fam.code})` : v;
   };
@@ -90,7 +90,7 @@ export default function ReglageAlertes() {
   return (
     <div className="card" style={{ maxWidth: 720 }}>
       <p className="meta" style={{ marginTop: 0 }}>
-        Alertes envoyées à <strong>{session.user.email}</strong> · {r.actives ? "actives" : "inactives"}
+        Alertes envoyées à <strong>{session.user.email}</strong>, {r.actives ? "actives" : "inactives"}
       </p>
 
       <label>Chambres</label>

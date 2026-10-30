@@ -17,7 +17,7 @@ const NAV = [
 // (les liens de navigation, dont « Mon compte », sont dans le menu déroulant ;
 // « Se déconnecter » n'apparaît que si une session existe).
 export function EnTeteSite({ maintenance = false }: { maintenance?: boolean }) {
-  // Mode maintenance : le menu ☰ disparaît — ses liens mènent tous à des pages
+  // Mode maintenance : le menu ☰ disparaît, ses liens mènent tous à des pages
   // coupées. Restent visibles : logo, recherche et pied de page. Sur www,
   // EnteteSiteRoute le déduit du chemin (le proxy réécrit tout vers
   // /maintenance quand la maintenance est active).

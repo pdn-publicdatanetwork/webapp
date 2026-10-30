@@ -1,6 +1,6 @@
 // Habillage commun des pages d'atterrissage des emails (désinscription,
-// préférences) : même charte que le gabarit des emails (lib/gabarit.ts) —
-// fond crème, carte blanche, serif navy, bouton navy, filet gris — pour que
+// préférences) : même charte que le gabarit des emails (lib/gabarit.ts),
+// fond crème, carte blanche, serif navy, bouton navy, filet gris, pour que
 // la page continue visuellement l'email qui y mène.
 import type { ReactNode } from "react";
 
@@ -19,7 +19,7 @@ export function Logo() {
   );
 }
 
-// Bouton navy, arrondi 8 px, hauteur confortable (mobile) — même style que
+// Bouton navy, arrondi 8 px, hauteur confortable (mobile) : même style que
 // les boutons des emails (lib/mail.ts).
 export function Bouton({ children }: { children: ReactNode }) {
   return (
@@ -41,7 +41,7 @@ export function Carte({ titre, children }: { titre: string; children: ReactNode 
           {children}
         </div>
         <div style={{ padding: "16px 32px 22px", borderTop: "1px solid " + LIGNE, background: FOND, fontSize: 13, textAlign: "center", color: GRIS }}>
-          DataParl' · <a href="https://www.dataparl.fr/" style={{ color: BLEU, textDecoration: "none" }}>www.dataparl.fr</a>
+          DataParl' <a href="https://www.dataparl.fr/" style={{ color: BLEU, textDecoration: "none" }}>www.dataparl.fr</a>
         </div>
       </div>
     </main>

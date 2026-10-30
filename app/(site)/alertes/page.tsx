@@ -29,7 +29,7 @@ async function apercus(): Promise<{ quotidien: string; hebdo: string; jour: stri
   const hebdoMvts = [...parGroupe.values()].sort((a, b) => b.length - a.length).slice(0, 3).flatMap((ms) => ms.slice(0, 2));
   const rendu = (ms: MvtAlerte[], f: "quotidienne" | "hebdomadaire") => {
     const m = messageAlerte(ms, f, jour);
-    return gabarit({ titre: m.titre, corpsHtml: m.html, edition: m.edition, adressage: { date: jour, pour: "Émilie DURAND" }, lireUrl: "#", pied: "<a href=\"https://www.dataparl.fr/mon-compte\" style=\"color:#4A5670\">Mon compte</a> · <a href=\"#\" style=\"color:#4A5670\">Me désinscrire des alertes</a> · <a href=\"#\" style=\"color:#4A5670\">Mes préférences</a>" });
+    return gabarit({ titre: m.titre, corpsHtml: m.html, edition: m.edition, adressage: { date: jour, pour: "Émilie DURAND" }, lireUrl: "#", pied: "<a href=\"https://www.dataparl.fr/mon-compte\" style=\"color:#4A5670\">Mon compte</a>, <a href=\"#\" style=\"color:#4A5670\">Me désinscrire des alertes</a>, <a href=\"#\" style=\"color:#4A5670\">Mes préférences</a>" });
   };
   return { quotidien: rendu(deux, "quotidienne"), hebdo: rendu(hebdoMvts, "hebdomadaire"), jour };
 }
