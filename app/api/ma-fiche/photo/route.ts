@@ -10,12 +10,15 @@ export const dynamic = "force-dynamic";
 // est servie par media.dataparl.fr/cldb/<collab_id>.<ext> (règle proxy,
 // route app/media/cldb) ; colonne photo_url de collaborateurs.
 // Limites : 2 Mo, JPEG/PNG/WebP, vérification de la signature du fichier
-// (l'extension seule ne prouve rien). DELETE retire la photo (fiche
-// publique et Ma fiche) sans délai.
+// (l'extension seule ne prouve rien) et contrôle vision : l'image doit
+// représenter une personne (anti-troll ; indisponibilité du service ne
+// bloque pas l'upload, l'incident est journalisé). DELETE retire la photo
+// (fiche publique et Ma fiche) sans délai.
 
 const TAILLE_MAX = 2 * 1024 * 1024;
 const BUCKET = "photos-profils";
 const MEDIA_BASE = (process.env.NEXT_PUBLIC_MEDIA_BASE ?? "https://media.dataparl.fr").replace(/\/$/, "");
+const DPCHAT_URL = (process.env.DPCHAT_URL ?? "https://chat.dataparl.fr").replace(/\/$/, "");
 
 function extensionValide(f: File): "jpg" | "png" | "webp" | null {
   const t = f.type;
@@ -57,6 +60,32 @@ export async function POST(req: Request) {
   const octets = new Uint8Array(await fichier.arrayBuffer());
   if (!signatureValide(octets)) {
     return NextResponse.json({ error: "fichier image invalide" }, { status: 400 });
+  }
+
+  // Anti-troll : le service vision de dpchat vérifie que l'image représente
+  // une personne (ni logo, ni meme, ni photo d'objet). En cas
+  // d'indisponibilité du service, l'upload passe (jamais de blocage sur une
+  // panne tierce) et l'incident est journalisé.
+  const cle = process.env.CLE_EXTRACTION_CV ?? "";
+  if (cle) {
+    try {
+      const v = await fetch(`${DPCHAT_URL}/api/verifier-photo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-cle-cv": cle },
+        body: JSON.stringify({ image: Buffer.from(octets).toString("base64") }),
+        signal: AbortSignal.timeout(30000),
+      });
+      if (v.ok) {
+        const d = await v.json().catch(() => ({}));
+        if (d.personne === false) {
+          return NextResponse.json({ error: "La photo doit représenter une personne : choisissez un portrait net de vous." }, { status: 422 });
+        }
+      } else {
+        console.error("verifier-photo indisponible", v.status);
+      }
+    } catch (e) {
+      console.error("verifier-photo: échec", e);
+    }
   }
 
   const db = dataAdmin();
