@@ -3,6 +3,8 @@ import { authAdmin } from "./supabaseAdmin";
 import { collaborateurDepuisSlug } from "./referentiel";
 import { normalizeEmail, sha256 } from "./tokens";
 import { copieSlack, SLACK_CONTACT } from "./slack";
+import { expedier, bouton, esc } from "./mail";
+import { SITE_URL } from "./env";
 
 // Association entre un compte DataParl' et sa fiche collaborateur.
 // Vérification par e-mail : depuis son compte, la personne génère un code à
@@ -12,10 +14,11 @@ import { copieSlack, SLACK_CONTACT } from "./slack";
 // tout écart va en revue manuelle côté admin (/admin/users/matchprofile).
 // Fallback sans adresse parlementaire : dépôt d'une pièce justificative
 // (statut piece_jointe), revue admin, purge à la décision ou sous 30 jours.
-// Suivi : copie Slack de chaque événement notable (canal dédié via
-// SLACK_ASSOCIATIONS, repli sur SLACK_CONTACT ; vide = pas de copie).
+// Suivi : copie Slack de chaque événement notable (SLACK_WEBHOOK_URL ou
+// SLACK_ASSOCIATIONS, repli sur SLACK_CONTACT ; vide = pas de copie) et
+// e-mail transactionnel directement à la personne à chaque aboutissement.
 
-export const ADRESSE_ASSOCIER = "associer@dataparl.fr"; // à ajouter chez Resend (inbound)
+export const ADRESSE_ASSOCIER = "associer@dataparl.fr"; // boîte écoutée par le webhook Resend (inbound)
 const EXPIRATION_H = 48;
 const ECHECS_MAX = 3;
 const GEL_JOURS = 30;
@@ -89,6 +92,68 @@ export async function prevenirAssociation(evenement: string, slug: string | null
   });
 }
 
+// Adresse e-mail du compte (auth.admin : lecture service, jamais exposée).
+async function adresseDe(user_id: string): Promise<string | null> {
+  const { data } = await authAdmin().auth.admin.getUserById(user_id);
+  return data?.user?.email ?? null;
+}
+
+// E-mails transactionnels directement à la personne : le résultat de sa
+// demande et, si besoin, la marche à suivre. Best-effort, jamais bloquant.
+
+async function accuseValidation(user_id: string, slug: string): Promise<void> {
+  const email = await adresseDe(user_id);
+  if (!email) return;
+  await expedier({
+    to: [email],
+    subject: "Votre fiche DataParl' est associée à votre compte",
+    titre: "Fiche associée",
+    corpsHtml:
+      "<p>Bonne nouvelle : votre demande d'association a été validée. La fiche <strong>" + esc(slug) + "</strong> est désormais rattachée à votre compte.</p>" +
+      bouton(SITE_URL + "/mon-compte/ma-fiche", "Compléter mon profil CV") +
+      "<p>Vous pouvez y importer votre CV (l'IA propose une mise en forme que vous validez point par point), ajouter une photo et présenter votre parcours comme vous l'entendez.</p>",
+    text: "Bonne nouvelle : votre demande d'association a été validée. La fiche " + slug + " est désormais rattachée à votre compte. Complétez votre profil CV : " + SITE_URL + "/mon-compte/ma-fiche",
+    type: "transactionnel",
+  }).catch((e) => console.error("accuse validation", String(e).slice(0, 200)));
+}
+
+async function accuseReception(user_id: string, slug: string): Promise<void> {
+  const email = await adresseDe(user_id);
+  if (!email) return;
+  await expedier({
+    to: [email],
+    subject: "Votre demande d'association est en vérification",
+    titre: "Vérification en cours",
+    corpsHtml:
+      "<p>Nous avons bien reçu votre demande pour la fiche <strong>" + esc(slug) + "</strong>. La vérification prend un peu plus de temps : notre équipe l'examine et vous répond sous 48 h.</p>" +
+      "<p>Vous pouvez suivre l'avancement à tout moment depuis « Mon compte ».</p>",
+    text: "Nous avons bien reçu votre demande pour la fiche " + slug + ". La vérification prend un peu plus de temps : notre équipe l'examine et vous répond sous 48 h.",
+    type: "transactionnel",
+  }).catch((e) => console.error("accuse reception", String(e).slice(0, 200)));
+}
+
+async function accuseRefus(user_id: string, slug: string, gele: boolean): Promise<void> {
+  const email = await adresseDe(user_id);
+  if (!email) return;
+  await expedier({
+    to: [email],
+    subject: gele ? "Vos demandes d'association DataParl' sont suspendues" : "Votre demande d'association n'a pas abouti",
+    titre: gele ? "Demandes suspendues" : "Demande non aboutie",
+    corpsHtml: gele
+      ? "<p>Après plusieurs tentatives depuis une adresse inattendue, les demandes d'association pour la fiche <strong>" + esc(slug) + "</strong> sont suspendues pendant 30 jours.</p><p>Si vous êtes bien la personne concernée, passez par le formulaire de contact : nous vérifierons votre identité au cas par cas.</p>" + bouton(SITE_URL + "/contact", "Nous écrire")
+      : "<p>La vérification de la fiche <strong>" + esc(slug) + "</strong> n'a pas pu aboutir : l'e-mail reçu ne correspond pas à l'adresse professionnelle attendue.</p><p>La marche à suivre :</p><ol><li>Relancez la demande depuis la page « Associer ma fiche », puis envoyez l'e-mail prérempli <strong>depuis votre adresse professionnelle parlementaire</strong>, sans modifier l'objet ni le code.</li><li>Si vous n'avez plus accès à cette adresse (fin de collaboration, par exemple), la même page permet de joindre une pièce justificative (badge ou carte AN/Sénat, contrat de travail, capture de votre messagerie interne). Notre équipe vous répond sous 48 h.</li><li>En cas de blocage persistant, écrivez-nous via le formulaire de contact.</li></ol>" + bouton(SITE_URL + "/mon-compte/associer-fiche", "Reprendre la vérification"),
+    text: gele
+      ? "Après plusieurs tentatives depuis une adresse inattendue, les demandes d'association pour la fiche " + slug + " sont suspendues pendant 30 jours. Passez par le formulaire de contact : " + SITE_URL + "/contact"
+      : "La vérification de la fiche " + slug + " n'a pas pu aboutir. Relancez la demande depuis " + SITE_URL + "/mon-compte/associer-fiche et envoyez l'e-mail prérempli depuis votre adresse professionnelle parlementaire, sans modifier l'objet ni le code. Sans accès à cette adresse, joignez une pièce justificative depuis la même page (réponse sous 48 h).",
+    type: "transactionnel",
+  }).catch((e) => console.error("accuse refus", String(e).slice(0, 200)));
+}
+
+// Confirmation de dépôt d'une pièce justificative.
+export async function accuserPiece(user_id: string, slug: string): Promise<void> {
+  await accuseReception(user_id, slug);
+}
+
 async function journal(user_id: string, collab_id: string, evenement: string, detail: Record<string, unknown> = {}, slug?: string): Promise<void> {
   await authAdmin().from("associations_journal").insert({ user_id, collab_id, evenement, detail });
   // Copie Slack (silencieuse si aucun canal configuré).
@@ -144,7 +209,8 @@ function extraireCode(texte: string | null | undefined): string | null {
 
 // Traite un e-mail reçu (appelé depuis lib/webmail.importerRecu). Renvoie
 // true si le message relève de l'association : dans ce cas pas d'accusé
-// générique, le compte voit le résultat dans « Mon compte ».
+// générique, le compte voit le résultat dans « Mon compte » et reçoit un
+// e-mail transactionnel à chaque aboutissement.
 export async function traiterEmailAssociation(m: {
   to: string[]; from: string; subject: string; text?: string | null; headers?: unknown;
 }): Promise<boolean> {
@@ -185,6 +251,7 @@ export async function traiterEmailAssociation(m: {
       gel_jusqu_a: gele ? new Date(Date.now() + GEL_JOURS * 86400_000).toISOString() : null, maj_le: new Date().toISOString(),
     }).eq("id", demande.id);
     await journal(demande.user_id, demande.collab_id, gele ? "gele" : "refus_domaine", { from: m.from }, slug);
+    if (gele) await accuseRefus(demande.user_id, slug, true);
     return true;
   }
   if (expiree) {
@@ -200,6 +267,7 @@ export async function traiterEmailAssociation(m: {
       email_preuve: normalizeEmail(m.from),
     }).eq("id", demande.id);
     await journal(demande.user_id, demande.collab_id, "valide_auto", { from: m.from }, slug);
+    await accuseValidation(demande.user_id, slug);
     return true;
   }
   // Domaine bon mais nom ou SPF/DKIM non concluant : revue manuelle, jamais
@@ -207,6 +275,7 @@ export async function traiterEmailAssociation(m: {
   // revue admin, la décision reste manuelle.
   await db.from("associations_fiches").update({ statut: "a_traiter", maj_le: new Date().toISOString(), email_preuve: normalizeEmail(m.from) }).eq("id", demande.id);
   await journal(demande.user_id, demande.collab_id, "a_traiter", { from: m.from, nomOk, spfDkimOk }, slug);
+  await accuseReception(demande.user_id, slug);
   return true;
 }
 
@@ -222,7 +291,9 @@ export async function deciderManuellement(
     action === "refuser" ? { statut: "refuse" } :
     { statut: "refuse", verifie_par: null, verifie_le: null, email_preuve: null };
   await db.from("associations_fiches").update({ ...maj, maj_le: new Date().toISOString() }).eq("id", demande.id);
-  await journal(demande.user_id, demande.collab_id, `manuel_${action}`, { par: admin.userId });
+  await journal(demande.user_id, demande.collab_id, `manuel_${action}`, { par: admin.userId }, demande.collab_slug);
+  if (action === "valider") await accuseValidation(demande.user_id, demande.collab_slug);
+  if (action === "refuser") await accuseRefus(demande.user_id, demande.collab_slug, false);
   return { ok: true };
 }
 
