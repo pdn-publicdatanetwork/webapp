@@ -72,7 +72,7 @@ export default function MesAlertes() {
     setEnCours(true);
     setMessage(null);
     const a = compte!.alertes;
-    const r = await appel("/api/compute/alertes".replace("compute", "compte"), {
+    const r = await appel("/api/compte/alertes", {
       method: "PUT",
       body: JSON.stringify({
         // Le canal (on/off) se gère dans Communications : on conserve
