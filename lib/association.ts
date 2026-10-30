@@ -20,6 +20,14 @@ const DOMAINES: Record<string, string[]> = {
   an: ["clb-an.fr"], senat: ["clb.senat.fr"], europarl: ["europarl.europa.eu"],
 };
 
+// Fiches de test (slug contenant « test___ », hors référentiel officiel) :
+// la vérification se fait depuis une adresse @dataparl.fr, ce qui permet de
+// tester le parcours complet sans adresse parlementaire.
+export function domainesAttendusFiche(slug: string, chambres: string): string[] {
+  if (/test___/.test(slug)) return ["dataparl.fr"];
+  return (chambres ?? "").split(" ").filter(Boolean).flatMap((ch) => DOMAINES[ch] ?? []);
+}
+
 export type DemandeAssociation = {
   id: string; collab_slug: string; collab_id: string; statut: string;
   echecs: number; gel_jusqu_a: string | null; expire_le: string | null; verifie_le: string | null;
@@ -58,7 +66,7 @@ async function journal(user_id: string, collab_id: string, evenement: string, de
 // Crée (ou relance) une demande d'association pour une fiche.
 export async function creerDemande(
   userId: string, slug: string,
-): Promise<{ ok: true; objet: string; code: string; expireLe: string } | { ok: false; error: string }> {
+): Promise<{ ok: true; objet: string; code: string; expireLe: string; domaine: string } | { ok: false; error: string }> {
   const c = await collaborateurDepuisSlug(slug).catch(() => null);
   if (!c) return { ok: false, error: "fiche introuvable" };
   const db = authAdmin();
@@ -77,7 +85,9 @@ export async function creerDemande(
   };
   await db.from("associations_fiches").upsert(row, { onConflict: "user_id,collab_slug" });
   await journal(userId, row.collab_id, "demande_creee");
-  return { ok: true, objet: `ASSOC ${slug}`, code, expireLe };
+  // Domaine attendu, affiché à la personne (jamais l'adresse dérivée).
+  const domaine = domainesAttendusFiche(slug, c.chambres).join(", @");
+  return { ok: true, objet: `ASSOC ${slug}`, code, expireLe, domaine };
 }
 
 export async function statutDemande(userId: string): Promise<DemandeAssociation | null> {
@@ -122,12 +132,10 @@ export async function traiterEmailAssociation(m: {
   }
   const expiree = new Date(demande.expire_le).getTime() < Date.now();
   const fiche = await collaborateurDepuisSlug(slug).catch(() => null);
-  const domainesAttendus = new Set(
-    (fiche?.chambres ?? "").split(" ").filter(Boolean).flatMap((ch) => DOMAINES[ch] ?? []),
-  );
-  const domaineOk = domainesAttendus.has(domaineDe(m.from));
+  const attendus = new Set(domainesAttendusFiche(slug, fiche?.chambres ?? ""));
+  const domaineOk = attendus.has(domaineDe(m.from));
   const nomOk = fiche ? variantesLocales(fiche.prenom, fiche.nom).has(localNettoie(m.from)) : false;
-  // SPF/DKIM : en-tête Authentication-Results du domaine parlementaire.
+  // SPF/DKIM : en-tête Authentication-Results du domaine émetteur.
   const ar = (() => {
     try { return (m.headers as Record<string, unknown>) ?? {}; } catch { return {}; }
   })();
@@ -136,7 +144,7 @@ export async function traiterEmailAssociation(m: {
   const spfDkimOk = /spf=pass/i.test(texteAR) && /dkim=pass/i.test(texteAR);
 
   if (!domaineOk) {
-    // Domaine non parlementaire : refus automatique, avec compteur d'échecs.
+    // Domaine inattendu : refus automatique, avec compteur d'échecs.
     const echecs = (demande.echecs ?? 0) + 1;
     const gele = echecs >= ECHECS_MAX;
     await db.from("associations_fiches").update({
