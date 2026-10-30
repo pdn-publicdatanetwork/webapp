@@ -151,7 +151,8 @@ export default function MonCompte() {
             ? `Actives : ${compte.alertes.chambres.map((c) => CHAMBRES.find((x) => x.v === c)?.l ?? c).join(", ")}, ${compte.alertes.frequence === "quotidienne" ? "chaque jour où ça bouge" : "une fois par semaine"}.`
             : "Tu ne reçois pas d'alertes pour l'instant."}
         </p>
-        <a className="btn secondaire" href="/alertes">Régler mes alertes</a>
+        <a className="btn secondaire" href="/mon-compte/preferences">Gérer mes préférences</a>{" "}
+        <a className="btn secondaire" href="/alertes">Affiner (élus, groupes)</a>
       </section>
 
       <section className="section-compte">
