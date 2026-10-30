@@ -712,7 +712,7 @@ ul.mouvements-accueil { list-style: none; padding: 0; margin: 0; }
 ul.mouvements-accueil li { display: flex; gap: 10px; align-items: flex-start; padding: 13px 2px; transition: background .15s ease; }
 ul.mouvements-accueil li + li { border-top: 1px solid color-mix(in srgb, var(--line) 55%, transparent); }
 ul.mouvements-accueil li:hover { background: color-mix(in srgb, var(--bleu) 4%, transparent); }
-ul.mouvements-accueil .badge { flex: none; font-size: .66rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; margin-top: 4px; }
+ul.mouvements-accueil .badge { flex: none; border: 0; font-size: .66rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; margin-top: 4px; }
 ul.mouvements-accueil .badge.arrivee { background: color-mix(in srgb, var(--arrivee) 30%, transparent); }
 ul.mouvements-accueil .badge.depart { background: color-mix(in srgb, var(--depart) 30%, transparent); }
 ul.mouvements-accueil .badge.transfert { background: color-mix(in srgb, var(--transfert) 30%, transparent); }
