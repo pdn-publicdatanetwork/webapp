@@ -36,6 +36,13 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
   descriptions de longueur uniforme, wordmarks VigiParl' / MixiParl' alignés
   sur la même hauteur que les icônes.
 
+- **Accueil v2, retours (4)** : « Derniers mouvements » passe aux pastilles
+  discrètes — point coloré (bleu #3B82F6 / rouge #EF4444 / violet #8B5CF6,
+  spécifiques à l'accueil) + libellé « Arrivée / Départ / Transfert » en texte
+  normal, fin des badges. Hiérarchie conservée : collaborateur en gras, élu +
+  groupe en secondaire, chambre + date sur une ligne discrète, séparations
+  fines entre les lignes.
+
 ## 2026-10-19
 
 - **Fiches groupes : « L'équipe du groupe » (PR #36)** : nouvelle section sur

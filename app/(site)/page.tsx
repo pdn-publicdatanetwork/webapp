@@ -53,26 +53,28 @@ const IC_ENVELOPPE = '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0
 // en texte secondaire, chambre + date très discrets, badge compact.
 function LigneMouvement({ m }: { m: MouvementAffiche }) {
   const lienElu = (nom: string, cle: string, id: string) => (
-    <a href={"/parlementaires/" + encodeURIComponent(idParlementaire(m.chambre, id, cle, nom))}>{nomAffiche(nom)}</a>
+    <a className="elu" href={"/parlementaires/" + encodeURIComponent(idParlementaire(m.chambre, id, cle, nom))}>{nomAffiche(nom)}</a>
   );
   const qui = prenomNom(m.collab_prenom, m.collab_nom);
   const collab = m.collab_cle ? (
-    <a className="nom" href={"/collab/k/" + encodeURIComponent(m.collab_cle)}>{qui}</a>
+    <a className="collab" href={"/collab/k/" + encodeURIComponent(m.collab_cle)}>{qui}</a>
   ) : (
-    <strong className="nom">{qui}</strong>
+    <strong className="collab">{qui}</strong>
   );
   const groupe = m.elu_groupe ? <span className="groupe"> ({m.elu_groupe})</span> : null;
   const elu = <>{lienElu(m.elu_nom, m.elu_cle, m.elu_id)}{groupe}</>;
   return (
-    <li>
-      <span className={"badge " + m.type}>{TYPE[m.type]}</span>
-      <div>
-        <p className="principal">
+    <li className="mouvement">
+      <div className={"mouvement-type " + m.type}>
+        <span className="dot" /> {TYPE[m.type]}
+      </div>
+      <div className="mouvement-content">
+        <p className="mouvement-main">
           {m.type === "arrivee" && <>{collab} rejoint l&apos;équipe de {elu}</>}
           {m.type === "depart" && <>{collab} quitte l&apos;équipe de {elu}</>}
           {m.type === "transfert" && <>{collab} passe de l&apos;équipe de {nomAffiche(m.elu_origine_nom)} à celle de {elu}</>}
         </p>
-        <p className="meta-mvt">{CHAMBRE[m.chambre]} · {dateLongue(m.date_event)}{m.fonction ? " · " + m.fonction : ""}</p>
+        <p className="mouvement-meta">{CHAMBRE[m.chambre]} · {dateLongue(m.date_event)}{m.fonction ? " · " + m.fonction : ""}</p>
       </div>
     </li>
   );
@@ -147,7 +149,7 @@ export default async function Accueil() {
       {!indisponible && mouvements.length === 0 && (
         <p className="meta">Aucun mouvement détecté depuis le démarrage du suivi quotidien. Les premiers apparaîtront ici dès le prochain passage.</p>
       )}
-      <ul className="mouvements-accueil">
+      <ul className="mouvements-list">
         {mouvements.map((m) => <LigneMouvement key={m.id} m={m} />)}
       </ul>
       <div className="actions-accueil">
