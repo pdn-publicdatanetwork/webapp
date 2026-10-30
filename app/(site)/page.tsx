@@ -74,7 +74,7 @@ function LigneMouvement({ m }: { m: MouvementAffiche }) {
           {m.type === "depart" && <>{collab} quitte l&apos;équipe de {elu}</>}
           {m.type === "transfert" && <>{collab} passe de l&apos;équipe de {nomAffiche(m.elu_origine_nom)} à celle de {elu}</>}
         </p>
-        <p className="mouvement-meta">{CHAMBRE[m.chambre]} · {dateLongue(m.date_event)}{m.fonction ? " · " + m.fonction : ""}</p>
+        <p className="mouvement-meta">{CHAMBRE[m.chambre]}, {dateLongue(m.date_event)}{m.fonction ? ", " + m.fonction : ""}</p>
       </div>
     </li>
   );
@@ -96,7 +96,7 @@ export default async function Accueil() {
   // Chiffres clés : logos officiels des trois institutions (public/logos/),
   // icône simple pour les collaborateurs suivis.
   // Les cartes des trois institutions pointent vers leurs pages chambre (routes
-  // canoniques /an, /senat, /pe — les autres graphies sont des redirections).
+  // canoniques /an, /senat, /pe : les autres graphies sont des redirections).
   const chiffres: { icone?: string; logo?: string; alt?: string; href?: string; valeur: string; libelle: string }[] = [
     { icone: IC_UTILISATEURS, valeur: fr(total), libelle: "collaborateurs suivis" },
     { href: "/an", logo: "/logos/assemblee-nationale.svg", alt: "Assemblée nationale", valeur: fr(comptes.assemblee ?? 0), libelle: "à l'Assemblée nationale" },
@@ -110,7 +110,7 @@ export default async function Accueil() {
   const explorer: { href: string; icone?: string; marque?: "vigi" | "mixi"; titre?: string; desc: string }[] = [
     { href: "/mouvements/parlement", icone: IC_MOUVEMENTS, titre: "Mouvements", desc: "Les arrivées et départs en temps réel." },
     { href: "/collab", icone: IC_UTILISATEURS, titre: "Collaborateurs", desc: "Les profils et parcours des collaborateurs." },
-    { href: "/parlementaires", icone: IC_PARLEMENTAIRES, titre: "Parlementaires", desc: "Les équipes et collaborateurs des élu·es." },
+    { href: "/parlementaires", icone: IC_PARLEMENTAIRES, titre: "Parlementaires", desc: "Les équipes et collaborateurs des élu(e)s." },
     { href: "/gouv", icone: IC_GOUVERNEMENT, titre: "Gouvernement", desc: "Les cabinets ministériels et leurs collaborateurs." },
     { href: "/vigiparl", marque: "vigi", desc: "Le renouvellement des équipes, élu par élu." },
     { href: "/mixiparl", marque: "mixi", desc: "La mixité et la parité des équipes." },
