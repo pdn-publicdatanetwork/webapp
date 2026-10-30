@@ -707,13 +707,19 @@ main .wrap [contenteditable="true"] { outline: 2px dashed color-mix(in srgb, var
 .chiffres.hero { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 26px 0 10px; }
 .chiffres.hero div { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
 .icone-chiffre { display: inline-flex; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 10px; background: color-mix(in srgb, var(--jaune) 40%, transparent); color: #071A41; margin-bottom: 8px; flex: none; }
-/* Derniers mouvements : pastilles colorées et hover léger */
-.accueil-mouvements ul.mouvements li { padding: 12px 10px; border-radius: 10px; transition: background .15s ease; }
-.accueil-mouvements ul.mouvements li:hover { background: color-mix(in srgb, var(--bleu) 5%, transparent); }
-.accueil-mouvements .badge { display: inline-block; text-align: center; padding: 3px 10px; border-radius: 999px; }
-.badge.arrivee { background: color-mix(in srgb, var(--arrivee) 32%, transparent); }
-.badge.depart { background: color-mix(in srgb, var(--depart) 32%, transparent); }
-.badge.transfert { background: color-mix(in srgb, var(--transfert) 32%, transparent); }
+/* Derniers mouvements : lignes hiérarchisées, séparations fines, badges compacts */
+ul.mouvements-accueil { list-style: none; padding: 0; margin: 0; }
+ul.mouvements-accueil li { display: flex; gap: 10px; align-items: flex-start; padding: 13px 2px; transition: background .15s ease; }
+ul.mouvements-accueil li + li { border-top: 1px solid color-mix(in srgb, var(--line) 55%, transparent); }
+ul.mouvements-accueil li:hover { background: color-mix(in srgb, var(--bleu) 4%, transparent); }
+ul.mouvements-accueil .badge { flex: none; font-size: .66rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; margin-top: 4px; }
+ul.mouvements-accueil .badge.arrivee { background: color-mix(in srgb, var(--arrivee) 30%, transparent); }
+ul.mouvements-accueil .badge.depart { background: color-mix(in srgb, var(--depart) 30%, transparent); }
+ul.mouvements-accueil .badge.transfert { background: color-mix(in srgb, var(--transfert) 30%, transparent); }
+ul.mouvements-accueil .principal { margin: 0; line-height: 1.5; }
+ul.mouvements-accueil .principal a.nom, ul.mouvements-accueil strong.nom { font-weight: 700; }
+ul.mouvements-accueil .groupe { color: var(--muted); }
+ul.mouvements-accueil .meta-mvt { margin: 2px 0 0; font-size: .82rem; color: var(--muted); }
 .actions-accueil { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
 .actions-accueil .btn { margin-top: 0; }
 /* Carte alertes email, légèrement mise en avant */
@@ -739,9 +745,10 @@ ul.explorer { list-style: none; padding: 0; margin: 0; display: grid; grid-templ
 }
 
 /* ── Accueil v2, retours : logos officiels et wordmarks ─────────────────── */
+.explorer .icone-chiffre { width: 32px; height: 32px; border-radius: 8px; background: color-mix(in srgb, var(--line) 35%, transparent); color: var(--ink); margin-bottom: 10px; }
 .chiffres.hero img.logo-org { display: block; height: 32px; width: auto; max-width: 150px; object-fit: contain; margin-bottom: 12px; align-self: flex-start; }
 @media (prefers-color-scheme: dark) {
   /* Les logos officiels (bleus sur fond transparent) passent sur une pastille claire en mode nuit. */
   .chiffres.hero img.logo-org { background: #FFFDF5; border-radius: 6px; padding: 4px 6px; }
 }
-.marque-carte { display: block; font-family: var(--font-spectral), "Spectral", serif; font-weight: 700; font-size: 1.25rem; line-height: 1.15; margin-bottom: 8px; white-space: nowrap; }
+.marque-carte { display: flex; align-items: center; height: 32px; font-family: var(--font-spectral), "Spectral", serif; font-weight: 700; font-size: 1.25rem; line-height: 1.15; margin-bottom: 10px; white-space: nowrap; }

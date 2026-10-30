@@ -28,6 +28,14 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
   transfert renforcés (32 %), hover des cartes Explorer adouci (bordure bleue
   plus discrète, ombre légère, sans translation).
 
+- **Accueil v2, retours (3)** : section « Derniers mouvements » refaite —
+  badges compacts et contrastés, nom du collaborateur en gras, élu + groupe en
+  texte secondaire, chambre + date très discrets, séparations fines entre
+  lignes (fin des gros blocs arrondis) ; section « Explorer » homogénéisée —
+  icônes sobres identiques dans des pastilles neutres (fin du jaune massif),
+  descriptions de longueur uniforme, wordmarks VigiParl' / MixiParl' alignés
+  sur la même hauteur que les icônes.
+
 ## 2026-10-19
 
 - **Fiches groupes : « L'équipe du groupe » (PR #36)** : nouvelle section sur
