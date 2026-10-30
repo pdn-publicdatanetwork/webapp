@@ -3,6 +3,7 @@ import { logConsent } from "@/lib/consent";
 import { authAdmin } from "@/lib/supabaseAdmin";
 import { normalizeEmail } from "@/lib/tokens";
 import { fournisseurs, utilisateur } from "@/lib/userAuth";
+import { retirerFicheCollab } from "@/lib/profilDeclare";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,14 @@ export async function DELETE(req: Request) {
   if (!user) return NextResponse.json({ error: "non connecté" }, { status: 401 });
   const email = normalizeEmail(user.email!);
   const db = authAdmin();
+  // Fiches collaborateur associées : la photo part du bucket et la rubrique
+  // Profil CV est retirée (promesse affichée dans Ma fiche), puis les
+  // déclarations et associations de ce compte sont effacées.
+  const { data: fiches } = await db.from("associations_fiches")
+    .select("collab_id").eq("user_id", user.id).eq("statut", "verifie");
+  for (const f of fiches ?? []) await retirerFicheCollab(user.id, f.collab_id).catch(() => {});
+  await db.from("collab_declarations").delete().eq("user_id", user.id);
+  await db.from("associations_fiches").delete().eq("user_id", user.id);
   await db.from("alert_subscriptions").delete().eq("email", email);
   await db.from("communication_preferences").delete().eq("email", email);
   await db.from("communication_tokens").delete().eq("email", email);

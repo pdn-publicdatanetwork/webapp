@@ -1,5 +1,5 @@
 import "server-only";
-import { authAdmin } from "./supabaseAdmin";
+import { authAdmin, dataAdmin } from "./supabaseAdmin";
 
 // Profil CV déclaré par un collaborateur associé à sa fiche : publication
 // immédiate, éléments futurs publiés automatiquement à leur date d'effet
@@ -109,4 +109,22 @@ export async function supprimerProfil(userId: string): Promise<void> {
   await authAdmin().from("collab_declarations")
     .update({ supprime_le: new Date().toISOString(), maj_le: new Date().toISOString() })
     .eq("user_id", userId).is("supprime_le", null);
+}
+
+// Retrait de la fiche quand le lien compte-fiche est rompu :
+// dissociation admin ou suppression du compte (promesse affichée dans
+// « Ma fiche » et « Données et confidentialité »). Les déclarations
+// partent en suppression douce (sauvegarde interne), la photo du bucket
+// photos-profils et la colonne collaborateurs.photo_url sont effacées.
+export async function retirerFicheCollab(userId: string, collabId: string): Promise<void> {
+  if (!collabId) return;
+  const db = authAdmin();
+  await db.from("collab_declarations")
+    .update({ supprime_le: new Date().toISOString(), maj_le: new Date().toISOString() })
+    .eq("user_id", userId).eq("collab_id", collabId).is("supprime_le", null);
+  const stockage = dataAdmin().storage.from("photos-profils");
+  const { data: fichiers } = await stockage.list("", { search: collabId });
+  const chemins = (fichiers ?? []).map((f) => f.name).filter((n) => n.startsWith(collabId + "."));
+  if (chemins.length) await stockage.remove(chemins);
+  await db.from("collaborateurs").update({ photo_url: null }).eq("collab_id", collabId);
 }
