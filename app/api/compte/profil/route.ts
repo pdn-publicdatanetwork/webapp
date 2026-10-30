@@ -16,12 +16,12 @@ export async function PUT(req: Request) {
   if (!user) return NextResponse.json({ error: "connexion requise" }, { status: 401 });
   const parsed = Corps.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "prénom ou nom invalide" }, { status: 400 });
-  const data = {
+  const meta = {
     ...((user.user_metadata ?? {}) as Record<string, unknown>),
     prenom: parsed.data.prenom,
     nom: parsed.data.nom.toUpperCase(),
   };
-  const { error } = await authAdmin().auth.admin.updateUserById(user.id, { data });
+  const { error } = await authAdmin().auth.admin.updateUserById(user.id, { user_metadata: meta });
   if (error) return NextResponse.json({ error: "enregistrement impossible, réessaie" }, { status: 500 });
-  return NextResponse.json({ ok: true, prenom: data.prenom as string, nom: data.nom as string });
+  return NextResponse.json({ ok: true, prenom: meta.prenom as string, nom: meta.nom as string });
 }

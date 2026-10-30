@@ -59,7 +59,7 @@ export default function Informations() {
       const b = await r.json().catch(() => ({}));
       return setMessage({ ok: false, texte: (b as { error?: string }).error ?? "Enregistrement impossible, réessaie." });
     }
-    setCompte({ ...compte, prenom: prenom.trim(), nom: nom.trim().toUpperCase() });
+    setCompte({ ...compte!, prenom: prenom.trim(), nom: nom.trim().toUpperCase() });
     setMessage({ ok: true, texte: "C'est enregistré." });
   }
 

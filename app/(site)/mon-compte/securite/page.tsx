@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import type { Session } from "@supabase/supabase-js";
+import type { Session, UserIdentity } from "@supabase/supabase-js";
 import { authBrowser, sessionActuelle } from "@/lib/supabaseBrowser";
 
 const NOMS: Record<string, string> = { email: "Code par email", google: "Google", github: "GitHub", twitter: "X (Twitter)", slack_oidc: "Slack" };
@@ -8,12 +8,11 @@ const NOMS: Record<string, string> = { email: "Code par email", google: "Google"
 // Sécurité et connexion : mot de passe, validation en deux étapes (TOTP),
 // clés d'accès (à venir), mon activité et méthodes de connexion associées.
 type Facteur = { id: string; nom: string };
-type Identite = { id: string; provider: string };
 
 export default function Securite() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [fournisseurs, setFournisseurs] = useState<string[]>([]);
-  const [identites, setIdentites] = useState<Identite[]>([]);
+  const [identites, setIdentites] = useState<UserIdentity[]>([]);
   const [mdp, setMdp] = useState("");
   const [mdp2, setMdp2] = useState("");
   const [facteurs, setFacteurs] = useState<Facteur[]>([]);
@@ -32,7 +31,7 @@ export default function Securite() {
     const { data, error } = await authBrowser().auth.mfa.listFactors();
     if (error) return;
     setFacteurs(
-      (data?.factors ?? [])
+      (data?.all ?? [])
         .filter((f) => f.status === "verified")
         .map((f) => ({ id: f.id, nom: f.friendly_name ?? "Application d'authentification" })),
     );
@@ -40,7 +39,7 @@ export default function Securite() {
 
   async function chargerIdentites() {
     const { data } = await authBrowser().auth.getUserIdentities();
-    setIdentites((data?.identities ?? []).map((i) => ({ id: i.id, provider: i.provider })));
+    setIdentites(data?.identities ?? []);
   }
 
   useEffect(() => {
@@ -103,11 +102,11 @@ export default function Securite() {
     e.preventDefault();
     setEnCours(true);
     const sb = authBrowser();
-    const { data: ch, error: ech } = await sb.auth.mfa.challenge({ factorId });
+    const { data: ch, error: ech } = await sb.auth.mfa.challenge({ factorId: facteurId });
     let echec = ech;
     let reussi = false;
     if (!echec && ch) {
-      const { error: ev } = await sb.auth.mfa.verify({ factorId, challengeId: ch.id, code: code.trim() });
+      const { error: ev } = await sb.auth.mfa.verify({ factorId: facteurId, challengeId: ch.id, code: code.trim() });
       if (!ev) reussi = true;
       else echec = ev;
     }
@@ -151,9 +150,9 @@ export default function Securite() {
     }
   }
 
-  async function retirer(identite: Identite) {
+  async function retirer(identite: UserIdentity) {
     if (!window.confirm(`Retirer ${NOMS[identite.provider] ?? identite.provider} de tes méthodes de connexion ?`)) return;
-    const { error } = await authBrowser().auth.unlinkIdentity({ identityId: identite.id });
+    const { error } = await authBrowser().auth.unlinkIdentity(identite);
     if (error) return setMessage({ ok: false, texte: "Retrait impossible : garde au moins une méthode de connexion." });
     await chargerIdentites();
     setMessage({ ok: true, texte: "Méthode retirée." });
