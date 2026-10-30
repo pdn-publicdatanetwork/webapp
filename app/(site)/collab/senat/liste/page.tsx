@@ -5,7 +5,7 @@ export const revalidate = 86400;
 type Props = { searchParams: Promise<{ page?: string }> };
 
 export const metadata: Metadata = {
-  title: "Liste des collaborateurs par sénateur — complète",
+  title: "Liste complète des collaborateurs par sénateur",
   description: "La liste référence de tous les collaborateurs parlementaires en poste au Sénat : nom du collaborateur, sénateur employeur et fonction, mise à jour quotidiennement.",
   alternates: { canonical: "/collab/senat/liste" },
 };

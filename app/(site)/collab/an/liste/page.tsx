@@ -5,7 +5,7 @@ export const revalidate = 86400;
 type Props = { searchParams: Promise<{ page?: string }> };
 
 export const metadata: Metadata = {
-  title: "Liste des collaborateurs par député — complète",
+  title: "Liste complète des collaborateurs par député",
   description: "La liste référence de tous les collaborateurs parlementaires des députés en poste à l'Assemblée nationale : nom du collaborateur, député employeur et fonction, mise à jour quotidiennement.",
   alternates: { canonical: "/collab/an/liste" },
 };

@@ -82,30 +82,30 @@ export default async function Page() {
   return (
     <>
       <p className="meta">
-        <Link href={"/collab/pe/" + FONCTIONS_STRUCTURES["Tiers payant" as Fonction].slug}>Tiers payants</Link> ·{" "}
-        <Link href={"/collab/pe/" + FONCTIONS_STRUCTURES["Prestataire de services spécialisé" as Fonction].slug}>Prestataires</Link> · Parlement européen
+        <Link href={"/collab/pe/" + FONCTIONS_STRUCTURES["Tiers payant" as Fonction].slug}>Tiers payants</Link>,{" "}
+        <Link href={"/collab/pe/" + FONCTIONS_STRUCTURES["Prestataire de services spécialisé" as Fonction].slug}>Prestataires</Link>, Parlement européen
       </p>
       <h1>Le réseau des tiers payants et prestataires</h1>
       <p className="lead">
         {toutes.length} structures, {elus.size} eurodéputés français, {aretes.length} contrats, sur un seul graphe.
         Les structures en lien avec beaucoup d&apos;élus apparaissent en haut du classement ; et quand un même
-        eurodéputé emploie plusieurs structures, il fait le pont entre elles — c&apos;est là que se lisent les
+        eurodéputé emploie plusieurs structures, il fait le pont entre elles : c&apos;est là que se lisent les
         interconnections. {TOP} structure(s) comptent au moins 5 clients ; {multi} eurodéputé(s) en emploient plusieurs.
       </p>
       <GrapheReseau noeuds={noeuds} aretes={aretes} />
       <p className="meta">
         Export :{" "}
         <a href="https://media.dataparl.fr/assets/pe/reseau">graphe SVG (media.dataparl.fr/assets/pe/reseau)</a>
-        {" · "}
+        {", "}
         <a href="https://media.dataparl.fr/assets/pe/reseau?telecharger=1">télécharger le fichier</a>
-        {" — "}données ouvertes DataParl&apos;, rafraîchies toutes les heures.
+        {" : données ouvertes DataParl&apos;, rafraîchies toutes les heures."}
       </p>
       <h2>Classement des structures</h2>
       <Tableur
         id="reseau-structures"
         titre="Structures par nombre d'eurodéputés clients"
         description=""
-        provenance="Table affectations (API DataParl'/Supabase) · registre des entreprises (Pappers)"
+        provenance="Table affectations (API DataParl'/Supabase), registre des entreprises (Pappers)"
         entetes={entetes}
         donnees={donnees}
         liens={liens}

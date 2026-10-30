@@ -24,23 +24,23 @@ export default async function Page() {
   const entetes = ["Structure", "Eurodéputés clients", "Forme juridique", "SIREN"];
   const donnees = liste.map((s) => {
     const info = siren[s.cle];
-    return [s.nom, s.clients.length, info?.forme_juridique || "—", info?.siren || "non identifiée"];
+    return [s.nom, s.clients.length, info?.forme_juridique || "non identifiée", info?.siren || "non identifiée"];
   });
   const liens = liste.map((s) => [BASE + "/" + slugStructure(s.nom), null, null, null]);
   return (
     <>
-      <p className="meta">Parlement européen · eurodéputés français</p>
+      <p className="meta">Parlement européen, eurodéputés français</p>
       <h1>{F.titre}</h1>
       <p className="lead">
         {F.definition} DataParl&apos; recense ici toutes les structures employées par les {nClients} eurodéputés
-        français suivis — une information publique mais jamais agrégée jusqu&apos;ici, au-delà de la page « assistants »
+        français suivis : une information publique mais jamais agrégée jusqu&apos;ici, au-delà de la page « assistants »
         du Parlement européen.
       </p>
       <Tableur
         id={F.slug}
         titre={F.titre}
         description=""
-        provenance="Table affectations (API DataParl'/Supabase) · registre des entreprises (Pappers)"
+        provenance="Table affectations (API DataParl'/Supabase), registre des entreprises (Pappers)"
         entetes={entetes}
         donnees={donnees}
         liens={liens}
