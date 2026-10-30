@@ -57,9 +57,9 @@ export default function ParcoursCollab({ id, suite }: { id: string; suite: strin
               {p.en_cours && <span className="puce">en poste</span>}
             </p>
             <p className="meta" style={{ margin: "2px 0" }}>
-              {CHAMBRE_LONG[p.chambre]}{p.groupe ? ` · groupe ${p.groupe}` : ""}{p.elu.circonscription && p.chambre !== "europarl" ? ` · ${p.elu.circonscription}` : ""}
+              {CHAMBRE_LONG[p.chambre]}{p.groupe ? `, groupe ${p.groupe}` : ""}{p.elu.circonscription && p.chambre !== "europarl" ? `, ${p.elu.circonscription}` : ""}
             </p>
-            <p style={{ margin: "2px 0" }}>{libellePeriode(p)}{p.fonction ? ` · ${p.fonction}` : ""}</p>
+            <p style={{ margin: "2px 0" }}>{libellePeriode(p)}{p.fonction ? `, ${p.fonction}` : ""}</p>
             {p.commissions.length > 0 && (
               <p className="meta" style={{ margin: "2px 0" }}>
                 Commissions de l&apos;élu pendant la période : {p.commissions.map((c) => c.libelle + (c.fonction && c.fonction.toLowerCase() !== "membre" ? ` (${c.fonction.toLowerCase()})` : "")).join(" ; ")}

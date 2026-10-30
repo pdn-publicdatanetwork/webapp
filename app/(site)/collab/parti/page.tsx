@@ -58,7 +58,7 @@ export default async function CollabParParti() {
         {partis.map((p) => (
           <li key={p}>
             <a href={"/collab/parti/" + slugCollectif(p)}>{"Collaborateurs des élus du " + libelleParti(p)}</a>
-            <span className="meta">{" · " + (parParti.get(p) ?? 0).toLocaleString("fr-FR") + " collaborateur" + ((parParti.get(p) ?? 0) > 1 ? "s" : "") + " en poste"}</span>
+            <span className="meta">{" (" + (parParti.get(p) ?? 0).toLocaleString("fr-FR") + " collaborateur" + ((parParti.get(p) ?? 0) > 1 ? "s" : "") + " en poste)"}</span>
           </li>
         ))}
       </ul>
@@ -66,8 +66,8 @@ export default async function CollabParParti() {
       <p className="meta">
         Comptages établis d&apos;après les équipes en poste suivies quotidiennement par DataParl&apos;.
         Exports bruts par chambre :{" "}
-        <a href="https://media.dataparl.fr/assets/collab/an.csv">Assemblée nationale (CSV)</a> ·{" "}
-        <a href="https://media.dataparl.fr/assets/collab/senat.csv">Sénat (CSV)</a> ·{" "}
+        <a href="https://media.dataparl.fr/assets/collab/an.csv">Assemblée nationale (CSV)</a>,{" "}
+        <a href="https://media.dataparl.fr/assets/collab/senat.csv">Sénat (CSV)</a>,{" "}
         <a href="https://media.dataparl.fr/assets/collab/pe.csv">Parlement européen (CSV)</a>.
       </p>
     </>

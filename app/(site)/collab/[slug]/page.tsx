@@ -24,9 +24,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!c) return { title: "Collaborateur" };
   const nom = prenomNom(c.prenom, c.nom);
   // Claims Google (brief) : title « Nom | DataParl' » (template du layout racine),
-  // description « Parcours de Nom sur DataParl' — élus, mouvements et historique
+  // description « Parcours de Nom sur DataParl' : élus, mouvements et historique
   // depuis 2015. », og:title « Nom sur DataParl' » (og:site_name vient du layout).
-  const claim = "Parcours de " + nom + " sur DataParl’ — élus, mouvements et historique depuis 2015.";
+  const claim = "Parcours de " + nom + " sur DataParl’ : élus, mouvements et historique depuis 2015.";
   return {
     title: nom,
     description: claim,
@@ -54,7 +54,7 @@ export default async function FicheCollab({ params }: Props) {
 
   return (
     <>
-      <p className="meta" style={{ marginBottom: 0 }}>{role} · {c.chambres.split(" ").map((x) => CHAMBRE_LONG[x]).join(", ")}</p>
+      <p className="meta" style={{ marginBottom: 0 }}>{role}, {c.chambres.split(" ").map((x) => CHAMBRE_LONG[x]).join(", ")}</p>
       {/* Photo de profil déclarée par l'intéressé (Ma fiche) : visible à côté
           du nom ; rien n'est affiché si la personne n'en a pas publiée. */}
       <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
@@ -95,7 +95,7 @@ export default async function FicheCollab({ params }: Props) {
       <section className={styles.bloc}>
         <div className={styles.enteteBloc}>
           <h2>Parcours</h2>
-          <span className={`${styles.badge} ${styles.badgeOfficiel}`}>✓ Certifié DataParl&apos; · listes officielles</span>
+          <span className={`${styles.badge} ${styles.badgeOfficiel}`}>✓ Certifié DataParl&apos;, listes officielles</span>
         </div>
         <p className="meta" style={{ margin: "2px 0 14px" }}>
           Chaque poste provient des listes officielles de l&apos;Assemblée nationale et du Sénat, vérifiées par DataParl&apos;.
@@ -112,7 +112,7 @@ export default async function FicheCollab({ params }: Props) {
                   <li key={i}>
                     {p.fonction || (c.genre === "F" ? "Collaboratrice" : "Collaborateur")} de{" "}
                     {f ? <a href={`/parlementaires/${encodeURIComponent(f.slug)}`}>{eluNom}</a> : eluNom}
-                    <span className="meta"> · {CHAMBRE_LONG[p.chambre]}{f?.groupe ? ` · ${f.groupe}` : ""} · {libellePeriode(p)}</span>
+                    <span className="meta">, {CHAMBRE_LONG[p.chambre]}{f?.groupe ? `, ${f.groupe}` : ""}, {libellePeriode(p)}</span>
                   </li>
                 );
               })}
@@ -136,9 +136,9 @@ export default async function FicheCollab({ params }: Props) {
               return (
                 <li key={p.id}>
                   {p.fonction || "Membre de cabinet"} au cabinet de{" "}
-                  {mi ? <a href={"/gouv/m/" + encodeURIComponent(mi.id)}>{prenomNom(mi.prenom, mi.nom)}</a> : "—"}
+                  {mi ? <a href={"/gouv/m/" + encodeURIComponent(mi.id)}>{prenomNom(mi.prenom, mi.nom)}</a> : "ministre inconnu"}
                   <span className="meta">
-                    {" — " + (mi ? (mi.portefeuille || mi.fonction) + " · " + mi.gouvernement + " · " : "") + periode(p.debut, finEffective(p.fin, mi?.fin ?? null))}
+                    {" (" + (mi ? (mi.portefeuille || mi.fonction) + ", " + mi.gouvernement + ", " : "") + periode(p.debut, finEffective(p.fin, mi?.fin ?? null)) + ")"}
                   </span>
                 </li>
               );

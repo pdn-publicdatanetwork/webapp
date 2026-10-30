@@ -90,7 +90,7 @@ export default function ProfilCV({ slug }: { slug: string }) {
             {items.map((d) => (
               <li key={d.id}>
                 <b>{d.libelle}</b>
-                {d.periode ? <span className="meta"> · {d.periode}</span> : ""}
+                {d.periode ? <span className="meta">, {d.periode}</span> : ""}
                 {d.precision_text ? <div className="meta">{d.precision_text}</div> : null}
               </li>
             ))}

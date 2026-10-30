@@ -13,9 +13,9 @@ export const metadata: Metadata = {
 
 const TAILLE_PAGE = 200;
 
-// Pagination cote base : une seule page de TAILLE_PAGE lignes est lue
-// (au lieu de telecharger l'integralite des periodes en plusieurs allers-retours),
-// le total venant du content-range renvoye par PostgREST. LCP divise d'autant.
+// Pagination côté base : une seule page de TAILLE_PAGE lignes est lue
+// (au lieu de télécharger l'intégralité des périodes en plusieurs allers-retours),
+// le total venant du content-range renvoyé par PostgREST. LCP divisé d'autant.
 async function pageListe(numPage: number) {
   const p = new URLSearchParams({
     select: "collab_id,chambre,elu_id,elu_nom,debut,fin,en_cours,fonction",
@@ -28,7 +28,7 @@ async function pageListe(numPage: number) {
   return { rows, total };
 }
 
-// Compteur par chambre : une requete limitee a 1 ligne, total via content-range.
+// Compteur par chambre : une requête limitée à 1 ligne, total via content-range.
 async function compteParChambre(): Promise<Record<string, number>> {
   const out: Record<string, number> = {};
   for (const chambre of ["assemblee", "senat", "europarl"]) {
@@ -45,7 +45,7 @@ export default async function ListeCollaborateurs({ searchParams }: { searchPara
   const totalLignes = total ?? rows.length;
   const totalPages = Math.max(1, Math.ceil(totalLignes / TAILLE_PAGE));
   const pageOk = Math.min(page, totalPages);
-  // Si la page demandee depasse la fin, on relit la derniere plage (une seule requete).
+  // Si la page demandée dépasse la fin, on relit la dernière plage (une seule requête).
   const lignes = pageOk === page || totalLignes === 0 ? rows : (await pageListe(pageOk)).rows;
   const parChambreTxt = Object.entries(parChambre)
     .filter(([, nb]) => nb > 0)
@@ -74,14 +74,14 @@ export default async function ListeCollaborateurs({ searchParams }: { searchPara
       </table>
       {totalPages > 1 && (
         <p className="meta">
-          {"Page " + pageOk + " sur " + totalPages + " — "}
+          {"Page " + pageOk + " sur " + totalPages + ", "}
           <a href={"/collab/liste?page=" + (pageOk - 1)}>précédente</a>
-          {" · "}
+          {", "}
           <a href={"/collab/liste?page=" + (pageOk + 1)}>suivante</a>
         </p>
       )}
       <p className="meta">
-        {"Liste établie à partir des listes officielles de collaborateurs publiées par l'Assemblée nationale et le Sénat, mise à jour quotidiennement — page générée le " + maj + ". Version tableur détaillée : "}
+        {"Liste établie à partir des listes officielles de collaborateurs publiées par l'Assemblée nationale et le Sénat, mise à jour quotidienne, page générée le " + maj + ". Version tableur détaillée : "}
         <a href="https://media.dataparl.fr/sheets/liste_collab_dataparl">DataParl&apos; Sheets</a>.
       </p>
     </>

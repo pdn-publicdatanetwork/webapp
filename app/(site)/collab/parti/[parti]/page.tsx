@@ -9,7 +9,7 @@ export const revalidate = 86400;
 type Props = { params: Promise<{ parti: string }> };
 
 // /collab/parti/<parti> : les collaborateurs parlementaires en poste chez les
-// élus d'un parti, toutes chambres confondues — chaque ligne : collaborateur,
+// élus d'un parti, toutes chambres confondues ; chaque ligne : collaborateur,
 // élu employeur, fonction. Le titre et le H1 portent le nom complet du parti.
 type Periode = { collab_id: string; elu_nom: string; fonction: string };
 type Collab = { collab_id: string; nom: string; prenom: string };
@@ -55,13 +55,13 @@ export default async function CollabDuParti({ params }: Props) {
   const noms = new Map(collabs.map((c) => [c.collab_id, [c.prenom, c.nom].filter(Boolean).join(" ")]));
   const lignes: LigneCollab[] = periodes
     .filter((p) => nomsElus.has(norm(p.elu_nom)))
-    .map((p) => ({ nom: noms.get(p.collab_id) ?? "—", elu: p.elu_nom, fonction: p.fonction || "" }))
-    .filter((l) => l.nom !== "—");
+    .map((p) => ({ nom: noms.get(p.collab_id) ?? "", elu: p.elu_nom, fonction: p.fonction || "" }))
+    .filter((l) => l.nom !== "");
   const maj = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(new Date());
   return (
     <>
       <p className="meta">
-        <a href="/collab/parti">&larr; Collaborateurs par parti</a> · <a href="/collab">&larr; Tous les collaborateurs</a>
+        <a href="/collab/parti">&larr; Collaborateurs par parti</a>, <a href="/collab">&larr; Tous les collaborateurs</a>
       </p>
       <h1>Les collaborateurs des élus du <span className="surligne">{complet}</span>{complet !== sigle ? <span className="meta"> ({sigle})</span> : null}</h1>
       <p className="lead">
@@ -76,7 +76,7 @@ export default async function CollabDuParti({ params }: Props) {
         <TableauCollabs rows={lignes} mode="table" />
       )}
       <p className="meta">
-        Listes établies à partir des publications officielles des trois chambres, mises à jour quotidiennement —
+        Listes établies à partir des publications officielles des trois chambres, mises à jour quotidiennement,
         page générée le {maj}. Les groupes parlementaires ont aussi leur fiche :{" "}
         <a href="/groupe">voir tous les groupes</a>.
       </p>
@@ -87,7 +87,7 @@ export default async function CollabDuParti({ params }: Props) {
             "@context": "https://schema.org",
             "@type": "Dataset",
             name: "Collaborateurs des élus du " + complet,
-            description: "Liste des collaborateurs parlementaires en poste chez les élus du " + complet + " : nom, élu employeur et fonction, mise à jour quotidiennement.",
+            description: "Liste des collaborateurs parlementaires en poste chez les élus du " + complet + " : nom, élu employeur et fonction, mise à jour quotidienne.",
             url: "https://www.dataparl.fr/collab/parti/" + slug,
             creator: { "@type": "Organization", name: "DataParl'", url: "https://www.dataparl.fr" },
             isAccessibleForFree: true,
