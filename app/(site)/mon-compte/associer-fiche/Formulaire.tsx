@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { sessionActuelle } from "@/lib/supabaseBrowser";
 import { dateHeure } from "@/app/_components/admin/utils";
 
@@ -17,8 +16,9 @@ async function appel(url: string, init?: RequestInit) {
 }
 
 export default function Formulaire() {
-  const params = useSearchParams();
-  const [slug, setSlug] = useState(params.get("slug") ?? "");
+  // Slug prérempli via ?slug=… : lu en client dans un effet (pas de
+  // useSearchParams, qui exige une boundary Suspense et casse le prérendu).
+  const [slug, setSlug] = useState("");
   const [demande, setDemande] = useState<{ adresse: string; objet: string; code: string; expireLe: string } | null>(null);
   const [statut, setStatut] = useState<Statut>(null);
   const [erreur, setErreur] = useState("");
@@ -30,6 +30,8 @@ export default function Formulaire() {
   }, []);
 
   useEffect(() => {
+    const s = new URLSearchParams(window.location.search).get("slug");
+    if (s && /^[a-z0-9_]{3,120}$/.test(s)) setSlug(s);
     rafraichir();
     // Rafraîchissement léger tant qu'une demande est en attente.
     const t = setInterval(rafraichir, 15000);
