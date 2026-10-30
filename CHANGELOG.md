@@ -2,6 +2,20 @@
 
 Historique des évolutions de la webapp DataParl' (dataparl.fr).
 
+## 2026-10-31
+
+- **Pages chambres v2** (`/an`, `/senat`, `/pe`) : les landings deviennent de
+  vraies pages de destination — en-tête allégé (logo officiel de la chambre +
+  titre sans highlight), 4 chiffres clés dynamiques (collaborateurs en poste,
+  mouvements du mois, taux de renouvellement 12 mois vers VigiParl', part de
+  femmes vers MixiParl'), les 5 derniers mouvements de la chambre au style de
+  l'accueil (pastille + libellé), bouton vers l'historique de la chambre, et
+  grille « Explorer » en cartes (mouvements, collaborateurs, parlementaires,
+  groupes, VigiParl', MixiParl', Sénatoriales 2026 pour le Sénat).
+- **Refactor** : `LigneMouvement` et les icônes de trait extraits en composants
+  partagés (`app/_components/`), réutilisés par l'accueil et les pages chambres
+  (aucun changement visuel sur l'accueil).
+
 ## 2026-10-30
 
 - **Accueil v2** : page d'accueil refondue, plus aérée et hiérarchisée — hero

@@ -760,3 +760,10 @@ ul.explorer { list-style: none; padding: 0; margin: 0; display: grid; grid-templ
 /* Cartes de chiffres cliquables (pages chambre /an, /senat, /pe) */
 .chiffres.hero a.chiffre-carte { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; border: 1px solid var(--line); border-radius: var(--radius-card); padding: 14px 18px; background: var(--card); text-decoration: none; color: inherit; transition: border-color .15s ease, box-shadow .15s ease; }
 .chiffres.hero a.chiffre-carte:hover, .chiffres.hero a.chiffre-carte:focus-visible { border-color: color-mix(in srgb, var(--bleu) 25%, transparent); box-shadow: 0 4px 12px rgba(7, 26, 65, .05); }
+
+/* ── Pages chambres (/an, /senat, /pe) : en-tête logo + titre ────────────── */
+.chambre-entete { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
+.chambre-entete img.logo-org { display: block; height: 38px; width: auto; max-width: 150px; object-fit: contain; }
+@media (prefers-color-scheme: dark) {
+  .chambre-entete img.logo-org { background: #FFFDF5; border-radius: 6px; padding: 4px 6px; }
+}
