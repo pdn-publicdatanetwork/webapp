@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { sessionActuelle } from "@/lib/supabaseBrowser";
+import styles from "./fiche.module.css";
 
 // Rubrique « Profil CV » de la fiche collaborateur : éléments déclarés par
 // l'intéressé, réservés aux comptes (même barrière que le parcours complet).
 // Bandeau obligatoire : déclaré par la personne, non issu des listes
-// officielles. Sans session ou sans élément visible : rien d'affiché côté
+// officielles. Visuellement distinct du parcours certifié (badge coral,
+// bordure coral). Sans session ou sans élément visible : rien d'affiché côté
 // public, le voile « réservé aux comptes » pour les connectés.
 
 const TITRES: Record<string, string> = {
@@ -42,9 +44,12 @@ export default function ProfilCV({ slug }: { slug: string }) {
   if (element.type === "chargement") return null;
   if (element.type === "voile") {
     return (
-      <section>
-        <h2>Profil CV</h2>
-        <p className="card">
+      <section className={`${styles.bloc} ${styles.blocDeclare}`}>
+        <div className={styles.enteteBloc}>
+          <h2>Profil CV</h2>
+          <span className={`${styles.badge} ${styles.badgeDeclare}`}>Déclaré par l&apos;intéressé</span>
+        </div>
+        <p className="card" style={{ maxWidth: "none" }}>
           Le profil CV déclaré par la personne (formations, expériences, autres activités) est réservé aux
           comptes DataParl&apos;, gratuits.{" "}
           <a href="/inscription">Créer un compte</a> ou <a href="/connexion">se connecter</a>.
@@ -68,9 +73,12 @@ export default function ProfilCV({ slug }: { slug: string }) {
   }
 
   return (
-    <section>
-      <h2>Profil CV</h2>
-      <p className="card">
+    <section className={`${styles.bloc} ${styles.blocDeclare}`}>
+      <div className={styles.enteteBloc}>
+        <h2>Profil CV</h2>
+        <span className={`${styles.badge} ${styles.badgeDeclare}`}>Déclaré par l&apos;intéressé</span>
+      </div>
+      <p className="meta" style={{ margin: "2px 0 14px" }}>
         Rubrique déclarée par l&apos;intéressé, transmise directement par la personne : elle n&apos;est pas issue
         des listes officielles de l&apos;AN ou du Sénat, qui restent la seule source des autres rubriques.{" "}
         <a href="/methode#profil-cv">Voir nos règles</a>.
