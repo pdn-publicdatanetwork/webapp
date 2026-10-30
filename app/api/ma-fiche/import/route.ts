@@ -10,11 +10,10 @@ export const maxDuration = 60;
 // une fiche vérifiée, le transmet au moteur d'extraction de dpchat
 // (chat.dataparl.fr/api/extraire-cv) avec le secret partagé
 // CLE_EXTRACTION_CV, et renvoie les propositions à l'utilisateur.
-// Le PDF lui-même n'est jamais stocké ni journalisé. Avec le consentement
-// CGU coché, le texte OCR et les propositions sont conservés (table
-// cv_imports) pour l'édition de la fiche par DataParl'. Rien n'est publié
-// sans validation explicite dans la page Ma fiche. L'acceptation des CGU du
-// Chat est enregistrée à chaque import : trace horodatée (cgu_acceptees).
+// Le PDF n'est jamais stocké ; le texte OCR et les propositions brutes
+// sont conservés (table cv_imports) pour édition par l'admin DataParl',
+// mentionnée dans la case d'acceptation des CGU. L'acceptation de la case
+// CGU du Chat est enregistrée à chaque import (cgu_acceptees, preuve RGPD).
 
 const DPCHAT_URL = (process.env.DPCHAT_URL ?? "https://chat.dataparl.fr").replace(/\/$/, "");
 const TAILLE_MAX = 8 * 1024 * 1024; // base64 d'un PDF d'environ 5 Mo
@@ -54,17 +53,18 @@ export async function POST(req: Request) {
       console.error("extraire-cv", res.status, data.error);
       return NextResponse.json({ error: data.error ?? "extraction échouée" }, { status: 502 });
     }
-    // Conservation (consentement CGU) : texte OCR + propositions, pour
-    // l'édition de la fiche par l'équipe DataParl'. Jamais affichés au
-    // public : seul ce que l'utilisateur valide est publié.
-    if (corps?.accepte_cgu === true) {
+
+    // Alimentation côté admin : texte OCR + propositions brutes conservés
+    // (jamais le PDF). Visibles depuis le back-office, purgés avec la fiche.
+    if (data.propositions) {
       await dataAdmin().from("cv_imports").insert({
         user_id: u.id,
-        collab_slug: a.collab_slug ?? "",
-        texte: typeof data.texte_cv === "string" ? data.texte_cv.slice(0, 60000) : null,
-        propositions: data.propositions ?? null,
-      }).catch((e: unknown) => console.error("cv_imports", e));
+        collab_slug: a.collab_slug,
+        texte: typeof data.texte_ocr === "string" ? data.texte_ocr.slice(0, 60000) : null,
+        propositions: data.propositions,
+      });
     }
+
     return NextResponse.json({ propositions: data.propositions ?? null });
   } catch (e) {
     console.error("extraire-cv: échec réseau ou timeout", e);
