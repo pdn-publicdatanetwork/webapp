@@ -4,7 +4,7 @@ import { authAdmin } from "@/lib/supabaseAdmin";
 import { SIGLE, idDepuisSlug, slugOffre, titreStandard, type Chambre } from "@/lib/jobs";
 import { PastilleProvenance } from "../_components/ListeOffres";
 
-// Détail d'une offre — hébergé sur DataParl' (jamais de redirection).
+// Détail d'une offre : hébergé sur DataParl' (jamais de redirection).
 // URL publique : https://jobs.dataparl.fr/<slug> (voir middleware.ts).
 // Pastille de provenance : déposée par l'élu ou collectée sur une source publique.
 
@@ -83,7 +83,7 @@ export default async function OffrePage({ params }: { params: Promise<{ slug: st
       </p>
       <h1>{titreStandard(o)}</h1>
 
-      {/* ——— Informations clés ——— */}
+      {/* Informations clés */}
       <div className="card" style={{ margin: "24px 0", display: "grid", gap: 10 }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           <PastilleProvenance connector={o.source_connector} avecLibelle />
@@ -99,13 +99,13 @@ export default async function OffrePage({ params }: { params: Promise<{ slug: st
           ))}
         </div>
         <p className="meta" style={{ margin: 0 }}>
-          {nomElu && <>Équipe de {nomElu} · </>}
+          {nomElu && <>Équipe de {nomElu}, </>}
           {o.publie_le ? "Publiée le " + dateFr(o.publie_le) : "Publication en cours"}
-          {o.expire_le ? " · Candidatures jusqu'au " + dateFr(o.expire_le) : ""}
+          {o.expire_le ? ", Candidatures jusqu'au " + dateFr(o.expire_le) : ""}
         </p>
       </div>
 
-      {/* ——— Corps de l'offre, hébergé sur DataParl' ——— */}
+      {/* Corps de l'offre, hébergé sur DataParl' */}
       {o.description ? (
         <div style={{ whiteSpace: "pre-line", lineHeight: 1.7 }}>{o.description}</div>
       ) : (

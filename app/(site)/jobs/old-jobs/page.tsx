@@ -60,7 +60,7 @@ export default async function OldJobs() {
         Anciennes <span className="surligne">offres</span>
       </h1>
       <p className="lead">
-        Les offres de collaborateur parlementaire pourvues ou expirées — conservées pour consultation et repérage des équipes qui recrutent.
+        Les offres de collaborateur parlementaire pourvues ou expirées, conservées pour consultation et repérage des équipes qui recrutent.
       </p>
 
       {offres.length === 0 ? (
@@ -84,9 +84,9 @@ export default async function OldJobs() {
               </p>
               <h2 style={{ margin: "0 0 8px", fontSize: "1.08rem" }}>{titreStandard(o)}</h2>
               <p className="meta" style={{ margin: 0 }}>
-                {[o.type_poste, o.localisation].filter(Boolean).join(" · ")}
-                {o.publie_le ? " · publiée le " + dateFr(o.publie_le) : ""}
-                {o.expire_le ? " · expirée le " + dateFr(o.expire_le) : ""}
+                {[o.type_poste, o.localisation].filter(Boolean).join(", ")}
+                {o.publie_le ? ", publiée le " + dateFr(o.publie_le) : ""}
+                {o.expire_le ? ", expirée le " + dateFr(o.expire_le) : ""}
               </p>
             </article>
           ))}

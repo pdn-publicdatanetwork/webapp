@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { sessionActuelle } from "@/lib/supabaseBrowser";
 import { CHAMBRES, domaineAutorise } from "@/lib/jobs";
 
-// Proposer une offre — connexion DataParl' obligatoire, et l'email du compte
+// Proposer une offre : connexion DataParl' obligatoire, et l'email du compte
 // doit appartenir à un domaine parlementaire (voir lib/jobs.ts). L'offre part
 // en file de revue : rien n'est publié sans validation humaine.
 type SessionDP = NonNullable<Awaited<ReturnType<typeof sessionActuelle>>>;
@@ -20,7 +20,7 @@ export default function Proposer() {
   return (
     <>
       <h1>Proposer une offre</h1>
-      <p className="lead">Votre offre sera relue par l&apos;équipe avant publication — elle n&apos;apparaît pas immédiatement.</p>
+      <p className="lead">Votre offre sera relue par l&apos;équipe avant publication, elle n&apos;apparaît pas immédiatement.</p>
       {!session ? (
         <div className="card" style={{ marginTop: "24px" }}>
           <p style={{ marginTop: 0 }}>
@@ -75,7 +75,7 @@ function Formulaire({ session }: { session: SessionDP }) {
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.erreur ?? "erreur inconnue");
-      setInfo("Merci ! Votre offre est en file de revue — l'équipe la relit avant publication.");
+      setInfo("Merci ! Votre offre est en file de revue, l'équipe la relit avant publication.");
       setF({ titre: "", description: "", source_url: "", type_poste: "", localisation: "", groupe_politique: "", chambre: "", departement: "", elu_prenom: "", elu_nom: "", publie_le: "", expire_le: "" });
     } catch (e2) { setErreur((e2 as Error).message); }
     setOccupe(false);
@@ -85,7 +85,7 @@ function Formulaire({ session }: { session: SessionDP }) {
     <form onSubmit={envoyer} style={{ marginTop: "24px", display: "grid", gap: 14, maxWidth: 640 }}>
       <label>Chambre
         <select {...maj("chambre")}>
-          <option value="">—</option>
+          <option value="">Non précisée</option>
           {CHAMBRES.map((c) => (
             <option key={c.valeur} value={c.valeur}>{c.libelle}</option>
           ))}
@@ -105,7 +105,7 @@ function Formulaire({ session }: { session: SessionDP }) {
       {erreur && <p className="erreur">{erreur}</p>}
       {info && <p className="meta">{info}</p>}
       <p style={{ color: "#6b7280", fontSize: "0.82rem", margin: 0 }}>
-        Déposé avec l&apos;adresse {session.user.email} — conservée en note interne de revue, jamais publiée.
+        Déposé avec l&apos;adresse {session.user.email}, conservée en note interne de revue, jamais publiée.
       </p>
       <button type="submit" disabled={occupe}>{occupe ? "Envoi…" : "Envoyer en revue"}</button>
     </form>

@@ -78,7 +78,7 @@ export default function ListeOffres({ offres }: { offres: OffreListe[] }) {
 
   return (
     <>
-      {/* ——— Filtres ——— */}
+      {/* Filtres */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, margin: "24px 0 4px" }}>
         <select value={chambre} onChange={(e) => setChambre(e.target.value)} aria-label="Chambre">
           <option value="">Toutes les chambres</option>
@@ -111,12 +111,12 @@ export default function ListeOffres({ offres }: { offres: OffreListe[] }) {
           <input type="checkbox" checked={parLElu} onChange={(e) => setParLElu(e.target.checked)} />
           Uniquement les offres déposées par les élus
         </label>
-        {" — "}
+        {", "}
         {visibles.length} offre{visibles.length > 1 ? "s" : ""}
         {visibles.length !== offres.length ? " (filtrée" + (visibles.length > 1 ? "s" : "") + " sur " + offres.length + ")" : ""}
         {unFiltre && (
           <>
-            {" — "}
+            {", "}
             <button type="button" onClick={reset} style={{ background: "none", border: "none", padding: 0, color: "inherit", textDecoration: "underline", cursor: "pointer", font: "inherit" }}>
               réinitialiser
             </button>
@@ -124,7 +124,7 @@ export default function ListeOffres({ offres }: { offres: OffreListe[] }) {
         )}
       </p>
 
-      {/* ——— Cartes ——— */}
+      {/* Cartes */}
       {visibles.length === 0 ? (
         <p>Aucune offre ne correspond à ces critères.</p>
       ) : (
@@ -138,8 +138,8 @@ export default function ListeOffres({ offres }: { offres: OffreListe[] }) {
                 <Link href={"/jobs/" + slugOffre(o)}>{titreStandard(o)}</Link>
               </h2>
               <p className="meta" style={{ margin: "0 0 10px" }}>
-                {[o.type_poste, o.localisation].filter(Boolean).join(" · ")}
-                {o.publie_le ? " · publiée le " + dateFr(o.publie_le) : ""}
+                {[o.type_poste, o.localisation].filter(Boolean).join(", ")}
+                {o.publie_le ? ", publiée le " + dateFr(o.publie_le) : ""}
               </p>
               {o.description && (
                 <p style={{ margin: 0 }}>

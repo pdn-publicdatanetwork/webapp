@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { authAdmin } from "@/lib/supabaseAdmin";
 import ListeOffres, { type OffreListe } from "./_components/ListeOffres";
 
-// Offres d'emploi des équipes parlementaires — page publique.
+// Offres d'emploi des équipes parlementaires : page publique.
 // Le module vit sur jobs.dataparl.fr (voir proxy.ts) : cette route /jobs
 // sert de fondation interne, redirigée depuis dataparl.fr et réécrite depuis
 // la racine du sous-domaine.
@@ -93,7 +93,7 @@ export default async function Jobs() {
         Les postes de collaborateur parlementaire publiés dans les équipes, collectés depuis les sources officielles et vérifiés à la main.
       </p>
 
-      {/* ——— Carte d'appel : proposer une offre ——— */}
+      {/* Carte d'appel : proposer une offre */}
       <div
         style={{
           marginTop: 18,
@@ -112,14 +112,14 @@ export default async function Jobs() {
           <strong>✉️ Vous avez une offre à publier ?</strong>
           <br />
           <span className="meta">
-            Déposez-la depuis votre adresse parlementaire — chaque offre est relue avant publication.
+            Déposez-la depuis votre adresse parlementaire, chaque offre est relue avant publication.
           </span>
         </p>
         <a className="btn" href="/jobs/proposer">Proposer une offre</a>
       </div>
 
       {offres.length === 0 ? (
-        /* ——— État vide : comment fonctionne DataParl' Jobs ——— */
+        /* État vide : comment fonctionne DataParl' Jobs */
         <div style={{ marginTop: "32px" }}>
           <h2>Aucune offre active pour le moment</h2>
           <p className="lead" style={{ fontSize: "1rem" }}>
@@ -150,15 +150,15 @@ export default async function Jobs() {
             />
           </div>
           <p className="meta" style={{ marginTop: "20px" }}>
-            Les élus et leurs équipes peuvent aussi déposer une offre directement —{" "}
+            Les élus et leurs équipes peuvent aussi déposer une offre directement :{" "}
             <a href="/jobs/proposer">proposer une offre</a>
-            {" — et les offres pourvues ou expirées restent consultables dans les "}
+            {". Les offres pourvues ou expirées restent consultables dans les "}
             <a href="/jobs/old-jobs">anciennes offres</a>.
           </p>
         </div>
       ) : (
         <>
-          {/* ——— Bulles statistiques ——— */}
+          {/* Bulles statistiques */}
           <div
             style={{
               display: "grid",
