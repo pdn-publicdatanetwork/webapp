@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import EnTete from "@/app/_components/admin/EnTete";
 import Porte from "@/app/_components/admin/Porte";
 
-export const metadata: Metadata = { title: { default: "Administration", template: "%s · DataParl' Admin" } };
+export const metadata: Metadata = { title: { default: "Administration", template: "%s, DataParl' Admin" } };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (

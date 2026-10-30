@@ -56,8 +56,8 @@ export default function ParcoursCompte() {
         <>
           <h2>{data.compte.nom || data.compte.email}</h2>
           <p className="meta">
-            {data.compte.email} · {data.total} page(s) vue(s) sur 90 jours
-            {data.compte.derniere_connexion ? <> · dernière connexion {dateHeure(data.compte.derniere_connexion)}</> : null}
+            {data.compte.email}, {data.total} page(s) vue(s) sur 90 jours
+            {data.compte.derniere_connexion ? <>, dernière connexion {dateHeure(data.compte.derniere_connexion)}</> : null}
           </p>
           <div className="deux-colonnes">
             <Repartition titre="Pages les plus consultées" lignes={data.pages} />

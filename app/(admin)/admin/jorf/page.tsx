@@ -9,7 +9,7 @@ type Ligne = { date: string; texte: string; err?: boolean };
 
 // Balayage du Journal officiel : chaque appel de l'API traite un lot de jours
 // (borné par le temps d'exécution du serveur) et rend la suite ; la page
-// rappelle tant qu'il reste des jours — un seul clic pour tout 2017→aujourd'hui.
+// rappelle tant qu'il reste des jours : un seul clic pour tout 2017→aujourd'hui.
 export default function PageJORF() {
   const { api } = useAdmin();
   const [statut, setStatut] = useState<Statut | null>(null);
@@ -33,7 +33,7 @@ export default function PageJORF() {
         relance++;
         const lot: Lot = await api<Lot>("/api/admin/jorf", { method: "POST", body: { debut: prochain, force } });
         for (const j of lot.jours) {
-          const errs = j.erreurs.length ? ` — ${j.erreurs[0]}` : "";
+          const errs = j.erreurs.length ? ` : ${j.erreurs[0]}` : "";
           log(j.date, j.nb === 0 && !j.erreurs.length ? "aucune mesure nominative" : `${j.nb} mesure(s) : ${j.ministres} ministre(s), ${j.cabinets} cabinet(s)${errs}`, !!j.erreurs.length);
         }
         prochain = lot.prochain ?? null;
@@ -48,19 +48,19 @@ export default function PageJORF() {
 
   return (
     <>
-      <h1>JORF — gouvernement et cabinets</h1>
+      <h1>JORF : gouvernement et cabinets</h1>
       <p className="lead">
         Le Journal officiel est balayé chaque matin (tâche planifiée) : nominations et cessations de fonctions
         des ministres et des membres de leurs cabinets alimentent les fiches. Cette page rattrape
-        l&apos;historique depuis 2017 — un clic suffit, le balayage reprend là où il s&apos;était arrêté.
+        l&apos;historique depuis 2017 : un clic suffit, le balayage reprend là où il s&apos;était arrêté.
         Le même pipeline existe en bot autonome (GitHub Actions, chaque matin à 6h30) :
-        <a href="https://github.com/dataparl/jorf-bot" target="_blank" rel="noreferrer">github.com/dataparl/jorf-bot</a> —
+        <a href="https://github.com/dataparl/jorf-bot" target="_blank" rel="noreferrer">github.com/dataparl/jorf-bot</a> :
         il écrit dans les mêmes tables, sans doublons.
       </p>
       {statut && (
         <p className="meta">
           Jours déjà balayés : {statut.scan.jours}{statut.scan.premiere ? ` (de ${statut.scan.premiere} à ${statut.scan.derniere})` : ""}
-          {statut.prochain ? ` · prochaine étape : ${statut.prochain} (${statut.restants} jours restants)` : " · historique complet"}
+          {statut.prochain ? `, prochaine étape : ${statut.prochain} (${statut.restants} jours restants)` : ", historique complet"}
         </p>
       )}
       <p>

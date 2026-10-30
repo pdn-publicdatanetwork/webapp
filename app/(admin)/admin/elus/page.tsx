@@ -4,7 +4,7 @@ import { useAdmin } from "@/app/_components/admin/Porte";
 import { dateHeure } from "@/app/_components/admin/utils";
 
 // Espace Élus : gérer à la main la biographie, les mandats et les fonctions
-// d'un parlementaire — en complément des données synchronisées chaque nuit.
+// d'un parlementaire : en complément des données synchronisées chaque nuit.
 
 type Fiche = {
   personne_id: string; elu_id: string; slug: string; chambre: string; civilite: string;
@@ -56,7 +56,7 @@ export default function EspaceElus() {
   if (!personneId) return (
     <>
       <h1>Élus</h1>
-      <p className="meta">Recherche un parlementaire pour gérer sa biographie, ses mandats et ses fonctions — en complément des données officielles synchronisées chaque nuit (elles ne sont jamais modifiées).</p>
+      <p className="meta">Recherche un parlementaire pour gérer sa biographie, ses mandats et ses fonctions : en complément des données officielles synchronisées chaque nuit (elles ne sont jamais modifiées).</p>
       <label htmlFor="e-rech">Rechercher un élu</label>
       <input id="e-rech" type="text" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nom, prénom ou circonscription…" autoFocus />
       {enCours && <p className="meta">Recherche…</p>}
@@ -66,7 +66,7 @@ export default function EspaceElus() {
           <thead><tr><th>Élu</th><th>Chambre</th><th>Circonscription</th><th>Groupe</th><th></th></tr></thead>
           <tbody>{resultats.map((r) => (
             <tr key={r.personne_id}>
-              <td><strong>{nomComplet(r)}</strong>{!r.actif && <span className="meta"> · ancien ne</span>}</td>
+              <td><strong>{nomComplet(r)}</strong>{!r.actif && <span className="meta">, ancien ne</span>}</td>
               <td className="meta">{r.chambre || "–"}</td>
               <td className="meta">{r.circonscription || "–"}</td>
               <td className="meta">{r.groupe || "–"}</td>
@@ -98,7 +98,7 @@ function FicheElu({ d, api, dire, recharger }: {
     <>
       <h1>{nomComplet(f)}</h1>
       <p className="meta">
-        {f.chambre} · {f.circonscription || "sans circonscription"}{f.groupe ? ` · groupe ${f.groupe}` : ""} · {f.actif ? <span className="ok">en cours de mandat</span> : "mandat terminé"} ·{" "}
+        {f.chambre}, {f.circonscription || "sans circonscription"}{f.groupe ? `, groupe ${f.groupe}` : ""}, {f.actif ? <span className="ok">en cours de mandat</span> : "mandat terminé"},{" "}
         <a href={`https://www.dataparl.fr/parlementaires/${encodeURIComponent(f.slug)}/bio`} target="_blank" rel="noreferrer">voir la bio publique ↗</a>
       </p>
       <BioPanel bio={d.bio} personneId={f.personne_id} api={api} dire={dire} />
@@ -119,7 +119,7 @@ function BioPanel({ bio, personneId, api, dire }: { bio: Bio | null; personneId:
     setOccupe(true);
     try {
       await api("/api/admin/elus/bio", { method: "PUT", body: { personne_id: personneId, texte, source, actif } });
-      dire(true, actif ? "Biographie enregistrée et activée — visible sur le site." : "Biographie enregistrée (désactivée : invisible sur le site).");
+      dire(true, actif ? "Biographie enregistrée et activée : visible sur le site." : "Biographie enregistrée (désactivée : invisible sur le site).");
     } catch (e) { dire(false, (e as Error).message); }
     finally { setOccupe(false); }
   }
@@ -135,7 +135,7 @@ function BioPanel({ bio, personneId, api, dire }: { bio: Bio | null; personneId:
 
   return (
     <form className="card" style={{ maxWidth: 860 }} onSubmit={enregistrer}>
-      <h2 style={{ marginTop: 0 }}>Biographie {bio ? <span className={actif ? "ok" : "meta"}>{actif ? "· active sur le site" : "· désactivée"}</span> : <span className="meta">· aucune bio manuelle</span>}</h2>
+      <h2 style={{ marginTop: 0 }}>Biographie {bio ? <span className={actif ? "ok" : "meta"}>{actif ? ", active sur le site" : ", désactivée"}</span> : <span className="meta">, aucune bio manuelle</span>}</h2>
       <label htmlFor="b-texte">Texte de la biographie</label>
       <textarea id="b-texte" value={texte} onChange={(e) => setTexte(e.target.value)} placeholder="Ex. : Née en 1978 à Bordeaux, … élue sénatrice de la Gironde en 2026, elle siège à la commission des Lois…" style={{ minHeight: 220 }} />
       <div className="grille-2">
@@ -146,16 +146,16 @@ function BioPanel({ bio, personneId, api, dire }: { bio: Bio | null; personneId:
         <div>
           <label htmlFor="b-actif">Affichage</label>
           <select id="b-actif" value={actif ? "1" : "0"} onChange={(e) => setActif(e.target.value === "1")}>
-            <option value="1">Active — affichée sur dataparl.fr</option>
-            <option value="0">Désactivée — brouillon invisible</option>
+            <option value="1">Active : affichée sur dataparl.fr</option>
+            <option value="0">Désactivée : brouillon invisible</option>
           </select>
         </div>
       </div>
       {bio && <p className="meta">Dernière modification : {dateHeure(bio.maj_le)} par {bio.maj_par || "?"}</p>}
       <div className="actions" style={{ flexWrap: "nowrap" }}>
         <button disabled={occupe || !texte.trim()}>{bio ? "Enregistrer" : "Créer la biographie"}</button>
-        {bio && <> · <button type="button" className="lien" onClick={basculer}>{actif ? "Désactiver" : "Activer"}</button></>}
-        {bio && <> · <button type="button" className="lien" onClick={supprimer}>Supprimer</button></>}
+        {bio && <>, <button type="button" className="lien" onClick={basculer}>{actif ? "Désactiver" : "Activer"}</button></>}
+        {bio && <>, <button type="button" className="lien" onClick={supprimer}>Supprimer</button></>}
       </div>
     </form>
   );
@@ -204,7 +204,7 @@ function MandatsPanel({ personneId, mandatsSync, manuels, api, dire, recharger }
             <tr key={m.id}>
               <td>{m.libelle} <span className="meta">{m.chambre}</span></td>
               <td className="meta">{m.circonscription || "–"}</td>
-              <td className="meta">{m.debut || "—"}</td>
+              <td className="meta">{m.debut || ":"}</td>
               <td className="meta">{m.fin || "en cours"}</td>
               <td className="meta">{m.cause_fin || "–"}</td>
             </tr>
@@ -218,12 +218,12 @@ function MandatsPanel({ personneId, mandatsSync, manuels, api, dire, recharger }
           <thead><tr><th>Mandat</th><th>Début</th><th>Fin</th><th>État</th><th></th></tr></thead>
           <tbody>{manuels.map((m) => (
             <tr key={m.id}>
-              <td><strong>{m.libelle}</strong>{m.circonscription ? <span className="meta"> · {m.circonscription}</span> : ""}{m.chambre && <span className="meta"> · {m.chambre}</span>}</td>
-              <td className="meta">{m.debut || "—"}</td>
+              <td><strong>{m.libelle}</strong>{m.circonscription ? <span className="meta">, {m.circonscription}</span> : ""}{m.chambre && <span className="meta">, {m.chambre}</span>}</td>
+              <td className="meta">{m.debut || ":"}</td>
               <td className="meta">{m.fin || "en cours"}</td>
               <td>{m.actif ? <span className="ok">affiché</span> : <span className="meta">masqué</span>}</td>
               <td className="actions" style={{ flexWrap: "nowrap" }}>
-                <button className="lien" onClick={() => modifier(m)}>Modifier</button> · <button className="lien" onClick={() => basculer(m)}>{m.actif ? "Masquer" : "Afficher"}</button> · <button className="lien" onClick={() => supprimer(m)}>Supprimer</button>
+                <button className="lien" onClick={() => modifier(m)}>Modifier</button>, <button className="lien" onClick={() => basculer(m)}>{m.actif ? "Masquer" : "Afficher"}</button>, <button className="lien" onClick={() => supprimer(m)}>Supprimer</button>
               </td>
             </tr>
           ))}</tbody>
@@ -235,7 +235,7 @@ function MandatsPanel({ personneId, mandatsSync, manuels, api, dire, recharger }
         <div className="grille-2">
           <div>
             <label htmlFor="m-lib">Libellé</label>
-            <input id="m-lib" type="text" required value={f.libelle} onChange={(e) => setF({ ...f, libelle: e.target.value })} placeholder="Sénateur · Maire de Bordeaux · Ministre…" />
+            <input id="m-lib" type="text" required value={f.libelle} onChange={(e) => setF({ ...f, libelle: e.target.value })} placeholder="Sénateur, Maire de Bordeaux, Ministre…" />
           </div>
           <div>
             <label htmlFor="m-ch">Chambre / collectivité</label>
@@ -243,7 +243,7 @@ function MandatsPanel({ personneId, mandatsSync, manuels, api, dire, recharger }
           </div>
           <div>
             <label htmlFor="m-cir">Circonscription / collectivité</label>
-            <input id="m-cir" type="text" value={f.circonscription} onChange={(e) => setF({ ...f, circonscription: e.target.value })} placeholder="Gironde · Ville de Paris…" />
+            <input id="m-cir" type="text" value={f.circonscription} onChange={(e) => setF({ ...f, circonscription: e.target.value })} placeholder="Gironde, Ville de Paris…" />
           </div>
           <div>
             <label htmlFor="m-src">Source</label>
@@ -264,7 +264,7 @@ function MandatsPanel({ personneId, mandatsSync, manuels, api, dire, recharger }
         </div>
         <div className="actions" style={{ flexWrap: "nowrap" }}>
           <button>{edite ? "Enregistrer le mandat" : "Créer le mandat"}</button>
-          {edite && <> · <button type="button" className="lien" onClick={() => { setEdition(null); setF(vide); }}>Annuler</button></>}
+          {edite && <>, <button type="button" className="lien" onClick={() => { setEdition(null); setF(vide); }}>Annuler</button></>}
         </div>
       </form>
     </section>
@@ -304,7 +304,7 @@ function FonctionsPanel({ personneId, appartenances, manuelles, api, dire, recha
   return (
     <section className="card" style={{ maxWidth: 860 }}>
       <h2 style={{ marginTop: 0 }}>Fonctions et commissions</h2>
-      <h3>Synchronisées (lecture seule) — {appartenances.length}</h3>
+      <h3>Synchronisées (lecture seule) : {appartenances.length}</h3>
       {appartenances.length === 0 ? <p className="meta">Aucune appartenance synchronisée.</p> : (
         <div className="defile"><table className="stats">
           <thead><tr><th>Fonction</th><th>Type</th><th>Rôle</th><th>Période</th></tr></thead>
@@ -325,12 +325,12 @@ function FonctionsPanel({ personneId, appartenances, manuelles, api, dire, recha
           <thead><tr><th>Fonction</th><th>Rôle</th><th>Période</th><th>État</th><th></th></tr></thead>
           <tbody>{manuelles.map((m) => (
             <tr key={m.id}>
-              <td><strong>{m.libelle}</strong>{m.sigle && <span className="meta"> ({m.sigle})</span>}<span className="meta"> · {m.type}</span></td>
+              <td><strong>{m.libelle}</strong>{m.sigle && <span className="meta"> ({m.sigle})</span>}<span className="meta">, {m.type}</span></td>
               <td className="meta">{m.fonction || "–"}</td>
               <td className="meta">{m.debut || "?"} → {m.fin || "en cours"}</td>
               <td>{m.actif ? <span className="ok">affichée</span> : <span className="meta">masquée</span>}</td>
               <td className="actions" style={{ flexWrap: "nowrap" }}>
-                <button className="lien" onClick={() => modifier(m)}>Modifier</button> · <button className="lien" onClick={() => basculer(m)}>{m.actif ? "Masquer" : "Afficher"}</button> · <button className="lien" onClick={() => supprimer(m)}>Supprimer</button>
+                <button className="lien" onClick={() => modifier(m)}>Modifier</button>, <button className="lien" onClick={() => basculer(m)}>{m.actif ? "Masquer" : "Afficher"}</button>, <button className="lien" onClick={() => supprimer(m)}>Supprimer</button>
               </td>
             </tr>
           ))}</tbody>
@@ -377,7 +377,7 @@ function FonctionsPanel({ personneId, appartenances, manuelles, api, dire, recha
         </div>
         <div className="actions" style={{ flexWrap: "nowrap" }}>
           <button>{edite ? "Enregistrer la fonction" : "Créer la fonction"}</button>
-          {edite && <> · <button type="button" className="lien" onClick={() => { setEdition(null); setF(vide); }}>Annuler</button></>}
+          {edite && <>, <button type="button" className="lien" onClick={() => { setEdition(null); setF(vide); }}>Annuler</button></>}
         </div>
       </form>
     </section>

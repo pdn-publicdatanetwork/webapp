@@ -101,13 +101,13 @@ export default function Liens() {
           <tbody>
             {data.liens.map((l) => (
               <tr key={l.code}>
-                <td><strong>{l.titre || l.code}</strong><br /><button className="lien mono" onClick={() => copier(l.code)}>{copie === l.code ? "copié" : adresseCourte(l.code).replace("https://", "")}</button>{!l.actif && <span className="meta"> · inactif</span>}</td>
+                <td><strong>{l.titre || l.code}</strong><br /><button className="lien mono" onClick={() => copier(l.code)}>{copie === l.code ? "copié" : adresseCourte(l.code).replace("https://", "")}</button>{!l.actif && <span className="meta">, inactif</span>}</td>
                 <td className="meta" style={{ maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis" }}>{l.destination}</td>
                 <td className="num">{l.clics}</td>
-                <td className="meta">{l.sources.map((s) => `${s.cle} ${s.n}`).join(" · ") || "–"}</td>
+                <td className="meta">{l.sources.map((s) => `${s.cle} ${s.n}`).join(", ") || "–"}</td>
                 <td className="meta">{dateHeure(l.cree_le)}</td>
                 <td className="actions" style={{ flexWrap: "nowrap" }}>
-                  <button className="lien" onClick={() => setOuvert(l.code)}>Statistiques</button> · <button className="lien" onClick={() => basculer(l)}>{l.actif ? "Désactiver" : "Activer"}</button> · <button className="lien" onClick={() => supprimer(l)}>Supprimer</button>
+                  <button className="lien" onClick={() => setOuvert(l.code)}>Statistiques</button>, <button className="lien" onClick={() => basculer(l)}>{l.actif ? "Désactiver" : "Activer"}</button>, <button className="lien" onClick={() => supprimer(l)}>Supprimer</button>
                 </td>
               </tr>
             ))}

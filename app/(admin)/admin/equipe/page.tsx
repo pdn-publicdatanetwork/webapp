@@ -66,7 +66,7 @@ function Liste() {
       <div className="card" style={{ maxWidth: 720 }}>
         <p><button className="lien" onClick={() => setGere(null)}>← Retour</button></p>
         <h2 style={{ marginTop: 0 }}>{gere.nom}</h2>
-        <p className="meta">{gere.email} · créé le {dateHeure(gere.cree_le)} · {gere.actif ? "actif" : "suspendu"} · second facteur {gere.role !== "admin" ? "non requis" : gere.totp_actif ? "activé" : "à activer"}{gere.derniere_connexion_auth && <> · dernière connexion {dateHeure(gere.derniere_connexion_auth)}</>}</p>
+        <p className="meta">{gere.email}, créé le {dateHeure(gere.cree_le)}, {gere.actif ? "actif" : "suspendu"}, second facteur {gere.role !== "admin" ? "non requis" : gere.totp_actif ? "activé" : "à activer"}{gere.derniere_connexion_auth && <>, dernière connexion {dateHeure(gere.derniere_connexion_auth)}</>}</p>
         <label>Rôle</label>
         <div className="cartes-roles">
           {ROLES.map((r) => (
@@ -119,12 +119,12 @@ function Liste() {
               <tr key={c.user_id}>
                 <td><strong>{c.nom}</strong>{c.user_id === data.moi && <span className="meta"> (toi)</span>}</td>
                 <td>{c.email}</td>
-                <td className="meta">{libellesFournisseurs(c.fournisseurs, c.passkeys).join(" · ") || "–"}</td>
+                <td className="meta">{libellesFournisseurs(c.fournisseurs, c.passkeys).join(", ") || "–"}</td>
                 <td><span className={`badge-role ${c.role}`}>{LIBELLE_ROLE[c.role]}</span></td>
-                <td>{c.actif ? <span className="ok">Actif</span> : <span className="meta">Suspendu</span>}{c.actif && c.doit_changer_mdp && <span className="meta"> · 1re connexion à faire</span>}</td>
+                <td>{c.actif ? <span className="ok">Actif</span> : <span className="meta">Suspendu</span>}{c.actif && c.doit_changer_mdp && <span className="meta">, 1re connexion à faire</span>}</td>
                 <td className="actions" style={{ flexWrap: "nowrap" }}>
                   <button className="lien" onClick={() => { setMessage(null); setAdresse(""); setEnvoiA(""); setGere(c); }}>Gérer</button>
-                  {c.user_id !== data.moi && <> · <button className="lien" onClick={() => action(c, { action: c.actif ? "suspendre" : "reactiver" })}>{c.actif ? "Suspendre" : "Réactiver"}</button></>}
+                  {c.user_id !== data.moi && <>, <button className="lien" onClick={() => action(c, { action: c.actif ? "suspendre" : "reactiver" })}>{c.actif ? "Suspendre" : "Réactiver"}</button></>}
                 </td>
               </tr>
             ))}

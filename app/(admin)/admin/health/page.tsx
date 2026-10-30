@@ -38,8 +38,8 @@ export default function Sante() {
 
       <h2>Infrastructures</h2>
       <ul>
-        <li><Pastille ok={s.base_data.ok} label="Base de données (dataparl)" />{s.base_data.detail ? <span className="meta"> — {s.base_data.detail}</span> : null}</li>
-        <li><Pastille ok={s.base_auth.ok} label="Base d&rsquo;authentification" />{s.base_auth.detail ? <span className="meta"> — {s.base_auth.detail}</span> : null}</li>
+        <li><Pastille ok={s.base_data.ok} label="Base de données (dataparl)" />{s.base_data.detail ? <span className="meta"> : {s.base_data.detail}</span> : null}</li>
+        <li><Pastille ok={s.base_auth.ok} label="Base d&rsquo;authentification" />{s.base_auth.detail ? <span className="meta"> : {s.base_auth.detail}</span> : null}</li>
       </ul>
 
       <h2>Moniteurs UptimeRobot</h2>
@@ -59,10 +59,10 @@ export default function Sante() {
                 <tr key={m.id}>
                   <td>{m.friendly_name}<br /><span className="meta">{m.url}</span></td>
                   <td className={m.status === 2 ? "ok" : m.status === 0 ? "meta" : "erreur"}>{ETAT_UR[m.status] ?? "?"}</td>
-                  <td className="num">{m.average_response_time ? `${m.average_response_time} ms` : "—"}</td>
-                  <td className="num">{j1 ?? "—"} %</td>
-                  <td className="num">{j7 ?? "—"} %</td>
-                  <td className="num">{j30 ?? "—"} %</td>
+                  <td className="num">{m.average_response_time ? `${m.average_response_time} ms` : ":"}</td>
+                  <td className="num">{j1 ?? ":"} %</td>
+                  <td className="num">{j7 ?? ":"} %</td>
+                  <td className="num">{j30 ?? ":"} %</td>
                 </tr>
               );
             })}

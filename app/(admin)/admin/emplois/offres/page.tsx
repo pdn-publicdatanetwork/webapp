@@ -23,7 +23,7 @@ export default function Gestion() {
   const [info, setInfo] = useState<string | null>(null);
   return (
     <>
-      <h1>Emplois — offres</h1>
+      <h1>Emplois : offres</h1>
       <p className="meta"><a href={lien("admin", "/emplois")}>← File de revue</a></p>
       {info && <p className="meta">{info}</p>}
       <Nouvelle onCree={() => { setInfo("Offre enregistrée : elle attend la revue."); recharger(); }} setInfo={setInfo} />
@@ -40,9 +40,9 @@ export default function Gestion() {
           <tbody>
             {data.offres.map((o) => (
               <tr key={o.id}>
-                <td><strong>{o.titre}</strong>{o.review_note && <span className="meta"> · {o.review_note}</span>}</td>
-                <td className="meta">{o.chambre ? CHAMBRES.find((c) => c.valeur === o.chambre)?.libelle ?? o.chambre : "—"}</td>
-                <td className="meta">{[o.elu_prenom, o.elu_nom].filter(Boolean).join(" ") || "—"}{o.groupe_politique ? " · " + o.groupe_politique : ""}</td>
+                <td><strong>{o.titre}</strong>{o.review_note && <span className="meta">, {o.review_note}</span>}</td>
+                <td className="meta">{o.chambre ? CHAMBRES.find((c) => c.valeur === o.chambre)?.libelle ?? o.chambre : ":"}</td>
+                <td className="meta">{[o.elu_prenom, o.elu_nom].filter(Boolean).join(" ") || ":"}{o.groupe_politique ? ", " + o.groupe_politique : ""}</td>
                 <td className="meta">{dateHeure(o.publie_le)}</td>
                 <td><a href={o.source_url} target="_blank" rel="noopener noreferrer">lien</a></td>
                 <td>
@@ -50,7 +50,7 @@ export default function Gestion() {
                     <Actions id={o.id} fait={(s) => { setInfo(s); recharger(); }} />
                   ) : (
                     <>
-                      <span className="meta">{o.statut} · {dateHeure(o.updated_at)}{" · "}</span>
+                      <span className="meta">{o.statut}, {dateHeure(o.updated_at)}{", "}</span>
                       <Actions id={o.id} fait={(s) => { setInfo(s); recharger(); }} supprimerSeul />
                     </>
                   )}
@@ -113,7 +113,7 @@ function Nouvelle({ onCree, setInfo }: { onCree: () => void; setInfo: (s: string
       <form onSubmit={enregistrer}>
         <label>Chambre
           <select {...maj("chambre")}>
-            <option value="">—</option>
+            <option value="">:</option>
             {CHAMBRES.map((c) => <option key={c.valeur} value={c.valeur}>{c.libelle}</option>)}
           </select>
         </label>
