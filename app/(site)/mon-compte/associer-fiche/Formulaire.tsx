@@ -21,7 +21,7 @@ export default function Formulaire() {
   // Slug prérempli via ?slug=… : lu en client dans un effet (pas de
   // useSearchParams, qui exige une boundary Suspense et casse le prérendu).
   const [fiche, setFiche] = useState<Fiche | null>(null);
-  const [demande, setDemande] = useState<{ adresse: string; objet: string; code: string; expireLe: string } | null>(null);
+  const [demande, setDemande] = useState<{ adresse: string; objet: string; code: string; expireLe: string; domaine: string } | null>(null);
   const [statut, setStatut] = useState<Statut>(null);
   const [erreur, setErreur] = useState("");
   const [chargement, setChargement] = useState(false);
@@ -122,8 +122,7 @@ export default function Formulaire() {
         <>
           <h2>Envoyez l&apos;e-mail depuis votre adresse professionnelle</h2>
           <p>
-            L&apos;adresse attendue pour votre fiche est une adresse parlementaire : en <code>@clb-an.fr</code>,
-            <code> @clb.senat.fr</code> ou <code>@europarl.europa.eu</code> selon votre chambre.
+            L&apos;adresse attendue pour votre fiche est en <code>@{demande.domaine}</code>.
           </p>
           <p>L&apos;e-mail est entièrement prérempli : cliquez, puis « Envoyer ».</p>
           <p>
