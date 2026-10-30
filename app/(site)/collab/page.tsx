@@ -6,7 +6,7 @@ export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "Liste des collaborateurs parlementaires (AN, Sénat, Parlement européen)",
-  description: "La liste des collaborateurs parlementaires français : qui travaille pour quel député, sénateur ou député européen, aujourd'hui et depuis 2015 — fiche par collaborateur, listes complètes par chambre, recherche par élu, parti ou groupe.",
+  description: "La liste des collaborateurs parlementaires français : qui travaille pour quel député, sénateur ou député européen, aujourd'hui et depuis 2015, fiche par collaborateur, listes complètes par chambre, recherche par élu, parti ou groupe.",
   alternates: { canonical: "/collab" },
 };
 
@@ -15,11 +15,11 @@ export const metadata: Metadata = {
 const FAQ = [
   {
     q: "Qu'est-ce qu'un collaborateur parlementaire ?",
-    r: "Un collaborateur parlementaire est une personne recrutée par un élu — député, sénateur ou député européen — pour l'assister dans son travail de parlementaire : suivi des dossiers, rédaction, rendez-vous et relations avec les citoyens. DataParl' publie la liste de ces collaborateurs, élu par élu, avec la fonction de chacun.",
+    r: "Un collaborateur parlementaire est une personne recrutée par un élu (député, sénateur ou député européen) pour l'assister dans son travail de parlementaire : suivi des dossiers, rédaction, rendez-vous et relations avec les citoyens. DataParl' publie la liste de ces collaborateurs, élu par élu, avec la fonction de chacun.",
   },
   {
     q: "Où trouver la liste des collaborateurs d'un élu ?",
-    r: "La fiche de chaque élu — député, sénateur ou député européen — présente son équipe de collaborateurs en poste, et les listes complètes par chambre (Assemblée nationale, Sénat, Parlement européen) sont publiées avec l'élu employeur et la fonction de chaque collaborateur.",
+    r: "La fiche de chaque élu (député, sénateur ou député européen) présente son équipe de collaborateurs en poste, et les listes complètes par chambre (Assemblée nationale, Sénat, Parlement européen) sont publiées avec l'élu employeur et la fonction de chaque collaborateur.",
   },
   {
     q: "Depuis quand DataParl' suit-il les collaborateurs parlementaires ?",
@@ -31,8 +31,8 @@ export default function Collabs() {
   return (
     <>
       <h1>La liste des <span className="surligne">collaborateurs</span> parlementaires</h1>
-      <p className="lead">Qui travaille pour quel élu — député de l&apos;Assemblée nationale, sénateur ou député européen — aujourd&apos;hui et depuis 2015. Retrouve la fiche d&apos;une personne, ou cherche par élu, parti, groupe ou chambre et exporte une équipe en un clic.</p>
-      <p className="meta">Par chambre : <a href="/collab/an">liste des collaborateurs de l&apos;Assemblée nationale</a> · <a href="/collab/senat">liste des collaborateurs du Sénat</a> · <a href="/collab/pe">liste des collaborateurs du Parlement européen</a> · <a href="/collab/liste">liste complète, toutes chambres</a></p>
+      <p className="lead">Qui travaille pour quel élu (député de l&apos;Assemblée nationale, sénateur ou député européen), aujourd&apos;hui et depuis 2015. Retrouve la fiche d&apos;une personne, ou cherche par élu, parti, groupe ou chambre et exporte une équipe en un clic.</p>
+      <p className="meta">Par chambre : <a href="/collab/an">liste des collaborateurs de l&apos;Assemblée nationale</a>, <a href="/collab/senat">liste des collaborateurs du Sénat</a>, <a href="/collab/pe">liste des collaborateurs du Parlement européen</a>, <a href="/collab/liste">liste complète, toutes chambres</a></p>
       <RechercheGlobale placeholder="Nom d'un collaborateur ou d'un élu" />
       <h2>Les équipes</h2>
       <Equipes />

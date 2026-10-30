@@ -25,7 +25,8 @@ const fmtJour = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long"
 function phraseMouvement(m: Mouvement): string {
   if (m.type === "arrivee") return "arrive dans l'équipe de " + m.elu_nom;
   if (m.type === "depart") return "quitte l'équipe de " + m.elu_nom;
-  return "quitte l'équipe de " + (m.elu_origine_nom || "—") + " pour celle de " + m.elu_nom;
+  if (!m.elu_origine_nom) return "rejoint l'équipe de " + m.elu_nom;
+  return "quitte l'équipe de " + m.elu_origine_nom + " pour celle de " + m.elu_nom;
 }
 
 export default async function HubChambre({ chambre }: { chambre: "assemblee" | "senat" | "europarl" }) {
@@ -55,7 +56,7 @@ export default async function HubChambre({ chambre }: { chambre: "assemblee" | "
     },
     {
       q: "Quelle est la différence entre les collaborateurs de l'Assemblée nationale, du Sénat et du Parlement européen ?",
-      r: "Le métier — assister un élu dans son travail parlementaire — est le même, mais le statut et l'employeur varient selon la chambre. Le lexique de DataParl' détaille chaque régime : collaborateurs de député, régime du Sénat, assistants accrédités et assistants locaux du Parlement européen.",
+      r: "Le métier (assister un élu dans son travail parlementaire) est le même, mais le statut et l'employeur varient selon la chambre. Le lexique de DataParl' détaille chaque régime : collaborateurs de député, régime du Sénat, assistants accrédités et assistants locaux du Parlement européen.",
     },
   ];
   return (
@@ -68,7 +69,7 @@ export default async function HubChambre({ chambre }: { chambre: "assemblee" | "
         {enPoste > 0
           ? n + " collaborateurs parlementaires sont en poste " + AU[chambre] + ", d'après les données suivies quotidiennement par DataParl'. "
           : "Qui travaille pour quel élu " + AU[chambre] + " : "}
-        {"Retrouve la fiche d'une personne, cherche par élu, parti ou groupe, et exporte une équipe en un clic. Mise à jour quotidienne — page générée le " + maj + "."}
+        {"Retrouve la fiche d'une personne, cherche par élu, parti ou groupe, et exporte une équipe en un clic. Mise à jour quotidienne, page générée le " + maj + "."}
       </p>
       {(mix.taux !== null || top.length > 0 || mvts.length > 0) && (
         <section>
@@ -77,7 +78,7 @@ export default async function HubChambre({ chambre }: { chambre: "assemblee" | "
             <p>
               Mixité moyenne des équipes : <strong>{pct(mix.taux)}</strong>{" "}
               <span className="meta">
-                · {mix.equipes} équipes de 2 personnes ou plus, toutes de genre déterminé ·{" "}
+                , {mix.equipes} équipes de 2 personnes ou plus, toutes de genre déterminé,{" "}
                 <a href={"/mixiparl/" + seg + "/parlementaires"}>détail élu par élu</a>
               </span>
             </p>
@@ -87,7 +88,7 @@ export default async function HubChambre({ chambre }: { chambre: "assemblee" | "
             barre="surligne-vigi"
             note={
               <span className="meta">
-                Départs rapportés à l&apos;effectif moyen ·{" "}
+                Départs rapportés à l&apos;effectif moyen,{" "}
                 <a href={"/vigiparl/" + seg + "/parlementaires"}>classement complet</a>
               </span>
             }
@@ -96,7 +97,7 @@ export default async function HubChambre({ chambre }: { chambre: "assemblee" | "
               lien: "/parlementaires/" + encodeURIComponent(idParlementaire(r.chambre, r.elu_id, r.elu_cle, r.elu_nom)),
               libelle: r.elu_groupe ?? "",
               valeur: tauxTurnover(r) ?? 0,
-              texte: pct(tauxTurnover(r)) + " · " + r.departs_12m + " départs, équipe de " + r.effectif,
+              texte: pct(tauxTurnover(r)) + ", " + r.departs_12m + " départs, équipe de " + r.effectif,
             }))}
           />
           {mvts.length > 0 && (
@@ -105,7 +106,7 @@ export default async function HubChambre({ chambre }: { chambre: "assemblee" | "
               <ul className="liste-deps">
                 {mvts.map((m) => (
                   <li key={m.id}>
-                    <span className="meta">{fmtJour.format(new Date(m.date_event))} · </span>
+                    <span className="meta">{fmtJour.format(new Date(m.date_event))}, </span>
                     {m.collab_prenom} {m.collab_nom} {phraseMouvement(m)}
                   </li>
                 ))}
@@ -119,10 +120,10 @@ export default async function HubChambre({ chambre }: { chambre: "assemblee" | "
       )}
       <ul className="liste-deps">
         <li><a href={"/collab/" + seg + "/liste"}>{"La liste des collaborateurs " + PAR[chambre] + " (liste complète)"}</a></li>
-        <li><a href={"/collab/" + seg + "/trombinoscope"}>{TROMBINO[chambre]}</a> <span className="meta">· la planche de tous les collaborateurs en poste</span></li>
-        <li><a href="/collab/parti">Par parti politique</a> <span className="meta">· la liste des collaborateurs de chaque parti</span></li>
-        <li><a href="/groupe">Par groupe parlementaire</a> <span className="meta">· une fiche par groupe : élus et équipes</span></li>
-        <li><a href="/collab">Recherche par élu, groupe ou nom</a> <span className="meta">· compte gratuit, export CSV</span></li>
+        <li><a href={"/collab/" + seg + "/trombinoscope"}>{TROMBINO[chambre]}</a> <span className="meta">(la planche de tous les collaborateurs en poste)</span></li>
+        <li><a href="/collab/parti">Par parti politique</a> <span className="meta">(la liste des collaborateurs de chaque parti)</span></li>
+        <li><a href="/groupe">Par groupe parlementaire</a> <span className="meta">(une fiche par groupe : élus et équipes)</span></li>
+        <li><a href="/collab">Recherche par élu, groupe ou nom</a> <span className="meta">(compte gratuit, export CSV)</span></li>
         {chambre === "europarl" && (
           <>
             <li><a href="/collab/pe/reseau">Le réseau des collaborateurs</a></li>
@@ -130,10 +131,10 @@ export default async function HubChambre({ chambre }: { chambre: "assemblee" | "
             <li><a href="/collab/pe/prestataires">Prestataires de services</a></li>
           </>
         )}
-        <li><a href={"/vigiparl/" + seg}>VigiParl&apos; : le renouvellement des équipes</a> <span className="meta">· classement élu par élu</span></li>
+        <li><a href={"/vigiparl/" + seg}>VigiParl&apos; : le renouvellement des équipes</a> <span className="meta">(classement élu par élu)</span></li>
         <li><a href={"/mixiparl/" + seg + "/parlementaires"}>MixiParl&apos; : la mixité des équipes, élue par élue</a></li>
         <li><a href={MOUVEMENTS[chambre]}>Les mouvements de la chambre, mois par mois</a></li>
-        <li><a href="/lexique">Le lexique des collaborateurs parlementaires</a> <span className="meta">· définitions par chambre et statuts</span></li>
+        <li><a href="/lexique">Le lexique des collaborateurs parlementaires</a> <span className="meta">(définitions par chambre et statuts)</span></li>
       </ul>
       <h2 id="faq">Questions fréquentes</h2>
       <dl>

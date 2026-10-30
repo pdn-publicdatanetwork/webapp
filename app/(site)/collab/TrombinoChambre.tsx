@@ -31,19 +31,19 @@ export default async function TrombinoChambre({ chambre }: { chambre: "assemblee
   ]);
   const noms = new Map(collabs.map((c) => [c.collab_id, [c.prenom, c.nom].filter(Boolean).join(" ")]));
   const lignes: LigneCollab[] = rows
-    .map((r) => ({ nom: noms.get(r.collab_id) ?? "—", elu: r.elu_nom, fonction: r.fonction || "" }))
-    .filter((r) => r.nom !== "—");
+    .map((r) => ({ nom: noms.get(r.collab_id) ?? "", elu: r.elu_nom, fonction: r.fonction || "" }))
+    .filter((r) => r.nom !== "");
   const maj = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(new Date());
   const total = lignes.length;
 
   return (
     <>
-      <p className="meta"><a href={"/collab/" + seg}>&larr; Collaborateurs {CHAMBRE_LONG[chambre]}</a> · <a href="/collab">&larr; Tous les collaborateurs</a></p>
+      <p className="meta"><a href={"/collab/" + seg}>&larr; Collaborateurs {CHAMBRE_LONG[chambre]}</a>, <a href="/collab">&larr; Tous les collaborateurs</a></p>
       <h1>{TITRE[chambre]}</h1>
       <p className="lead">
         {total.toLocaleString("fr-FR")} collaborateurs parlementaires en poste {AU[chambre]} : la planche complète,
         avec initiales, élu employeur et fonction. Filtre par lettre, recherche et groupement par élu
-        ci-dessous. Mise à jour quotidienne — page générée le {maj}.
+        ci-dessous. Mise à jour quotidienne, page générée le {maj}.
       </p>
       {total === 0 ? (
         chambre === "europarl" ? (
@@ -62,7 +62,7 @@ export default async function TrombinoChambre({ chambre }: { chambre: "assemblee
       <p className="meta">
         {"Version tableau détaillée : "}
         <a href={"/collab/" + seg + "/liste"}>{"liste des collaborateurs " + PAR[chambre]}</a>
-        {" · "}
+        {", "}
         <a href="https://media.dataparl.fr/sheets/liste_collab_dataparl">DataParl&apos; Sheets</a>.
       </p>
       <script

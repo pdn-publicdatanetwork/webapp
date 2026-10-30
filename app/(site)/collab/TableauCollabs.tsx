@@ -120,7 +120,7 @@ export default function TableauCollabs({ rows, mode }: { rows: LigneCollab[]; mo
           <section key={elu} style={{ marginBottom: 20 }}>
             <h3 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 17 }}>
               {elu}
-              <span className="meta">{"· " + lignes.length + " collaborateur" + (lignes.length > 1 ? "s" : "")}</span>
+              <span className="meta">{", " + lignes.length + " collaborateur" + (lignes.length > 1 ? "s" : "")}</span>
             </h3>
             {mode === "trombi" ? <Cartes lignes={lignes} /> : <Tableau lignes={lignes} tri={tri} boutonTri={boutonTri} />}
           </section>
@@ -133,9 +133,9 @@ export default function TableauCollabs({ rows, mode }: { rows: LigneCollab[]; mo
 
       {totalPages > 1 && (
         <p className="meta" style={{ margin: "16px 0" }}>
-          {"Page " + pageOk + " sur " + totalPages + " — "}
+          {"Page " + pageOk + " sur " + totalPages + ", "}
           {pageOk > 1 && <button type="button" onClick={() => setPage(pageOk - 1)} style={{ all: "unset", cursor: "pointer", color: "inherit", textDecoration: "underline" }}>précédente</button>}
-          {pageOk > 1 && pageOk < totalPages ? " · " : ""}
+          {pageOk > 1 && pageOk < totalPages ? " " : ""}
           {pageOk < totalPages && <button type="button" onClick={() => setPage(pageOk + 1)} style={{ all: "unset", cursor: "pointer", color: "inherit", textDecoration: "underline" }}>suivante</button>}
         </p>
       )}
@@ -176,7 +176,7 @@ function Tableau({ lignes, tri, boutonTri }: { lignes: LigneCollab[]; tri: strin
             <tr key={r.nom + "-" + r.elu + "-" + i}>
               <td>{r.nom}</td>
               <td>{r.elu}</td>
-              <td>{r.fonction || "—"}</td>
+              <td>{r.fonction || ""}</td>
             </tr>
           ))}
         </tbody>

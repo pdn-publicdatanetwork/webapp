@@ -30,14 +30,14 @@ export default async function ListeChambre({ chambre, page: _page }: { chambre: 
   ]);
   const noms = new Map(collabs.map((c) => [c.collab_id, [c.prenom, c.nom].filter(Boolean).join(" ")]));
   const lignes: LigneCollab[] = rows
-    .map((r) => ({ nom: noms.get(r.collab_id) ?? "—", elu: r.elu_nom, fonction: r.fonction || "" }))
-    .filter((r) => r.nom !== "—");
+    .map((r) => ({ nom: noms.get(r.collab_id) ?? "", elu: r.elu_nom, fonction: r.fonction || "" }))
+    .filter((r) => r.nom !== "");
 
   const total = lignes.length;
 
   return (
     <>
-      <p className="meta"><a href={"/collab/" + seg}>&larr; Collaborateurs {CHAMBRE_LONG[chambre]}</a> · <a href="/collab">&larr; Tous les collaborateurs</a></p>
+      <p className="meta"><a href={"/collab/" + seg}>&larr; Collaborateurs {CHAMBRE_LONG[chambre]}</a>, <a href="/collab">&larr; Tous les collaborateurs</a></p>
       <h1>{"La liste des collaborateurs " + PAR[chambre]}</h1>
       <p className="lead">
         {total.toLocaleString("fr-FR")} collaborateurs parlementaires en poste {AU[chambre]}, avec le nom de chacun,
@@ -60,9 +60,9 @@ export default async function ListeChambre({ chambre, page: _page }: { chambre: 
         <TableauCollabs rows={lignes} mode="table" />
       )}
       <p className="meta">
-        {"Liste établie à partir de " + SOURCE[chambre] + ", mise à jour quotidiennement — page générée le " + maj + ". "}
+        {"Liste établie à partir de " + SOURCE[chambre] + ", mise à jour quotidiennement, page générée le " + maj + ". "}
         <a href={"/collab/" + seg + "/trombinoscope"}>{"Voir aussi le trombinoscope des collaborateurs"}</a>
-        {" · Version tableur détaillée : "}
+        {", version tableur détaillée : "}
         <a href="https://media.dataparl.fr/sheets/liste_collab_dataparl">DataParl&apos; Sheets</a>.
       </p>
       <script
@@ -72,7 +72,7 @@ export default async function ListeChambre({ chambre, page: _page }: { chambre: 
             "@context": "https://schema.org",
             "@type": "Dataset",
             name: "Liste des collaborateurs " + PAR[chambre],
-            description: "Liste référence des collaborateurs parlementaires en poste " + AU[chambre] + " : nom, élu employeur et fonction, mise à jour quotidiennement.",
+            description: "Liste référence des collaborateurs parlementaires en poste " + AU[chambre] + " : nom, élu employeur et fonction, mise à jour quotidienne.",
             url: "https://www.dataparl.fr/collab/" + seg + "/liste",
             creator: { "@type": "Organization", name: "DataParl'", url: "https://www.dataparl.fr" },
             isAccessibleForFree: true,

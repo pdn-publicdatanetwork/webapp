@@ -16,7 +16,7 @@ function csv(equipes: Equipe[]): string {
       lignes.push([CHAMBRE_LONG[e.chambre], nomAffiche(e.elu_nom), e.elu_groupe, e.elu_email ?? "", c.civilite, c.prenom, c.nom.toLocaleUpperCase("fr-FR"), c.fonction, c.email ?? ""].map(cell).join(";"));
     }
   }
-  return "﻿" + lignes.join("\r\n");
+  return "\ufeff" + lignes.join("\r\n");
 }
 
 function telecharger(nom: string, contenu: string) {
@@ -127,7 +127,7 @@ export default function Equipes() {
                 <a href={`/parlementaires/${encodeURIComponent(e.id_page)}`} style={{ color: "inherit" }}>{nomAffiche(e.elu_nom)}</a>
               </h2>
               <p className="meta" style={{ marginTop: 0 }}>
-                {CHAMBRE_LONG[e.chambre]}{e.elu_groupe ? ` · ${e.elu_groupe}` : ""}{e.elu_email ? ` · ${e.elu_email}` : ""}
+                {CHAMBRE_LONG[e.chambre]}{e.elu_groupe ? `, ${e.elu_groupe}` : ""}{e.elu_email ? `, ${e.elu_email}` : ""}
               </p>
               <table className="stats">
                 <thead><tr><th>Collaborateur</th><th>Fonction</th><th>Email (déduit)</th></tr></thead>
