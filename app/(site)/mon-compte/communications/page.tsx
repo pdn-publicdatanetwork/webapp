@@ -14,6 +14,14 @@ type Freq = "quotidienne" | "hebdomadaire";
 type Alertes = { actives: boolean; frequences: Freq[]; chambres: string[]; types: string[]; groupes: string[]; elus: string[]; partis: string[]; commissions: string[] };
 type Compte = { email: string; alertes: Alertes };
 
+// Petites icônes à gauche de chaque option, trait fin.
+function Icone({ nom }: { nom: "enveloppe" | "cloche" | "oeil" }) {
+  const p = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true } as React.SVGProps<SVGSVGElement>;
+  if (nom === "cloche") return (<svg {...p}><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2H4.5z" /><path d="M10 20a2 2 0 0 0 4 0" /></svg>);
+  if (nom === "oeil") return (<svg {...p}><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z" /><circle cx="12" cy="12" r="2.5" /></svg>);
+  return (<svg {...p}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></svg>);
+}
+
 export default function Communications() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [etat, setEtat] = useState<Etat | null>(null);
@@ -115,6 +123,10 @@ export default function Communications() {
     setMessage({ ok: true, texte: "C'est enregistré : les prochains envois suivront ces réglages." });
   }
 
+  const carte = { border: "1px solid rgba(15, 23, 42, 0.12)", borderRadius: 10, padding: "14px 16px" };
+  const titre = { display: "block", fontWeight: 600, fontSize: 15, color: "#1A1A1A" };
+  const desc = { display: "block", fontSize: 14, color: "#5C5C5C", marginTop: 2 };
+
   return (
     <div className="etroit">
       <StyleCompte />
@@ -124,28 +136,42 @@ export default function Communications() {
 
       <section className="section-compte">
         <h2>Emails DataParl'</h2>
-        <label style={{ display: "block", margin: "10px 0" }}>
-          <input type="checkbox" checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} />
-          La newsletter DataParl' — les nouveautés du service et les coulisses
-        </label>
-        <label style={{ display: "block", margin: "6px 0" }}>
-          <input type="checkbox" checked={alertesActives} onChange={(e) => setAlertesActives(e.target.checked)} />
-          Les alertes parlementaires — Daily et/ou Weekly, selon tes réglages dans <a href="/mon-compte/alertes">Mes alertes</a>
-        </label>
-        {!compte.alertes.actives && alertesActives && (
-          <>
-            <label style={{ display: "block", margin: "14px 0 6px" }}><input type="checkbox" checked={cgu} onChange={(e) => setCgu(e.target.checked)} /> J'accepte les <a href="/informations-legales/cgu">conditions d'utilisation</a></label>
-            <label style={{ display: "block", margin: "6px 0" }}><input type="checkbox" checked={consentement} onChange={(e) => setConsentement(e.target.checked)} /> Je consens à recevoir les e-mails DataParl'</label>
-          </>
-        )}
-        <label style={{ display: "block", margin: "6px 0" }}>
-          <input type="checkbox" checked={suivi} onChange={(e) => setSuivi(e.target.checked)} />
-          Le suivi des e-mails — pixels d'ouverture et liens tracés. Décoche pour ne plus être mesuré.
-        </label>
-        <p style={{ marginTop: 14 }}><button className="btn" onClick={enregistrer} disabled={enCours}>Enregistrer</button></p>
-        <p className="meta">
-          Les critères des alertes (chambres, types de mouvement, élus suivis) se règlent dans <a href="/mon-compte/alertes">Mes alertes</a>.
-        </p>
+        <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
+          <label style={{ ...carte, display: "flex", gap: 12, alignItems: "flex-start", cursor: "pointer" }}>
+            <input type="checkbox" checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} style={{ marginTop: 3 }} />
+            <span><Icone nom="enveloppe" /></span>
+            <span>
+              <span style={titre}>Newsletter DataParl'</span>
+              <span style={desc}>Les nouveautés du service et les coulisses</span>
+            </span>
+          </label>
+          <div style={carte}>
+            <label style={{ display: "flex", gap: 12, alignItems: "flex-start", cursor: "pointer" }}>
+              <input type="checkbox" checked={alertesActives} onChange={(e) => setAlertesActives(e.target.checked)} style={{ marginTop: 3 }} />
+              <span><Icone nom="cloche" /></span>
+              <span>
+                <span style={titre}>Alertes parlementaires</span>
+                <span style={desc}>Daily et/ou Weekly, selon tes réglages</span>
+              </span>
+            </label>
+            <p className="meta" style={{ margin: "10px 0 0", paddingLeft: 26 }}><a href="/mon-compte/alertes">Gérer les critères dans Mes alertes →</a></p>
+            {!compte.alertes.actives && alertesActives && (
+              <div style={{ marginTop: 10, paddingLeft: 26 }}>
+                <label style={{ display: "block", margin: "6px 0" }}><input type="checkbox" checked={cgu} onChange={(e) => setCgu(e.target.checked)} /> J'accepte les <a href="/informations-legales/cgu">conditions d'utilisation</a></label>
+                <label style={{ display: "block", margin: "6px 0" }}><input type="checkbox" checked={consentement} onChange={(e) => setConsentement(e.target.checked)} /> Je consens à recevoir les e-mails DataParl'</label>
+              </div>
+            )}
+          </div>
+          <label style={{ ...carte, display: "flex", gap: 12, alignItems: "flex-start", cursor: "pointer" }}>
+            <input type="checkbox" checked={suivi} onChange={(e) => setSuivi(e.target.checked)} style={{ marginTop: 3 }} />
+            <span><Icone nom="oeil" /></span>
+            <span>
+              <span style={titre}>Suivi des e-mails</span>
+              <span style={desc}>Pixels d'ouverture et liens tracés. Décoche pour ne plus être mesuré.</span>
+            </span>
+          </label>
+        </div>
+        <p style={{ marginTop: 18 }}><button className="btn" onClick={enregistrer} disabled={enCours}>Enregistrer</button></p>
       </section>
     </div>
   );

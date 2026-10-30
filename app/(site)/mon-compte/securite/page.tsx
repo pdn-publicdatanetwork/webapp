@@ -4,7 +4,7 @@ import type { Session, UserIdentity } from "@supabase/supabase-js";
 import { authBrowser, sessionActuelle } from "@/lib/supabaseBrowser";
 import StyleCompte from "../style-compte";
 
-const NOMS: Record<string, string> = { email: "Code par email", google: "Google", github: "GitHub", twitter: "X (Twitter)", slack_oidc: "Slack" };
+const NOMS: Record<string, string> = { email: "Code par email", google: "Google", github: "GitHub", twitter: "X", slack_oidc: "Slack" };
 const PROC: Array<"google" | "github" | "twitter"> = ["google", "github", "twitter"];
 
 // Sécurité et connexion : méthodes de connexion, mot de passe, validation
@@ -199,7 +199,7 @@ export default function Securite() {
           </div>
           <p><button className="btn" type="submit" disabled={enCours}>Définir ou changer mon mot de passe</button></p>
         </form>
-        <p className="meta">Une fois défini, tu peux te connecter avec ton adresse et ce mot de passe. Le code email et les fournisseurs (Google, GitHub, X) restent disponibles.</p>
+        <p className="meta">Une fois défini, tu pourras aussi te connecter avec ton email et ce mot de passe. Les autres méthodes (Google, GitHub, X) restent disponibles.</p>
       </section>
 
       <section className="section-compte">
@@ -220,7 +220,7 @@ export default function Securite() {
           </form>
         ) : (
           <>
-            <p>Une application d'authentification (Google Authenticator, 1Password, Aegis…) génère un code à 6 chiffres qui change de minute en minute.</p>
+            <p>Une application d'authentification (Google Authenticator, 1Password, Aegis…) génère un code à 6 chiffres qui change toutes les minutes.</p>
             <button className="btn secondaire" onClick={demarrer2fa} disabled={enCours}>Activer la validation en deux étapes</button>
           </>
         )}
@@ -228,12 +228,12 @@ export default function Securite() {
 
       <section className="section-compte">
         <h2>Clés d'accès et clés de sécurité</h2>
-        <p>Bientôt : Touch ID, Face ID, l'empreinte de ton téléphone ou une clé de sécurité physique — comme l'espace équipe en dispose déjà. En préparation.</p>
+        <p>Bientôt disponibles : Touch ID, Face ID, l'empreinte de ton téléphone ou une clé de sécurité physique.</p>
       </section>
 
       <section className="section-compte">
         <h2>Mon activité</h2>
-        <p>Les traces récentes sur ton compte : appareils et adresses IP.</p>
+        <p>Appareils et adresses IP récemment utilisés sur ton compte.</p>
         <a className="btn secondaire" href="/mon-compte/activite">Voir mon activité</a>
       </section>
     </div>
