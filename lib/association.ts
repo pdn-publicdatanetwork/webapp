@@ -20,6 +20,7 @@ import { SITE_URL } from "./env";
 // e-mail transactionnel directement à la personne à chaque aboutissement.
 
 export const ADRESSE_ASSOCIER = "associer@dataparl.fr"; // boîte écoutée par le webhook Resend (inbound)
+const FROM_ASSOCIATION = "comptes@dataparl.fr"; // expéditeur des e-mails d'association (domaine vérifié Resend)
 const EXPIRATION_H = 48;
 const ECHECS_MAX = 3;
 const GEL_JOURS = 30;
@@ -52,12 +53,18 @@ function domaineDe(email: string): string {
   return normalizeEmail(email).split("@")[1] ?? "";
 }
 
-// Variantes plausibles de la partie locale : prenom.nom, nom.prenom, tirets,
-// points et espaces ignorés, accents retirés.
-function variantesLocales(prenom: string, nom: string): Set<string> {
-  const p = sansAccents(prenom.toLowerCase()).replace(/[^a-z0-9]/g, "");
-  const n = sansAccents(nom.toLowerCase()).replace(/[^a-z0-9]/g, "");
-  return new Set([`${p}${n}`, `${n}${p}`].map((x) => x.replace(/[^a-z0-9]/g, "")));
+// Nom affiché de la fiche : « Prenom Nom » plutôt que le slug technique
+// (jamais montré tel quel à la personne). Repli à partir du slug
+// « nom_prenom___00006779 » si la fiche n'est pas disponible.
+function libelleFiche(prenom: string | null | undefined, nom: string | null | undefined, slug: string): string {
+  const p = (prenom ?? "").trim();
+  const n = (nom ?? "").trim();
+  if (p || n) return [p, n].filter(Boolean).join(" ");
+  const base = slug.replace(/_[0-9a-f]{8}$/, "");
+  const m = base.match(/^([a-z0-9]+)_([a-z0-9]+)$/i);
+  if (!m) return slug;
+  const maj = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  return maj(m[2]) + " " + maj(m[1]);
 }
 
 // Fiche fraîche (jamais mise en cache) : le contrôle d'identité de
@@ -68,6 +75,14 @@ async function ficheFraiche(slug: string): Promise<Collaborateur | null> {
   if (!m) return null;
   const { rows } = await dataQuery<Collaborateur>("collaborateurs", new URLSearchParams({ select: "*", collab_id: `eq.${m[1]}`, limit: "1" }), 0);
   return rows[0] ?? null;
+}
+
+// Variantes plausibles de la partie locale : prenom.nom, nom.prenom, tirets,
+// points et espaces ignorés, accents retirés.
+function variantesLocales(prenom: string, nom: string): Set<string> {
+  const p = sansAccents(prenom.toLowerCase()).replace(/[^a-z0-9]/g, "");
+  const n = sansAccents(nom.toLowerCase()).replace(/[^a-z0-9]/g, "");
+  return new Set([`${p}${n}`, `${n}${p}`].map((x) => x.replace(/[^a-z0-9]/g, "")));
 }
 
 // Code court non ambigu (jamais de O/0/I/1/L) : DP-XXXXX, à usage unique.
@@ -91,15 +106,26 @@ const LIBELLES_SLACK: Record<string, string> = {
   refus_domaine: "refus automatique (domaine inattendu)",
   code_expire: "code expiré",
 };
+const EMOJIS_SLACK: Record<string, string> = {
+  demande_creee: ":email:",
+  valide_auto: ":white_check_mark:",
+  a_traiter: ":mag:",
+  piece_deposee: ":paperclip:",
+  piece_admin: ":paperclip:",
+  gele: ":snowflake:",
+  refus_domaine: ":no_entry:",
+  code_expire: ":hourglass:",
+};
 
-export async function prevenirAssociation(evenement: string, slug: string | null, detail?: string): Promise<void> {
+export async function prevenirAssociation(evenement: string, fiche: string | null, detail?: string): Promise<void> {
   const libelle = LIBELLES_SLACK[evenement];
   if (!libelle) return;
-  const ligne = libelle + (slug ? " — fiche " + slug : "") + (detail ? " (" + detail + ")" : "");
+  const sujet = (EMOJIS_SLACK[evenement] ?? "•") + " Association · " + libelle;
+  const texte = (fiche ? "Fiche : " + fiche + "\n" : "") + (detail ?? "");
   await copieSlack(CANAL_ASSOCIATION, {
-    subject: "Association : " + ligne,
-    corpsHtml: "<p>" + ligne + "</p>",
-    text: ligne,
+    subject: sujet,
+    corpsHtml: "<p><strong>" + libelle + "</strong>" + (fiche ? " — fiche " + esc(fiche) : "") + (detail ? " (" + esc(detail) + ")" : "") + "</p>",
+    text: texte,
   });
 }
 
@@ -111,65 +137,77 @@ async function adresseDe(user_id: string): Promise<string | null> {
 
 // E-mails transactionnels directement à la personne : le résultat de sa
 // demande et, si besoin, la marche à suivre. Best-effort, jamais bloquant.
+// Expéditeur comptes@dataparl.fr, signés « L'équipe DataParl' » ; la fiche
+// est désignée par son nom affiché, jamais par le slug technique.
+const SIGNATURE_HTML = "<p style=\"margin-top:24px;color:#4A5670\">— L'équipe DataParl'</p>";
 
-async function accuseValidation(user_id: string, slug: string): Promise<void> {
+async function accuseValidation(user_id: string, fiche: string): Promise<void> {
   const email = await adresseDe(user_id);
   if (!email) return;
   await expedier({
     to: [email],
+    from: FROM_ASSOCIATION,
+    nomExpediteur: "L'équipe DataParl'",
     subject: "Votre fiche DataParl' est associée à votre compte",
     titre: "Fiche associée",
     corpsHtml:
-      "<p>Bonne nouvelle : votre demande d'association a été validée. La fiche <strong>" + esc(slug) + "</strong> est désormais rattachée à votre compte.</p>" +
+      "<p>Bonne nouvelle : votre demande d'association a été validée. La fiche <strong>" + esc(fiche) + "</strong> est désormais rattachée à votre compte.</p>" +
       bouton(SITE_URL + "/mon-compte/ma-fiche", "Compléter mon profil CV") +
-      "<p>Vous pouvez y importer votre CV (l'IA propose une mise en forme que vous validez point par point), ajouter une photo et présenter votre parcours comme vous l'entendez.</p>",
-    text: "Bonne nouvelle : votre demande d'association a été validée. La fiche " + slug + " est désormais rattachée à votre compte. Complétez votre profil CV : " + SITE_URL + "/mon-compte/ma-fiche",
+      "<p>Vous pouvez y importer votre CV (l'IA propose une mise en forme que vous validez point par point), ajouter une photo et présenter votre parcours comme vous l'entendez.</p>" +
+      SIGNATURE_HTML,
+    text: "Bonne nouvelle : votre demande d'association a été validée. La fiche " + fiche + " est désormais rattachée à votre compte. Complétez votre profil CV : " + SITE_URL + "/mon-compte/ma-fiche\n\n— L'équipe DataParl'",
     type: "transactionnel",
   }).catch((e) => console.error("accuse validation", String(e).slice(0, 200)));
 }
 
-async function accuseReception(user_id: string, slug: string): Promise<void> {
+async function accuseReception(user_id: string, fiche: string): Promise<void> {
   const email = await adresseDe(user_id);
   if (!email) return;
   await expedier({
     to: [email],
+    from: FROM_ASSOCIATION,
+    nomExpediteur: "L'équipe DataParl'",
     subject: "Votre demande d'association est en vérification",
     titre: "Vérification en cours",
     corpsHtml:
-      "<p>Nous avons bien reçu votre demande pour la fiche <strong>" + esc(slug) + "</strong>. La vérification prend un peu plus de temps : notre équipe l'examine et vous répond sous 48 h.</p>" +
-      "<p>Vous pouvez suivre l'avancement à tout moment depuis « Mon compte ».</p>",
-    text: "Nous avons bien reçu votre demande pour la fiche " + slug + ". La vérification prend un peu plus de temps : notre équipe l'examine et vous répond sous 48 h.",
+      "<p>Nous avons bien reçu votre demande pour la fiche <strong>" + esc(fiche) + "</strong>. La vérification prend un peu plus de temps : notre équipe l'examine et vous répond sous 48 h.</p>" +
+      "<p>Vous pouvez suivre l'avancement à tout moment depuis « Mon compte ».</p>" +
+      SIGNATURE_HTML,
+    text: "Nous avons bien reçu votre demande pour la fiche " + fiche + ". La vérification prend un peu plus de temps : notre équipe l'examine et vous répond sous 48 h.\n\n— L'équipe DataParl'",
     type: "transactionnel",
   }).catch((e) => console.error("accuse reception", String(e).slice(0, 200)));
 }
 
-async function accuseRefus(user_id: string, slug: string, gele: boolean): Promise<void> {
+async function accuseRefus(user_id: string, fiche: string, gele: boolean): Promise<void> {
   const email = await adresseDe(user_id);
   if (!email) return;
   await expedier({
     to: [email],
+    from: FROM_ASSOCIATION,
+    nomExpediteur: "L'équipe DataParl'",
     subject: gele ? "Vos demandes d'association DataParl' sont suspendues" : "Votre demande d'association n'a pas abouti",
     titre: gele ? "Demandes suspendues" : "Demande non aboutie",
     corpsHtml: gele
-      ? "<p>Après plusieurs tentatives depuis une adresse inattendue, les demandes d'association pour la fiche <strong>" + esc(slug) + "</strong> sont suspendues pendant 30 jours.</p><p>Si vous êtes bien la personne concernée, passez par le formulaire de contact : nous vérifierons votre identité au cas par cas.</p>" + bouton(SITE_URL + "/contact", "Nous écrire")
-      : "<p>La vérification de la fiche <strong>" + esc(slug) + "</strong> n'a pas pu aboutir : l'e-mail reçu ne correspond pas à l'adresse professionnelle attendue.</p><p>La marche à suivre :</p><ol><li>Relancez la demande depuis la page « Associer ma fiche », puis envoyez l'e-mail prérempli <strong>depuis votre adresse professionnelle parlementaire</strong>, sans modifier l'objet ni le code.</li><li>Si vous n'avez plus accès à cette adresse (fin de collaboration, par exemple), la même page permet de joindre une pièce justificative (badge ou carte AN/Sénat, contrat de travail, capture de votre messagerie interne). Notre équipe vous répond sous 48 h.</li><li>En cas de blocage persistant, écrivez-nous via le formulaire de contact.</li></ol>" + bouton(SITE_URL + "/mon-compte/associer-fiche", "Reprendre la vérification"),
+      ? "<p>Après plusieurs tentatives depuis une adresse inattendue, les demandes d'association pour la fiche <strong>" + esc(fiche) + "</strong> sont suspendues pendant 30 jours.</p><p>Si vous êtes bien la personne concernée, passez par le formulaire de contact : nous vérifierons votre identité au cas par cas.</p>" + bouton(SITE_URL + "/contact", "Nous écrire") + SIGNATURE_HTML
+      : "<p>La vérification de la fiche <strong>" + esc(fiche) + "</strong> n'a pas pu aboutir : l'e-mail reçu ne correspond pas à l'adresse professionnelle attendue.</p><p>La marche à suivre :</p><ol><li>Relancez la demande depuis la page « Associer ma fiche », puis envoyez l'e-mail prérempli <strong>depuis votre adresse professionnelle parlementaire</strong>, sans modifier l'objet ni le code.</li><li>Si vous n'avez plus accès à cette adresse (fin de collaboration, par exemple), la même page permet de joindre une pièce justificative (badge ou carte AN/Sénat, contrat de travail, capture de votre messagerie interne). Notre équipe vous répond sous 48 h.</li><li>En cas de blocage persistant, écrivez-nous via le formulaire de contact.</li></ol>" + bouton(SITE_URL + "/mon-compte/associer-fiche", "Reprendre la vérification") + SIGNATURE_HTML,
     text: gele
-      ? "Après plusieurs tentatives depuis une adresse inattendue, les demandes d'association pour la fiche " + slug + " sont suspendues pendant 30 jours. Passez par le formulaire de contact : " + SITE_URL + "/contact"
-      : "La vérification de la fiche " + slug + " n'a pas pu aboutir. Relancez la demande depuis " + SITE_URL + "/mon-compte/associer-fiche et envoyez l'e-mail prérempli depuis votre adresse professionnelle parlementaire, sans modifier l'objet ni le code. Sans accès à cette adresse, joignez une pièce justificative depuis la même page (réponse sous 48 h).",
+      ? "Après plusieurs tentatives depuis une adresse inattendue, les demandes d'association pour la fiche " + fiche + " sont suspendues pendant 30 jours. Passez par le formulaire de contact : " + SITE_URL + "/contact\n\n— L'équipe DataParl'"
+      : "La vérification de la fiche " + fiche + " n'a pas pu aboutir. Relancez la demande depuis " + SITE_URL + "/mon-compte/associer-fiche et envoyez l'e-mail prérempli depuis votre adresse professionnelle parlementaire, sans modifier l'objet ni le code. Sans accès à cette adresse, joignez une pièce justificative depuis la même page (réponse sous 48 h).\n\n— L'équipe DataParl'",
     type: "transactionnel",
   }).catch((e) => console.error("accuse refus", String(e).slice(0, 200)));
 }
 
 // Confirmation de dépôt d'une pièce justificative.
 export async function accuserPiece(user_id: string, slug: string): Promise<void> {
-  await accuseReception(user_id, slug);
+  const f = await ficheFraiche(slug).catch(() => null);
+  await accuseReception(user_id, libelleFiche(f?.prenom, f?.nom, slug));
 }
 
-async function journal(user_id: string, collab_id: string, evenement: string, detail: Record<string, unknown> = {}, slug?: string): Promise<void> {
+async function journal(user_id: string, collab_id: string, evenement: string, detail: Record<string, unknown> = {}, fiche?: string): Promise<void> {
   await authAdmin().from("associations_journal").insert({ user_id, collab_id, evenement, detail });
   // Copie Slack (silencieuse si aucun canal configuré).
-  const d = typeof detail?.from === "string" ? "expéditeur : " + String(detail.from) : undefined;
-  await prevenirAssociation(evenement, slug ?? null, d).catch(() => {});
+  const d = typeof detail?.from === "string" ? "Expéditeur : " + String(detail.from) : undefined;
+  await prevenirAssociation(evenement, fiche ?? null, d).catch(() => {});
 }
 
 // Crée (ou relance) une demande d'association pour une fiche.
@@ -178,6 +216,7 @@ export async function creerDemande(
 ): Promise<{ ok: true; objet: string; code: string; expireLe: string; domaine: string } | { ok: false; error: string }> {
   const c = await ficheFraiche(slug).catch(() => null);
   if (!c) return { ok: false, error: "fiche introuvable" };
+  const libelle = libelleFiche(c.prenom, c.nom, slug);
   const db = authAdmin();
   const { data: existante } = await db.from("associations_fiches")
     .select("*").eq("user_id", userId).eq("collab_slug", slug).maybeSingle();
@@ -193,7 +232,7 @@ export async function creerDemande(
     statut: "attente_email", echecs: existante?.echecs ?? 0, gel_jusqu_a: null, verifie_par: null, verifie_le: null,
   };
   await db.from("associations_fiches").upsert(row, { onConflict: "user_id,collab_slug" });
-  await journal(userId, row.collab_id, "demande_creee", {}, slug);
+  await journal(userId, row.collab_id, "demande_creee", {}, libelle);
   // Domaine attendu, affiché à la personne (jamais l'adresse dérivée).
   const domaine = domainesAttendusFiche(slug, c.chambres).join(", @");
   return { ok: true, objet: `ASSOC ${slug}`, code, expireLe, domaine };
@@ -242,6 +281,7 @@ export async function traiterEmailAssociation(m: {
   }
   const expiree = new Date(demande.expire_le).getTime() < Date.now();
   const fiche = await ficheFraiche(slug).catch(() => null);
+  const libelle = libelleFiche(fiche?.prenom, fiche?.nom, slug);
   const attendus = new Set(domainesAttendusFiche(slug, fiche?.chambres ?? ""));
   const domaineOk = attendus.has(domaineDe(m.from));
   const nomOk = fiche ? variantesLocales(fiche.prenom, fiche.nom).has(localNettoie(m.from)) : false;
@@ -261,12 +301,12 @@ export async function traiterEmailAssociation(m: {
       echecs, statut: gele ? "gele" : "attente_email",
       gel_jusqu_a: gele ? new Date(Date.now() + GEL_JOURS * 86400_000).toISOString() : null, maj_le: new Date().toISOString(),
     }).eq("id", demande.id);
-    await journal(demande.user_id, demande.collab_id, gele ? "gele" : "refus_domaine", { from: m.from }, slug);
-    if (gele) await accuseRefus(demande.user_id, slug, true);
+    await journal(demande.user_id, demande.collab_id, gele ? "gele" : "refus_domaine", { from: m.from }, libelle);
+    if (gele) await accuseRefus(demande.user_id, libelle, true);
     return true;
   }
   if (expiree) {
-    await journal(demande.user_id, demande.collab_id, "code_expire", { from: m.from }, slug);
+    await journal(demande.user_id, demande.collab_id, "code_expire", { from: m.from }, libelle);
     return true;
   }
   if (nomOk && spfDkimOk) {
@@ -277,16 +317,16 @@ export async function traiterEmailAssociation(m: {
       // preuve d'identité ; purge si la fiche est dissociée).
       email_preuve: normalizeEmail(m.from),
     }).eq("id", demande.id);
-    await journal(demande.user_id, demande.collab_id, "valide_auto", { from: m.from }, slug);
-    await accuseValidation(demande.user_id, slug);
+    await journal(demande.user_id, demande.collab_id, "valide_auto", { from: m.from }, libelle);
+    await accuseValidation(demande.user_id, libelle);
     return true;
   }
   // Domaine bon mais nom ou SPF/DKIM non concluant : revue manuelle, jamais
   // de décision automatique partielle. L'adresse est conservée pour la
   // revue admin, la décision reste manuelle.
   await db.from("associations_fiches").update({ statut: "a_traiter", maj_le: new Date().toISOString(), email_preuve: normalizeEmail(m.from) }).eq("id", demande.id);
-  await journal(demande.user_id, demande.collab_id, "a_traiter", { from: m.from, nomOk, spfDkimOk }, slug);
-  await accuseReception(demande.user_id, slug);
+  await journal(demande.user_id, demande.collab_id, "a_traiter", { from: m.from, nomOk, spfDkimOk }, libelle);
+  await accuseReception(demande.user_id, libelle);
   return true;
 }
 
@@ -297,14 +337,16 @@ export async function deciderManuellement(
   const db = authAdmin();
   const { data: demande } = await db.from("associations_fiches").select("*").eq("id", demandeId).maybeSingle();
   if (!demande) return { ok: false, error: "demande introuvable" };
+  const f = await ficheFraiche(demande.collab_slug).catch(() => null);
+  const libelle = libelleFiche(f?.prenom, f?.nom, demande.collab_slug);
   const maj =
     action === "valider" ? { statut: "verifie", verifie_par: "manuel", verifie_le: new Date().toISOString() } :
     action === "refuser" ? { statut: "refuse" } :
     { statut: "refuse", verifie_par: null, verifie_le: null, email_preuve: null };
   await db.from("associations_fiches").update({ ...maj, maj_le: new Date().toISOString() }).eq("id", demande.id);
-  await journal(demande.user_id, demande.collab_id, `manuel_${action}`, { par: admin.userId }, demande.collab_slug);
-  if (action === "valider") await accuseValidation(demande.user_id, demande.collab_slug);
-  if (action === "refuser") await accuseRefus(demande.user_id, demande.collab_slug, false);
+  await journal(demande.user_id, demande.collab_id, `manuel_${action}`, { par: admin.userId }, libelle);
+  if (action === "valider") await accuseValidation(demande.user_id, libelle);
+  if (action === "refuser") await accuseRefus(demande.user_id, libelle, false);
   return { ok: true };
 }
 
