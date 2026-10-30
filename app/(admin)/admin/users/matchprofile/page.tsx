@@ -51,6 +51,20 @@ async function joindrePiece(id: string, fichier: File) {
   return r.ok;
 }
 
+// Consultation d'une pièce : le jeton de session ne voyage pas dans une
+// navigation d'onglet, on télécharge donc le fichier via fetch authentifié
+// puis on l'ouvre localement (blob).
+async function voirPiece(id: string) {
+  const s = await sessionActuelle();
+  const r = await fetch("/api/admin/matchprofile/piece?id=" + id, {
+    headers: { Authorization: `Bearer ${s?.access_token}` },
+  });
+  if (!r.ok) return;
+  const url = URL.createObjectURL(await r.blob());
+  window.open(url, "_blank");
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
 export default function AdminMatchProfile() {
   const [filtre, setFiltre] = useState("a_traiter");
   const { data, err, recharger } = useRessource<{ demandes: Demande[] }>("/api/admin/matchprofile", {});
@@ -113,7 +127,7 @@ export default function AdminMatchProfile() {
                 {d.echecs > 0 ? ` · ${d.echecs} échec(s)` : ""}
                 {d.verifie_le ? ` vérifié le ${dateHeure(d.verifie_le)}` : ""}
                 {d.piece && (
-                  <>{" · "}<a href={"/api/admin/matchprofile/piece?id=" + d.piece.id} target="_blank" rel="noreferrer">voir la pièce ({d.piece.nom})</a></>
+                  <>{" · "}<button className="lien" onClick={() => voirPiece(d.piece!.id)}>voir la pièce ({d.piece.nom})</button></>
                 )}
               </td>
               <td>
