@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const c = chambreDuSegment(seg);
   if (!c) return {};
   return {
-    title: "Mixité des équipes par élu · " + CHAMBRE_LONG[c],
+    title: "Mixité des équipes par élu : " + CHAMBRE_LONG[c],
     description: "Le taux de mixité de l'équipe de chaque élu " + (LE_DE[c] ?? CHAMBRE_LONG[c]) + ".",
     alternates: { canonical: "/mixiparl/" + seg + "/parlementaires" },
   };
@@ -60,11 +60,11 @@ export default async function Page({ params, searchParams }: Props) {
         {croissant ? "De l'équipe la moins mixte à la plus mixte." : "De l'équipe la plus mixte à la moins mixte."} À taux
         égal, la plus grande équipe passe devant. Équipes de 2 personnes ou plus, toutes de genre déterminé, dans la
         grille DataParl&apos; Sheets (recherche Ctrl+F, export CSV).{" "}
-        <a href="/mixiparl/methode#taux-de-mixite">Définition</a> ·{" "}
-        <a href={croissant ? base : base + "?ordre=moins"}>{croissant ? "Les plus mixtes d'abord" : "Les moins mixtes d'abord"}</a> · {"Voir aussi : "}
+        <a href="/mixiparl/methode#taux-de-mixite">Définition</a>,{" "}
+        <a href={croissant ? base : base + "?ordre=moins"}>{croissant ? "Les plus mixtes d'abord" : "Les moins mixtes d'abord"}</a>, {"Voir aussi : "}
         {autres.map((s, i) => (
           <span key={s}>
-            {i > 0 ? " · " : ""}
+            {i > 0 ? ", " : ""}
             <a href={"/mixiparl/" + s + "/parlementaires"}>{LIBELLE[s]}</a>
           </span>
         ))}
@@ -84,7 +84,7 @@ export default async function Page({ params, searchParams }: Props) {
             lien: "/parlementaires/" + encodeURIComponent(idParlementaire(r.chambre, r.elu_id, r.elu_cle, r.elu_nom)),
             libelle: r.elu_groupe ?? "",
             valeur: tauxMixite(r) ?? 0,
-            texte: pct(tauxMixite(r)) + " · " + r.femmes + " femmes, " + r.hommes + " hommes",
+            texte: pct(tauxMixite(r)) + ", " + r.femmes + " femmes, " + r.hommes + " hommes",
           }))}
         />
       )}
@@ -95,7 +95,7 @@ export default async function Page({ params, searchParams }: Props) {
           id={"mixiparl-elus-" + seg}
           titre="Mixité des équipes, élu par élu"
           description=""
-          provenance="Vue stats_turnover_elus (API DataParl'/Supabase) · méthode MixiParl'"
+          provenance="Vue stats_turnover_elus (API DataParl'/Supabase), méthode MixiParl'"
           entetes={entetes}
           donnees={donnees}
           liens={liens}

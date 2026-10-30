@@ -27,7 +27,7 @@ export function imageOg({ surtitre, chiffre, legende, accent = "#FFD23F" }: Cart
 // ── Carte de partage « par élu » ──────────────────────────────────────────────
 // Photo officielle de l'élu (media.dataparl.fr), logo du module (DataParl',
 // VigiParl', MixiParl'), deux ou trois chiffres clés et la courbe mensuelle de
-// l'effectif de l'équipe — la même lecture que la fiche, en un coup d'œil.
+// l'effectif de l'équipe : la même lecture que la fiche, en un coup d'œil.
 export type Chiffre = { valeur: string; legende: string };
 type CarteElu = {
   module: "DataParl'" | "VigiParl'" | "MixiParl'";
@@ -83,7 +83,7 @@ export async function carteEluOg(c: CarteElu): Promise<ImageResponse> {
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", fontSize: 76, fontWeight: 700, lineHeight: 1.1, maxWidth: 820 }}>{c.nom}</div>
             <div style={{ display: "flex", fontSize: 34, color: "#C9D2EA", marginTop: 10, maxWidth: 820 }}>
-              {c.chiffres.map((ch) => `${ch.valeur} ${ch.legende}`).join("  ·  ")}
+              {c.chiffres.map((ch) => `${ch.valeur} ${ch.legende}`).join(", ")}
             </div>
           </div>
         </div>

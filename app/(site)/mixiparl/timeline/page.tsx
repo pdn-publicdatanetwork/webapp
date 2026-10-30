@@ -26,7 +26,7 @@ export default async function Timeline() {
         return (
           <section key={c}>
             <h2>{CHAMBRE_LONG[c]}</h2>
-            <BarresAnnuelles titre={`Taux de mixité moyen · ${CHAMBRE_LONG[c]}`} couleur="var(--mixi)" max={1} format={(v) => pct(v)}
+            <BarresAnnuelles titre={`Taux de mixité moyen : ${CHAMBRE_LONG[c]}`} couleur="var(--mixi)" max={1} format={(v) => pct(v)}
               points={serie.map((a) => ({ an: a.an, valeur: a.mixite_moyenne, detail: `${a.equipes} équipes` }))} />
             <div className="defile">
               <table className="stats">

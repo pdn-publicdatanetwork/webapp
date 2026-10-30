@@ -41,7 +41,7 @@ export default async function Page({ params }: Props) {
 
   return (
     <>
-      <p className="meta"><a href="/mixiparl">MixiParl&apos;</a> · <a href={"/mixiparl/" + (e.chambre === "assemblee" ? "an" : e.chambre === "senat" ? "senat" : "pe") + "/parlementaires"}>Classement {CHAMBRE_LONG[e.chambre]}</a></p>
+      <p className="meta"><a href="/mixiparl">MixiParl&apos;</a>, <a href={"/mixiparl/" + (e.chambre === "assemblee" ? "an" : e.chambre === "senat" ? "senat" : "pe") + "/parlementaires"}>Classement {CHAMBRE_LONG[e.chambre]}</a></p>
       <h1>La mixité de l&apos;équipe de <span className="surligne-mixi">{nom}</span></h1>
       <p className="lead">
         Femmes et hommes dans l&apos;équipe de collaborateurs de {nom}{e.groupe ? " (" + e.groupe + ")" : ""}, mois par mois depuis le début du

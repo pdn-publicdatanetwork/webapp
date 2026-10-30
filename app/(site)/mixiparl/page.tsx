@@ -97,7 +97,7 @@ export default async function MixiParl() {
           <h2><a className="titre-lien" href="/mixiparl/timeline">L&apos;évolution année par année →</a></h2>
           <div className="graphiques">
             {CHAMBRES.map((c) => (
-              <BarresAnnuelles key={c} titre={`Taux de mixité moyen · ${CHAMBRE_LONG[c]}`} couleur="var(--mixi)" max={1} format={(v) => pct(v)}
+              <BarresAnnuelles key={c} titre={`Taux de mixité moyen : ${CHAMBRE_LONG[c]}`} couleur="var(--mixi)" max={1} format={(v) => pct(v)}
                 points={annees.filter((a) => a.chambre === c).map((a) => ({ an: a.an, valeur: a.mixite_moyenne, detail: `${a.equipes} équipes, dont ${a.non_mixtes} non mixtes` }))} />
             ))}
           </div>

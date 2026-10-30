@@ -11,7 +11,7 @@ export default async function Image() {
   const m = mixite(rows);
   const an = mixiteMoyenne(rows.filter((r) => r.chambre === "assemblee"));
   return imageOg({
-    surtitre: "MixiParl' · la mixité des équipes", accent: "#B794FF",
+    surtitre: "MixiParl' : la mixité des équipes", accent: "#B794FF",
     chiffre: an.taux !== null ? pct(an.taux) : undefined,
     legende: an.taux !== null ? `de mixité en moyenne dans les équipes de l'Assemblée, et ${m.nonMixtes} équipes non mixtes au Parlement` : "Les équipes parlementaires sont-elles mixtes ?",
   });
