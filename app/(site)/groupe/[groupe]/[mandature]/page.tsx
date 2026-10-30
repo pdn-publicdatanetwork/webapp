@@ -124,7 +124,7 @@ async function MandatureChambre({ chambre, slug }: { chambre: string; slug: stri
         <a href="/groupe">← Tous les groupes</a>
       </p>
       <h1>
-        {CHAMBRE_LONG[chambre] : <span className="surligne">{libelle}</span>
+        {CHAMBRE_LONG[chambre]} : <span className="surligne">{libelle}</span>
       </h1>
       <p className="lead">
         Les {elus.length} élus ayant siégé à {CHAMBRE_LONG[chambre]} pendant la {libelle}, avec, pour chacun, le groupe de l&apos;époque.
