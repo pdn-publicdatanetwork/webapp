@@ -1,0 +1,80 @@
+/* Fiche collaborateur : distinction visuelle entre le parcours certifié
+   (listes officielles AN/Sénat, vérifié par DataParl') et le profil CV
+   déclaré par l'intéressé. */
+
+.bloc {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  padding: 18px 20px;
+  margin: 26px 0;
+}
+
+.blocDeclare {
+  border-color: var(--corail);
+}
+
+.enteteBloc {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.enteteBloc h2 {
+  margin: 0;
+}
+
+.badge {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.badgeOfficiel {
+  background: var(--ink, #102a43);
+  color: var(--card, #ffffff);
+}
+
+.badgeDeclare {
+  border: 1px solid var(--corail);
+  color: var(--corail);
+}
+
+.partager {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0 0;
+}
+
+.partager a,
+.partager button {
+  font: inherit;
+  font-size: .8rem;
+  padding: 5px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.partager a:hover,
+.partager button:hover {
+  border-color: var(--corail);
+}
+
+.partager .copieOk {
+  border-color: var(--corail);
+  color: var(--corail);
+}
