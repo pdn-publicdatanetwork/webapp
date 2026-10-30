@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { utilisateur } from "@/lib/userAuth";
 import { statutDemande } from "@/lib/association";
+import { dataAdmin } from "@/lib/supabaseAdmin";
 import {
   ajouterDeclaration, modifierDeclaration, mesDeclarations,
   supprimerDeclaration, supprimerProfil,
@@ -15,9 +16,18 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const u = await utilisateur(req);
   if (!u) return NextResponse.json({ error: "connexion requise" }, { status: 401 });
+  const association = await statutDemande(u.id);
+  // Photo de profil (bucket photos-profils, colonne collaborateurs.photo_url).
+  let photo_url: string | null = null;
+  if (association?.collab_id) {
+    const { data } = await dataAdmin().from("collaborateurs")
+      .select("photo_url").eq("collab_id", association.collab_id).maybeSingle();
+    photo_url = data?.photo_url ?? null;
+  }
   return NextResponse.json({
-    association: await statutDemande(u.id),
+    association,
     declarations: await mesDeclarations(u.id),
+    photo_url,
   });
 }
 
