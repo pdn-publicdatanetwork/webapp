@@ -15,6 +15,13 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
   hovers légers, transitions courtes, grille responsive (4 / 2 / 1 colonnes),
   chiffres et mouvements toujours dynamiques (ISR 300 s).
 
+- **Accueil v2, retours design** : suppression du liseré jaune sur la carte
+  « Recevoir les mouvements par email » (fond très léger à la place), logos
+  officiels des institutions sur les cartes de chiffres (Assemblée nationale,
+  Sénat, Parlement européen — SVG dans `public/logos/`), wordmarks VigiParl' et
+  MixiParl' en lieu et place des icônes génériques dans la grille Explorer, et
+  badges arrivée / départ / transfert plus contrastés.
+
 ## 2026-10-19
 
 - **Fiches groupes : « L'équipe du groupe » (PR #36)** : nouvelle section sur
