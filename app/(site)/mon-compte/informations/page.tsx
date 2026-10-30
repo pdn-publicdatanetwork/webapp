@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { sessionActuelle } from "@/lib/supabaseBrowser";
+import StyleCompte from "../style-compte";
 
 // Informations personnelles : prénom et nom du compte. Les comptes créés
 // avec Google ne peuvent pas les modifier ici : ils viennent du compte
@@ -65,8 +66,9 @@ export default function Informations() {
 
   return (
     <div className="etroit">
+      <StyleCompte />
       <h1>Informations <span className="surligne">personnelles</span></h1>
-      <p className="meta"><a className="lien" href="/mon-compte">Compte</a> / Informations personnelles</p>
+      <p className="meta fil-compte"><a className="lien" href="/mon-compte">Compte</a> / Informations personnelles</p>
       {message && <p className={message.ok ? "ok" : "erreur"} role="status">{message.texte}</p>}
 
       <section className="section-compte">

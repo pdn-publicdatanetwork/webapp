@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { authBrowser, sessionActuelle } from "@/lib/supabaseBrowser";
+import StyleCompte from "../style-compte";
 
 // Données et confidentialité : newsletter et suivi (pixels d'ouverture,
 // liens tracés), indépendants des alertes ; export et suppression du compte.
@@ -83,8 +84,9 @@ export default function DonneesConfidentialite() {
 
   return (
     <div className="etroit">
+      <StyleCompte />
       <h1>Données et <span className="surligne">confidentialité</span></h1>
-      <p className="meta"><a className="lien" href="/mon-compte">Compte</a> / Données et confidentialité</p>
+      <p className="meta fil-compte"><a className="lien" href="/mon-compte">Compte</a> / Données et confidentialité</p>
       {message && <p className={message.ok ? "ok" : "erreur"} role="status">{message.texte}</p>}
 
       <section className="section-compte">

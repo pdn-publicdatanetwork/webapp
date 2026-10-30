@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { sessionActuelle } from "@/lib/supabaseBrowser";
+import StyleCompte from "../style-compte";
 
 // Mes alertes : le réglage des alertes parlementaires du compte. Réglages
 // fins (élus, groupes, commissions) : page /alertes ; newsletter et suivi :
@@ -128,8 +129,9 @@ export default function MesAlertes() {
 
   return (
     <div className="etroit">
+      <StyleCompte />
       <h1>Mes <span className="surligne">alertes</span></h1>
-      <p className="meta"><a className="lien" href="/mon-compte">Compte</a> / Mes alertes</p>
+      <p className="meta fil-compte"><a className="lien" href="/mon-compte">Compte</a> / Mes alertes</p>
       {message && <p className={message.ok ? "ok" : "erreur"} role="status">{message.texte}</p>}
 
       <section className="section-compte">
@@ -161,8 +163,9 @@ export default function MesAlertes() {
           {compte.alertes.actives && <button className="danger" onClick={arreter} disabled={enCours}>Arrêter mes alertes</button>}
         </p>
         <p className="meta">
-          Critères avancés (élus suivis, groupes, commissions) : <a href="/alertes">page des alertes</a>.
-          Newsletter et suivi : <a href="/mon-compte/preferences">Données et confidentialité</a>.
+          <a href="/alertes">Critères avancés (élus suivis, groupes, commissions) →</a>
+          <br />
+          Newsletter et suivi : <a href="/mon-compte/preferences">Données et confidentialité</a>
         </p>
       </section>
     </div>

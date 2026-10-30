@@ -2,11 +2,13 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Session, UserIdentity } from "@supabase/supabase-js";
 import { authBrowser, sessionActuelle } from "@/lib/supabaseBrowser";
+import StyleCompte from "../style-compte";
 
 const NOMS: Record<string, string> = { email: "Code par email", google: "Google", github: "GitHub", twitter: "X (Twitter)", slack_oidc: "Slack" };
+const PROC: Array<"google" | "github" | "twitter"> = ["google", "github", "twitter"];
 
-// Sécurité et connexion : mot de passe, validation en deux étapes (TOTP),
-// clés d'accès (à venir), mon activité et méthodes de connexion associées.
+// Sécurité et connexion : méthodes de connexion, mot de passe, validation
+// en deux étapes (TOTP), clés d'accès (à venir) et mon activité.
 type Facteur = { id: string; nom: string };
 
 export default function Securite() {
@@ -158,13 +160,33 @@ export default function Securite() {
     setMessage({ ok: true, texte: "Méthode retirée." });
   }
 
-  const manquants = ["google", "github", "twitter"].filter((p) => !fournisseurs.includes(p));
-
   return (
     <div className="etroit">
+      <StyleCompte />
       <h1>Sécurité et <span className="surligne">connexion</span></h1>
-      <p className="meta"><a className="lien" href="/mon-compte">Compte</a> / Sécurité et connexion</p>
+      <p className="meta fil-compte"><a className="lien" href="/mon-compte">Compte</a> / Sécurité et connexion</p>
       {message && <p className={message.ok ? "ok" : "erreur"} role="status">{message.texte}</p>}
+
+      <section className="section-compte">
+        <h2>Méthodes de connexion</h2>
+        {fournisseurs.includes("email") && (
+          <p style={{ margin: "12px 0 4px" }}>Code par email <span className="meta">(connecté)</span></p>
+        )}
+        {PROC.map((p) => {
+          const identite = identites.find((i) => i.provider === p);
+          return (
+            <p key={p} style={{ margin: "12px 0", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+              <span>{NOMS[p]} <span className="meta">({identite ? "connecté" : "non associé"})</span></span>
+              {identite ? (
+                <button className="lien" onClick={() => retirer(identite)} disabled={enCours}>Retirer</button>
+              ) : (
+                <button className="secondaire" style={{ marginTop: 0, padding: "6px 12px", fontSize: "0.9rem" }} onClick={() => associer(p)} disabled={enCours}>Associer</button>
+              )}
+            </p>
+          );
+        })}
+        <p className="meta">Garde toujours au moins une méthode de connexion active.</p>
+      </section>
 
       <section className="section-compte">
         <h2>Mot de passe</h2>
@@ -213,28 +235,6 @@ export default function Securite() {
         <h2>Mon activité</h2>
         <p>Les traces récentes sur ton compte : appareils et adresses IP.</p>
         <a className="btn secondaire" href="/mon-compte/activite">Voir mon activité</a>
-      </section>
-
-      <section className="section-compte">
-        <h2>Connexions associées</h2>
-        <ul style={{ paddingLeft: 18, margin: "0 0 10px" }}>
-          {identites.map((i) => (
-            <li key={i.id} style={{ margin: "6px 0" }}>
-              {NOMS[i.provider] ?? i.provider}{" "}
-              <button className="lien" onClick={() => retirer(i)}>Retirer</button>
-            </li>
-          ))}
-          {fournisseurs.includes("email") && !identites.length && (
-            <li>Code par email</li>
-          )}
-        </ul>
-        {manquants.length > 0 && (
-          <p>
-            {manquants.map((p) => (
-              <button key={p} className="secondaire" style={{ margin: "0 6px 6px 0" }} onClick={() => associer(p as "google" | "github" | "twitter")}>Associer {NOMS[p]}</button>
-            ))}
-          </p>
-        )}
       </section>
     </div>
   );

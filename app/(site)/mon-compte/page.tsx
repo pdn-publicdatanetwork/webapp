@@ -113,7 +113,7 @@ export default function MonCompte() {
   return (
     <div className="etroit">
       <style>{`
-        .compte-item { display: flex; align-items: center; gap: 16px; min-height: 72px; padding: 12px 14px; margin: 0 -14px; text-decoration: none; border-radius: 10px; transition: background 0.15s ease; }
+        .compte-item { display: flex; align-items: center; gap: 16px; min-height: 76px; padding: 12px 14px; margin: 0 -14px; text-decoration: none; border-radius: 10px; transition: background 0.15s ease; }
         .compte-item + .compte-item { border-top: 1px solid rgba(15, 23, 42, 0.06); }
         .compte-item:hover, .compte-item:focus-visible { background: rgba(15, 23, 42, 0.05); }
       `}</style>
