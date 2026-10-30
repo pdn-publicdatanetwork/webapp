@@ -60,7 +60,17 @@ function variantesLocales(prenom: string, nom: string): Set<string> {
   return new Set([`${p}${n}`, `${n}${p}`].map((x) => x.replace(/[^a-z0-9]/g, "")));
 }
 
-// Fiche fraîche (jamais mise en cache) : le contrôle d'identité de\n// l'association ne doit pas dépendre d'une lecture potentiellement\n// périmée (fiche renommée ou créée récemment).\nasync function ficheFraiche(slug: string): Promise<Collaborateur | null> {\n  const m = slug.match(/([0-9a-f]{8})$/);\n  if (!m) return null;\n  const { rows } = await dataQuery<Collaborateur>("collaborateurs", new URLSearchParams({ select: "*", collab_id: `eq.${m[1]}`, limit: "1" }), 0);\n  return rows[0] ?? null;\n}\n\n// Code court non ambigu (jamais de O/0/I/1/L) : DP-XXXXX, à usage unique.
+// Fiche fraîche (jamais mise en cache) : le contrôle d'identité de
+// l'association ne doit pas dépendre d'une lecture potentiellement
+// périmée (fiche renommée ou créée récemment).
+async function ficheFraiche(slug: string): Promise<Collaborateur | null> {
+  const m = slug.match(/([0-9a-f]{8})$/);
+  if (!m) return null;
+  const { rows } = await dataQuery<Collaborateur>("collaborateurs", new URLSearchParams({ select: "*", collab_id: `eq.${m[1]}`, limit: "1" }), 0);
+  return rows[0] ?? null;
+}
+
+// Code court non ambigu (jamais de O/0/I/1/L) : DP-XXXXX, à usage unique.
 function codeCourt(): string {
   const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
   let s = "";
