@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { utilisateur } from "@/lib/userAuth";
 import { statutDemande } from "@/lib/association";
+import { authAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -11,6 +12,8 @@ export const maxDuration = 60;
 // CLE_EXTRACTION_CV, et renvoie les propositions à l'utilisateur.
 // Le CV n'est jamais stocké ni journalisé : la réponse seule est affichée,
 // et rien n'est publié sans validation explicite dans la page Ma fiche.
+// L'acceptation des CGU du Chat (case cochée) est enregistrée à chaque
+// import : trace de consentement horodatée (table cgu_acceptees).
 
 const DPCHAT_URL = (process.env.DPCHAT_URL ?? "https://chat.dataparl.fr").replace(/\/$/, "");
 const TAILLE_MAX = 8 * 1024 * 1024; // base64 d'un PDF d'environ 5 Mo
@@ -25,9 +28,17 @@ export async function POST(req: Request) {
   const cle = process.env.CLE_EXTRACTION_CV ?? "";
   if (!cle) return NextResponse.json({ error: "import non configuré" }, { status: 503 });
 
-  const { pdf } = await req.json().catch(() => ({}));
+  const corps = await req.json().catch(() => ({}));
+  const pdf = corps?.pdf;
   if (typeof pdf !== "string" || pdf.length < 100 || pdf.length > TAILLE_MAX) {
     return NextResponse.json({ error: "pdf invalide ou trop volumineux (5 Mo max)" }, { status: 400 });
+  }
+
+  // Trace de consentement : la case « j'accepte les CGU » est cochée
+  // côté client avant chaque import ; on l'horodate ici (preuve RGPD).
+  if (corps?.accepte_cgu === true) {
+    await authAdmin().from("cgu_acceptees")
+      .upsert({ user_id: u.id, cgu: "chat" }, { onConflict: "user_id,cgu" });
   }
 
   try {

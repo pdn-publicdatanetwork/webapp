@@ -234,13 +234,35 @@
   text-underline-offset: 3px;
 }
 
-/* Import de CV : bouton d'appel + zone de propositions à valider. */
+/* Import de CV : bouton d'appel, case d'acceptation des CGU (enregistrée
+   au premier import), propositions à valider. */
 .importZone {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 20px;
+}
+
+.importZone button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.cguCase {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: .85rem;
+  color: var(--ink);
+  flex: 1;
+  min-width: 220px;
+  cursor: pointer;
+}
+
+.cguCase input {
+  margin-top: 3px;
+  accent-color: var(--corail);
 }
 
 .importNote {
