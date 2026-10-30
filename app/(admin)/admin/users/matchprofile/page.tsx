@@ -5,19 +5,23 @@ import { useRessource, dateHeure } from "@/app/_components/admin/utils";
 import { sessionActuelle } from "@/lib/supabaseBrowser";
 
 // Revue des associations de fiches collaborateurs : file « à traiter »
-// (contrôles non concluants, demandes du formulaire de contact), décisions
-// manuelles valider/refuser/dissocier, historique des validations
-// automatiques et des refus. Règles affichées en haut de page : jamais de
-// validation automatique partielle, tout écart arrive ici.
+// (contrôles non concluants, pièces justificatives), décisions manuelles
+// valider/refuser/dissocier, historique des validations automatiques et
+// des refus. Règles affichées en haut de page : jamais de validation
+// automatique partielle, tout écart arrive ici. Les pièces justificatives
+// (fallback sans adresse parlementaire) se consultent et se déposent ici,
+// puis sont purgées à la décision (30 jours maximum).
 
 type Demande = {
   id: string; user_id: string; email: string | null; collab_slug: string; collab_id: string;
   statut: string; echecs: number; gel_jusqu_a: string | null; expire_le: string | null;
   verifie_par: string | null; verifie_le: string | null; cree_le: string;
+  piece: { id: string; nom: string; cree_le: string } | null;
 };
 
 const FILTRES = [
   { code: "a_traiter", libelle: "À traiter" },
+  { code: "piece_jointe", libelle: "Pièces à vérifier" },
   { code: "attente_email", libelle: "En attente d'e-mail" },
   { code: "verifie", libelle: "Validées" },
   { code: "refuse", libelle: "Refusées" },
@@ -34,6 +38,19 @@ async function agir(id: string, action: string) {
   return r.ok;
 }
 
+async function joindrePiece(id: string, fichier: File) {
+  const s = await sessionActuelle();
+  const f = new FormData();
+  f.append("demande_id", id);
+  f.append("fichier", fichier);
+  const r = await fetch("/api/admin/matchprofile/piece", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${s?.access_token}` },
+    body: f,
+  });
+  return r.ok;
+}
+
 export default function AdminMatchProfile() {
   const [filtre, setFiltre] = useState("a_traiter");
   const { data, err, recharger } = useRessource<{ demandes: Demande[] }>("/api/admin/matchprofile", {});
@@ -42,6 +59,13 @@ export default function AdminMatchProfile() {
   const agirPuisRecharger = useCallback(async (id: string, action: string) => {
     setEnCours(id);
     await agir(id, action);
+    setEnCours("");
+    recharger();
+  }, [recharger]);
+
+  const joindrePuisRecharger = useCallback(async (id: string, fichier: File) => {
+    setEnCours(id);
+    await joindrePiece(id, fichier);
     setEnCours("");
     recharger();
   }, [recharger]);
@@ -61,6 +85,7 @@ export default function AdminMatchProfile() {
         <li>3 échecs pour un même compte et une même fiche : demandes gelées 30 jours, compte invité à passer par le formulaire de contact.</li>
         <li>Toute décision (auto ou manuelle) est journalisée dans associations_journal.</li>
         <li>La dissociation manuelle est possible à tout moment depuis cette page.</li>
+        <li>Pièce justificative (fallback sans adresse parlementaire) : consultation et dépôt ici ; purge à la décision ou sous 30 jours.</li>
       </ol>
 
       <div className="onglets">
@@ -87,13 +112,28 @@ export default function AdminMatchProfile() {
                 {d.gel_jusqu_a ? `gelé jusqu'au ${d.gel_jusqu_a.slice(0, 10)}` : ""}
                 {d.echecs > 0 ? ` · ${d.echecs} échec(s)` : ""}
                 {d.verifie_le ? ` vérifié le ${dateHeure(d.verifie_le)}` : ""}
+                {d.piece && (
+                  <>{" · "}<a href={"/api/admin/matchprofile/piece?id=" + d.piece.id} target="_blank" rel="noreferrer">voir la pièce ({d.piece.nom})</a></>
+                )}
               </td>
               <td>
                 {enCours === d.id ? "…" : (
                   <>
                     {d.statut !== "verifie" && <button onClick={() => agirPuisRecharger(d.id, "valider")}>Valider</button>}{" "}
                     <button onClick={() => agirPuisRecharger(d.id, "dissocier")}>Dissocier</button>{" "}
-                    <button onClick={() => agirPuisRecharger(d.id, "refuser")}>Refuser</button>
+                    <button onClick={() => agirPuisRecharger(d.id, "refuser")}>Refuser</button>{" "}
+                    <label className="lien">
+                      Joindre une pièce
+                      <input
+                        type="file" hidden
+                        accept="application/pdf,image/jpeg,image/png"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) joindrePuisRecharger(d.id, f);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
                   </>
                 )}
               </td>

@@ -25,6 +25,9 @@ export default function Formulaire() {
   const [statut, setStatut] = useState<Statut>(null);
   const [erreur, setErreur] = useState("");
   const [chargement, setChargement] = useState(false);
+  const [pieceMsg, setPieceMsg] = useState("");
+  const [pieceErr, setPieceErr] = useState("");
+  const [pieceEnvoi, setPieceEnvoi] = useState(false);
 
   const rafraichir = useCallback(async () => {
     const { ok, data } = await appel("/api/compte/association");
@@ -57,6 +60,26 @@ export default function Formulaire() {
     setChargement(false);
     if (!ok) return setErreur(data.error ?? "erreur");
     setDemande(data);
+    rafraichir();
+  }
+
+  // Fallback sans adresse parlementaire : dépôt d'une pièce justificative.
+  async function envoyerPiece(fichier: File) {
+    if (!fiche) return;
+    setPieceErr(""); setPieceMsg(""); setPieceEnvoi(true);
+    const s = await sessionActuelle();
+    const f = new FormData();
+    f.append("slug", fiche.slug);
+    f.append("fichier", fichier);
+    const r = await fetch("/api/compte/association/piece", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${s?.access_token}` },
+      body: f,
+    });
+    setPieceEnvoi(false);
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) return setPieceErr(data.error ?? "envoi impossible");
+    setPieceMsg("Pièce reçue. L'équipe vérifie votre identité et vous répond sous 48 h.");
     rafraichir();
   }
 
@@ -143,10 +166,44 @@ export default function Formulaire() {
           Nous avons bien reçu votre e-mail : la vérification prend un peu plus de temps. Nous vous répondons sous 48 h.
         </p>
       )}
+      {s === "piece_jointe" && (
+        <p className="card">
+          Pièce reçue : l&apos;équipe vérifie votre identité et vous répond sous 48 h.
+        </p>
+      )}
       {s === "attente_email" && !demande && statut?.expire_le && (
         <p className="meta">
           Une demande est déjà en cours (expire le {dateHeure(statut.expire_le)}). Relancez-la pour recevoir un nouveau code.
         </p>
+      )}
+
+      {fiche && s !== "verifie" && s !== "gele" && (
+        <>
+          <h2>Pas accès à votre adresse parlementaire ?</h2>
+          <p className="meta">
+            Ancien collaborateur, messagerie inaccessible : joignez une pièce justificative (badge ou carte
+            AN/Sénat, contrat de travail, capture de votre messagerie interne). PDF, JPEG ou PNG, 5 Mo maximum.
+            Elle n&apos;est jamais publiée : elle sert uniquement à la vérification, l&apos;équipe la supprime
+            après décision (30 jours maximum) et vous répond sous 48 h.
+          </p>
+          <p>
+            <label className="bouton">
+              Joindre une pièce justificative
+              <input
+                type="file" hidden
+                accept="application/pdf,image/jpeg,image/png"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) envoyerPiece(f);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          </p>
+          {pieceEnvoi && <p className="meta">Envoi en cours…</p>}
+          {pieceErr && <p className="erreur">{pieceErr}</p>}
+          {pieceMsg && <p className="card">{pieceMsg}</p>}
+        </>
       )}
     </>
   );
