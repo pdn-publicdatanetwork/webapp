@@ -17,7 +17,9 @@ import { estPageReseaux, journaliserVueReseaux } from "./lib/vuesReseaux";
 //                           /connexion et /api/* servis tels quels
 //   admin.dataparl.fr       /x -> /admin/x, sauf /connexion et /api/*
 //   webmail.dataparl.fr    /x -> /webmail/x, sauf /connexion et /api/*
-//   mail.dataparl.fr        /lire/<jeton> (version en ligne des emails), le reste -> www
+//   mail.dataparl.fr        /lire/<jeton> (version en ligne des emails) et
+//                           pages de consentement (/preferences, /desinscription,
+//                           /api/desinscription), le reste -> www
 //   link.dataparl.fr        /<code> -> /l/<code> (liens tracés), le reste -> www
 //   media.dataparl.fr       photos des élus et des ministres (/an|senat|pe|gouv)/…,
 //                           photos de profil déclarées des collaborateurs
@@ -190,6 +192,13 @@ export async function proxy(req: NextRequest) {
   // mail.cavaparlement.eu : uniquement les versions en ligne des emails.
   if (host === `mail.${DOMAINE}`) {
     if (path.startsWith("/lire/")) return protege(NextResponse.next());
+    // Pages de consentement (préférences, désinscription) et leur API : les
+    // liens des emails — pied des alertes et mailings, en-tête
+    // List-Unsubscribe des webmails — pointent sur cet hôte, comme les
+    // versions en ligne (/lire/).
+    if (path === "/preferences" || path.startsWith("/preferences/") ||
+        path === "/desinscription" || path.startsWith("/desinscription/") ||
+        path === "/api/desinscription") return protege(NextResponse.next());
     // Favicon du domaine : Σ' blanc sur rouge, servi depuis /mail/*.
     if (path === "/icon.svg" || path === "/apple-icon") {
       const url = req.nextUrl.clone();
@@ -272,7 +281,7 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
     if (path === "/icon.svg" || path === "/apple-icon") {
       const url = req.nextUrl.clone();
       url.pathname = `/media${path}`;
-      return NextResponse.rewrite(url);
+      return protege(NextResponse.rewrite(url));
     }
     const autorise =
       path === "/sheets" || path.startsWith("/sheets/") ||
@@ -344,7 +353,7 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
     return vers(req, `www.${DOMAINE}`, "/", 308);
   }
 
-  for (const espace of ["admin", "webmail"] as const) {
+  for (const espace de ["admin", "webmail"] as const) {
     if (host !== `${espace}.${DOMAINE}`) continue;
     let res: NextResponse;
     if (path.startsWith("/api/") || path.startsWith(`/${espace}`) || path === "/connexion") res = NextResponse.next();
