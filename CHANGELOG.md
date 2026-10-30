@@ -22,6 +22,12 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
   MixiParl' en lieu et place des icônes génériques dans la grille Explorer, et
   badges arrivée / départ / transfert plus contrastés.
 
+- **Accueil v2, retours (2)** : description des cartes VigiParl' et MixiParl'
+  repoussée sous le wordmark (fin du texte collé au nom), hauteur des logos
+  officiels harmonisée (32 px, retrait identique), badges arrivée / départ /
+  transfert renforcés (32 %), hover des cartes Explorer adouci (bordure bleue
+  plus discrète, ombre légère, sans translation).
+
 ## 2026-10-19
 
 - **Fiches groupes : « L'équipe du groupe » (PR #36)** : nouvelle section sur

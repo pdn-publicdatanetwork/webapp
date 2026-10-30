@@ -711,9 +711,9 @@ main .wrap [contenteditable="true"] { outline: 2px dashed color-mix(in srgb, var
 .accueil-mouvements ul.mouvements li { padding: 12px 10px; border-radius: 10px; transition: background .15s ease; }
 .accueil-mouvements ul.mouvements li:hover { background: color-mix(in srgb, var(--bleu) 5%, transparent); }
 .accueil-mouvements .badge { display: inline-block; text-align: center; padding: 3px 10px; border-radius: 999px; }
-.badge.arrivee { background: color-mix(in srgb, var(--arrivee) 22%, transparent); }
-.badge.depart { background: color-mix(in srgb, var(--depart) 22%, transparent); }
-.badge.transfert { background: color-mix(in srgb, var(--transfert) 22%, transparent); }
+.badge.arrivee { background: color-mix(in srgb, var(--arrivee) 32%, transparent); }
+.badge.depart { background: color-mix(in srgb, var(--depart) 32%, transparent); }
+.badge.transfert { background: color-mix(in srgb, var(--transfert) 32%, transparent); }
 .actions-accueil { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
 .actions-accueil .btn { margin-top: 0; }
 /* Carte alertes email, légèrement mise en avant */
@@ -723,9 +723,9 @@ main .wrap [contenteditable="true"] { outline: 2px dashed color-mix(in srgb, var
 /* Grille Explorer : 8 cartes (4 colonnes desktop, 2 tablette, 1 mobile) */
 ul.explorer { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .explorer a { display: block; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--card); text-decoration: none; color: var(--ink); transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
-.explorer a:hover, .explorer a:focus-visible { border-color: color-mix(in srgb, var(--bleu) 45%, transparent); box-shadow: 0 6px 18px rgba(7, 26, 65, .08); transform: translateY(-1px); }
+.explorer a:hover, .explorer a:focus-visible { border-color: color-mix(in srgb, var(--bleu) 22%, transparent); box-shadow: 0 4px 12px rgba(7, 26, 65, .05); }
 .explorer strong { display: block; margin-bottom: 2px; }
-.explorer a > span:last-child { color: var(--muted); font-size: .88rem; }
+.explorer a > span:last-child { display: block; color: var(--muted); font-size: .88rem; }
 @media (max-width: 1023px) {
   ul.explorer { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .chiffres.hero { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -739,9 +739,9 @@ ul.explorer { list-style: none; padding: 0; margin: 0; display: grid; grid-templ
 }
 
 /* ── Accueil v2, retours : logos officiels et wordmarks ─────────────────── */
-.chiffres.hero img.logo-org { height: 30px; width: auto; max-width: 130px; object-fit: contain; margin-bottom: 10px; align-self: flex-start; }
+.chiffres.hero img.logo-org { display: block; height: 32px; width: auto; max-width: 150px; object-fit: contain; margin-bottom: 12px; align-self: flex-start; }
 @media (prefers-color-scheme: dark) {
   /* Les logos officiels (bleus sur fond transparent) passent sur une pastille claire en mode nuit. */
   .chiffres.hero img.logo-org { background: #FFFDF5; border-radius: 6px; padding: 4px 6px; }
 }
-.marque-carte { display: inline-block; font-family: var(--font-spectral), "Spectral", serif; font-weight: 700; font-size: 1.25rem; line-height: 1.15; margin-bottom: 10px; white-space: nowrap; }
+.marque-carte { display: block; font-family: var(--font-spectral), "Spectral", serif; font-weight: 700; font-size: 1.25rem; line-height: 1.15; margin-bottom: 8px; white-space: nowrap; }
