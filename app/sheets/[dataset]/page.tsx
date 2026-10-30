@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const id = (await params).dataset;
   const f = feuille(id);
   return f
-    ? { title: `${f.titre} · DataParl' Sheets`, description: f.description, alternates: { canonical: `https://media.dataparl.fr/sheets/${f.id}` } }
+    ? { title: `${f.titre}, DataParl' Sheets`, description: f.description, alternates: { canonical: `https://media.dataparl.fr/sheets/${f.id}` } }
     : { title: "DataParl' Sheets" };
 }
 

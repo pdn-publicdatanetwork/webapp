@@ -14,13 +14,13 @@ export function signatureHtml(p: Profil): string {
     </td>
     <td style="padding-left:14px">
       <div style="font-weight:bold;font-size:15px">${esc(qui)}</div>
-      ${p.poste.trim() ? `<div style="color:#4A5670">${esc(p.poste.trim())} · DataParl'</div>` : `<div style="color:#4A5670">DataParl'</div>`}
-      <div style="margin-top:6px"><a href="mailto:${esc(p.email)}" style="color:#164DFF;text-decoration:none">${esc(p.email)}</a> · <a href="https://www.dataparl.fr" style="color:#164DFF;text-decoration:none;font-weight:bold">dataparl.fr</a></div>
+      ${p.poste.trim() ? `<div style="color:#4A5670">${esc(p.poste.trim())}, DataParl'</div>` : `<div style="color:#4A5670">DataParl'</div>`}
+      <div style="margin-top:6px"><a href="mailto:${esc(p.email)}" style="color:#164DFF;text-decoration:none">${esc(p.email)}</a>, <a href="https://www.dataparl.fr" style="color:#164DFF;text-decoration:none;font-weight:bold">dataparl.fr</a></div>
     </td>
   </tr>
 </table>`;
 }
 
 export function signatureTexte(p: Profil): string {
-  return [nomComplet(p) || p.email, p.poste.trim() ? `${p.poste.trim()} · DataParl'` : "DataParl'", `${p.email} · https://www.dataparl.fr`].join("\n");
+  return [nomComplet(p) || p.email, p.poste.trim() ? `${p.poste.trim()}, DataParl'` : "DataParl'", `${p.email}, https://www.dataparl.fr`].join("\n");
 }

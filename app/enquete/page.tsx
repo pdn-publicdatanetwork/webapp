@@ -22,7 +22,7 @@ export default async function Enquete({ searchParams }: { searchParams: Promise<
     <div className="etroit" style={{ margin: "0 auto", padding: "48px 20px", maxWidth: 640 }}>
       <p style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1.3rem", margin: 0 }}>
         Data<span style={{ background: "#FFD23F", padding: "0 3px" }}>Parl&apos;</span>
-        <span style={{ color: "#4A5670", fontStyle: "italic", fontWeight: 400 }}> · Ton avis</span>
+        <span style={{ color: "#4A5670", fontStyle: "italic", fontWeight: 400 }}>, Ton avis</span>
       </p>
       {!valide ? (
         <>

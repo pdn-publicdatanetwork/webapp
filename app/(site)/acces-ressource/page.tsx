@@ -5,7 +5,7 @@ import Link from "next/link";
 // il arrive ici avant la connexion. On lui explique pourquoi un compte est
 // demandé et ce qu'il va se passer après. La ressource visée est dans ?suite=.
 export const metadata = {
-  title: "Ressource protégée · DataParl'",
+  title: "Ressource protégée, DataParl'",
   description: "Crée un compte DataParl' (gratuit) pour télécharger cette ressource.",
 };
 

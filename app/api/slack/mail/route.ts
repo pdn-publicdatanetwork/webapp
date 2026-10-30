@@ -39,7 +39,7 @@ export async function POST(req: Request) {
   const cmd = (mots[0] ?? "").toLowerCase();
 
   if (cmd === "aide") {
-    return NextResponse.json({ text: "📬 /mail — console e-mail :\n• `/mail` : 10 derniers messages reçus\n• `/mail envoyes` · `/mail corbeille`\n• `/mail <id court>` : lire un message\n• `/mail envoyer` : nouveau message (confirmation par bouton avant l'envoi réle)\n• `/mail supprimer <id court>` : déplacer vers la corbeille (confirmation par bouton)" });
+    return NextResponse.json({ text: "📬 /mail : console e-mail :\n• `/mail` : 10 derniers messages reçus\n• `/mail envoyes`, `/mail corbeille`\n• `/mail <id court>` : lire un message\n• `/mail envoyer` : nouveau message (confirmation par bouton avant l'envoi réle)\n• `/mail supprimer <id court>` : déplacer vers la corbeille (confirmation par bouton)" });
   }
 
   if (!cmd || ["recus", "inbox", "envoyes", "sent", "corbeille", "trash"].includes(cmd)) {
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
     const messages = await lister(dossier, 12);
     if (!messages.length) return NextResponse.json({ text: "📭 Dossier " + dossier + " vide." + diag });
     const lignes = messages.map((m) =>
-      (m.read ? "• " : "🔴 ") + "`" + idCourt(m.id) + "` " + (dossier === "sent" ? "→ " + m.to_addr : m.from_addr) + " — *" + (m.subject || "(sans objet)") + "* (" + heure(m.date) + ")");
+      (m.read ? "• " : "🔴 ") + "`" + idCourt(m.id) + "` " + (dossier === "sent" ? "→ " + m.to_addr : m.from_addr) + " : *" + (m.subject || "(sans objet)") + "* (" + heure(m.date) + ")");
     return NextResponse.json({ text: "📬 " + messages.length + " derniers (" + dossier + ") :\n" + lignes.join("\n") + "\n`/mail <id court>` pour lire un message." + diag });
   }
 
@@ -69,7 +69,7 @@ export async function POST(req: Request) {
           { type: "input", block_id: "a", element: { type: "plain_text_input", action_id: "v", placeholder: { type: "plain_text", text: "destinataire@exemple.fr (plusieurs séparés par des virgules)" } }, label: { type: "plain_text", text: "À" } },
           { type: "input", optional: true, block_id: "cc", element: { type: "plain_text_input", action_id: "v", placeholder: { type: "plain_text", text: "copie@exemple.fr (facultatif)" } }, label: { type: "plain_text", text: "Cc (facultatif)" } },
           { type: "input", block_id: "sujet", element: { type: "plain_text_input", action_id: "v", max_length: 300 }, label: { type: "plain_text", text: "Objet" } },
-          { type: "input", block_id: "texte", element: { type: "plain_text_input", action_id: "v", multiline: true, max_length: 1400, placeholder: { type: "plain_text", text: "Le message — un bouton de confirmation s'affichera avant l'envoi réel" } }, label: { type: "plain_text", text: "Message" } },
+          { type: "input", block_id: "texte", element: { type: "plain_text_input", action_id: "v", multiline: true, max_length: 1400, placeholder: { type: "plain_text", text: "Le message : un bouton de confirmation s'affichera avant l'envoi réel" } }, label: { type: "plain_text", text: "Message" } },
         ],
       },
     };

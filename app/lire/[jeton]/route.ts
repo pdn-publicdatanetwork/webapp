@@ -13,7 +13,7 @@ const ENTETES = {
   "Cache-Control": "private, no-store",
 };
 
-const introuvable = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Email introuvable · DataParl'</title></head>
+const introuvable = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Email introuvable, DataParl'</title></head>
 <body style="margin:0;background:#FFFDF5;font-family:Arial,Helvetica,sans-serif;color:#071A41;text-align:center;padding:80px 16px">
 <p style="font-family:Georgia,serif;font-weight:bold;font-size:24px">Data<span style="background:#FFD23F;padding:0 3px">Parl'</span></p>
 <h1 style="font-family:Georgia,serif">Cet email est introuvable</h1>

@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 // Lien tracé : enregistre le clic (provenance, pays, IP tronquée) puis redirige.
 // Les éventuels paramètres utm_* de l'adresse courte (ex. l/daily?utm_source=x)
-// sont transmis à la destination, pour l'attribution dans l'outil de mesure —
+// sont transmis à la destination, pour l'attribution dans l'outil de mesure :
 // seulement s'ils sont explicitement mis dans le lien partagé. Sans eux, la
 // destination est servie telle quelle : le clic reste compté ici, sans pistage.
 export async function GET(req: Request, { params }: { params: Promise<{ code: string }> }) {

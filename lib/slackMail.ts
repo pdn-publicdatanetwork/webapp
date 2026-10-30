@@ -3,7 +3,7 @@ import { authAdmin } from "@/lib/supabaseAdmin";
 import { gabarit, texteVersHtml } from "@/lib/gabarit";
 
 // Console Slack /mail : lecture, envoi et suppression des e-mails de la
-// table emails (dataparl-auth) — même base que le webmail de l'admin.
+// table emails (dataparl-auth) : même base que le webmail de l'admin.
 // Authentifiée par MAINTENANCE_TOKEN (?t=…), pas par une session admin.
 // Envoi réel : Resend + gabarit officiel DataParl' (lib/gabarit.ts), puis
 // rangement dans emails et trace d'audit.
@@ -24,8 +24,8 @@ async function chercher(prefixe: string): Promise<{ ok: true; message: Message }
     .select("id, direction, from_addr, to_addr, cc_addr, subject, date, read, body_text, attachments")
     .ilike("id", p + "%").limit(2);
   const rows = (data ?? []) as Message[];
-  if (!rows.length) return { ok: false, erreur: "message introuvable — /mail pour la liste" };
-  if (rows.length > 1) return { ok: false, erreur: "id ambigu — ajoute des caractères" };
+  if (!rows.length) return { ok: false, erreur: "message introuvable : /mail pour la liste" };
+  if (rows.length > 1) return { ok: false, erreur: "id ambigu : ajoute des caractères" };
   return { ok: true, message: rows[0] };
 }
 

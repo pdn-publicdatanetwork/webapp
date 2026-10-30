@@ -131,7 +131,7 @@ export async function expedier(m: Message): Promise<Resultat> {
   const jeton = randomBytes(20).toString("hex");
   const lireUrl = `${MAIL_WEB_URL}/lire/${jeton}`;
   const html = gabarit({ titre: m.titre ?? m.subject, corpsHtml: m.corpsHtml, lireUrl, pied: m.pied, edition: m.edition, adressage: m.adressage });
-  const text = `${m.text}\n\n--\nDataParl' · version en ligne : ${lireUrl}`;
+  const text = `${m.text}\n\n--\nDataParl', version en ligne : ${lireUrl}`;
   const nom = (m.nomExpediteur ?? "DataParl'").replace(/["<>\r\n]/g, "").trim() || "DataParl'";
   const from = m.from ? `"${nom}" <${m.from}>` : MAIL_FROM;
 
@@ -182,5 +182,5 @@ export function piedObligatoire(): string {
 }
 
 export function piedOptIn(prefsUrl: string, unsubUrl: string): string {
-  return `<a href="https://www.dataparl.fr/mon-compte" style="color:#4A5670">Mon compte</a> · <a href="${unsubUrl}" style="color:#4A5670">Me désinscrire des alertes</a> · <a href="${prefsUrl}" style="color:#4A5670">Mes préférences</a>`;
+  return `<a href="https://www.dataparl.fr/mon-compte" style="color:#4A5670">Mon compte</a>, <a href="${unsubUrl}" style="color:#4A5670">Me désinscrire des alertes</a>, <a href="${prefsUrl}" style="color:#4A5670">Mes préférences</a>`;
 }
