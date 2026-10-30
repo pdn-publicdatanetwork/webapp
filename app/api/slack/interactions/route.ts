@@ -16,7 +16,7 @@ export const maxDuration = 60;
 //  - boutons de confirmation d'envoi et de suppression (block_actions) ;
 //  - boutons du Home tab (home_*) qui ouvrent les modals, y compris la
 //    section Données (comptes, fiche compte, abonnés, clés API,
-//    téléchargements, enquête — lecture seule).
+//    téléchargements, enquête : lecture seule).
 
 function repondre(urlReponse: string, corps: string) {
   if (!urlReponse) return;
@@ -104,15 +104,15 @@ export async function POST(req: Request) {
 
     if (act.action_id === "mail_envoyer_ok") {
       let d: { f?: string; a?: string[]; c?: string[]; s?: string; t?: string } = {};
-      try { d = JSON.parse(act.value ?? "{}"); } catch { return NextResponse.json({ response_action: "update", view: vueResultat("Brouillon illisible — annulé.") }); }
+      try { d = JSON.parse(act.value ?? "{}"); } catch { return NextResponse.json({ response_action: "update", view: vueResultat("Brouillon illisible : annulé.") }); }
       const r = await envoyerDepuisSlack(charge.user?.name ?? "slack", { from: d.f ?? "", a: d.a ?? [], cc: d.c ?? [], sujet: d.s ?? "", texte: d.t ?? "" });
       const resultat = r.ok ? "✅ Envoyé à " + (d.a ?? []).join(", ") : "⚠️ " + r.erreur;
       if (charge.view) return NextResponse.json({ response_action: "update", view: vueResultat(resultat) });
       return NextResponse.json({ text: resultat, replace_original: true });
     }
     if (act.action_id === "mail_envoyer_annuler") {
-      if (charge.view) return NextResponse.json({ response_action: "update", view: vueResultat("Annulé — rien n'a été envoyé.") });
-      return NextResponse.json({ text: "Annulé — rien n'a été envoyé.", replace_original: true });
+      if (charge.view) return NextResponse.json({ response_action: "update", view: vueResultat("Annulé : rien n'a été envoyé.") });
+      return NextResponse.json({ text: "Annulé : rien n'a été envoyé.", replace_original: true });
     }
     if (act.action_id === "mail_supprimer_ok") {
       const err = await supprimer(act.value ?? "");
@@ -121,8 +121,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ text: msg, replace_original: true });
     }
     if (act.action_id === "mail_supprimer_annuler") {
-      if (charge.view) return NextResponse.json({ response_action: "update", view: vueResultat("Annulé — rien n'a été supprimé.") });
-      return NextResponse.json({ text: "Annulé — rien n'a été supprimé.", replace_original: true });
+      if (charge.view) return NextResponse.json({ response_action: "update", view: vueResultat("Annulé : rien n'a été supprimé.") });
+      return NextResponse.json({ text: "Annulé : rien n'a été supprimé.", replace_original: true });
     }
 
     // Home tab : boutons qui ouvrent les modals.
@@ -270,12 +270,12 @@ export async function POST(req: Request) {
       const canal = canauxDispo.find((c) => c.service === service);
       const nomReseau = suffixe === "x" ? "X" : "Bluesky";
       if (!canal) {
-        resultats.push("⚠️ " + nomReseau + " : aucun canal connecté dans Buffer (publish.buffer.com → Connect Channel)" + (code ? " — lien créé : https://link.dataparl.fr/" + code : ""));
+        resultats.push("⚠️ " + nomReseau + " : aucun canal connecté dans Buffer (publish.buffer.com → Connect Channel)" + (code ? " : lien créé : https://link.dataparl.fr/" + code : ""));
         continue;
       }
       const lienCourt = code ? "https://link.dataparl.fr/" + code : "";
       const p = await creerPost(canal.id, code ? texte + "\n" + lienCourt : texte, mode);
-      resultats.push(("id" in p ? "✅" : "⚠️") + " " + nomReseau + " : " + ("id" in p ? (mode === "maintenant" ? "publié" : mode === "brouillon" ? "brouillon créé dans Buffer" : "ajouté à la file Buffer") : "erreur : " + p.erreur) + (lienCourt ? " — " + lienCourt : " (sans lien tracé)"));
+      resultats.push(("id" in p ? "✅" : "⚠️") + " " + nomReseau + " : " + ("id" in p ? (mode === "maintenant" ? "publié" : mode === "brouillon" ? "brouillon créé dans Buffer" : "ajouté à la file Buffer") : "erreur : " + p.erreur) + (lienCourt ? " : " + lienCourt : " (sans lien tracé)"));
     }
 
     repondre(urlReponse, "📣 Post envoyé par " + qui + " :\n" + resultats.join("\n") + (destination ? "\nDestination : " + destination : "\n(sans lien tracé)"));

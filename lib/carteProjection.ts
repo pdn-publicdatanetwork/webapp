@@ -4,7 +4,7 @@
 // générés (résidus < 1 px). Le générateur scripts/carte-departements.mjs
 // calcule sa bounding box en itérant f.geometry.coordinates comme des anneaux :
 // les départements MultiPolygon n'y contribuent pas, d'où un minLon « inland »
-// (-3,66) — c'est voulu ici : on doit réutiliser exactement ces constantes.
+// (-3,66) : c'est voulu ici : on doit réutiliser exactement ces constantes.
 
 export const VIEWBOX = "0 0 1000 1061";
 

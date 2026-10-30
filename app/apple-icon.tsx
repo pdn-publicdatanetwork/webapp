@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 // Icône tactile iOS (180x180) du site principal.
-// Monogramme « Σ' » blanc sur bleu encre #071A41 — même identité que /icon.svg,
+// Monogramme « Σ' » blanc sur bleu encre #071A41 : même identité que /icon.svg,
 // appliqué à tous les domaines et sous-domaines DataParl'.
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";

@@ -5,10 +5,10 @@ import { authAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
 
-// POST /api/journal-connexion — appelé par JournalConnexion à chaque nouvelle
+// POST /api/journal-connexion : appelé par JournalConnexion à chaque nouvelle
 // session détectée côté client. Journalise l'événement avec IP, user-agent et
 // appareil déduit (public.journal_connexions). Dédoublonnage : un triple
-// identique (compte, IP, user-agent) dans les 5 minutes est ignoré — les
+// identique (compte, IP, user-agent) dans les 5 minutes est ignoré : les
 // rafraîchissements de page ne créent pas de fausses connexions.
 
 function appareilDepuis(ua: string): string {
@@ -22,7 +22,7 @@ function appareilDepuis(ua: string): string {
     : /Edg(e|A|iOS)?\//.test(ua) ? "Edge"
     : /Safari\//.test(ua) ? "Safari" : "navigateur inconnu";
   const type = /Mobi|iPhone|iPad|Android/.test(ua) ? "mobile" : "ordinateur";
-  return `${type} · ${os} · ${nav}`;
+  return `${type}, ${os}, ${nav}`;
 }
 
 export async function POST(req: Request) {

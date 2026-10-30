@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
-// Icône tactile iOS (180x180) — mail.dataparl.fr.
-// Monogramme « Σ' » blanc sur fond #C8102F —
+// Icône tactile iOS (180x180) : mail.dataparl.fr.
+// Monogramme « Σ' » blanc sur fond #C8102F :
 // même identité que /icon.svg du domaine correspondant.
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";

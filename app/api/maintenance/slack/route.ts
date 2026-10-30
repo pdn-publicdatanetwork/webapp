@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     const etat = await lireMaintenance();
     if (texte === "statut" || texte === "etat") {
       return repondre(etat.active
-        ? `🔴 Maintenance ACTIVE depuis le ${new Date(etat.ouvert_le ?? "").toLocaleString("fr-FR")}${etat.motif ? ` — ${etat.motif}` : ""}`
+        ? `🔴 Maintenance ACTIVE depuis le ${new Date(etat.ouvert_le ?? "").toLocaleString("fr-FR")}${etat.motif ? ` : ${etat.motif}` : ""}`
         : "🟢 Site ouvert, aucune maintenance en cours.");
     }
     const cible = texte === "on" || texte === "1" || texte === "activer" || texte === "couper" ? true
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     const r = await basculeMaintenance(cible, `Slack (${utilisateur})`);
     return repondre(
       (cible ? "🔴 Maintenance activée" : "🟢 Site rouvert") +
-        ` — status.dataparl.fr : ${r.betterstack.ok ? "synchronisé" : `NON synchronisé (${r.betterstack.message})`}`,
+        ` : status.dataparl.fr : ${r.betterstack.ok ? "synchronisé" : `NON synchronisé (${r.betterstack.message})`}`,
     );
   } catch (e) {
     return repondre(`Erreur : ${e instanceof Error ? e.message : String(e)}`);

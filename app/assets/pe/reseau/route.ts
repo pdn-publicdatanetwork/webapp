@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
   ]);
 
   // Fusion par structure (une même société peut être à la fois tiers payant
-  // chez un élu et prestataire chez un autre) — même logique que la page.
+  // chez un élu et prestataire chez un autre) : même logique que la page.
   type S = { cle: string; nom: string; types: string[]; clients: { elu_id: string; elu_nom: string; elu_groupe: string }[] };
   const parCle = new Map<string, S>();
   const ajouter = (liste: Awaited<ReturnType<typeof structures>>, type: string) => {
@@ -92,7 +92,7 @@ export async function GET(req: NextRequest) {
   p.push('<text x="48" y="72" font-size="44" font-weight="700" fill="#14224e" letter-spacing="1">Data</text>');
   p.push('<rect x="158" y="38" width="102" height="46" rx="7" fill="#FFD23F"/>');
   p.push('<text x="172" y="72" font-size="44" font-weight="700" fill="#071A41">Parl' + APOS + '</text>');
-  p.push('<text x="48" y="112" font-size="17" fill="#475569">Le réseau des tiers payants et prestataires des eurodéputés français — ' + nb(toutes.length) + ' structures · ' + nb(elus.size) + ' eurodéputés · ' + nb(aretes.length) + ' contrats · dataparl.fr</text>');
+  p.push('<text x="48" y="112" font-size="17" fill="#475569">Le réseau des tiers payants et prestataires des eurodéputés français : ' + nb(toutes.length) + ' structures, ' + nb(elus.size) + ' eurodéputés, ' + nb(aretes.length) + ' contrats, dataparl.fr</text>');
   // Arêtes puis nœuds.
   for (const a of aretes) {
     const s = pos.get(a.source), e = pos.get(a.target);
@@ -126,7 +126,7 @@ export async function GET(req: NextRequest) {
     p.push('<text x="' + nb(lx + 20) + '" y="' + nb(legendeY + 5) + '" font-size="14" fill="#1f2937">' + echappe(g) + '</text>');
     lx += 20 + echappe(g).length * 8 + 28;
   }
-  p.push('<text x="' + nb(W - 48) + '" y="' + nb(legendeY + 5) + '" text-anchor="end" font-size="12" fill="#64748b">Taille des nœuds = nombre de liens · source : DataParl' + APOS + ' (dataparl.fr), données ouvertes</text>');
+  p.push('<text x="' + nb(W - 48) + '" y="' + nb(legendeY + 5) + '" text-anchor="end" font-size="12" fill="#64748b">Taille des nœuds = nombre de liens, source : DataParl' + APOS + ' (dataparl.fr), données ouvertes</text>');
   p.push("</svg>");
   const svg = p.join("\n");
 

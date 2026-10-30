@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { aujourdhuiParis } from "@/lib/alertes";
 import { dataQuery, compteAffectations } from "@/lib/data";
 
-// GET https://api.dataparl.fr/v1/status — public, sans clé.
+// GET https://api.dataparl.fr/v1/status : public, sans clé.
 // Fraîcheur des données et volumes, pour synchroniser ou afficher un état.
 
 export const revalidate = 600;
