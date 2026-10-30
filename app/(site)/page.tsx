@@ -1,12 +1,6 @@
 import type { Metadata } from "next";
 import ListeMouvements from "../_components/ListeMouvements";
-import RechercheGlobale from "../_components/RechercheGlobale";
-import { compteAffectations, dataQuery, derniersMouvements, type Mouvement } from "@/lib/data";
-
-async function compteFiches(): Promise<number> {
-  const { total } = await dataQuery<unknown>("collaborateurs", new URLSearchParams({ select: "collab_id", limit: "1" }), 3600);
-  return total ?? 0;
-}
+import { compteAffectations, derniersMouvements, type Mouvement } from "@/lib/data";
 
 export const revalidate = 300;
 export const metadata: Metadata = { alternates: { canonical: "/" } };
@@ -41,74 +35,116 @@ const jsonLd = [
   },
 ];
 
+// Petites icônes de trait (style Feather), inline pour rester sans dépendance.
+function Ic({ d }: { d: string }) {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" dangerouslySetInnerHTML={{ __html: d }} />
+  );
+}
+const IC_UTILISATEURS = '<path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>';
+const IC_ASSEMBLEE = '<line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/>';
+const IC_SENAT = '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>';
+const IC_EUROPE = '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>';
+const IC_MOUVEMENTS = '<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>';
+const IC_GOUVERNEMENT = '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>';
+const IC_VIGI = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+const IC_MIXI = '<line x1="6" y1="20" x2="6" y2="16"/><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/>';
+const IC_SENATORIALES = '<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>';
+const IC_ALERTES = '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>';
+const IC_ENVELOPPE = '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>';
+
 export default async function Accueil() {
   let mouvements: Mouvement[] = [];
   let comptes: Record<string, number> = {};
-  let fiches = 0;
   let indisponible = false;
   try {
-    [mouvements, comptes, fiches] = await Promise.all([derniersMouvements(10), compteAffectations(), compteFiches().catch(() => 0)]);
+    [mouvements, comptes] = await Promise.all([derniersMouvements(5), compteAffectations()]);
   } catch {
     indisponible = true;
   }
   const peInconnu = (comptes.europarl ?? 0) === 0; // suivi PE repris le 8 octobre 2026
+  const total = (comptes.assemblee ?? 0) + (comptes.senat ?? 0) + (comptes.europarl ?? 0);
+  const fr = (n: number) => n.toLocaleString("fr-FR");
+
+  const chiffres = [
+    { icone: IC_UTILISATEURS, valeur: fr(total), libelle: "collaborateurs suivis" },
+    { icone: IC_ASSEMBLEE, valeur: fr(comptes.assemblee ?? 0), libelle: "à l'Assemblée nationale" },
+    { icone: IC_SENAT, valeur: fr(comptes.senat ?? 0), libelle: "au Sénat" },
+    peInconnu
+      ? { icone: IC_EUROPE, valeur: "–", libelle: "au Parlement européen (suivi repris le 8 octobre 2026)" }
+      : { icone: IC_EUROPE, valeur: fr(comptes.europarl ?? 0), libelle: "au Parlement européen" },
+  ];
+
+  const explorer = [
+    { href: "/mouvements/parlement", icone: IC_MOUVEMENTS, titre: "Mouvements", desc: "Suivez les arrivées et départs en temps réel." },
+    { href: "/collab", icone: IC_UTILISATEURS, titre: "Collaborateurs", desc: "Explorez les profils et parcours des collaborateurs." },
+    { href: "/parlementaires", icone: IC_ASSEMBLEE, titre: "Parlementaires", desc: "Découvrez les équipes et collaborateurs des élu·es." },
+    { href: "/gouv", icone: IC_GOUVERNEMENT, titre: "Gouvernement", desc: "Les cabinets ministériels et leurs collaborateurs." },
+    { href: "/vigiparl", icone: IC_VIGI, titre: <>Vigi<span className="surligne-vigi">Parl&apos;</span></>, desc: "Le renouvellement des équipes, élu par élu." },
+    { href: "/mixiparl", icone: IC_MIXI, titre: <>Mixi<span className="surligne-mixi">Parl&apos;</span></>, desc: "Analysez la mixité et la parité des équipes." },
+    { href: "/senatoriales2026", icone: IC_SENATORIALES, titre: "Sénatoriales 2026", desc: "Préparez et suivez le renouvellement du Sénat." },
+    { href: "/alertes", icone: IC_ALERTES, titre: "Alertes", desc: "Gérez vos alertes email et notifications." },
+  ];
 
   return (
     <>
       {jsonLd.map((j, i) => (
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(j).replace(/</g, "\u003c") }} />
       ))}
-      <h1>Qui travaille pour <span className="surligne">vos élus</span> ?</h1>
-      <p className="lead">
-        Chaque matin, DataParl&apos; relit les listes officielles des collaborateurs parlementaires et signale
-        les arrivées, les départs et les transferts. Parce que les mouvements des équipes en disent
-        souvent plus long que les déclarations.
-      </p>
 
-      <RechercheGlobale placeholder="Rechercher un élu ou un collaborateur" />
+      <section className="accueil-hero">
+        <h1>Qui travaille pour <span className="surligne">vos élus</span> ?</h1>
+        <p className="lead">
+          Suivi chaque matin des mouvements des collaborateurs parlementaires, en France et en Europe.
+        </p>
+        <div className="chiffres hero">
+          {chiffres.map((c, i) => (
+            <div key={i}>
+              <span className="icone-chiffre"><Ic d={c.icone} /></span>
+              <strong>{c.valeur}</strong>
+              <span>{c.libelle}</span>
+            </div>
+          ))}
+        </div>
+        <p className="meta">
+          L&apos;effectif du Sénat tient compte du renouvellement partiel des sénatoriales 2026
+          {peInconnu && " ; le suivi quotidien des équipes du Parlement européen a repris le 8 octobre 2026"}.
+        </p>
+      </section>
 
-      <div className="chiffres">
-        <div className="principal"><strong>{((comptes.assemblee ?? 0) + (comptes.senat ?? 0) + (comptes.europarl ?? 0)).toLocaleString("fr-FR")}</strong><span>collaborateurs parlementaires aujourd&apos;hui</span></div>
-        <div><strong>{(comptes.assemblee ?? 0).toLocaleString("fr-FR")}</strong><span>à l&apos;Assemblée</span></div>
-        <div><strong>{(comptes.senat ?? 0).toLocaleString("fr-FR")}</strong><span>au Sénat</span></div>
-        {peInconnu ? (
-          <div><strong>–</strong><span>au Parlement européen (suivi repris le 8 octobre 2026)</span></div>
-        ) : (
-          <div><strong>{(comptes.europarl ?? 0).toLocaleString("fr-FR")}</strong><span>au Parlement européen</span></div>
-        )}
-        {fiches > 0 && <div><strong>{fiches.toLocaleString("fr-FR")}</strong><span>parcours reconstitués depuis 2015</span></div>}
-      </div>
-      <p className="meta" style={{ marginTop: -8 }}>
-        L&apos;effectif du Sénat tient compte du renouvellement partiel des sénatoriales 2026
-        {peInconnu && " ; le suivi quotidien des équipes du Parlement européen a repris le 8 octobre 2026"}.
-      </p>
-
-      <h2>Les derniers mouvements</h2>
+      <h2>Derniers mouvements</h2>
       {indisponible && <p className="erreur">Les données sont momentanément indisponibles.</p>}
       {!indisponible && mouvements.length === 0 && (
         <p className="meta">Aucun mouvement détecté depuis le démarrage du suivi quotidien. Les premiers apparaîtront ici dès le prochain passage.</p>
       )}
-      <ListeMouvements mouvements={mouvements} />
+      <div className="accueil-mouvements">
+        <ListeMouvements mouvements={mouvements} />
+      </div>
+      <div className="actions-accueil">
+        <a className="btn" href="/daily">Voir les mouvements du jour</a>
+        <a className="btn secondaire" href="/mouvements">Voir l&apos;historique</a>
+      </div>
 
-      <div className="card" style={{ maxWidth: "none", marginTop: 28 }}>
-        <p style={{ marginTop: 0 }}>
-          <strong>Tout l&apos;historique depuis 2015</strong>, la recherche par collaborateur, élu, groupe ou date, et les
-          alertes personnalisées : c&apos;est gratuit, il suffit d&apos;un compte.
-        </p>
-        <a className="btn" href="/mouvements">Voir plus</a>{" "}
-        <a className="btn secondaire" href="/daily">Les mouvements du jour en une page →</a>
+      <div className="card accueil-alerte">
+        <span className="icone-chiffre"><Ic d={IC_ENVELOPPE} /></span>
+        <div>
+          <strong>Recevoir les mouvements par email</strong>
+          <p>Les derniers mouvements, chaque matin dans votre boîte. Gratuit, sans engagement et désinscriptible à tout moment.</p>
+        </div>
+        <a className="btn" href="/alertes">Configurer mon alerte</a>
       </div>
 
       <h2>Explorer</h2>
-      <ul className="sommaire">
-        <li><a href="/mouvements/parlement"><strong>Mouvements</strong><span>Rechercher dans les trois chambres →</span></a></li>
-        <li><a href="/collab"><strong>Collaborateurs</strong><span>Qui travaille pour quel élu, et comment le joindre →</span></a></li>
-        <li><a href="/parlementaires"><strong>Parlementaires</strong><span>Chaque élu à l&apos;Assemblée, au Sénat ou au Parlement européen, son équipe, ses mandats et ses commissions →</span></a></li>
-        <li><a href="/gouv"><strong>Gouvernement</strong><span>Qui gouverne, et les cabinets ministériels, d&apos;après le JORF →</span></a></li>
-        <li><a href="/senatoriales2026"><strong>Sénatoriales 2026</strong><span>Les nouveaux sénateurs, département par département →</span></a></li>
-        <li><a href="/vigiparl"><strong>Vigi<span className="surligne-vigi">Parl&apos;</span></strong><span>Le renouvellement des équipes, élu par élu →</span></a></li>
-        <li><a href="/mixiparl"><strong>Mixi<span className="surligne-mixi">Parl&apos;</span></strong><span>La mixité femmes-hommes des équipes →</span></a></li>
-        <li><a href="/alertes"><strong>Alertes</strong><span>Être prévenu(e) des mouvements qui vous intéressent →</span></a></li>
+      <ul className="explorer">
+        {explorer.map((e) => (
+          <li key={e.href}>
+            <a href={e.href}>
+              <span className="icone-chiffre"><Ic d={e.icone} /></span>
+              <strong>{e.titre}</strong>
+              <span>{e.desc}</span>
+            </a>
+          </li>
+        ))}
       </ul>
     </>
   );

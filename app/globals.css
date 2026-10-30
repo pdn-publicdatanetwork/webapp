@@ -700,3 +700,40 @@ main .wrap [contenteditable="true"] { outline: 2px dashed color-mix(in srgb, var
 .macv-form .actions { margin-top: 10px; }
 .macv-form .actions button { margin-top: 0; }
 .macv-aide { font-size: .88rem; color: var(--muted); }
+
+
+/* ── Accueil v2 : hero aéré, alerte email, cartes Explorer ───────────────── */
+.accueil-hero h1 { margin-top: 8px; }
+.chiffres.hero { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 26px 0 10px; }
+.chiffres.hero div { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+.icone-chiffre { display: inline-flex; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 10px; background: color-mix(in srgb, var(--jaune) 40%, transparent); color: #071A41; margin-bottom: 8px; flex: none; }
+/* Derniers mouvements : pastilles colorées et hover léger */
+.accueil-mouvements ul.mouvements li { padding: 12px 10px; border-radius: 10px; transition: background .15s ease; }
+.accueil-mouvements ul.mouvements li:hover { background: color-mix(in srgb, var(--bleu) 5%, transparent); }
+.accueil-mouvements .badge { display: inline-block; text-align: center; padding: 3px 10px; border-radius: 999px; }
+.badge.arrivee { background: color-mix(in srgb, var(--arrivee) 12%, transparent); }
+.badge.depart { background: color-mix(in srgb, var(--depart) 12%, transparent); }
+.badge.transfert { background: color-mix(in srgb, var(--transfert) 12%, transparent); }
+.actions-accueil { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.actions-accueil .btn { margin-top: 0; }
+/* Carte alertes email, légèrement mise en avant */
+.accueil-alerte { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 30px; max-width: none; border-left: 4px solid var(--jaune); }
+.accueil-alerte p { margin: 4px 0 0; color: var(--muted); }
+.accueil-alerte .btn { margin: 0; }
+/* Grille Explorer : 8 cartes (4 colonnes desktop, 2 tablette, 1 mobile) */
+ul.explorer { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.explorer a { display: block; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--card); text-decoration: none; color: var(--ink); transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.explorer a:hover, .explorer a:focus-visible { border-color: color-mix(in srgb, var(--bleu) 45%, transparent); box-shadow: 0 6px 18px rgba(7, 26, 65, .08); transform: translateY(-1px); }
+.explorer strong { display: block; margin-bottom: 2px; }
+.explorer a > span:last-child { color: var(--muted); font-size: .88rem; }
+@media (max-width: 1023px) {
+  ul.explorer { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .chiffres.hero { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+  ul.explorer { grid-template-columns: 1fr; }
+  .actions-accueil { flex-direction: column; align-items: stretch; }
+  .actions-accueil .btn { text-align: center; }
+  .accueil-alerte { flex-direction: column; align-items: flex-start; }
+  main { padding-top: 20px; }
+}
