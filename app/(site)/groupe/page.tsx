@@ -22,7 +22,7 @@ export default async function IndexGroupes() {
       <h1>Groupes parlementaires</h1>
       <p className="lead">
         Une fiche par groupe politique de chaque chambre : qui en est membre, où siège chacun,
-        et l&apos;équipe de collaborateurs de chaque élu — suivie par DataParl&apos;.
+        et l&apos;équipe de collaborateurs de chaque élu : suivie par DataParl&apos;.
       </p>
       <p className="meta">Les partis toutes chambres confondues ont aussi leur fiche : <Link href="/parti">voir tous les partis</Link>.</p>
       {Object.entries(parChambre).map(([chambre, gs]) => (
@@ -35,7 +35,7 @@ export default async function IndexGroupes() {
                   <a href={`/groupe/${CHAMBRE_COURTE[g.chambre]}-${slugCollectif(g.groupe)}/`}>
                     Groupe {g.groupe_libelle || g.groupe}
                   </a>
-                  <span className="meta"> · {g.groupe}</span>
+                  <span className="meta">, {g.groupe}</span>
                 </li>
               ))}
             </ul>
@@ -45,7 +45,7 @@ export default async function IndexGroupes() {
               {"Par mandature : "}
               {mandatures.filter((m) => m.chambre === chambre).map((m, i) => (
                 <span key={m.slug}>
-                  {i > 0 ? " · " : ""}
+                  {i > 0 ? ", " : ""}
                   <a href={"/groupe/" + CHAMBRE_COURTE[chambre] + "/" + m.slug}>{m.libelle}</a>
                 </span>
               ))}

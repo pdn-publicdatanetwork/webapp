@@ -34,8 +34,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       alternates: { canonical: url },
       // og:image : la carte de partage 1200×630 générée par opengraph-image.tsx
       // (charte du site, nom de l'élu) prend le dessus sur une photo 400×400.
-      openGraph: { siteName: "DataParl'", title: `${nom} · DataParl'`, description, url, type: "profile" },
-      twitter: { card: "summary_large_image", title: `${nom} · DataParl'`, description },
+      openGraph: { siteName: "DataParl'", title: `${nom}, DataParl'`, description, url, type: "profile" },
+      twitter: { card: "summary_large_image", title: `${nom}, DataParl'`, description },
     };
   }
   const e = await eluDepuisId(id).catch(() => null);
@@ -69,7 +69,7 @@ function ListeOrganes({ items }: { items: Appartenance[] }) {
         <li key={`${a.code}-${a.debut}-${i}`}>
           {a.libelle}
           {a.fonction && a.fonction.toLowerCase() !== "membre" && <span className="puce">{a.fonction}</span>}
-          <span className="meta"> · {a.fin ? `${moisAnnee(a.debut)} à ${moisAnnee(a.fin)}` : `depuis ${moisAnnee(a.debut)}`}</span>
+          <span className="meta">, {a.fin ? `${moisAnnee(a.debut)} à ${moisAnnee(a.fin)}` : `depuis ${moisAnnee(a.debut)}`}</span>
         </li>
       ))}
     </ul>
@@ -94,7 +94,7 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
   ]);
   const nom = prenomNom(f.prenom, f.nom);
   // La vue de stats compte aussi les sociétés (tiers payants, prestataires PE)
-  // parmi les « indéterminés » : on les retire du décompte affiché — ce ne
+  // parmi les « indéterminés » : on les retire du décompte affiché : ce ne
   // sont pas des personnes.
   const societes = f.chambre === "europarl" ? collabs.filter((c) => FONCTIONS_SOCIETES.includes(c.fonction)).length : 0;
   const indetermines = stats ? Math.max(0, stats.indetermines - societes) : 0;
@@ -102,7 +102,7 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
   const depuis = periodes.map((p) => p.debut).filter(Boolean).sort()[0];
   const commissionsActuelles = fusionner(appartenances.filter((a) => a.chambre === f.chambre && a.elu_id === f.elu_id && a.type !== "groupe")).filter((a) => !a.fin);
   // Les autres fiches actives de la même personne (une fiche ancienne et inactive
-  // — ex. député devenu sénateur — est déjà résumée par ses mandats ci-dessous,
+  // (ex. député devenu sénateur) est déjà résumée par ses mandats ci-dessous,
   // et son URL renvoie vers la fiche active).
   const autres = fiches.filter((x) => x.chambre !== f.chambre && x.actif);
   // Parcours chronologique unique : mandats parlementaires et fonctions
@@ -134,20 +134,20 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
       <div className="entete-elu">
         <Photo chambre={f.chambre} slug={f.slug} src={f.photo_url} nom={nom} />
         <div>
-          <p className="meta" style={{ margin: 0 }}>{CHAMBRE_LONG[f.chambre]}{f.actif ? "" : ` · ${ancien(f).toLowerCase()} mandat`}</p>
+          <p className="meta" style={{ margin: 0 }}>{CHAMBRE_LONG[f.chambre]}{f.actif ? "" : `, ${ancien(f).toLowerCase()} mandat`}</p>
           <h1 style={{ margin: "2px 0 6px" }}>{nom}</h1>
           <p className="lead" style={{ margin: 0 }}>
             {f.actif ? titre(f) : `${ancien(f)} ${titre(f).toLowerCase()}`}
-            {f.circonscription && f.chambre !== "europarl" ? ` · ${f.circonscription}` : ""}
-            {f.actif && f.groupe ? <> · <Groupe chambre={f.chambre} sigle={f.groupe} libelle={f.groupe_libelle} /></> : null}
+            {f.circonscription && f.chambre !== "europarl" ? `, ${f.circonscription}` : ""}
+            {f.actif && f.groupe ? <>, <Groupe chambre={f.chambre} sigle={f.groupe} libelle={f.groupe_libelle} /></> : null}
           </p>
           <p className="meta" style={{ marginTop: 6 }}>
             {f.actif ? `En fonction depuis ${moisAnnee(dernierDebut(mandats, f))}` : f.fin_mandat ? `Mandat terminé en ${moisAnnee(f.fin_mandat)}` : ""}
-            {f.url_officielle && <> · <a href={f.url_officielle}>fiche officielle</a></>}
-            {hrefDepartement(f.departement || f.circonscription, slugDepartement) && <> · <a href={hrefDepartement(f.departement || f.circonscription, slugDepartement)!}>fiche élus de {f.departement || f.circonscription}</a></>}
-            {!sansGroupe(f.groupe) && hrefGroupe(f.chambre, f.groupe) && <> · <a href={hrefGroupe(f.chambre, f.groupe)!}>fiche groupe {f.groupe}</a></>}
-            {!sansGroupe(f.groupe) && hrefParti(f.groupe) && <> · <a href={hrefParti(f.groupe)!}>fiche parti {f.groupe}</a></>}
-            {autres.map((x) => <span key={x.chambre}> · <a href={`/parlementaires/${encodeURIComponent(x.slug)}`}>fiche {CHAMBRE_LONG[x.chambre]}</a></span>)}
+            {f.url_officielle && <>, <a href={f.url_officielle}>fiche officielle</a></>}
+            {hrefDepartement(f.departement || f.circonscription, slugDepartement) && <>, <a href={hrefDepartement(f.departement || f.circonscription, slugDepartement)!}>fiche élus de {f.departement || f.circonscription}</a></>}
+            {!sansGroupe(f.groupe) && hrefGroupe(f.chambre, f.groupe) && <>, <a href={hrefGroupe(f.chambre, f.groupe)!}>fiche groupe {f.groupe}</a></>}
+            {!sansGroupe(f.groupe) && hrefParti(f.groupe) && <>, <a href={hrefParti(f.groupe)!}>fiche parti {f.groupe}</a></>}
+            {autres.map((x) => <span key={x.chambre}>, <a href={`/parlementaires/${encodeURIComponent(x.slug)}`}>fiche {CHAMBRE_LONG[x.chambre]}</a></span>)}
           </p>
           <Partage compact url={`https://www.dataparl.fr/parlementaires/${encodeURIComponent(f.slug)}`} titre={nom}
             texte={`${nom} : son équipe de collaborateurs, ses arrivées et ses départs, sur DataParl'`} />
@@ -168,17 +168,17 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
           {f.chambre === "europarl" && !stats.premier_depart ? (
             <div>
               <strong>–</strong>
-              <span><a href="/vigiparl">VigiParl&apos;</a> · renouvellement : suivi repris le 8 octobre 2026, taux disponible avec 12 mois de recul</span>
+              <span><a href="/vigiparl">VigiParl&apos;</a>, renouvellement : suivi repris le 8 octobre 2026, taux disponible avec 12 mois de recul</span>
             </div>
           ) : (
             <div>
               <strong style={{ color: "var(--vigi)" }}>{pct(tauxTurnover(stats))}</strong>
-              <span><a href="/vigiparl">VigiParl&apos;</a> · renouvellement sur 12 mois ({stats.departs_12m} départ{stats.departs_12m > 1 ? "s" : ""})</span>
+              <span><a href="/vigiparl">VigiParl&apos;</a>, renouvellement sur 12 mois ({stats.departs_12m} départ{stats.departs_12m > 1 ? "s" : ""})</span>
             </div>
           )}
           <div>
             <strong style={{ color: "var(--mixi)" }}>{pct(partFemmes(stats))}</strong>
-            <span><a href="/mixiparl">MixiParl&apos;</a> · de femmes ({stats.femmes} F, {stats.hommes} H{indetermines > 0 ? `, ${indetermines} ind.` : ""})</span>
+            <span><a href="/mixiparl">MixiParl&apos;</a>, de femmes ({stats.femmes} F, {stats.hommes} H{indetermines > 0 ? `, ${indetermines} ind.` : ""})</span>
           </div>
         </>}
         {nbCollabs > 0 && (
@@ -234,7 +234,7 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
           ({commeCollab.chambres.split(" ").map((c) => CHAMBRE_LONG[c]).join(", ")}, {commeCollab.premiere_date.slice(0, 4)}
           {commeCollab.derniere_date.slice(0, 4) !== commeCollab.premiere_date.slice(0, 4) ? `-${commeCollab.derniere_date.slice(0, 4)}` : ""}).{" "}
           <a href={`/collab/${commeCollab.slug}`}>Voir son parcours de {f.civilite === "Mme" ? "collaboratrice" : "collaborateur"}</a>
-          <span className="meta"> · rapprochement par le nom, sans chevauchement avec ses mandats</span>
+          <span className="meta">, rapprochement par le nom, sans chevauchement avec ses mandats</span>
         </p>
       )}
 
@@ -247,7 +247,7 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
                 <p className="parcours-titre">
                   <strong>{g.fonction}</strong>
                   <span className="meta">
-                    {" · "}gouvernement {g.gouvernement} · {libellePeriode({ debut: g.debut, debut_connu: true, fin: g.fin, fin_connue: !!g.fin, en_cours: !g.fin })}
+                    {", "}gouvernement {g.gouvernement}, {libellePeriode({ debut: g.debut, debut_connu: true, fin: g.fin, fin_connue: !!g.fin, en_cours: !g.fin })}
                   </span>
                 </p>
                 {g.portefeuille && <p className="meta" style={{ margin: "2px 0" }}>{g.portefeuille}</p>}
@@ -265,9 +265,9 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
             <li key={`${m.chambre}-${m.debut}-${i}`}>
               <p className="parcours-titre">
                 <strong>{m.libelle}</strong>
-                {m.circonscription && m.chambre !== "europarl" ? ` · ${m.circonscription}` : ""}
-                <span className="meta"> · {periodeMandat(m)}</span>
-                {fiche && fiche.slug !== f.slug && <> · <a href={`/parlementaires/${encodeURIComponent(fiche.slug)}`}>voir la fiche</a></>}
+                {m.circonscription && m.chambre !== "europarl" ? `, ${m.circonscription}` : ""}
+                <span className="meta">, {periodeMandat(m)}</span>
+                {fiche && fiche.slug !== f.slug && <>, <a href={`/parlementaires/${encodeURIComponent(fiche.slug)}`}>voir la fiche</a></>}
               </p>
               {groupes.length > 0 && (
                 <p className="meta" style={{ margin: "2px 0" }}>

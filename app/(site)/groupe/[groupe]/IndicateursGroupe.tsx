@@ -55,8 +55,8 @@ export default async function IndicateursGroupe({ chambre, sigle }: { chambre: s
         </div>
       </div>
       <p className="meta">
-        Calcul détaillé et classement : <a href="/mixiparl">MixiParl&rsquo;</a> · <a href="/vigiparl">VigiParl&rsquo;</a>
-        {" "}· méthodes : <a href="/mixiparl/methode">mixité</a>, <a href="/vigiparl/methode">renouvellement</a>
+        Calcul détaillé et classement : <a href="/mixiparl">MixiParl&rsquo;</a>, <a href="/vigiparl">VigiParl&rsquo;</a>
+        {", "}méthodes : <a href="/mixiparl/methode">mixité</a>, <a href="/vigiparl/methode">renouvellement</a>
       </p>
     </>
   );

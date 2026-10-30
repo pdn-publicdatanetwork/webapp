@@ -13,7 +13,7 @@ export const revalidate = 86400;
 export default async function Image({ params }: { params: Promise<{ id: string }> }) {
   const id = decodeURIComponent((await params).id);
   const f = await parlementaireDepuisId(id).catch(() => null);
-  if (!f) return imageOg({ surtitre: "Fiche parlementaire · équipe de collaborateurs", legende: "Parlementaire : son équipe de collaborateurs, ses mouvements et ses mandats" });
+  if (!f) return imageOg({ surtitre: "Fiche parlementaire : équipe de collaborateurs", legende: "Parlementaire : son équipe de collaborateurs, ses mouvements et ses mandats" });
   const e = eluDepuisFiche(f);
   const [stat, hist] = await Promise.all([
     statsElu(e).catch(() => null),
@@ -22,7 +22,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
   return carteEluOg({
     module: "DataParl'", accent: "#FFD23F",
     nom: prenomNom(f.prenom, f.nom),
-    role: CHAMBRE_LONG[f.chambre] + (f.groupe ? ` · groupe ${f.groupe}` : ""),
+    role: CHAMBRE_LONG[f.chambre] + (f.groupe ? `, groupe ${f.groupe}` : ""),
     photoUrl: photoAbsolue(f.chambre, f.slug, 400),
     chiffres: [
       stat ? { valeur: String(stat.effectif), legende: "collaborateurs aujourd'hui" } : null,
@@ -30,6 +30,6 @@ export default async function Image({ params }: { params: Promise<{ id: string }
       stat ? { valeur: String(stat.departs_total), legende: "départs depuis le début du suivi" } : null,
     ].filter((x): x is { valeur: string; legende: string } => !!x),
     serie: hist.points.map((p) => p.femmes + p.hommes),
-    serieLegende: "Effectif de l'équipe, fin de mois" + (hist.debutSuivi ? ` · suivi depuis ${hist.debutSuivi}` : ""),
+    serieLegende: "Effectif de l'équipe, fin de mois" + (hist.debutSuivi ? `, suivi depuis ${hist.debutSuivi}` : ""),
   });
 }

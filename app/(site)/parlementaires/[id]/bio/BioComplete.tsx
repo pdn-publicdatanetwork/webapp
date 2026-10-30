@@ -47,7 +47,7 @@ export default function BioComplete({ personne, nom, suite }: { personne: string
   return (
     <>
       <div className="bio-html" dangerouslySetInnerHTML={{ __html: assainirHtml(bioVersHtml(bio.texte)) }} />
-      {bio.source && <p className="meta">Source : {bio.source} · biographie éditée par l&apos;équipe DataParl&apos;.</p>}
+      {bio.source && <p className="meta">Source : {bio.source}, biographie éditée par l&apos;équipe DataParl&apos;.</p>}
     </>
   );
 }

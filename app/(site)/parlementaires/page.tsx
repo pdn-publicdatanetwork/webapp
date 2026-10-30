@@ -43,8 +43,8 @@ export default async function Parlementaires() {
         <li><a href="/departement"><strong>Par département</strong><span>Où siège chaque parlementaire, département par département →</span></a></li>
         <li><a href="/parlementaires/map"><strong>La carte des permanences</strong><span>Toutes les adresses de permanences des élus, sur une carte →</span></a></li>
         <li><a href="/senatoriales2026"><strong>Sénatoriales 2026</strong><span>Les nouveaux sénateurs, département par département →</span></a></li>
-        <li><a href="/vigiparl/an/parlementaires"><strong>Classement VigiParl&apos; — Assemblée</strong><span>Le renouvellement des équipes, élu par élu →</span></a></li>
-        <li><a href="/vigiparl/senat/parlementaires"><strong>Classement VigiParl&apos; — Sénat</strong><span>Le renouvellement des équipes, élu par élu →</span></a></li>
+        <li><a href="/vigiparl/an/parlementaires"><strong>Classement VigiParl&apos; : Assemblée</strong><span>Le renouvellement des équipes, élu par élu →</span></a></li>
+        <li><a href="/vigiparl/senat/parlementaires"><strong>Classement VigiParl&apos; : Sénat</strong><span>Le renouvellement des équipes, élu par élu →</span></a></li>
         <li><a href="/mixiparl"><strong>MixiParl&apos;</strong><span>La mixité femmes-hommes des équipes →</span></a></li>
       </ul>
 
@@ -56,7 +56,7 @@ export default async function Parlementaires() {
             <div className="puces">
               {groupes.filter((g) => g.c === c).map((g) => (
                 <a key={`${c}-${g.g}`} className="puce" href={`/mouvements/${c}?groupe=${encodeURIComponent(g.g)}`}>
-                  {g.g} · {g.n}
+                  {g.g}, {g.n}
                 </a>
               ))}
             </div>

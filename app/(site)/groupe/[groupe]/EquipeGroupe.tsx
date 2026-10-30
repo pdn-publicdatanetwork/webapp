@@ -28,11 +28,11 @@ export default async function EquipeGroupe({ chambre, sigle }: { chambre: string
           {equipe.map((m) => (
             <li key={`eq-${m.nom}`}>
               <strong>{nomComplet(m)}</strong>
-              {m.fonction ? <> — {m.fonction}</> : null}{" "}
+              {m.fonction ? <> : {m.fonction}</> : null}{" "}
               <span className="meta">
                 source&nbsp;: {m.url_source ? <a href={m.url_source}>{m.source}</a> : m.source}
                 {m.date_source ? ` (${m.date_source})` : ""}
-                {m.confiance === "a_verifier" ? " — à vérifier" : ""}
+                {m.confiance === "a_verifier" ? " (à vérifier)" : ""}
               </span>
             </li>
           ))}
@@ -43,13 +43,13 @@ export default async function EquipeGroupe({ chambre, sigle }: { chambre: string
           <h3>Assistants rattachés au groupe</h3>
           <p className="meta">
             {groupement.length} assistant{groupement.length > 1 ? "s" : ""} « (groupement) » du Parlement européen
-            — assistants accrédités ou locaux rattachés au groupe politique.
+            : assistants accrédités ou locaux rattachés au groupe politique.
           </p>
           <ul>
             {groupement.map((m, i) => (
               <li key={`grp-${i}`}>
                 <strong>{nomComplet({ prenom: m.collab_prenom, nom: m.collab_nom })}</strong>
-                {m.fonction ? <> — {m.fonction}</> : null}
+                {m.fonction ? <> : {m.fonction}</> : null}
               </li>
             ))}
           </ul>

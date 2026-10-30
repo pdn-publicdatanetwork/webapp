@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const slug = (await params).groupe;
   const g = groupeDepuisSlug(slug, await groupesExistants().catch(() => []));
   if (!g) return { title: "Groupe parlementaire" };
-  const titre = `Groupe ${g.groupe_libelle || g.groupe} — ${CHAMBRE_LONG[g.chambre]}`;
+  const titre = `Groupe ${g.groupe_libelle || g.groupe} : ${CHAMBRE_LONG[g.chambre]}`;
   return {
     title: titre,
     description: `Les élus du groupe ${g.groupe_libelle || g.groupe} à ${CHAMBRE_LONG[g.chambre]} : leurs fiches, leurs biographies, leurs équipes de collaborateurs et leurs mouvements.`,
@@ -80,7 +80,7 @@ export default async function FicheGroupe({ params }: Props) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: `Groupe ${g.groupe_libelle || g.groupe} — ${CHAMBRE_LONG[g.chambre]}`,
+    name: `Groupe ${g.groupe_libelle || g.groupe} : ${CHAMBRE_LONG[g.chambre]}`,
     numberOfItems: elus.length,
   };
   const filAriane = {
@@ -96,14 +96,14 @@ export default async function FicheGroupe({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(filAriane).replace(/</g, "\\u003c") }} />
       <p className="meta" style={{ marginTop: 0 }}>
-        <a href="/senatoriales2026">← Sénatoriales 2026</a> · <a href="/groupe">← Tous les groupes</a>
+        <a href="/senatoriales2026">← Sénatoriales 2026</a>, <a href="/groupe">← Tous les groupes</a>
       </p>
       <h1>
         {logo && (
           // eslint-disable-next-line @next/next/no-img-element
           <img className="logo-groupe" src={logo} alt={`Logo du groupe ${g.groupe}`} width={64} height={64} />
         )}
-        Groupe <span className="surligne">{g.groupe_libelle || g.groupe}</span> — {CHAMBRE_LONG[g.chambre]}
+        Groupe <span className="surligne">{g.groupe_libelle || g.groupe}</span> : {CHAMBRE_LONG[g.chambre]}
       </h1>
       <p className="lead">
         Les {elus.length} élu{elus.length > 1 ? "s" : ""} du groupe {g.groupe} à {CHAMBRE_LONG[g.chambre]}, avec pour chacun sa fiche,
@@ -111,14 +111,14 @@ export default async function FicheGroupe({ params }: Props) {
       </p>
       <p className="meta">
         Voir aussi : <a href={hrefParti(g.groupe) ?? "#"}>la fiche du parti {g.groupe}, toutes chambres confondues</a>
-        {" "}<Link href="/parlementaires">· tous les parlementaires</Link>
+        <Link href="/parlementaires">, tous les parlementaires</Link>
       </p>
       {mandatures.length > 0 && (
         <p className="meta">
           {"Au fil des mandatures : "}
           {mandatures.map((m, i) => (
             <span key={m.slug}>
-              {i > 0 ? " · " : ""}
+              {i > 0 ? ", " : ""}
               <Link href={"/groupe/" + slug + "/" + m.slug}>{m.libelle}</Link>
             </span>
           ))}

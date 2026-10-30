@@ -36,7 +36,7 @@ export default function CartePermanencesPage() {
         </>
       ) : (
         <p className="meta">
-          La collecte des adresses n&apos;a pas encore été exécutée — lancez le workflow
+          La collecte des adresses n&apos;a pas encore été exécutée : lancez le workflow
           « Permanences » (ou <code>node scripts/permanences.mjs</code> en local) pour générer les données.
         </p>
       )}

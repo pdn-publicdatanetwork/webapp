@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${nom} : biographie et parcours parlementaire`,
     description,
     alternates: { canonical: `/parlementaires/${encodeURIComponent(f.slug)}/bio` },
-    openGraph: { siteName: "DataParl'", title: `${nom} : biographie · DataParl'`, description, url: `https://www.dataparl.fr/parlementaires/${encodeURIComponent(f.slug)}/bio`, type: "profile" },
+    openGraph: { siteName: "DataParl'", title: `${nom} : biographie, DataParl'`, description, url: `https://www.dataparl.fr/parlementaires/${encodeURIComponent(f.slug)}/bio`, type: "profile" },
   };
 }
 
@@ -164,12 +164,12 @@ export default async function Bio({ params }: Props) {
       <div className="entete-elu">
         <Photo chambre={f.chambre} slug={f.slug} src={f.photo_url} nom={nom} />
         <div>
-          <p className="meta" style={{ margin: 0 }}>{CHAMBRE_LONG[f.chambre]} · biographie</p>
+          <p className="meta" style={{ margin: 0 }}>{CHAMBRE_LONG[f.chambre]}, biographie</p>
           <h1 style={{ margin: "2px 0 6px" }}>{nom}</h1>
           <p className="lead" style={{ margin: 0 }}>
             {f.actif ? role(f) : `${f.civilite === "Mme" ? "Ancienne" : "Ancien"} ${role(f)}`}
-            {f.circonscription && f.chambre !== "europarl" ? ` · ${f.circonscription}` : ""}
-            {f.actif && f.groupe ? ` · groupe ${f.groupe}` : ""}
+            {f.circonscription && f.chambre !== "europarl" ? `, ${f.circonscription}` : ""}
+            {f.actif && f.groupe ? `, groupe ${f.groupe}` : ""}
           </p>
         </div>
       </div>
@@ -190,7 +190,7 @@ export default async function Bio({ params }: Props) {
             ? <div className="bio-html" dangerouslySetInnerHTML={{ __html: assainirHtml(manuel.bio.texte) }} />
             : manuel.bio.texte.split(/\n\s*\n/).map((p, i) => <ParagrapheBio key={i} texte={p.trim()} i={i} />)}
           {manuel.bio.source && (
-            <p className="meta">Source : {manuel.bio.source} · biographie éditée par l&apos;équipe DataParl&apos;.</p>
+            <p className="meta">Source : {manuel.bio.source}, biographie éditée par l&apos;équipe DataParl&apos;.</p>
           )}
         </>
       ))}
@@ -210,8 +210,8 @@ export default async function Bio({ params }: Props) {
               <li key={`gouv-${m.debut}-${i}`}>
                 <p className="parcours-titre">
                   <strong>{m.libelle}</strong>
-                  {m.circonscription ? ` · ${m.circonscription}` : ""}
-                  <span className="meta"> · {libellePeriode({ debut: m.debut, debut_connu: !!m.debut, fin: m.fin, fin_connue: !!m.fin, en_cours: !m.fin })}</span>
+                  {m.circonscription ? `, ${m.circonscription}` : ""}
+                  <span className="meta">, {libellePeriode({ debut: m.debut, debut_connu: !!m.debut, fin: m.fin, fin_connue: !!m.fin, en_cours: !m.fin })}</span>
                   <span className="puce">gouvernement</span>
                 </p>
               </li>
@@ -224,8 +224,8 @@ export default async function Bio({ params }: Props) {
             <li key={`${mandat.chambre}-${mandat.debut}-${i}`}>
               <p className="parcours-titre">
                 <strong>{mandat.libelle}</strong>
-                {mandat.circonscription && mandat.chambre !== "europarl" ? ` · ${mandat.circonscription}` : ""}
-                <span className="meta"> · {libellePeriode({ debut: mandat.debut, debut_connu: !!mandat.debut, fin: mandat.fin, fin_connue: !!mandat.fin, en_cours: !mandat.fin })}</span>
+                {mandat.circonscription && mandat.chambre !== "europarl" ? `, ${mandat.circonscription}` : ""}
+                <span className="meta">, {libellePeriode({ debut: mandat.debut, debut_connu: !!mandat.debut, fin: mandat.fin, fin_connue: !!mandat.fin, en_cours: !mandat.fin })}</span>
                 {manuelItem && <span className="puce">précisé par DataParl&apos;</span>}
               </p>
               {g.length > 0 && <p className="meta" style={{ margin: "2px 0" }}>Groupe : {g.join(", ")}</p>}
@@ -243,14 +243,14 @@ export default async function Bio({ params }: Props) {
               <li key={`${a.code}-${a.debut}-${i}`}>
                 {a.libelle}
                 {a.fonction && a.fonction.toLowerCase() !== "membre" && <span className="puce">{a.fonction}</span>}
-                <span className="meta"> · {a.fin ? `${moisAnnee(a.debut)} à ${moisAnnee(a.fin)}` : `depuis ${moisAnnee(a.debut)}`}</span>
+                <span className="meta">, {a.fin ? `${moisAnnee(a.debut)} à ${moisAnnee(a.fin)}` : `depuis ${moisAnnee(a.debut)}`}</span>
               </li>
             ))}
             {manuel.fonctions.map((a) => (
               <li key={a.id}>
                 {a.libelle}
                 {a.fonction && a.fonction.toLowerCase() !== "membre" && <span className="puce">{a.fonction}</span>}
-                <span className="meta"> · {a.fin ? `${a.debut ? `${moisAnnee(a.debut)} à ${moisAnnee(a.fin)}` : `jusqu'en ${moisAnnee(a.fin)}`}` : a.debut ? `depuis ${moisAnnee(a.debut)}` : ""}</span>
+                <span className="meta">, {a.fin ? `${a.debut ? `${moisAnnee(a.debut)} à ${moisAnnee(a.fin)}` : `jusqu'en ${moisAnnee(a.fin)}`}` : a.debut ? `depuis ${moisAnnee(a.debut)}` : ""}</span>
               </li>
             ))}
           </ul>
@@ -272,7 +272,7 @@ export default async function Bio({ params }: Props) {
           (l'inscription aux alertes inclut la newsletter). */}
       <BlocRetenir />
       {f.url_officielle && (
-        <p className="meta">Sources officielles : <a href={f.url_officielle}>fiche institutionnelle</a> · données DataParl&apos; mises à jour chaque jour.</p>
+        <p className="meta">Sources officielles : <a href={f.url_officielle}>fiche institutionnelle</a>, données DataParl&apos; mises à jour chaque jour.</p>
       )}
     </>
   );

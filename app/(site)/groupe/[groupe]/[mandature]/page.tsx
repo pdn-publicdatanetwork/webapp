@@ -30,7 +30,7 @@ function AutresMandatures({ mandatures, chambre, actuelle, prefixe }: { mandatur
       {"Autres mandatures : "}
       {autres.map((m, i) => (
         <span key={m.slug}>
-          {i > 0 ? " · " : ""}
+          {i > 0 ? ", " : ""}
           <Link href={prefixe + "/" + m.slug}>{m.libelle}</Link>
         </span>
       ))}
@@ -47,7 +47,7 @@ function ScrutinsDeSerie({ scrutins, serie, prefixe }: { scrutins: ScrutinExista
       {"Par scrutin de renouvellement : "}
       {liste.map((s, i) => (
         <span key={s.annee}>
-          {i > 0 ? " · " : ""}
+          {i > 0 ? ", " : ""}
           <Link href={prefixe + "/" + s.annee}>{s.annee}</Link>
           <span className="meta"> ({s.elus} élu{s.elus > 1 ? "s" : ""})</span>
         </span>
@@ -78,14 +78,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!chambre || valeur === null) return { title: "Mandature" };
   const libelle = libelleMandature(chambre, valeur) ?? "mandature";
   if (CHAMBRE_DEPUIS_SLUG[slugGroupe]) {
-    return { title: CHAMBRE_LONG[chambre] + " — " + libelle, alternates: { canonical: "/groupe/" + slugGroupe + "/" + slug } };
+    return { title: CHAMBRE_LONG[chambre] + " : " + libelle, alternates: { canonical: "/groupe/" + slugGroupe + "/" + slug } };
   }
   const d = decomposerSlugGroupe(slugGroupe);
   if (!d) return { title: "Mandature" };
   const groupes = await groupesExistants().catch((): GroupeExistant[] => []);
   const resolu = sigleDepuisSlug(d.chambre, d.slugSigle, groupes.filter((g) => g.chambre === d.chambre).map((g) => g.groupe));
   const nom = resolu ? (groupes.find((g) => g.chambre === d.chambre && g.groupe === resolu.actuel)?.groupe_libelle ?? resolu.actuel) : "groupe";
-  return { title: "Groupe " + nom + " — " + libelle, alternates: { canonical: "/groupe/" + slugGroupe + "/" + slug } };
+  return { title: "Groupe " + nom + " : " + libelle, alternates: { canonical: "/groupe/" + slugGroupe + "/" + slug } };
 }
 
 export default async function PageMandature({ params }: Props) {
@@ -105,7 +105,7 @@ async function MandatureChambre({ chambre, slug }: { chambre: string; slug: stri
     mandaturesExistantes().catch((): MandatureExistante[] => []),
     scrutinsExistants().catch((): ScrutinExistant[] => []),
   ]);
-  if (!elus.length) return <Introuvable cause={"Aucun élu enregistré pour cette mandature — " + (libelleMandature(chambre, valeur) ?? slug) + "."} />;
+  if (!elus.length) return <Introuvable cause={"Aucun élu enregistré pour cette mandature (" + (libelleMandature(chambre, valeur) ?? slug) + "."} />;
   const libelle = libelleMandature(chambre, valeur) ?? "mandature";
   const sections = new Map<string, { sigle: string; libelle: string; elus: EluMandature[]; anciens: Set<string> }>();
   let horsGroupe: EluMandature[] = [];
@@ -124,7 +124,7 @@ async function MandatureChambre({ chambre, slug }: { chambre: string; slug: stri
         <a href="/groupe">← Tous les groupes</a>
       </p>
       <h1>
-        {CHAMBRE_LONG[chambre]} — <span className="surligne">{libelle}</span>
+        {CHAMBRE_LONG[chambre] : <span className="surligne">{libelle}</span>
       </h1>
       <p className="lead">
         Les {elus.length} élus ayant siégé à {CHAMBRE_LONG[chambre]} pendant la {libelle}, avec, pour chacun, le groupe de l&apos;époque.
@@ -142,8 +142,8 @@ async function MandatureChambre({ chambre, slug }: { chambre: string; slug: stri
             <a href={"/groupe/" + CHAMBRE_COURTE[chambre] + "-" + slugCollectif(s.sigle) + "/"}>
               Groupe {s.libelle || s.sigle} ({s.sigle})
             </a>
-            <span className="meta"> · {s.elus.length} élu{s.elus.length > 1 ? "s" : ""}</span>
-            {s.anciens.size > 0 && <span className="meta"> · alors {[...s.anciens].join(", ")}</span>}
+            <span className="meta">, {s.elus.length} élu{s.elus.length > 1 ? "s" : ""}</span>
+            {s.anciens.size > 0 && <span className="meta">, alors {[...s.anciens].join(", ")}</span>}
           </h2>
           <ListeElus elus={s.elus.map(pourAffichage)} afficher="groupe" />
         </section>
@@ -151,7 +151,7 @@ async function MandatureChambre({ chambre, slug }: { chambre: string; slug: stri
       {horsGroupe.length > 0 && (
         <section>
           <h2>
-            Sans groupe <span className="meta">· {horsGroupe.length} élu{horsGroupe.length > 1 ? "s" : ""}</span>
+            Sans groupe<span className="meta">, {horsGroupe.length} élu{horsGroupe.length > 1 ? "s" : ""}</span>
           </h2>
           <ListeElus elus={horsGroupe.map(pourAffichage)} afficher="groupe" />
         </section>
@@ -188,14 +188,14 @@ async function GroupeMandature({ slugGroupe, slug }: { slugGroupe: string; slug:
         {" "}<a href={"/groupe/" + slugGroupe + "/"}>← Fiche actuelle du groupe</a>
       </p>
       <h1>
-        Groupe <span className="surligne">{fiche?.groupe_libelle || resolu.actuel}</span> — {CHAMBRE_LONG[d.chambre]}, {libelle}
+        Groupe <span className="surligne">{fiche?.groupe_libelle || resolu.actuel}</span> : {CHAMBRE_LONG[d.chambre]}, {libelle}
       </h1>
       <p className="lead">
         Les {duGroupe.length} élus du groupe {resolu.actuel} ayant siégé à {CHAMBRE_LONG[d.chambre]} pendant la {libelle},
         avec, pour chacun, le groupe de l&apos;époque.
       </p>
       {anciens.length > 0 && (
-        <p className="meta">Nom de l&apos;époque : {anciens.join(", ")} — renommage harmonisé vers {resolu.actuel}.</p>
+        <p className="meta">Nom de l&apos;époque : {anciens.join(", ")} (renommage harmonisé vers {resolu.actuel}).</p>
       )}
       {resolu.ancien && (
         <p className="meta">Adresse « {slugGroupe} » : ancien nom {resolu.ancien}, fiche d&apos;aujourd&apos;hui {resolu.actuel}.</p>

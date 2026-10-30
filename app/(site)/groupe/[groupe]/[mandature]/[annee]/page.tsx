@@ -43,7 +43,7 @@ function AutresScrutins({ scrutins, serie, actuel, prefixe }: { scrutins: Scruti
       {"Autres scrutins de la série : "}
       {autres.map((s, i) => (
         <span key={s.annee}>
-          {i > 0 ? " · " : ""}
+          {i > 0 ? ", " : ""}
           <Link href={prefixe + "/" + s.annee}>{s.annee}</Link>
         </span>
       ))}
@@ -64,7 +64,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const scrutin = SCRUTINS_SENAT.find((s) => s.serie === serie && s.annee === annee);
   if (CHAMBRE_DEPUIS_SLUG[slugGroupe]) {
     return {
-      title: "Sénat — scrutin de " + annee + (scrutin ? " (" + scrutin.date + ")" : ""),
+      title: "Sénat : scrutin de " + annee + (scrutin ? " (" + scrutin.date + ")" : ""),
       alternates: { canonical: "/groupe/senat/" + slugMandature + "/" + slugAnnee },
     };
   }
@@ -74,7 +74,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const resolu = sigleDepuisSlug(d.chambre, d.slugSigle, groupes.filter((g) => g.chambre === d.chambre).map((g) => g.groupe));
   const nom = resolu ? (groupes.find((g) => g.chambre === d.chambre && g.groupe === resolu.actuel)?.groupe_libelle ?? resolu.actuel) : "groupe";
   return {
-    title: "Groupe " + nom + " — scrutin de " + annee,
+    title: "Groupe " + nom + " : scrutin de " + annee,
     alternates: { canonical: "/groupe/" + slugGroupe + "/" + slugMandature + "/" + slugAnnee },
   };
 }
@@ -84,7 +84,7 @@ export default async function PageScrutin({ params }: Props) {
   const chambre = CHAMBRE_DEPUIS_SLUG[slugGroupe];
   if (chambre) {
     if (chambre !== "senat") {
-      return <Introuvable cause="Les pages par scrutin de renouvellement n'existent que pour le Sénat — l'Assemblée nationale et le Parlement européen suivent des législatures numérotées." />;
+      return <Introuvable cause="Les pages par scrutin de renouvellement n'existent que pour le Sénat : l'Assemblée nationale et le Parlement européen suivent des législatures numérotées." />;
     }
     return <ScrutinChambre slugMandature={slugMandature} slugAnnee={slugAnnee} />;
   }
@@ -108,7 +108,7 @@ async function ScrutinChambre({ slugMandature, slugAnnee }: { slugMandature: str
     scrutinsExistants().catch((): ScrutinExistant[] => []),
   ]);
   if (!elus.length) {
-    return <Introuvable cause={"Aucun élu enregistré pour le scrutin du " + scrutin.date + " — les pages suivent les mandats réellement enregistrés."} />;
+    return <Introuvable cause={"Aucun élu enregistré pour le scrutin du " + scrutin.date + " : les pages suivent les mandats réellement enregistrés."} />;
   }
   const sections = new Map<string, { sigle: string; libelle: string; elus: EluMandature[]; anciens: Set<string> }>();
   let horsGroupe: EluMandature[] = [];
@@ -128,7 +128,7 @@ async function ScrutinChambre({ slugMandature, slugAnnee }: { slugMandature: str
         {" "}<a href={"/groupe/senat/" + slugMandature}>← Série {serie}</a>
       </p>
       <h1>
-        Sénat — <span className="surligne">scrutin de {annee}</span>
+        Sénat : <span className="surligne">scrutin de {annee}</span>
       </h1>
       <p className="lead">
         Les {elus.length} sénateurs élus lors du scrutin du {scrutin.date} (série {serie}, {scrutin.sieges} sièges renouvelés),
@@ -141,8 +141,8 @@ async function ScrutinChambre({ slugMandature, slugAnnee }: { slugMandature: str
             <a href={"/groupe/senat-" + slugCollectif(s.sigle) + "/"}>
               Groupe {s.libelle || s.sigle} ({s.sigle})
             </a>
-            <span className="meta"> · {s.elus.length} élu{s.elus.length > 1 ? "s" : ""}</span>
-            {s.anciens.size > 0 && <span className="meta"> · alors {[...s.anciens].join(", ")}</span>}
+            <span className="meta">, {s.elus.length} élu{s.elus.length > 1 ? "s" : ""}</span>
+            {s.anciens.size > 0 && <span className="meta">, alors {[...s.anciens].join(", ")}</span>}
           </h2>
           <ListeElus elus={s.elus.map(pourAffichage)} afficher="groupe" />
         </section>
@@ -150,7 +150,7 @@ async function ScrutinChambre({ slugMandature, slugAnnee }: { slugMandature: str
       {horsGroupe.length > 0 && (
         <section>
           <h2>
-            Sans groupe <span className="meta">· {horsGroupe.length} élu{horsGroupe.length > 1 ? "s" : ""}</span>
+            Sans groupe<span className="meta">, {horsGroupe.length} élu{horsGroupe.length > 1 ? "s" : ""}</span>
           </h2>
           <ListeElus elus={horsGroupe.map(pourAffichage)} afficher="groupe" />
         </section>
@@ -164,7 +164,7 @@ async function ScrutinChambre({ slugMandature, slugAnnee }: { slugMandature: str
 async function GroupeScrutin({ slugGroupe, slugMandature, slugAnnee }: { slugGroupe: string; slugMandature: string; slugAnnee: string }) {
   const d = decomposerSlugGroupe(slugGroupe);
   if (!d || d.chambre !== "senat") {
-    return <Introuvable cause="Les pages par scrutin de renouvellement n'existent que pour le Sénat — l'Assemblée nationale et le Parlement européen suivent des législatures numérotées." />;
+    return <Introuvable cause="Les pages par scrutin de renouvellement n'existent que pour le Sénat : l'Assemblée nationale et le Parlement européen suivent des législatures numérotées." />;
   }
   const serie = mandatureDepuisSlug("senat", slugMandature);
   const annee = anneeValide(slugAnnee);
@@ -197,14 +197,14 @@ async function GroupeScrutin({ slugGroupe, slugMandature, slugAnnee }: { slugGro
         {" "}<a href={"/groupe/" + slugGroupe + "/" + slugMandature}>← Série {serie}</a>
       </p>
       <h1>
-        Groupe <span className="surligne">{fiche?.groupe_libelle || resolu.actuel}</span> — Sénat, scrutin de {annee}
+        Groupe <span className="surligne">{fiche?.groupe_libelle || resolu.actuel}</span> : Sénat, scrutin de {annee}
       </h1>
       <p className="lead">
         Les {duGroupe.length} sénateurs du groupe {resolu.actuel} élus lors du scrutin du {scrutin.date} (série {serie},
         {scrutin.sieges} sièges renouvelés), avec, pour chacun, le groupe de l&apos;époque.
       </p>
       {anciens.length > 0 && (
-        <p className="meta">Nom de l&apos;époque : {anciens.join(", ")} — renommage harmonisé vers {resolu.actuel}.</p>
+        <p className="meta">Nom de l&apos;époque : {anciens.join(", ")} (renommage harmonisé vers {resolu.actuel}).</p>
       )}
       {resolu.ancien && (
         <p className="meta">Adresse « {slugGroupe} » : ancien nom {resolu.ancien}, fiche d&apos;aujourd&apos;hui {resolu.actuel}.</p>
