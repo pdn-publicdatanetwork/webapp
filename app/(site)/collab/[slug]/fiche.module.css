@@ -64,13 +64,15 @@
   font: inherit;
   font-size: .8rem;
   line-height: 1;
-  padding: 7px 13px;
+  height: 32px;
+  padding: 0 13px;
   border-radius: 999px;
   border: 1px solid var(--line);
   background: var(--card);
   color: var(--ink);
   cursor: pointer;
   text-decoration: none;
+  margin: 0;
 }
 
 .partager a:hover,
