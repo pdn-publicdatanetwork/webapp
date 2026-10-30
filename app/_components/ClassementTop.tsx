@@ -27,8 +27,8 @@ export default function ClassementTop({
             <span className="meta">{i + 1}.</span>
             <div>
               <Link href={it.lien}>{it.nom}</Link>
-              {it.libelle ? <span className="meta"> · {it.libelle}</span> : null}
-              <span className="meta"> · {it.texte}</span>
+              {it.libelle ? <span className="meta">, {it.libelle}</span> : null}
+              <span className="meta">, {it.texte}</span>
               <div aria-hidden="true" style={{ background: "#eceae4", borderRadius: "999px", height: "8px", marginTop: "0.35rem", maxWidth: "26rem" }}>
                 <div
                   className={barre}

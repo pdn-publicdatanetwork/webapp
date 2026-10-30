@@ -6,7 +6,7 @@ import { sessionActuelle } from "@/lib/supabaseBrowser";
 
 // Crayon « tout éditer » du site public : visible pour l'équipe connectée,
 // sur toutes les pages www sauf /mon-compte. L'édition porte sur le contenu
-// principal de la page (<main>) — jamais l'en-tête, le pied de page ni les
+// principal de la page (<main>) : jamais l'en-tête, le pied de page ni les
 // menus, qui restent en dehors. Le HTML enregistré remplace ensuite le
 // contenu de la page pour tous les visiteurs (CMS maison léger, table
 // contenu_pages). À manier avec goût sur les pages très interactives

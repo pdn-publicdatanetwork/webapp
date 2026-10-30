@@ -29,7 +29,7 @@ export default function BarresAnnuelles({ points, couleur, titre, format, max, e
           const partiel = enCours === p.an;
           return (
             <g key={p.an}>
-              <title>{`${p.an}${partiel ? " (année en cours)" : ""} : ${p.valeur === null ? "–" : format(v)}${p.detail ? ` · ${p.detail}` : ""}`}</title>
+              <title>{`${p.an}${partiel ? " (année en cours)" : ""} : ${p.valeur === null ? "–" : format(v)}${p.detail ? `, ${p.detail}` : ""}`}</title>
               <rect x={G + i * largeur} y={pad} width={largeur} height={H - B - pad} fill="transparent" />
               {p.valeur !== null && <path d={`M${x},${H - B} v${-Math.max(0, h - 4)} q0,-4 4,-4 h${w - 8} q4,0 4,4 v${Math.max(0, h - 4)} z`} fill={couleur} opacity={partiel ? 0.45 : 1} />}
               <text x={x + w / 2} y={H - 6} textAnchor="middle" fontSize="11" fill="var(--muted)">{String(p.an).slice(2)}</text>

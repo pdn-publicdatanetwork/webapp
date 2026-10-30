@@ -33,7 +33,7 @@ export function filtrerElus(elus: EluCompact[], saisie: string, chambre?: string
   return res.slice(0, max).map(({ e }) => ({
     valeur: e.s,
     libelle: prenomNom(e.p, e.n),
-    detail: [CHAMBRE_COURT[e.c], e.g, e.d, e.a ? "" : "ancien mandat"].filter(Boolean).join(" · "),
+    detail: [CHAMBRE_COURT[e.c], e.g, e.d, e.a ? "" : "ancien mandat"].filter(Boolean).join(", "),
     href: `/parlementaires/${encodeURIComponent(e.s)}`,
   }));
 }
@@ -83,7 +83,7 @@ export default function Autocompletion({ id, source, chambre, placeholder, valeu
       // ouvre sa page d'indicateurs, pas sa fiche.
       setOptions(res.map((o) =>
         outil && typeof o.href === "string" && o.href.startsWith("/parlementaires/")
-          ? { ...o, href: `/${outil}/${o.href.slice("/parlementaires/".length)}`, detail: [o.detail, "indicateurs"].filter(Boolean).join(" · ") }
+          ? { ...o, href: `/${outil}/${o.href.slice("/parlementaires/".length)}`, detail: [o.detail, "indicateurs"].filter(Boolean).join(", ") }
           : o,
       ));
     }, 200);

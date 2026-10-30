@@ -112,7 +112,7 @@ export default function CartePermanences({ points, maj }: { points: Permanence[]
             onClick={() => setChoisi(m.p)}
             style={{ cursor: "pointer" }}
           >
-            <title>{`${m.p.n} — ${m.p.a}, ${m.p.v}`}</title>
+            <title>{`${m.p.n}, ${m.p.a}, ${m.p.v}`}</title>
           </circle>
         ))}
       </svg>
@@ -126,7 +126,7 @@ export default function CartePermanences({ points, maj }: { points: Permanence[]
       ) : (
         <p className="meta">Cliquez sur un point pour afficher l&apos;adresse et le lien vers la fiche de l&apos;élu.</p>
       )}
-      <p className="meta">{marqueurs.length.toLocaleString("fr-FR")} permanences affichées{maj ? ` — adresses collectées le ${maj}` : ""}.</p>
+      <p className="meta">{marqueurs.length.toLocaleString("fr-FR")} permanences affichées{maj ? ` : adresses collectées le ${maj}` : ""}.</p>
     </div>
   );
 }

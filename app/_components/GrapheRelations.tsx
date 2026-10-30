@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 
-// Graphe relationnel (force graph) : un nœud central — la structure — relié
+// Graphe relationnel (force graph) : un nœud central (la structure) relié
 // à ses eurodéputés clients, colorés par groupe politique. SVG pur, sans
 // dépendance : les positions de départ (cercle) sont rendues côté serveur,
 // puis une simulation légère (répulsion + ressorts) les répartit dans le
@@ -116,7 +116,7 @@ export default function GrapheRelations({
           const p = pts[i + 1];
           const contenu = (
             <>
-              <title>{x.label + (x.groupe ? " · " + x.groupe : "")}</title>
+              <title>{x.label + (x.groupe ? ", " + x.groupe : "")}</title>
               <circle cx={p.x} cy={p.y} r="15" fill={couleur(x.groupe)} stroke="#fff" strokeWidth="2" />
               <text x={p.x} y={p.y + 31} textAnchor="middle" fontSize="11" fill="#334155">
                 {court(x.label, 22)}

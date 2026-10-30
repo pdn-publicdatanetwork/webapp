@@ -22,8 +22,8 @@ export default function ClassementElus({ base, lignes, colonnes, page, filtre, a
     <>
       <RechercheStatElu id="classement-recherche" placeholder="Chercher un élu dans le classement" colonnes={colonnes} lignes={lignes} />
       <p className="meta">
-        {filtre && <>Filtre : <strong>{filtre.valeur}</strong> · <a href={base}>tout afficher</a> · </>}
-        <a href={autreChambre.href}>{autreChambre.libelle}</a>{ordre && <> · <a href={ordre.href}>{ordre.libelle}</a></>}
+        {filtre && <>Filtre : <strong>{filtre.valeur}</strong>, <a href={base}>tout afficher</a>, </>}
+        <a href={autreChambre.href}>{autreChambre.libelle}</a>{ordre && <>, <a href={ordre.href}>{ordre.libelle}</a></>}
       </p>
       {lignes.length === 0 ? <p className="meta">Aucun élu pour ce filtre.</p> : (
         <div className="defile">
@@ -38,7 +38,7 @@ export default function ClassementElus({ base, lignes, colonnes, page, filtre, a
       )}
       <nav className="pagination" aria-label="Pages du classement">
         {p > 1 ? <a href={lien(p - 1)}>← Précédents</a> : <span />}
-        <span className="meta">Page {p} sur {pages} · {lignes.length} élus</span>
+        <span className="meta">Page {p} sur {pages}, {lignes.length} élus</span>
         {p < pages ? <a href={lien(p + 1)}>Suivants →</a> : <span />}
       </nav>
     </>

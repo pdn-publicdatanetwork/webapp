@@ -6,7 +6,7 @@ export function VersionMethode({ donnees, historique }: { donnees: string | null
   return (
     <p className="version-methode">
       Méthode applicable aux données {donnees ? `du ${dateTitre(donnees)}` : "actuelles"}
-      {v ? ` · version du ${dateTitre(v)}` : ""}. Toute évolution de méthode est datée et décrite <a href="#historique">en bas de page</a>.
+      {v ? `, version du ${dateTitre(v)}` : ""}. Toute évolution de méthode est datée et décrite <a href="#historique">en bas de page</a>.
     </p>
   );
 }

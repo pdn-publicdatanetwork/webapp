@@ -49,7 +49,7 @@ export function CourbeMensuelle({
   const grille = [0, 0.5, 1].map((t) => H - MARGE_B - t * (H - MARGE_B - 12));
   return (
     <figure className="histo">
-      <figcaption>{titre}{legende ? <span className="meta"> · {legende}</span> : null}</figcaption>
+      <figcaption>{titre}{legende ? <span className="meta">, {legende}</span> : null}</figcaption>
       <svg viewBox={`0 0 ${L} ${H}`} role="img" aria-label={`${titre}, mois par mois`}>
         {/* Axe : trois niveaux (0, milieu, max) */}
         {grille.map((y, i) => (
@@ -83,7 +83,7 @@ export function BarresMensuelles({
   const reperes = [0, Math.floor((n - 1) / 2), n - 1].filter((v, i, a) => a.indexOf(v) === i);
   return (
     <figure className="histo">
-      <figcaption>{titre}<span className="meta"> · <span className="ok">■</span> arrivées <span className="meta">■</span> départs (max {max}/mois)</span></figcaption>
+      <figcaption>{titre}<span className="meta">, <span className="ok">■</span> arrivées <span className="meta">■</span> départs (max {max}/mois)</span></figcaption>
       <svg viewBox={`0 0 ${L} ${H}`} role="img" aria-label={`${titre}, mois par mois`}>
         <line x1={MARGE_G} y1={H - MARGE_B} x2={L - 8} y2={H - MARGE_B} stroke="var(--line)" />
         {points.map((p, i) => {

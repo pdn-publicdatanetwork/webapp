@@ -1,7 +1,7 @@
 // Bloc rétention : transformer une lecture ponctuelle en visite récurrente.
 // Affiché aux moments de forte valeur (après un export CSV réussi, en fin des
 // fiches populaires) : le renvoi vers /alertes (Daily/Weekly) est le levier
-// n°1 de rétention du site — l'inscription aux alertes inscrit aussi à la
+// n°1 de rétention du site : l'inscription aux alertes inscrit aussi à la
 // newsletter (voir app/api/compte/alertes).
 export default function BlocRetenir({ compact = false }: { compact?: boolean }) {
   return (
