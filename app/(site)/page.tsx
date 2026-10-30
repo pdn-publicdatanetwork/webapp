@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { compteAffectations, derniersMouvements } from "@/lib/data";
-import { CHAMBRE, TYPE, dateLongue, idParlementaire, nomAffiche, prenomNom, type MouvementAffiche } from "@/lib/format";
+import type { MouvementAffiche } from "@/lib/format";
+import LigneMouvement from "../_components/LigneMouvement";
+import { Ic, IC_ALERTES, IC_ENVELOPPE, IC_GOUVERNEMENT, IC_MOUVEMENTS, IC_PARLEMENTAIRES, IC_SENATORIALES, IC_UTILISATEURS } from "../_components/icones";
 
 export const revalidate = 300;
 export const metadata: Metadata = { alternates: { canonical: "/" } };
@@ -30,57 +32,7 @@ const jsonLd = [
     name: "DataParl'",
     url: "https://www.dataparl.fr",
     logo: "https://www.dataparl.fr/icon.svg",
-    description: "Projet civique de suivi des collaborateurs parlementaires français, d'après les publications officielles.",
-    contactPoint: { "@type": "ContactPoint", contactType: "customer support", url: "https://www.dataparl.fr/contact" },
-  },
-];
-
-// Petites icônes de trait (style Feather), inline pour rester sans dépendance.
-function Ic({ d }: { d: string }) {
-  return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" dangerouslySetInnerHTML={{ __html: d }} />
-  );
-}
-const IC_UTILISATEURS = '<path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>';
-const IC_MOUVEMENTS = '<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>';
-const IC_PARLEMENTAIRES = '<line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/>';
-const IC_GOUVERNEMENT = '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>';
-const IC_SENATORIALES = '<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>';
-const IC_ALERTES = '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>';
-const IC_ENVELOPPE = '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>';
-
-// Une ligne de mouvement : nom du collaborateur en gras (lien), élu + groupe
-// en texte secondaire, chambre + date très discrets, badge compact.
-function LigneMouvement({ m }: { m: MouvementAffiche }) {
-  const lienElu = (nom: string, cle: string, id: string) => (
-    <a className="elu" href={"/parlementaires/" + encodeURIComponent(idParlementaire(m.chambre, id, cle, nom))}>{nomAffiche(nom)}</a>
-  );
-  const qui = prenomNom(m.collab_prenom, m.collab_nom);
-  const collab = m.collab_cle ? (
-    <a className="collab" href={"/collab/k/" + encodeURIComponent(m.collab_cle)}>{qui}</a>
-  ) : (
-    <strong className="collab">{qui}</strong>
-  );
-  const groupe = m.elu_groupe ? <span className="groupe"> ({m.elu_groupe})</span> : null;
-  const elu = <>{lienElu(m.elu_nom, m.elu_cle, m.elu_id)}{groupe}</>;
-  return (
-    <li className="mouvement">
-      <div className={"mouvement-type " + m.type}>
-        <span className="dot" /> {TYPE[m.type]}
-      </div>
-      <div className="mouvement-content">
-        <p className="mouvement-main">
-          {m.type === "arrivee" && <>{collab} rejoint l&apos;équipe de {elu}</>}
-          {m.type === "depart" && <>{collab} quitte l&apos;équipe de {elu}</>}
-          {m.type === "transfert" && <>{collab} passe de l&apos;équipe de {nomAffiche(m.elu_origine_nom)} à celle de {elu}</>}
-        </p>
-        <p className="mouvement-meta">{CHAMBRE[m.chambre]}, {dateLongue(m.date_event)}{m.fonction ? ", " + m.fonction : ""}</p>
-      </div>
-    </li>
-  );
-}
-
-export default async function Accueil() {
+    description: "Projet civique de suivi des collaborateurs parlementaires français, d'après les publicatiexport default async function Accueil() {
   let mouvements: MouvementAffiche[] = [];
   let comptes: Record<string, number> = {};
   let indisponible = false;
