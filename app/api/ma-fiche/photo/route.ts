@@ -6,13 +6,16 @@ import { dataAdmin } from "@/lib/supabaseAdmin";
 export const dynamic = "force-dynamic";
 
 // Photo de profil de la fiche : upload par la personne associée à la fiche
-// vérifiée, stockage dans le bucket public photos-profils (data), colonne
-// photo_url de collaborateurs. Limites : 2 Mo, JPEG/PNG/WebP, vérification
-// de la signature du fichier (l'extension seule ne prouve rien).
-// DELETE retire la photo (fiche publique et Ma fiche) sans délai.
+// vérifiée, stockage dans le bucket photos-profils (data). L'URL publique
+// est servie par media.dataparl.fr/cldb/<collab_id>.<ext> (règle proxy,
+// route app/media/cldb) ; colonne photo_url de collaborateurs.
+// Limites : 2 Mo, JPEG/PNG/WebP, vérification de la signature du fichier
+// (l'extension seule ne prouve rien). DELETE retire la photo (fiche
+// publique et Ma fiche) sans délai.
 
 const TAILLE_MAX = 2 * 1024 * 1024;
 const BUCKET = "photos-profils";
+const MEDIA_BASE = (process.env.NEXT_PUBLIC_MEDIA_BASE ?? "https://media.dataparl.fr").replace(/\/$/, "");
 
 function extensionValide(f: File): "jpg" | "png" | "webp" | null {
   const t = f.type;
@@ -63,11 +66,11 @@ export async function POST(req: Request) {
   });
   if (up.error) return NextResponse.json({ error: "enregistrement impossible" }, { status: 500 });
 
-  const { data } = db.storage.from(BUCKET).getPublicUrl(chemin);
-  const url = new URL(data.publicUrl);
-  url.searchParams.set("v", Date.now().toString()); // cache-buster du revalidate horaire
-  await db.from("collaborateurs").update({ photo_url: url.toString() }).eq("collab_id", a.collab_id);
-  return NextResponse.json({ ok: true, photo_url: url.toString() });
+  // URL publique sur media.dataparl.fr ; le cache-buster force le
+  // rafraîchissement (la fiche publique se revalidate toutes les heures).
+  const photo = `${MEDIA_BASE}/cldb/${chemin}?v=${Date.now()}`;
+  await db.from("collaborateurs").update({ photo_url: photo }).eq("collab_id", a.collab_id);
+  return NextResponse.json({ ok: true, photo_url: photo });
 }
 
 export async function DELETE(req: Request) {
