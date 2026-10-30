@@ -6,6 +6,8 @@ import { authBrowser, sessionActuelle } from "@/lib/supabaseBrowser";
 type Compte = {
   email: string;
   cree_le: string;
+  prenom: string;
+  nom: string;
   fournisseurs: string[];
   alertes: { actives: boolean; frequence: "quotidienne" | "hebdomadaire"; chambres: string[]; types: string[] };
 };
@@ -16,13 +18,12 @@ const CHAMBRES = [
   { v: "europarl", l: "Parlement européen" },
 ];
 
-const NOMS: Record<string, string> = { email: "Code par email", google: "Google", github: "GitHub", twitter: "X (Twitter)", slack_oidc: "Slack" };
-
+// Mon compte : le centre du compte, à la manière du compte Google. Chaque
+// rubrique est une carte qui résume l'état et mène à sa page dédiée.
 export default function MonCompte() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [compte, setCompte] = useState<Compte | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; texte: string } | null>(null);
-  const [enCours, setEnCours] = useState(false);
 
   const appel = useCallback(
     // Le jeton est relu à chaque appel : la session en mémoire peut être
@@ -63,51 +64,12 @@ export default function MonCompte() {
     return (
       <div className="card">
         <h1>Mon compte</h1>
-        <p>Connecte-toi pour gérer ton compte et tes alertes.</p>
+        <p>Connecte-toi pour gérer ton compte, tes alertes et tes données.</p>
         <a className="btn" href="/connexion?suite=/mon-compte">Se connecter</a>
       </div>
     );
   }
   if (!compte) return <p className="meta">{message?.texte ?? "Chargement…"}</p>;
-
-  async function associer(provider: "google" | "github" | "twitter") {
-    const { error } = await authBrowser().auth.linkIdentity({
-      provider,
-      options: { redirectTo: `${window.location.origin}/mon-compte` },
-    });
-    if (error) {
-      const m = error.message ?? "";
-      setMessage({
-        ok: false,
-        texte: /already|exists|linked|conflict/i.test(m)
-          ? "Ce compte est déjà relié à un autre compte DataParl'. Supprime d'abord l'autre compte (ou écris-nous via le formulaire de contact) pour pouvoir l'associer ici."
-          : /provider|unsupported|not enabled|disabled/i.test(m)
-            ? "Ce moyen de connexion n'est pas encore activé sur DataParl' — l'équipe travaille dessus. En attendant, connecte-toi par e-mail, Google ou GitHub."
-            : `L'association n'a pas abouti : ${m}. Réessaie, ou écris-nous via le formulaire de contact.`,
-      });
-    }
-  }
-
-  async function exporter() {
-    const r = await appel("/api/compte/export");
-    if (!r.ok) return setMessage({ ok: false, texte: "Export impossible, réessaie." });
-    const url = URL.createObjectURL(await r.blob());
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "dataparl-mes-donnees.json";
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  async function supprimer() {
-    if (!window.confirm("Supprimer définitivement ton compte, tes alertes et tes clés API ? Cette action est irréversible.")) return;
-    setEnCours(true);
-    const r = await appel("/api/compte", { method: "DELETE" });
-    setEnCours(false);
-    if (!r.ok) return setMessage({ ok: false, texte: "Suppression impossible, réessaie plus tard." });
-    await authBrowser().auth.signOut();
-    window.location.replace("/?compte=supprime");
-  }
 
   async function deconnexion() {
     await authBrowser().auth.signOut();
@@ -115,62 +77,50 @@ export default function MonCompte() {
   }
 
   const fmt = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  const initiale = (compte.prenom || compte.email)[0].toUpperCase();
+  const nomComplet = [compte.prenom, compte.nom].filter(Boolean).join(" ");
+  const resumeAlertes = compte.alertes.actives
+    ? `Actives : ${compte.alertes.chambres.map((c) => CHAMBRES.find((x) => x.v === c)?.l ?? c).join(", ")}`
+    : "Aucune alerte pour l'instant";
+
+  function Carte({ titre, resume, href, externe = false }: { titre: string; resume: string; href: string; externe?: boolean }) {
+    return (
+      <a className="section-compte" href={href} {...(externe ? { target: "_blank", rel: "noreferrer" } : {})} style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
+        <div>
+          <p style={{ margin: 0, fontWeight: 600 }}>{titre}</p>
+          <p className="meta" style={{ margin: "4px 0 0" }}>{resume}</p>
+        </div>
+        <span aria-hidden="true" style={{ marginLeft: "auto", color: "#64748b", fontSize: 20 }}>{externe ? "↗" : "›"}</span>
+      </a>
+    );
+  }
 
   return (
     <div className="etroit">
       <h1>Mon <span className="surligne">compte</span></h1>
       {message && <p className={message.ok ? "ok" : "erreur"} role="status">{message.texte}</p>}
 
-      <section className="section-compte">
-        <h2>Profil et connexions</h2>
-        <p><strong>{compte.email}</strong><br /><span className="meta">Compte créé le {fmt.format(new Date(compte.cree_le))}</span></p>
-        <p>Méthodes de connexion : {compte.fournisseurs.map((f) => NOMS[f] ?? f).join(", ")}</p>
-        {!compte.fournisseurs.includes("google") && (
-          <button className="secondaire" onClick={() => associer("google")}>Associer mon compte Google</button>
-        )}{" "}
-        {!compte.fournisseurs.includes("github") && (
-          <button className="secondaire" onClick={() => associer("github")}>Associer mon compte GitHub</button>
-        )}{" "}
-        {!compte.fournisseurs.includes("twitter") && (
-          <button className="secondaire" onClick={() => associer("twitter")}>Associer mon compte X</button>
-        )}
-        <p><button className="lien" onClick={deconnexion}>Se déconnecter</button></p>
+      <section className="section-compte" style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#0F172A", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 600, flexShrink: 0 }}>
+          {initiale}
+        </div>
+        <div>
+          <p style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>{compte.prenom ? `Bonjour ${compte.prenom}` : compte.email}</p>
+          <p className="meta" style={{ margin: 0 }}>
+            {compte.prenom ? `${compte.email} — ` : ""}compte créé le {fmt.format(new Date(compte.cree_le))}
+          </p>
+        </div>
       </section>
 
-      <section className="section-compte">
-        <h2>Ma fiche collaborateur</h2>
-        <p>Le profil CV déclaré sur votre fiche : formations, expériences, langues et photo, publiés sur dataparl.fr.</p>
-        <a className="btn secondaire" href="/mon-compte/ma-fiche">Gérer Ma fiche</a>{" "}
-        <a className="btn secondaire" href="/mon-compte/associer-fiche">Associer ma fiche</a>
-      </section>
+      <Carte titre="Informations personnelles" resume={nomComplet || "Prénom et nom utilisés pour tes e-mails"} href="/mon-compte/informations" />
+      <Carte titre="Sécurité et connexion" resume="Mot de passe, validation en deux étapes, clés d'accès, mon activité" href="/mon-compte/securite" />
+      <Carte titre="Données et confidentialité" resume="Newsletter, suivi, export et suppression" href="/mon-compte/preferences" />
+      <Carte titre="Mes alertes" resume={resumeAlertes} href="/mon-compte/alertes" />
+      <Carte titre="Ma fiche collaborateur" resume="Le profil CV publié sur dataparl.fr" href="/mon-compte/ma-fiche" />
+      <Carte titre="Mon espace API" resume="Ta clé API, sa consommation et la documentation" href="https://api.dataparl.fr/mon-espace-api" externe />
+      <Carte titre="Achats et abonnements" resume="Bientôt : des packs sans publicité" href="/mon-compte/achats" />
 
-      <section className="section-compte">
-        <h2>Mes alertes</h2>
-        <p>
-          {compte.alertes.actives
-            ? `Actives : ${compte.alertes.chambres.map((c) => CHAMBRES.find((x) => x.v === c)?.l ?? c).join(", ")}, ${compte.alertes.frequence === "quotidienne" ? "chaque jour où ça bouge" : "une fois par semaine"}.`
-            : "Tu ne reçois pas d'alertes pour l'instant."}
-        </p>
-        <a className="btn secondaire" href="/mon-compte/preferences">Gérer mes préférences</a>{" "}
-        <a className="btn secondaire" href="/alertes">Affiner (élus, groupes)</a>
-      </section>
-
-      <section className="section-compte">
-        <h2>Mes données</h2>
-        <p>Télécharge tout ce que DataParl&apos; conserve sur toi (format JSON), ou supprime ton compte.</p>
-        <button className="secondaire" onClick={exporter}>Exporter mes données</button>{" "}
-        <button className="danger" onClick={supprimer} disabled={enCours}>Supprimer mon compte</button>
-        <p className="meta">
-          La suppression efface ton compte, tes alertes et tes clés API. La trace de tes consentements est conservée 3 ans,
-          comme prévu par la <a href="/informations-legales/confidentialite">politique de données personnelles</a>.
-        </p>
-      </section>
-
-      <section className="section-compte">
-        <h2>Mon espace API</h2>
-        <p>Ta clé API, sa consommation et la documentation sont sur le site de l&apos;API.</p>
-        <a className="btn secondaire" href="https://api.dataparl.fr/mon-espace-api">Ouvrir mon espace API</a>
-      </section>
+      <p style={{ marginTop: 18 }}><button className="lien" onClick={deconnexion}>Se déconnecter</button></p>
     </div>
   );
 }
