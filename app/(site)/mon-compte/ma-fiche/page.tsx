@@ -268,8 +268,7 @@ export default function MaFiche() {
     e.preventDefault();
     e.stopPropagation();
     if (!crop) return;
-    drag.current = { px: e.clientX, py: e.clientY, x: crop.x, y: crop.y, s: crop.s, mode };
-    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    drag.current = { px: e.clientX, py: e.clientY, x: crop.x, y: crop.y, s: crop.s, mode }; (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
   }
 
   function pendantDrag(e: React.PointerEvent) {
@@ -367,6 +366,10 @@ export default function MaFiche() {
       <p className="lead">
         Chaque ajout validé est publié immédiatement sur votre fiche (rubrique visible par les comptes
         DataParl&apos;). L&apos;onglet « Parlement » (sources AN/Sénat) reste édité par DataParl&apos;.
+      </p>
+      <p className="meta" style={{ border: "1px solid rgba(15, 23, 42, 0.12)", borderRadius: 10, padding: "10px 14px" }}>
+        À savoir : désassocier votre compte ou supprimer votre compte DataParl&apos; entraîne la suppression de
+        votre fiche collaborateur complétée (profil CV, photo, éléments déclarés).
       </p>
 
       <div className={styles.entete}>
