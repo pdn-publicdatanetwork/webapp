@@ -23,8 +23,8 @@ export default function ListeMouvements({ mouvements }: { mouvements: MouvementA
           <div>
             <Phrase m={m} />
             <div className="meta">
-              {CHAMBRE[m.chambre]} · {dateLongue(m.date_event)}
-              {m.fonction ? ` · ${m.fonction}` : ""}
+              {CHAMBRE[m.chambre]}, {dateLongue(m.date_event)}
+              {m.fonction ? `, ${m.fonction}` : ""}
             </div>
           </div>
         </li>

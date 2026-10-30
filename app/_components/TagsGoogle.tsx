@@ -5,7 +5,7 @@ import { espaceInterne } from "@/lib/consentement";
 // Google Tag Manager (GTM-KW3MJMTK), chargé uniquement sur les espaces
 // publics (www.dataparl.fr, api, jobs, media…). Le conteneur était avant
 // injecté dans le <head> de app/layout.tsx sur TOUTES les pages, y compris
-// admin.dataparl.fr et webmail.dataparl.fr — c'est un tag de ce conteneur
+// admin.dataparl.fr et webmail.dataparl.fr : c'est un tag de ce conteneur
 // (message de consentement Google / Funding Choices, CMP ID 300) qui
 // affichait la bulle « Paramètres concernant la confidentialité et les
 // cookies » sur ces espaces internes. Chargé côté client au montage, il

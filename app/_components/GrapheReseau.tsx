@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 
 // Graphe de réseau biparti : structures (tiers payants, prestataires) et
 // eurodéputés, reliés par les contrats. Révèle d'un coup d'œil les structures
-// en lien avec beaucoup d'élus et les interconnexions — un eurodéputé relié
+// en lien avec beaucoup d'élus et les interconnexions : un eurodéputé relié
 // à plusieurs structures fait le pont entre elles. SVG pur, sans dépendance :
 // positions initiales en cercle rendues côté serveur, puis simulation de
 // forces (répulsion, ressorts, gravité centrale) dans le navigateur.
@@ -129,7 +129,7 @@ export default function GrapheReseau({
           const c = couleur(x);
           const contenu = (
             <>
-              <title>{x.label + (x.groupe ? " · " + x.groupe : "") + (x.poids ? " · " + x.poids + " lien(s)" : "")}</title>
+              <title>{x.label + (x.groupe ? ", " + x.groupe : "") + (x.poids ? ", " + x.poids + " lien(s)" : "")}</title>
               <circle cx={p.x} cy={p.y} r={r} fill={c} stroke="#fff" strokeWidth={x.type === "structure" ? 2 : 1.5} />
               {x.type === "structure" && (
                 <text x={p.x} y={p.y + r + 13} textAnchor="middle" fontSize="10.5" fill="#1f2937" fontWeight="600">

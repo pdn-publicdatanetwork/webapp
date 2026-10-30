@@ -9,7 +9,7 @@ import { sessionActuelle } from "@/lib/supabaseBrowser";
 // dans l'adresse), conservation 90 jours (purge côté serveur), accès réservé
 // aux administrateurs (module Journal).
 // Les visiteurs SANS compte sont aussi tracés (vues_anonymes : uuid local
-// localStorage, jamais associé à un compte) — décision de l'éditeur du
+// localStorage, jamais associé à un compte), décision de l'éditeur du
 // 22/10/2026 : traçage actif pour tous, sans condition de consentement.
 // Dédoublonnage : une même route consécutive n'est comptée qu'une fois
 // (les allers-retours rapides ne polluent pas le parcours).

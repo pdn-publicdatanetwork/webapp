@@ -25,7 +25,7 @@ export default function RechercheStatElu({ id, lignes, colonnes, placeholder }: 
             <table className="stats">
               <thead><tr><th>Élu</th><th>Groupe</th>{colonnes.map((c) => <th key={c} className="num">{c}</th>)}</tr></thead>
               <tbody>{trouves.map((l) => (
-                <tr key={l.href}><td><a href={l.href}>{l.nom}</a>{l.rang ? <span className="meta"> · {l.rang}{l.rang === 1 ? "er" : "e"}</span> : null}</td><td>{l.groupe}</td>
+                <tr key={l.href}><td><a href={l.href}>{l.nom}</a>{l.rang ? <span className="meta">, {l.rang}{l.rang === 1 ? "er" : "e"}</span> : null}</td><td>{l.groupe}</td>
                   {l.valeurs.map((v, i) => <td key={i} className="num">{v}</td>)}</tr>
               ))}</tbody>
             </table>

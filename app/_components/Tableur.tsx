@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { sessionActuelle } from "@/lib/supabaseBrowser";
 import BlocRetenir from "./BlocRetenir";
 
-// DataParl' Sheets — tableur maison, sans serveur : la grille vit dans le
+// DataParl' Sheets, tableur maison, sans serveur : la grille vit dans le
 // navigateur (sauvegarde automatique en localStorage), les données de base
 // viennent de l'API DataParl'. Formules inspirées des tableurs classiques :
 // =SOMME(A2:A10), =MOYENNE(B2:B19), =MIN, =MAX, =NB, références et
@@ -387,7 +387,7 @@ export default function Tableur({ id, provenance, entetes, donnees, lectureSeule
 
       <div className="tableur-pages" aria-label="Pagination de la feuille">
         <button className="lien" disabled={page === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>← Précédente</button>
-        <span className="meta">Page {page + 1} / {pages} · {grille.length} lignes</span>
+        <span className="meta">Page {page + 1} / {pages}, {grille.length} lignes</span>
         <button className="lien" disabled={page >= pages - 1} onClick={() => setPage((p) => Math.min(pages - 1, p + 1))}>Suivante →</button>
       </div>
 
@@ -397,7 +397,7 @@ export default function Tableur({ id, provenance, entetes, donnees, lectureSeule
           : "Formules : =SOMME(A2:A19), =MOYENNE(B2:B19), =MIN, =MAX, =NB, références (=B2*2), opérations + - * / ^. Ligne 1 : en-têtes. Les modifications sont conservées dans le navigateur de l'équipe."}
       </p>
 
-      {/* Rétention : l'export réussi est LE moment de forte valeur — proposer
+      {/* Rétention : l'export réussi est LE moment de forte valeur : proposer
           les alertes email juste après (inscription newsletter incluse). */}
       {exporte && <BlocRetenir compact />}
     </div>

@@ -35,7 +35,7 @@ export function TableStructures({
                 <Link href={hrefBase + "/" + slugStructure(s.nom)}>{s.nom}</Link>
               </td>
               <td>{s.clients.length}</td>
-              {avecSiren && <td>{info?.forme_juridique || "—"}</td>}
+              {avecSiren && <td>{info?.forme_juridique || "inconnue"}</td>}
               {avecSiren && <td>{info?.siren || "non identifiée"}</td>}
             </tr>
           );
@@ -66,8 +66,8 @@ export function CarteSiren({ info }: { info: InfoSiren | null }) {
         {info.manuel ? <span className="puce">SIREN vérifié à la main</span> : null}
       </p>
       <p className="meta" style={{ margin: 0 }}>
-        {info.forme_juridique ? info.forme_juridique + " · " : ""}SIREN {info.siren}
-        {info.adresse ? " · " + info.adresse : ""}
+        {info.forme_juridique ? info.forme_juridique + ", " : ""}SIREN {info.siren}
+        {info.adresse ? ", " + info.adresse : ""}
       </p>
       <h3 style={{ margin: "12px 0 4px" }}>Qui dirige la structure ?</h3>
       <p className="meta" style={{ margin: "0 0 6px" }}>
@@ -94,11 +94,11 @@ export function CarteSiren({ info }: { info: InfoSiren | null }) {
       <p className="meta" style={{ margin: "8px 0 0" }}>
         Fichiers publics :{" "}
         <a href={"https://annuaire-entreprises.data.gouv.fr/recherche?q=" + info.siren}>annuaire des entreprises</a>
-        {" · "}
+        {", "}
         <a href={"https://www.pappers.fr/recherche?q=" + info.siren}>Pappers</a>
         {info.manuel
-          ? " — SIREN vérifié manuellement par DataParl'."
-          : " — dénomination PE rapprochée automatiquement, à vérifier en cas d'homonymie."}
+          ? " : SIREN vérifié manuellement par DataParl'."
+          : " : dénomination PE rapprochée automatiquement, à vérifier en cas d'homonymie."}
       </p>
     </div>
   );

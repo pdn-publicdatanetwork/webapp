@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { sessionActuelle } from "@/lib/supabaseBrowser";
 
 // Journalise chaque nouvelle session connectée (POST /api/journal-connexion :
-// IP, appareil, user-agent — consultable dans la fiche admin du compte) et
+// IP, appareil, user-agent, consultable dans la fiche admin du compte) et
 // associe le compte à Microsoft Clarity (tag dp_user_id + identify) pour
 // retrouver ses replays. Clarity n'est chargé qu'après consentement de mesure
 // d'audience : l'association est retentée une fois, sinon silencieusement

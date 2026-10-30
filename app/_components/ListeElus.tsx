@@ -7,7 +7,7 @@ import type { EluCollectif } from "@/lib/collectifsData";
 
 // Grille d'élus des pages collectives (groupe, département, parti) : photo,
 // lien fiche + biographie, et liens croisés vers le groupe et le département
-// — chaque page renvoie vers les autres.
+// : chaque page renvoie vers les autres.
 
 export const CHAMBRE_LONG: Record<string, string> = {
   assemblee: "Assemblée nationale", senat: "Sénat", europarl: "Parlement européen",
