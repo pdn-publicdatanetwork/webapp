@@ -79,7 +79,7 @@ export default async function Page() {
         La <a href="/methode">méthode</a> et les <a href="/methode/sources">sources</a> sont publiées, les données
         sont sous licence ODbL.
       </p>
-      <p className="meta">Source : listes officielles des collaborateurs publiées par l&apos;Assemblée nationale, le Sénat et le Parlement européen, suivies par <a href="/">DataParl&apos;</a> — page générée le {dateFr}.</p>
+      <p className="meta">Source : listes officielles des collaborateurs publiées par l&apos;Assemblée nationale, le Sénat et le Parlement européen, suivies par <a href="/">DataParl&apos;</a>, page générée le {dateFr}.</p>
     </>
   );
 }

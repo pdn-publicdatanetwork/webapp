@@ -46,7 +46,7 @@ function Mois({ mois, jours }: { mois: string; jours: Map<string, Jour> }) {
 }
 
 const resume = (j: Jour) => ["assemblee", "senat", "europarl"].filter((c) => j.parChambre[c])
-  .map((c) => `${j.parChambre[c].n} ${c === "assemblee" ? "AN" : c === "senat" ? "Sénat" : "PE"}`).join(" · ");
+  .map((c) => `${j.parChambre[c].n} ${c === "assemblee" ? "AN" : c === "senat" ? "Sénat" : "PE"}`).join(", ");
 
 export default async function DailyIndex({ searchParams }: Props) {
   const { mois: demande } = await searchParams;
@@ -80,13 +80,13 @@ export default async function DailyIndex({ searchParams }: Props) {
       <ul className="jours">
         <li>
           <a href="https://t.me/dataparl_daily" target="_blank" rel="noopener noreferrer">
-            <strong>Telegram — @dataparl_daily</strong>
+            <strong>Telegram : @dataparl_daily</strong>
             <span>Le canal officiel : publication automatique chaque matin vers 7h45.</span>
           </a>
         </li>
         <li>
           <a href="https://whatsapp.com/channel/0029VbEDOKCCXC3R26cJIf1P" target="_blank" rel="noopener noreferrer">
-            <strong>WhatsApp — canal DataParl&apos; Daily</strong>
+            <strong>WhatsApp : canal DataParl&apos; Daily</strong>
             <span>Le même récapitulatif, publié dans notre canal WhatsApp.</span>
           </a>
         </li>
@@ -95,7 +95,7 @@ export default async function DailyIndex({ searchParams }: Props) {
       <h2>Les 7 derniers jours publiés</h2>
       <ul className="jours">
         {recents.map((j) => (
-          <li key={j.date}><a href={`/daily/${j.date}`}><strong>{dateTitre(j.date)}</strong><span>{j.n.toLocaleString("fr-FR")} mouvement{j.n > 1 ? "s" : ""} · {resume(j)}</span></a></li>
+          <li key={j.date}><a href={`/daily/${j.date}`}><strong>{dateTitre(j.date)}</strong><span>{j.n.toLocaleString("fr-FR")} mouvement{j.n > 1 ? "s" : ""}, {resume(j)}</span></a></li>
         ))}
       </ul>
 

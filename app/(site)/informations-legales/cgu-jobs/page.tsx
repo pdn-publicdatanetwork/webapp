@@ -3,7 +3,7 @@ import { CONTACT_URL } from "../maj";
 
 import { HistoriqueTexte, VERSIONS } from "../historique";
 
-export const metadata: Metadata = { title: "Conditions d'utilisation — DataParl' Jobs" };
+export const metadata: Metadata = { title: "Conditions d'utilisation : DataParl' Jobs" };
 
 export default function CGUJobs() {
   return (
@@ -21,7 +21,7 @@ export default function CGUJobs() {
 
       <h2>1. Objet</h2>
       <p>
-        DataParl&apos; Jobs référence des offres d&apos;emploi de collaborateur parlementaire — Assemblée nationale,
+        DataParl&apos; Jobs référence des offres d&apos;emploi de collaborateur parlementaire : Assemblée nationale,
         Sénat, Parlement européen. Les offres sont collectées automatiquement à partir de sources publiques (sites
         institutionnels et agrégateurs d&apos;offres en politique), puis <strong>relues et validées à la main</strong>{" "}
         avant publication.
@@ -42,8 +42,8 @@ export default function CGUJobs() {
       </p>
       <p>
         <strong>Les candidatures ne passent pas par DataParl&apos;.</strong> Le service ne collecte, ne transmet ni ne
-        stocke aucun CV ni aucune candidature. Les candidats ne doivent pas contacter DataParl&apos; — ni par email,
-        ni via le formulaire de contact — au sujet d&apos;une offre : toute demande de candidature, de mise en relation
+        stocke aucun CV ni aucune candidature. Les candidats ne doivent pas contacter DataParl&apos; (ni par email,
+        ni via le formulaire de contact) au sujet d&apos;une offre : toute demande de candidature, de mise en relation
         ou de recommandation ne recevra aucune réponse. La démarche relève du seul rapport direct entre le candidat et
         l&apos;employeur mentionné dans l&apos;annonce.
       </p>

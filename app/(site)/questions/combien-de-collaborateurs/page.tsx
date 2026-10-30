@@ -34,7 +34,7 @@ export default async function Page() {
     mainEntity: [
       { "@type": "Question", name: "Combien de collaborateurs a un député ou un sénateur ?", acceptedAnswer: { "@type": "Answer", text: reponse } },
       { "@type": "Question", name: "Quel est le plafond de collaborateurs par parlementaire ?", acceptedAnswer: { "@type": "Answer", text: "L'Assemblée nationale, le Sénat et le Parlement européen fixent chacun un plafond d'effectifs par parlementaire (jusqu'à cinq collaborateurs, dans la limite de l'enveloppe de masse salariale). Chaque élu répartit librement son enveloppe : un collaborateur à temps plein, plusieurs à temps partiel, à Paris ou en circonscription." } },
-      { "@type": "Question", name: "Tous les parlementaires ont-ils des collaborateurs ?", acceptedAnswer: { "@type": "Answer", text: "La quasi-totalité des parlementaires emploient au moins un collaborateur. Certains n'en emploient aucun, d'autres atteignent le plafond — les présidents de groupe, questeurs ou responsables de commissions ont les équipes les plus étoffées. DataParl' publie la composition exacte de chaque équipe sur la fiche de chaque élu." } },
+      { "@type": "Question", name: "Tous les parlementaires ont-ils des collaborateurs ?", acceptedAnswer: { "@type": "Answer", text: "La quasi-totalité des parlementaires emploient au moins un collaborateur. Certains n'en emploient aucun, d'autres atteignent le plafond : les présidents de groupe, questeurs ou responsables de commissions ont les équipes les plus étoffées. DataParl' publie la composition exacte de chaque équipe sur la fiche de chaque élu." } },
     ],
   };
   return (
@@ -62,7 +62,7 @@ export default async function Page() {
       <p>
         Les crédits collaborateurs sont plafonnés : chaque chambre fixe un maximum d&apos;effectifs et une masse
         salariale par parlementaire. Dans cette limite, chaque élu choisit librement : un collaborateur unique à
-        temps plein, deux ou trois à temps partiel, un poste à Paris et un autre en circonscription — c&apos;est la
+        temps plein, deux ou trois à temps partiel, un poste à Paris et un autre en circonscription : c&apos;est la
         répartition la plus courante.
       </p>
       <p>
@@ -78,7 +78,7 @@ export default async function Page() {
         <a href="/parlementaires">fiches parlementaires</a>, ou <a href="/collab">recherche par collaborateur</a>.
         Les moyennes par groupe et par parti sont sur <a href="/mixiparl">MixiParl&apos;</a>.
       </p>
-      <p className="meta">Source : listes officielles des collaborateurs publiées par l&apos;Assemblée nationale, le Sénat et le Parlement européen, suivies par <a href="/">DataParl&apos;</a> — page générée le {dateFr}.</p>
+      <p className="meta">Source : listes officielles des collaborateurs publiées par l&apos;Assemblée nationale, le Sénat et le Parlement européen, suivies par <a href="/">DataParl&apos;</a>, page générée le {dateFr}.</p>
     </>
   );
 }

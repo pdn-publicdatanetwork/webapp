@@ -19,20 +19,20 @@ export default async function PlanDuSite() {
       titre: "Les données",
       liens: [
         { href: "/mouvements", libelle: "Mouvements (parlement, Assemblée, Sénat, Parlement européen)" },
-        { href: "/daily", libelle: "DataParl' Daily — jour par jour" },
+        { href: "/daily", libelle: "DataParl' Daily : jour par jour" },
         { href: "/an", libelle: "Assemblée nationale" },
         { href: "/senat", libelle: "Sénat" },
         { href: "/pe", libelle: "Parlement européen" },
         { href: "/collab", libelle: "Collaborateurs parlementaires" },
-        { href: "/collab/liste", libelle: "La liste complète — tous les collaborateurs en poste" },
-        { href: "/collab/parti", libelle: "Collaborateurs — par parti politique" },
-        { href: "/collab/an/trombinoscope", libelle: "Trombinoscope — collaborateurs de député" },
-        { href: "/collab/senat/trombinoscope", libelle: "Trombinoscope — collaborateurs de sénateur" },
-        { href: "/collab/pe/trombinoscope", libelle: "Trombinoscope — collaborateurs de député européen" },
-        { href: "/collab/pe/tiers-payants", libelle: "Tiers payants — le Parlement européen" },
-        { href: "/collab/pe/prestataires", libelle: "Prestataires de services — le Parlement européen" },
-        { href: "/collab/pe/reseau", libelle: "Le réseau des collaborateurs — carte du Parlement européen" },
-        { href: "/gouv", libelle: "Gouvernements — les ministres et leurs cabinets" },
+        { href: "/collab/liste", libelle: "La liste complète : tous les collaborateurs en poste" },
+        { href: "/collab/parti", libelle: "Collaborateurs : par parti politique" },
+        { href: "/collab/an/trombinoscope", libelle: "Trombinoscope : collaborateurs de député" },
+        { href: "/collab/senat/trombinoscope", libelle: "Trombinoscope : collaborateurs de sénateur" },
+        { href: "/collab/pe/trombinoscope", libelle: "Trombinoscope : collaborateurs de député européen" },
+        { href: "/collab/pe/tiers-payants", libelle: "Tiers payants : le Parlement européen" },
+        { href: "/collab/pe/prestataires", libelle: "Prestataires de services : le Parlement européen" },
+        { href: "/collab/pe/reseau", libelle: "Le réseau des collaborateurs : carte du Parlement européen" },
+        { href: "/gouv", libelle: "Gouvernements : les ministres et leurs cabinets" },
         { href: "/lexique", libelle: "Lexique des collaborateurs parlementaires" },
         { href: "/parlementaires", libelle: "Parlementaires" },
         { href: "/parlementaires/map", libelle: "Carte des permanences parlementaires" },
@@ -45,12 +45,12 @@ export default async function PlanDuSite() {
     {
       titre: "Les indicateurs",
       liens: [
-        { href: "/vigiparl", libelle: "VigiParl' — renouvellement des équipes" },
-        { href: "/vigiparl/methode", libelle: "VigiParl' · méthode" },
-        { href: "/vigiparl/timeline", libelle: "VigiParl' · année par année" },
-        { href: "/mixiparl", libelle: "MixiParl' — mixité du Parlement" },
-        { href: "/mixiparl/methode", libelle: "MixiParl' · méthode" },
-        { href: "/mixiparl/timeline", libelle: "MixiParl' · année par année" },
+        { href: "/vigiparl", libelle: "VigiParl' : renouvellement des équipes" },
+        { href: "/vigiparl/methode", libelle: "VigiParl' : méthode" },
+        { href: "/vigiparl/timeline", libelle: "VigiParl' : année par année" },
+        { href: "/mixiparl", libelle: "MixiParl' : mixité du Parlement" },
+        { href: "/mixiparl/methode", libelle: "MixiParl' : méthode" },
+        { href: "/mixiparl/timeline", libelle: "MixiParl' : année par année" },
         { href: "/alertes", libelle: "Alertes par email" },
       ],
     },
@@ -89,7 +89,7 @@ export default async function PlanDuSite() {
     {
       titre: "Autres services DataParl'",
       liens: [
-        { href: "https://media.dataparl.fr/sheets", libelle: "DataParl' Sheets — le tableur", externe: true },
+        { href: "https://media.dataparl.fr/sheets", libelle: "DataParl' Sheets : le tableur", externe: true },
         { href: "https://api.dataparl.fr", libelle: "L'API DataParl'", externe: true },
         { href: "/sitemap.xml", libelle: "Plan du site pour les moteurs (XML)" },
       ],
@@ -110,12 +110,12 @@ export default async function PlanDuSite() {
               <ul>
                 {liens.map((l) => {
                   // Le mot-clé de la page en gras, le descriptif à sa suite.
-                  const [principal, ...reste] = l.libelle.split(" — ");
+                  const [principal, ...reste] = l.libelle.split(" : ");
                   return (
                     <li key={l.href}>
                       <a href={l.href}>
                         <strong>{principal}</strong>
-                        {reste.length > 0 ? ` — ${reste.join(" — ")}` : ""}
+                        {reste.length > 0 ? ` : ${reste.join(" : ")}` : ""}
                       </a>
                     </li>
                   );

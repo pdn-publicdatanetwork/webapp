@@ -34,7 +34,7 @@ export default function Questions() {
       </p>
       <ul className="organes">
         {QUESTIONS.map((q) => (
-          <li key={q.href}><Link href={q.href}>{q.titre}</Link><span className="meta"> — {q.extrait}</span></li>
+          <li key={q.href}><Link href={q.href}>{q.titre}</Link><span className="meta"> ({q.extrait})</span></li>
         ))}
       </ul>
     </>

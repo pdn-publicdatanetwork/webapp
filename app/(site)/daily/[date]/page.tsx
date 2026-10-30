@@ -10,7 +10,7 @@ import SuiteDuJour from "./SuiteDuJour";
 // Supabase du matin (~06:08 UTC) et rester « Aucun mouvement » jusqu'à 1 h.
 export const revalidate = 3600;
 // Pages générées à la première visite, puis mises en cache (ISR) :
-// PAS de generateStaticParams retournant [] — bug Next.js (issue #57996) :
+// PAS de generateStaticParams retournant [] : bug Next.js (issue #57996) :
 // un tableau vide casse la route ISR à la demande (erreur 500 pour toutes les dates).
 
 type Props = { params: Promise<{ date: string }> };
@@ -75,7 +75,7 @@ export default async function Daily({ params }: Props) {
         return (
           <section key={c}>
             <h2>{CHAMBRE_LONG[c]}</h2>
-            <p className="meta">{[d.arrivees && `${d.arrivees} arrivée${d.arrivees > 1 ? "s" : ""}`, d.departs && `${d.departs} départ${d.departs > 1 ? "s" : ""}`, d.transferts && `${d.transferts} transfert${d.transferts > 1 ? "s" : ""}`].filter(Boolean).join(" · ")}</p>
+            <p className="meta">{[d.arrivees && `${d.arrivees} arrivée${d.arrivees > 1 ? "s" : ""}`, d.departs && `${d.departs} départ${d.departs > 1 ? "s" : ""}`, d.transferts && `${d.transferts} transfert${d.transferts > 1 ? "s" : ""}`].filter(Boolean).join(", ")}</p>
             <ListeMouvements mouvements={ms} />
             {n > ms.length && <p className="meta">+ {(n - ms.length).toLocaleString("fr-FR")} autre{n - ms.length > 1 ? "s" : ""} dans cette chambre.</p>}
           </section>

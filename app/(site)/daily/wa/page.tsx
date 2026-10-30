@@ -41,7 +41,7 @@ export default async function DailyWa({ searchParams }: { searchParams: Promise<
         {lien && (
           <>
             <p>
-              <strong>Conserve ce lien de désinscription</strong> — il ne sera
+              <strong>Conserve ce lien de désinscription</strong> : il ne sera
               pas renvoyé :
             </p>
             <p><a href={lien} style={{ wordBreak: "break-all" }}>{lien}</a></p>
@@ -59,7 +59,7 @@ export default async function DailyWa({ searchParams }: { searchParams: Promise<
       <h1>Le DataParl’ Daily par WhatsApp</h1>
       <p>
         Chaque matin vers 7h45, le récapitulatif des mouvements de
-        collaborateurs parlementaires — arrivées, départs, transferts —
+        collaborateurs parlementaires (arrivées, départs, transferts)
         directement sur ton WhatsApp. Gratuit, sans compte, désinscription en
         un clic.
       </p>

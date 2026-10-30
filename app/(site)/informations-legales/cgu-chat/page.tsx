@@ -5,7 +5,7 @@ import { HistoriqueTexte, VERSIONS } from "../historique";
 export const metadata: Metadata = { title: "CGU DataParl' Chat" };
 
 // Conditions d'utilisation du chat conversationnel DataParl' (assistant
-// IA sur les données parlementaires). Version 1.0 — entrée en vigueur le
+// IA sur les données parlementaires). Version 1.0 : entrée en vigueur le
 // 10 octobre 2026.
 
 export default function CguChat() {
@@ -13,9 +13,9 @@ export default function CguChat() {
     <>
       <h1>CGU <span className="surligne">DataParl&apos; Chat</span></h1>
       <p className="lead">
-        Conditions d&apos;utilisation du chat conversationnel DataParl&apos; — assistant
+        Conditions d&apos;utilisation du chat conversationnel DataParl&apos; : assistant
         automatisé répondant aux questions sur DataParl&apos; et les données parlementaires.
-        Version 1.0 — en vigueur depuis le 10 octobre 2026.
+        Version 1.0 : en vigueur depuis le 10 octobre 2026.
       </p>
       <HistoriqueTexte versions={VERSIONS.cguChat} />
 
@@ -56,9 +56,9 @@ export default function CguChat() {
         l&apos;Union européenne) pour générer les réponses. L&apos;historique des échanges est
         conservé en mémoire locale du navigateur et vidé à la fermeture de la fenêtre
         du Chat. À des fins de statistiques d&apos;usage, de suivi de la qualité et de
-        détection des dysfonctionnements, chaque question posée — ainsi que des
+        détection des dysfonctionnements, chaque question posée (ainsi que des
         informations techniques associées (heure, durée de traitement, nombre
-        d&apos;interrogations de la base, survenue d&apos;une erreur) — est journalisée de
+        d&apos;interrogations de la base, survenue ), est journalisée de
         manière automatisée, sans identification de l&apos;utilisateur. La réponse
         associée est conservée de façon éphémère à la même fin. Ces journaux sont
         conservés pendant une durée raisonnable et ne font l&apos;objet d&apos;aucun

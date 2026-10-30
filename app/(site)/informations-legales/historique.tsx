@@ -31,7 +31,7 @@ export function HistoriqueTexte({ versions }: { versions: VersionTexte[] }) {
     <div className="versions-texte">
       <p className="meta">
         Version du {courante.date}
-        {courante.resume ? <> — {courante.resume}</> : null}
+        {courante.resume ? <> : {courante.resume}</> : null}
       </p>
       {anterieures.length > 0 && (
         <details>

@@ -1,6 +1,6 @@
 import { imageOg, TAILLE_OG } from "@/lib/og";
 
-export const alt = "Méthode · DataParl'";
+export const alt = "Méthode : DataParl'";
 export const size = TAILLE_OG;
 export const contentType = "image/png";
 

@@ -12,7 +12,7 @@ export default function Cookies() {
       <p>
         Par défaut, les seuls cookies déposés sont strictement nécessaires au service : ils sont dispensés de
         consentement (article 82 de la loi Informatique et libertés). La mesure d&apos;audience et la publicité
-        ne sont activées qu&apos;après l&apos;accord de l&apos;utilisateur, donné dans le bandeau d&apos;accueil — elles
+        ne sont activées qu&apos;après l&apos;accord de l&apos;utilisateur, donné dans le bandeau d&apos;accueil : elles
         peuvent être refusées ou ajustées à tout moment en supprimant les cookies du navigateur.
       </p>
       <p>
@@ -60,7 +60,7 @@ export default function Cookies() {
         <li><strong>Mesure d&apos;audience</strong> : statistiques de fréquentation anonymisées, pour savoir quelles
           pages sont lues et améliorer le site ;</li>
         <li><strong>Publicité</strong> : annonces de Google AdSense, avec personnalisation publicitaire si
-          l&apos;utilisateur l&apos;accepte — sinon, des annonces non personnalisées.</li>
+          l&apos;utilisateur l&apos;accepte : sinon, des annonces non personnalisées.</li>
       </ul>
       <p>
         Ces choix sont transmis à Google (Tag Manager et AdSense) via les signaux de consentement officiels

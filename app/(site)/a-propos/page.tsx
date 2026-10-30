@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 export const revalidate = 86400;
 
 // Logos des réseaux, en SVG inline (tracés officiels type Simple Icons,
-// viewBox 24×24 pour tous — aucune dépendance, aucun traqueur).
+// viewBox 24×24 pour tous : aucune dépendance, aucun traqueur).
 function LogoBluesky() {
   return (
     <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
@@ -69,7 +69,7 @@ export default function APropos() {
         Les équipes des parlementaires sont une pièce mal connue du travail parlementaire : des milliers de
         personnes travaillent dans l&apos;ombre des députés, sénateurs et eurodéputés, sans que rien n&apos;en soit
         publié de façon lisible. DataParl&apos; met ces données au clair : arrivées, départs, transferts,
-        parcours reconstitués — avec leur source officielle à chaque fois.
+        parcours reconstitués, avec leur source officielle à chaque fois.
       </p>
 
       <h2>Comment c&apos;est fait</h2>

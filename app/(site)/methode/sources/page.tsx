@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/methode/sources" },
   openGraph: {
     siteName: "DataParl'",
-    title: "Sources · DataParl'",
+    title: "Sources : DataParl'",
     description: "Les publications officielles derrière chaque chiffre de DataParl'.",
     url: "https://www.dataparl.fr/methode/sources",
     type: "article",
@@ -29,14 +29,14 @@ type Source = {
 
 const PARLEMENTAIRES: Source[] = [
   {
-    nom: "Assemblée nationale — données ouvertes (data.assemblee-nationale.fr)",
+    nom: "Assemblée nationale : données ouvertes (data.assemblee-nationale.fr)",
     href: "https://data.assemblee-nationale.fr/",
     contenu: "Députés, mandats, groupes et commissions ; identifiants officiels (PA…)",
     frequence: "quotidien",
     licence: "réutilisation libre (licences ouvertes de l'AN)",
   },
   {
-    nom: "Sénat — data.senat.fr et senat.fr",
+    nom: "Sénat : data.senat.fr et senat.fr",
     href: "https://data.senat.fr/",
     contenu: "Sénateurs, mandats, groupes et commissions ; pages individuelles senat.fr",
     frequence: "quotidien",
@@ -53,14 +53,14 @@ const PARLEMENTAIRES: Source[] = [
 
 const COLLABORATEURS: Source[] = [
   {
-    nom: "Assemblée nationale — liste des collaborateurs des députés",
+    nom: "Assemblée nationale : liste des collaborateurs des députés",
     href: "https://www2.assemblee-nationale.fr/qui/fiche_deputes",
     contenu: "Collaborateurs parlementaires par député (fonction, période)",
     frequence: "quotidien (relève la date de publication)",
     licence: "document administratif public",
   },
   {
-    nom: "Sénat — A.G.A.S. (liste des collaborateurs par sénateur)",
+    nom: "Sénat : A.G.A.S. (liste des collaborateurs par sénateur)",
     href: "https://www.senat.fr/senateurs/collaborateurs.html",
     contenu: "Collaborateurs parlementaires par sénateur (fonction, période)",
     frequence: "quotidien (relève la date de publication)",
@@ -71,20 +71,20 @@ const COLLABORATEURS: Source[] = [
     href: "https://www.dataparl.fr/mouvements",
     contenu: "Historique des publications pour retracer les arrivées et départs passés",
     frequence: "à chaque publication",
-    licence: "—",
+    licence: "non précisée",
   },
 ];
 
 const ELECTIONS: Source[] = [
   {
-    nom: "Ministère de l'Intérieur — résultats des élections",
+    nom: "Ministère de l'Intérieur : résultats des élections",
     href: "https://www.resultats-elections.interieur.gouv.fr/",
     contenu: "Résultats officiels des scrutins (sénatoriales 2026, législatives…), listes des élus",
     frequence: "à chaque scrutin",
     licence: "réutilisation libre",
   },
   {
-    nom: "Journal officiel (JO République française — Légifrance)",
+    nom: "Journal officiel (JO République française : Légifrance)",
     href: "https://www.legifrance.gouv.fr/",
     contenu: "Nominations, décrets, compositions officielles (gouvernement, cabinets)",
     frequence: "à chaque publication",
@@ -98,12 +98,12 @@ const COMPLEMENTS: Source[] = [
     href: "https://www.dataparl.fr/parlementaires",
     contenu: "Pages officielles et présence en ligne citées dans les fiches et biographies",
     frequence: "à la rédaction",
-    licence: "—",
+    licence: "non précisée",
   },
   {
     nom: "Rédaction DataParl'",
     href: "https://www.dataparl.fr/methode",
-    contenu: "Biographies, mandats locaux et fonctions partisanes non couverts par les syncs — toujours signalés « précisé par DataParl' », avec source et date",
+    contenu: "Biographies, mandats locaux et fonctions partisanes non couverts par les syncs : toujours signalés « précisé par DataParl' », avec source et date",
     frequence: "en continu",
     licence: "© DataParl'",
   },
@@ -141,7 +141,7 @@ export default function SourcesDataParl() {
       <h1>Les <span className="surligne">sources</span> de DataParl&apos;</h1>
       <p className="lead">
         Tout chiffre publié sur DataParl&apos; provient d&apos;une publication officielle relevée dans
-        cette liste — ou d&apos;un complément rédigé à la main, toujours signalé comme tel. Pour chaque
+        cette liste : ou d&apos;un complément rédigé à la main, toujours signalé comme tel. Pour chaque
         source : le contenu utilisé, la fréquence de relevé et la licence de réutilisation.
       </p>
 
