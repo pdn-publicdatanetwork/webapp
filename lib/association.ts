@@ -143,7 +143,15 @@ const SIGNATURE_HTML = '<p style="margin:24px 0 0;color:#475569">L\'équipe Data
 const PIED_AUTO = "Cet e-mail a été envoyé automatiquement : merci de ne pas y répondre. Une question ? <a href=\"" + SITE_URL + "/contact\" style=\"color:#164DFF\">Écris-nous via le formulaire de contact</a>.";
 const PIED_AUTO_TXT = "Cet e-mail a été envoyé automatiquement : merci de ne pas y répondre.";
 
-// Badge de statut (pilule jaune pâle) sous le titre de l'e-mail.
+// Salutation personnalisée « Bonjour Prénom, » (repli « Bonjour, »).
+function bonjour(prenom: string | null | undefined): string {
+  const p = (prenom ?? "").trim();
+  return '<p style="margin:0 0 16px">Bonjour ' + esc(p ? p.charAt(0).toUpperCase() + p.slice(1) : "") + ",</p>";
+}
+
+// Badge de statut (pilule jaune pâle) sous le titre de l'e-mail. Réservé aux
+// statuts qui informent : en cours, suspendues, non aboutie (pas sur la
+// validation, où le titre suffit).
 function badgeStatut(libelle: string): string {
   return '<p style="margin:0 0 16px"><span style="display:inline-block;background:#FEF9C3;color:#0F172A;font-size:13px;font-weight:600;border-radius:999px;padding:5px 12px">' + esc(libelle) + "</span></p>";
 }
@@ -153,29 +161,28 @@ function blocFiche(fiche: string, surtitre: string): string {
   return '<div style="background:#FEF9C3;border-left:4px solid #FFD23F;border-radius:8px;padding:14px 16px;margin:0 0 18px"><p style="margin:0 0 2px;font-size:13px;color:#475569">' + esc(surtitre) + '</p><p style="margin:0;font-size:19px;font-weight:700;color:#0F172A">' + esc(fiche) + "</p></div>";
 }
 
-async function accuseValidation(user_id: string, fiche: string): Promise<void> {
+async function accuseValidation(user_id: string, fiche: string, prenom: string | null): Promise<void> {
   const email = await adresseDe(user_id);
   if (!email) return;
   await expedier({
     to: [email],
     from: FROM_ASSOCIATION,
     nomExpediteur: "L'équipe DataParl'",
-    subject: "Votre fiche DataParl' est associée à votre compte",
-    titre: "Fiche associée",
+    subject: "🎉 Votre fiche DataParl' est associée à votre compte",
+    titre: "Votre fiche est associée à votre compte",
     corpsHtml:
-      badgeStatut("Fiche associée à votre compte") +
+      bonjour(prenom) +
       blocFiche(fiche, "Votre fiche") +
-      "<p>Votre demande d'association a été validée : cette fiche est désormais rattachée à votre compte.</p>" +
+      "<p>Votre demande d'association a été validée : cette fiche est désormais rattachée à votre compte. Vous pouvez y importer votre CV, ajouter une photo et présenter votre parcours comme vous l'entendez.</p>" +
       bouton(SITE_URL + "/mon-compte/ma-fiche", "Compléter mon profil CV") +
-      "<p>Vous pouvez y importer votre CV (l'IA propose une mise en forme que vous validez point par point), ajouter une photo et présenter votre parcours comme vous l'entendez.</p>" +
       SIGNATURE_HTML,
-    text: "Bonne nouvelle : votre demande d'association a été validée. La fiche " + fiche + " est désormais rattachée à votre compte. Complétez votre profil CV : " + SITE_URL + "/mon-compte/ma-fiche\n\nL'équipe DataParl'\n\n" + PIED_AUTO_TXT,
+    text: "Bonjour " + ((prenom ?? "").trim() || "") + ",\n\nBonne nouvelle : votre demande d'association a été validée. La fiche " + fiche + " est désormais rattachée à votre compte. Vous pouvez y importer votre CV, ajouter une photo et présenter votre parcours comme vous l'entendez : " + SITE_URL + "/mon-compte/ma-fiche\n\nL'équipe DataParl'\n\n" + PIED_AUTO_TXT,
     pied: PIED_AUTO,
     type: "transactionnel",
   }).catch((e) => console.error("accuse validation", String(e).slice(0, 200)));
 }
 
-async function accuseReception(user_id: string, fiche: string): Promise<void> {
+async function accuseReception(user_id: string, fiche: string, prenom: string | null): Promise<void> {
   const email = await adresseDe(user_id);
   if (!email) return;
   await expedier({
@@ -186,17 +193,18 @@ async function accuseReception(user_id: string, fiche: string): Promise<void> {
     titre: "Vérification en cours",
     corpsHtml:
       badgeStatut("En cours · réponse sous 48 h") +
+      bonjour(prenom) +
       blocFiche(fiche, "Fiche demandée") +
       "<p>Nous avons bien reçu votre demande. La vérification prend un peu plus de temps : notre équipe l'examine et vous répond sous 48 heures.</p>" +
       "<p>Vous pouvez suivre l'avancement à tout moment depuis « Mon compte ».</p>" +
       SIGNATURE_HTML,
-    text: "Nous avons bien reçu votre demande pour la fiche " + fiche + ". La vérification prend un peu plus de temps : notre équipe l'examine et vous répond sous 48 heures.\n\nL'équipe DataParl'\n\n" + PIED_AUTO_TXT,
+    text: "Bonjour " + ((prenom ?? "").trim() || "") + ",\n\nNous avons bien reçu votre demande pour la fiche " + fiche + ". La vérification prend un peu plus de temps : notre équipe l'examine et vous répond sous 48 heures.\n\nL'équipe DataParl'\n\n" + PIED_AUTO_TXT,
     pied: PIED_AUTO,
     type: "transactionnel",
   }).catch((e) => console.error("accuse reception", String(e).slice(0, 200)));
 }
 
-async function accuseRefus(user_id: string, fiche: string, gele: boolean): Promise<void> {
+async function accuseRefus(user_id: string, fiche: string, gele: boolean, prenom: string | null): Promise<void> {
   const email = await adresseDe(user_id);
   if (!email) return;
   await expedier({
@@ -207,17 +215,19 @@ async function accuseRefus(user_id: string, fiche: string, gele: boolean): Promi
     titre: gele ? "Demandes suspendues" : "Demande non aboutie",
     corpsHtml: gele
       ? badgeStatut("Suspendues pendant 30 jours") +
+        bonjour(prenom) +
         blocFiche(fiche, "Fiche demandée") +
         "<p>Après plusieurs tentatives depuis une adresse inattendue, les demandes d'association pour cette fiche sont suspendues pendant 30 jours.</p>" +
         "<p>Si vous êtes bien la personne concernée, passez par le formulaire de contact : nous vérifierons votre identité au cas par cas.</p>" +
         bouton(SITE_URL + "/contact", "Nous écrire") + SIGNATURE_HTML
       : badgeStatut("Non aboutie") +
+        bonjour(prenom) +
         blocFiche(fiche, "Fiche demandée") +
         "<p>La vérification n'a pas pu aboutir : l'e-mail reçu ne correspond pas à l'adresse professionnelle attendue.</p><p>La marche à suivre :</p><ol style=\"margin:0 0 16px;padding:0 0 0 22px\"><li style=\"margin:0 0 6px\">Relancez la demande depuis la page « Associer ma fiche », puis envoyez l'e-mail prérempli <strong>depuis votre adresse professionnelle parlementaire</strong>, sans modifier l'objet ni le code.</li><li style=\"margin:0 0 6px\">Si vous n'avez plus accès à cette adresse (fin de collaboration, par exemple), la même page permet de joindre une pièce justificative (badge ou carte AN/Sénat, contrat de travail, capture de votre messagerie interne). Notre équipe vous répond sous 48 h.</li><li>En cas de blocage persistant, écrivez-nous via le formulaire de contact.</li></ol>" +
         bouton(SITE_URL + "/mon-compte/associer-fiche", "Reprendre la vérification") + SIGNATURE_HTML,
     text: gele
-      ? "Après plusieurs tentatives depuis une adresse inattendue, les demandes d'association pour la fiche " + fiche + " sont suspendues pendant 30 jours. Passez par le formulaire de contact : " + SITE_URL + "/contact\n\nL'équipe DataParl'\n\n" + PIED_AUTO_TXT
-      : "La vérification de la fiche " + fiche + " n'a pas pu aboutir. Relancez la demande depuis " + SITE_URL + "/mon-compte/associer-fiche et envoyez l'e-mail prérempli depuis votre adresse professionnelle parlementaire, sans modifier l'objet ni le code. Sans accès à cette adresse, joignez une pièce justificative depuis la même page (réponse sous 48 h).\n\nL'équipe DataParl'\n\n" + PIED_AUTO_TXT,
+      ? "Bonjour " + ((prenom ?? "").trim() || "") + ",\n\nAprès plusieurs tentatives depuis une adresse inattendue, les demandes d'association pour la fiche " + fiche + " sont suspendues pendant 30 jours. Passez par le formulaire de contact : " + SITE_URL + "/contact\n\nL'équipe DataParl'\n\n" + PIED_AUTO_TXT
+      : "Bonjour " + ((prenom ?? "").trim() || "") + ",\n\nLa vérification de la fiche " + fiche + " n'a pas pu aboutir. Relancez la demande depuis " + SITE_URL + "/mon-compte/associer-fiche et envoyez l'e-mail prérempli depuis votre adresse professionnelle parlementaire, sans modifier l'objet ni le code. Sans accès à cette adresse, joignez une pièce justificative depuis la même page (réponse sous 48 h).\n\nL'équipe DataParl'\n\n" + PIED_AUTO_TXT,
     pied: PIED_AUTO,
     type: "transactionnel",
   }).catch((e) => console.error("accuse refus", String(e).slice(0, 200)));
@@ -226,7 +236,7 @@ async function accuseRefus(user_id: string, fiche: string, gele: boolean): Promi
 // Confirmation de dépôt d'une pièce justificative.
 export async function accuserPiece(user_id: string, slug: string): Promise<void> {
   const f = await ficheFraiche(slug).catch(() => null);
-  await accuseReception(user_id, libelleFiche(f?.prenom, f?.nom, slug));
+  await accuseReception(user_id, libelleFiche(f?.prenom, f?.nom, slug), f?.prenom ?? null);
 }
 
 async function journal(user_id: string, collab_id: string, evenement: string, detail: Record<string, unknown> = {}, fiche?: string): Promise<void> {
@@ -328,7 +338,7 @@ export async function traiterEmailAssociation(m: {
       gel_jusqu_a: gele ? new Date(Date.now() + GEL_JOURS * 86400_000).toISOString() : null, maj_le: new Date().toISOString(),
     }).eq("id", demande.id);
     await journal(demande.user_id, demande.collab_id, gele ? "gele" : "refus_domaine", { from: m.from }, libelle);
-    if (gele) await accuseRefus(demande.user_id, libelle, true);
+    if (gele) await accuseRefus(demande.user_id, libelle, true, fiche?.prenom ?? null);
     return true;
   }
   if (expiree) {
@@ -344,7 +354,7 @@ export async function traiterEmailAssociation(m: {
       email_preuve: normalizeEmail(m.from),
     }).eq("id", demande.id);
     await journal(demande.user_id, demande.collab_id, "valide_auto", { from: m.from }, libelle);
-    await accuseValidation(demande.user_id, libelle);
+    await accuseValidation(demande.user_id, libelle, fiche?.prenom ?? null);
     return true;
   }
   // Domaine bon mais nom ou SPF/DKIM non concluant : revue manuelle, jamais
@@ -352,7 +362,7 @@ export async function traiterEmailAssociation(m: {
   // revue admin, la décision reste manuelle.
   await db.from("associations_fiches").update({ statut: "a_traiter", maj_le: new Date().toISOString(), email_preuve: normalizeEmail(m.from) }).eq("id", demande.id);
   await journal(demande.user_id, demande.collab_id, "a_traiter", { from: m.from, nomOk, spfDkimOk }, libelle);
-  await accuseReception(demande.user_id, libelle);
+  await accuseReception(demande.user_id, libelle, fiche?.prenom ?? null);
   return true;
 }
 
@@ -371,8 +381,8 @@ export async function deciderManuellement(
     { statut: "refuse", verifie_par: null, verifie_le: null, email_preuve: null };
   await db.from("associations_fiches").update({ ...maj, maj_le: new Date().toISOString() }).eq("id", demande.id);
   await journal(demande.user_id, demande.collab_id, `manuel_${action}`, { par: admin.userId }, libelle);
-  if (action === "valider") await accuseValidation(demande.user_id, libelle);
-  if (action === "refuser") await accuseRefus(demande.user_id, libelle, false);
+  if (action === "valider") await accuseValidation(demande.user_id, libelle, f?.prenom ?? null);
+  if (action === "refuser") await accuseRefus(demande.user_id, libelle, false, f?.prenom ?? null);
   return { ok: true };
 }
 
