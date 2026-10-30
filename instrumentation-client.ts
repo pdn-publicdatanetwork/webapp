@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 
-// Sentry — erreurs côté navigateur.
+// Sentry : erreurs côté navigateur.
 // DSN fourni via la variable d'environnement Vercel NEXT_PUBLIC_SENTRY_DSN.
 // Silencieux si absent (dev local / déploiement sans Sentry).
 if (process.env.NEXT_PUBLIC_SENTRY_DSN) {

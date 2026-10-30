@@ -1,6 +1,6 @@
 // Génère sql/2026-10-03_bios_nouveaux_senateurs.sql : bios des nouveaux
 // sénateurs 2026 au format de la charte éditoriale, remplies uniquement
-// avec les données du référentiel (mandats, groupes, commissions) — aucun
+// avec les données du référentiel (mandats, groupes, commissions) : aucun
 // élément inventé. Les sections sans donnée disponible sont explicitement
 // marquées « à compléter » pour l'équipe.
 import fs from "fs";
@@ -62,7 +62,7 @@ function bioPour(elu) {
   lignes.push("");
   lignes.push(`Depuis octobre 2026 : **${titreSenateur} ${duDepartement}**${aGroupe ? ` (groupe ${elu.groupe})` : ""} ;`);
   for (const m of mesAvant.slice().reverse()) {
-    lignes.push(`${m.debut ? m.debut.slice(0, 4) : "—"}${m.fin ? ` – ${m.fin.slice(0, 4)}` : ""} : **${m.libelle}**${m.circonscription ? ` (${m.circonscription})` : ""} ;`);
+    lignes.push(`${m.debut ? m.debut.slice(0, 4) : ":"}${m.fin ? ` – ${m.fin.slice(0, 4)}` : ""} : **${m.libelle}**${m.circonscription ? ` (${m.circonscription})` : ""} ;`);
   }
   lignes.push("");
   lignes.push("Formation : à compléter.");
@@ -96,7 +96,7 @@ function bioPour(elu) {
       if (c.chambre) vues.get(nom).chambres.add(CHAMBRE_LONG[c.chambre] || c.chambre);
       if (c.fonction && c.fonction.toLowerCase() !== "membre") vues.get(nom).fonction = c.fonction;
     }
-    lignes.push(`Avant son élection au Sénat, ${f ? "elle a travaillé au sein de" : "il a travaillé au sein de"} ${[...vues.entries()].map(([nom, v]) => `**${nom}** (${[...v.chambres].join(", ")}${v.fonction && v.fonction.toLowerCase() !== "membre" ? ` — ${v.fonction.toLowerCase()}` : ""})`).join(", ")}. Ses travaux au Sénat seront détaillés dès la publication des commissions.`);
+    lignes.push(`Avant son élection au Sénat, ${f ? "elle a travaillé au sein de" : "il a travaillé au sein de"} ${[...vues.entries()].map(([nom, v]) => `**${nom}** (${[...v.chambres].join(", ")}${v.fonction && v.fonction.toLowerCase() !== "membre" ? ` : ${v.fonction.toLowerCase()}` : ""})`).join(", ")}. Ses travaux au Sénat seront détaillés dès la publication des commissions.`);
   } else {
     lignes.push("Ses positions et travaux parlementaires au Sénat seront documentés ici dès la publication des commissions et des travaux législatifs.");
   }
@@ -109,7 +109,7 @@ const out = [];
 let n = 0;
 for (const elu of elus) {
   if (biosDeja.has(elu.personne_id)) continue; // Diaz déjà rédigée
-  out.push(`-- ${elu.prenom} ${elu.nom} (${elu.departement}) — /parlementaires/${elu.slug}/bio
+  out.push(`-- ${elu.prenom} ${elu.nom} (${elu.departement}) : /parlementaires/${elu.slug}/bio
 insert into bios (personne_id, texte, source, actif, cree_par) values ('${e(elu.personne_id)}', $bio$
 ${bioPour(elu)}
 $bio$, 'Fiche générée depuis le référentiel (à enrichir par la rédaction)', true, 'quentin')
@@ -118,7 +118,7 @@ on conflict (personne_id) do update set texte = excluded.texte, maj_le = now();`
 }
 
 const entete = `-- ============================================================================
--- DataParl — Bios des nouveaux sénateurs 2026 (première version)
+-- DataParl : Bios des nouveaux sénateurs 2026 (première version)
 -- À exécuter dans le SQL Editor de la base \`dataparl\` (yuhqajaznizwmenmyzms).
 --
 -- ${n} nouveaux sénateurs (jamais sénateurs auparavant), scrutin du 27

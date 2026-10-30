@@ -7,7 +7,7 @@
 //     bloc « Adresse » → « En circonscription » ;
 //   - Sénat : fiche de chaque sénateur (senat.fr/senateur/<slug>.html),
 //     bloc « Permanence parlementaire ».
-//   - Parlement européen : NON collecté ici — europarl.europa.eu bloque les
+//   - Parlement européen : NON collecté ici : europarl.europa.eu bloque les
 //     requêtes automatisées (WAF) ; passer par les runners Playwright du dépôt
 //     collaborateurs si on veut les eurodéputés.
 //
@@ -15,7 +15,7 @@
 //   - lib/permanences.ts (fichier généré, consommé par la webapp) ;
 //   - data/permanences-geocache.json (cache de géocodage, à committer).
 //
-// Conventions maison : les cas douteux ne sont jamais tranchés seuls — ils
+// Conventions maison : les cas douteux ne sont jamais tranchés seuls : ils
 // sont listés dans le run avec « ATTENTION ». Des garde-fous empêchent
 // d'écraser un fichier correct avec une collecte cassée (exit 1).
 //
@@ -57,7 +57,7 @@ async function obtenir(url, options = {}, tentatives = 3) {
   }
 }
 
-const NOMBRES = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", eacute: "é", egrave: "è", ecirc: "ê", agrave: "à", ccedil: "ç", euml: "ë", ugrave: "ù", ocirc: "ô", icirc: "î", laquo: "«", raquo: "»", rsquo: "’", lsquo: "‘", ndash: "–", mdash: "—", deg: "°" };
+const NOMBRES = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", eacute: "é", egrave: "è", ecirc: "ê", agrave: "à", ccedil: "ç", euml: "ë", ugrave: "ù", ocirc: "ô", icirc: "î", laquo: "«", raquo: "»", rsquo: "’", lsquo: "‘", ndash: "–", mdash: ":", deg: "°" };
 
 // HTML → lignes de texte (le parsing se fait sur le texte, comme sur le site
 // rendu, pour rester robuste aux changements de structure HTML).
@@ -134,7 +134,7 @@ async function geocoder(adresse) {
   if (!r.ok) { note(`BAN HTTP ${r.status} pour « ${adresse} »`); return null; }
   const j = await r.json();
   const hit = j.features?.[0];
-  if (!hit || hit.properties.score < 0.4) { note(`Géocodage incertain (score ${hit?.properties.score ?? "—"}) : ${adresse}`); return null; }
+  if (!hit || hit.properties.score < 0.4) { note(`Géocodage incertain (score ${hit?.properties.score ?? ":"}) : ${adresse}`); return null; }
   const res = { lat: hit.geometry.coordinates[1], lon: hit.geometry.coordinates[0], score: +hit.properties.score.toFixed(2), ville: hit.properties.city ?? "" };
   cache[cle] = res;
   return res;
@@ -195,8 +195,8 @@ for (const c of chambres) points.push(...await collecter(c));
 // Garde-fous : une collecte cassée ne doit pas écraser la carte.
 const nAN = points.filter((p) => p.c === "assemblee").length;
 const nSenat = points.filter((p) => p.c === "senat").length;
-if (chambres.includes("assemblee") && nAN < 200) { console.error(`ATTENTION : seulement ${nAN} permanences AN (< 200) — parsing à vérifier, rien n'est écrit.`); }
-if (chambres.includes("senat") && nSenat < 40) { console.error(`ATTENTION : seulement ${nSenat} permanences Sénat (< 40) — parsing à vérifier, rien n'est écrit.`); }
+if (chambres.includes("assemblee") && nAN < 200) { console.error(`ATTENTION : seulement ${nAN} permanences AN (< 200) : parsing à vérifier, rien n'est écrit.`); }
+if (chambres.includes("senat") && nSenat < 40) { console.error(`ATTENTION : seulement ${nSenat} permanences Sénat (< 40) : parsing à vérifier, rien n'est écrit.`); }
 if ((chambres.includes("assemblee") && nAN < 200) || (chambres.includes("senat") && nSenat < 40)) {
   process.exit(1);
 }
@@ -204,7 +204,7 @@ if ((chambres.includes("assemblee") && nAN < 200) || (chambres.includes("senat")
 if (attention.length) console.log("À examiner :\n - " + attention.slice(0, 40).join("\n - "));
 
 const maj = new Date().toISOString().slice(0, 10);
-const fichier = `// GÉNÉRÉ par scripts/permanences.mjs — ne pas modifier à la main.
+const fichier = `// GÉNÉRÉ par scripts/permanences.mjs : ne pas modifier à la main.
 // Permanences parlementaires géocodées (Base Adresse Nationale). Mise à jour : ${maj}.
 // Sources : fiches des députés (Assemblée nationale) et des sénateurs (Sénat).
 export type ChambrePermanence = "assemblee" | "senat" | "europarl";

@@ -1,14 +1,14 @@
-# CRM campagnes — Listmonk (crm.dataparl.fr)
+# CRM campagnes : Listmonk (crm.dataparl.fr)
 
 Interface de campagnes auto-hébergée (remplace l'e-mailing dans l'admin .fr) :
 l'admin `admin.dataparl.fr/crm` reste la **source de vérité** (`crm_contacts`),
 Listmonk gère campagnes programmées, tracking et désinscription. Zéro charge
 Vercel supplémentaire.
 
-## 1. Hébergement — Oracle Cloud Always Free (0 €)
+## 1. Hébergement : Oracle Cloud Always Free (0 €)
 
 1. Créer un compte OCI, puis une instance **VM.Standard.E2.1.Micro**
-   (Always Free : 1/8 OCPU, 1 Go RAM — suffisant : listmonk ~57 Mo + Postgres).
+   (Always Free : 1/8 OCPU, 1 Go RAM : suffisant : listmonk ~57 Mo + Postgres).
    Ubuntu 22.04+, clé SSH. (Les Ampere A1 4 OCPU/24 Go sont aussi Always Free
    mais le quota est souvent indisponible ; inutile ici.)
 2. **Security List** du VCN : ouvrir uniquement **22 (SSH)** et **80/443**.
@@ -41,7 +41,7 @@ docker compose exec listmonk /listmonk/listmonk --install
   99 %+ / latence p99 ÷129, sans changer le code ni le SMTP.
 - ⚠️ **Incompatibilité actuelle** : le tracking open/clic de Resend n'est pas
   encore supporté sur Forge. Recommandation : activer Forge sur le domaine
-  campagnes **et désactiver le tracking Resend de ce domaine** — le tracking
+  campagnes **et désactiver le tracking Resend de ce domaine** : le tracking
   est assuré par Listmonk (ci-dessous), sans doublon de pixel.
 
 ## 3. Tracking (Listmonk)

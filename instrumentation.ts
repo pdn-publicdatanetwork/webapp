@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 
-// Sentry — erreurs côté serveur (SSR, routes API, Server Actions).
+// Sentry : erreurs côté serveur (SSR, routes API, Server Actions).
 export async function register() {
   // Côté serveur : DSN privé (SENTRY_DSN), jamais exposé au navigateur.
   if (process.env.NEXT_RUNTIME === "nodejs" && (process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN)) {

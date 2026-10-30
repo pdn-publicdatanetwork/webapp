@@ -4,12 +4,12 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
 
 ## 2026-10-30
 
-- Index /groupe et /parti v2 : les groupes passent en cartes avec effectifs (élus, collaborateurs, renouvellement, part de femmes) et les partis en lignes riches classées par nombre d'élus, avec répartition par chambre — fin des annuaires de liens bleus.
+- Index /groupe et /parti v2 : les groupes passent en cartes avec effectifs (élus, collaborateurs, renouvellement, part de femmes) et les partis en lignes riches classées par nombre d'élus, avec répartition par chambre : fin des annuaires de liens bleus.
 
 ## 2026-10-31
 
 - **Pages chambres v2** (`/an`, `/senat`, `/pe`) : les landings deviennent de
-  vraies pages de destination — en-tête allégé (logo officiel de la chambre +
+  vraies pages de destination : en-tête allégé (logo officiel de la chambre +
   titre sans highlight), 4 chiffres clés dynamiques (collaborateurs en poste,
   mouvements du mois, taux de renouvellement 12 mois vers VigiParl', part de
   femmes vers MixiParl'), les 5 derniers mouvements de la chambre au style de
@@ -22,7 +22,7 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
 
 ## 2026-10-30
 
-- **Accueil v2** : page d'accueil refondue, plus aérée et hiérarchisée — hero
+- **Accueil v2** : page d'accueil refondue, plus aérée et hiérarchisée : hero
   resserré (« Qui travaille pour vos élus ? »), quatre chiffres clés avec icônes
   (collaborateurs suivis, Assemblée, Sénat, Parlement européen), les cinq
   derniers mouvements avec badges en pastilles (arrivée / départ / transfert)
@@ -36,7 +36,7 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
 - **Accueil v2, retours design** : suppression du liseré jaune sur la carte
   « Recevoir les mouvements par email » (fond très léger à la place), logos
   officiels des institutions sur les cartes de chiffres (Assemblée nationale,
-  Sénat, Parlement européen — SVG dans `public/logos/`), wordmarks VigiParl' et
+  Sénat, Parlement européen : SVG dans `public/logos/`), wordmarks VigiParl' et
   MixiParl' en lieu et place des icônes génériques dans la grille Explorer, et
   badges arrivée / départ / transfert plus contrastés.
 
@@ -46,16 +46,16 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
   transfert renforcés (32 %), hover des cartes Explorer adouci (bordure bleue
   plus discrète, ombre légère, sans translation).
 
-- **Accueil v2, retours (3)** : section « Derniers mouvements » refaite —
+- **Accueil v2, retours (3)** : section « Derniers mouvements » refaite :
   badges compacts et contrastés, nom du collaborateur en gras, élu + groupe en
   texte secondaire, chambre + date très discrets, séparations fines entre
-  lignes (fin des gros blocs arrondis) ; section « Explorer » homogénéisée —
+  lignes (fin des gros blocs arrondis) ; section « Explorer » homogénéisée :
   icônes sobres identiques dans des pastilles neutres (fin du jaune massif),
   descriptions de longueur uniforme, wordmarks VigiParl' / MixiParl' alignés
   sur la même hauteur que les icônes.
 
 - **Accueil v2, retours (4)** : « Derniers mouvements » passe aux pastilles
-  discrètes — point coloré (bleu #3B82F6 / rouge #EF4444 / violet #8B5CF6,
+  discrètes : point coloré (bleu #3B82F6 / rouge #EF4444 / violet #8B5CF6,
   spécifiques à l'accueil) + libellé « Arrivée / Départ / Transfert » en texte
   normal, fin des badges. Hiérarchie conservée : collaborateur en gras, élu +
   groupe en secondaire, chambre + date sur une ligne discrète, séparations
@@ -77,14 +77,14 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
 
 ## 2026-10-14
 
-- **Perf CPU (PR #28)** : allongement des délais `revalidate` ISR — 24 h pour
+- **Perf CPU (PR #28)** : allongement des délais `revalidate` ISR : 24 h pour
   les fiches parlementaires/collaborateurs, listes, hubs, gouv, groupes, partis,
   sénatoriales, sitemaps et images opengraph ; 1 h pour mouvements et daily ;
   10 min pour sheets et search. Divise par ~24 les régénérations SSR de fond
   (limite Fluid Active CPU du plan Vercel atteinte en octobre).
 - **Revalidation à la demande (PR #29)** : endpoint `POST /api/revalidate`
   protégé par `REVALIDATE_SECRET`, appelé par le workflow « Synchro Supabase »
-  du dépôt collaborateurs après le run du matin — les pages vitrines se
+  du dépôt collaborateurs après le run du matin : les pages vitrines se
   rafraîchissent au bon moment, sans burst de CPU.
 - **Sitemap permanences (PR #27)** : page `/parlementaires/map` (carte des
   permanences) inscrite au registre des pages et au sitemap.
@@ -98,7 +98,7 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
   identifiant Clarity (`NEXT_PUBLIC_CLARITY_ID`).
 - Page interstitielle `acces-ressource` entre data.gouv.fr et la connexion.
 
-## 2026 — historique reconstitué (avant le 2026-10-13)
+## 2026 : historique reconstitué (avant le 2026-10-13)
 
 > Note : l'historique antérieur de ce fichier a été perdu lors d'un commit
 > défectueux (13/10). Les entrées ci-dessous le reconstituent d'après les
@@ -111,7 +111,7 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
   initiales sur les cartes ; état vide explicatif pour le Parlement
   européen (collecte récente).
 - Masquage temporaire des fausses arrivées Sénat du 2026-10-09 (listes,
-  Daily, emails Daily/Weekly) — exclusions centralisées dans
+  Daily, emails Daily/Weekly) : exclusions centralisées dans
   `lib/exclusions.ts`.
 - SEO partis : `lib/partisNoms.ts` (sigle → nom complet, repli sigle),
   fiches `/parti/<slug>` réécrites (H1, réponse directe, FAQ dynamique,
@@ -149,10 +149,10 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
 - OpenAPI 1.2.0 : contrat complet après audit + script d'audit Python
   (`scripts/audit_openapi.py`).
 - Page « lexique des collaborateurs parlementaires » (`/lexique`) :
-  définitions en une phrase — collaborateur de député, régime du Sénat,
+  définitions en une phrase : collaborateur de député, régime du Sénat,
   assistants accrédités et locaux du Parlement européen, groupements, tiers
   payants, prestataires, mouvements, turnover (VigiParl'), mixité
-  (MixiParl'), mandat et mandature — plus une section « devenir
+  (MixiParl'), mandat et mandature : plus une section « devenir
   collaborateur parlementaire » ; référencée dans le plan du site, le
   sitemap XML et les hubs collaborateurs.
 - Fichier `llms.txt` à la racine du site (format llmstxt.org) :
@@ -160,13 +160,13 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
   agents (listes de collaborateurs, tiers payants, prestataires, VigiParl',
   MixiParl', méthode et sources).
 - Pages « par scrutin de renouvellement » au Sénat : `/groupe/senat/serie-1/2023`,
-  `/groupe/senat/serie-2/2020`… et par groupe (`/groupe/senat-lr/serie-1/2023`) —
+  `/groupe/senat/serie-2/2020`… et par groupe (`/groupe/senat-lr/serie-1/2023`) :
   les sénateurs élus lors de chaque scrutin organisé depuis 2010 (2011 et 2014
   compris), avec le groupe de l'époque et les renommages harmonisés (UMP → LR…).
   Data-driven : une page n'existe que si des mandats élus cette année-là sont
   enregistrés ; les pages de série (`/groupe/senat/serie-1`) listent les
   scrutins disponibles, et le sitemap XML référence chaque scrutin.
-- Pages d'accueil par chambre : `/an`, `/senat`, `/pe` — tout
+- Pages d'accueil par chambre : `/an`, `/senat`, `/pe` : tout
   ce que DataParl' publie sur chaque chambre (mouvements, collaborateurs,
   parlementaires, groupes et mandatures, VigiParl', MixiParl', et
   sénatoriales 2026 pour le Sénat). Synonymes en redirection :
@@ -197,8 +197,8 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
 - Feuille « Parlementaires (2017 → aujourd'hui) » dans DataParl' Sheets.
 - Fichiers de gouvernance du dépôt : `LICENSE` (MIT), `SECURITY.md`,
   `CHANGELOG.md`.
-- Enquête utilisateurs : questionnaire survey.dataparl.fr (3 notes —
-  expérience, contenu de fond, globale — et un commentaire), proposé sur le
+- Enquête utilisateurs : questionnaire survey.dataparl.fr (3 notes :
+  expérience, contenu de fond, globale : et un commentaire), proposé sur le
   site après 4 minutes à un visiteur connecté (une fois, lien par jeton
   rattaché au compte) ; réponses et notes dans l'admin (Contenu → Enquête
   utilisateurs). Table : scripts/survey.sql.
@@ -208,7 +208,7 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
 - Perf : AdSense (`ca-pub-6168263680630864`) chargé uniquement après
   consentement via `chargerPub()` (~220 Ko évités par défaut) ; GA4
   (G-GC1JD019GY) déployé via le conteneur GTM (GTM-KW3MJMTK) seul, plus
-  gtag.js en direct — fin de la double mesure (~450 Ko de scripts en
+  gtag.js en direct : fin de la double mesure (~450 Ko de scripts en
   moins au chargement).
 - Sitemap XML et plan du site : `/collab/parti`, pages Turnover par
   chambre, trombinoscopes, classements, `/donnees` et `/reutilisations`.
@@ -222,7 +222,7 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
   et de la clé des lignes du tableau qui affichaient littéralement
   `${…}` (expressions jamais évaluées) depuis la création de la page.
 - Plan du site (`/sitemap`) et `sitemap.xml` : ajout des pages du Parlement
-  européen — tiers payants, prestataires, réseau des collaborateurs, et une
+  européen : tiers payants, prestataires, réseau des collaborateurs, et une
   URL par fiche structure dans le plan XML.
 - Accueil : le compteur détaille les trois chambres (Assemblée, Sénat,
   Parlement européen) et « Explorer » pointe vers les mouvements du
@@ -249,7 +249,7 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
 - Polices DM Sans et Spectral auto-hébergées via next/font (préchargées,
   police de repli aux métriques ajustées) : fin du reflow au chargement des
   polices Google (CLS 0,27 → ~0 sur l'accueil, mesuré PageSpeed). DM Sans pour
-  le corps de texte, Spectral pour les titres — visuel inchangé.
+  le corps de texte, Spectral pour les titres : visuel inchangé.
 - Emails d'alertes : nouvel en-tête épuré (fini le bandeau bleu nuit du
   DataParl' Daily/Weekly), pied de page réduit à une ligne, et expéditeurs
   dédiés `dataparl-daily@dataparl.fr` / `dataparl-weekly@dataparl.fr`
@@ -261,11 +261,11 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
   des emails.
 - En-tête www : logo à gauche, recherche au centre, menu déroulant à droite
   sur toutes les tailles d'écran.
-- Session : rafraîchissement explicite du jeton avant chaque action —
+- Session : rafraîchissement explicite du jeton avant chaque action :
   fin des « non connecté » après une inactivité (onglet en arrière-plan).
 - Cron Vercel `/api/cron/jorf` retiré (DILA injoignable depuis les IP Vercel).
 
-## 2026 — précédents
+## 2026 : précédents
 
 Le projet a démarré sans journal de versions : l'historique git fait foi
 (site, alertes, compte, administration, webmail, API v1, DataParl' Sheets).

@@ -38,7 +38,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ fichier
       headers: {
         "Content-Disposition": `inline; filename="${slug}_gouv_${taille}.png"`,
         "Content-Type": "image/png", "Cache-Control": "public, max-age=31536000, immutable",
-        "X-Credit": encodeURIComponent(`Photo : ${CREDIT.gouv}${credit ? " — " + credit : ""}`),
+        "X-Credit": encodeURIComponent(`Photo : ${CREDIT.gouv}${credit ? " : " + credit : ""}`),
         "Access-Control-Allow-Origin": "*", "X-Robots-Tag": "noarchive",
       },
     });

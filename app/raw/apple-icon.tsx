@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
-// Icône tactile iOS (180x180) — raw.dataparl.fr.
-// Monogramme « Σ' » bleu encre sur fond #FFFFFF —
+// Icône tactile iOS (180x180) : raw.dataparl.fr.
+// Monogramme « Σ' » bleu encre sur fond #FFFFFF :
 // même identité que /icon.svg du domaine correspondant.
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";

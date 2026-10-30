@@ -1,4 +1,4 @@
-// @ts-nocheck — config Checkly, déployée par « npx checkly deploy » (pas compilée par la webapp).
+// @ts-nocheck : config Checkly, déployée par « npx checkly deploy » (pas compilée par la webapp).
 // Checks as code : les browser checks vivent dans __checks__/ et sont
 // synchronisés avec le compte Checkly (projet dataparl.fr) via le CLI.
 // Voir https://checklyhq.com/docs/cli/ 
@@ -13,7 +13,7 @@ export default defineConfig({
     frequency: 60, // toutes les heures
     browserChecks: { testMatch: "__checks__/**/*.spec.ts" },
   },
-  // URL de base injectée dans les checks (ENVIRONMENT_URL) — la valeur par
+  // URL de base injectée dans les checks (ENVIRONMENT_URL) : la valeur par
   // défaut de chaque script reste www.dataparl.fr.
   env: [{ key: "ENVIRONMENT_URL", value: "https://www.dataparl.fr" }],
 });

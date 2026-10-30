@@ -28,19 +28,19 @@ export async function GET() {
   // mêmes exclusions que les moteurs classiques (un groupe dédié hérite sinon
   // de tout « Allow: / », y compris les espaces privés).
   const botsIA = [
-    // OpenAI — entraînement, recherche ChatGPT, fetch utilisateur
+    // OpenAI : entraînement, recherche ChatGPT, fetch utilisateur
     "GPTBot", "OAI-SearchBot", "ChatGPT-User",
-    // Perplexity — index et fetch utilisateur
+    // Perplexity : index et fetch utilisateur
     "PerplexityBot", "Perplexity-User",
-    // Anthropic — entraînement, recherche, fetch utilisateur, ancien token
+    // Anthropic : entraînement, recherche, fetch utilisateur, ancien token
     "ClaudeBot", "Claude-SearchBot", "Claude-User", "Claude-Web",
     // Google (Gemini grounding + entraînement), Apple, Common Crawl
     "Google-Extended", "Applebot-Extended", "CCBot",
-    // xAI (Grok) — tokens rapportés, non officiellement documentés
+    // xAI (Grok) : tokens rapportés, non officiellement documentés
     "GrokBot", "xAI-SearchBot",
-    // Meta AI — agent de récupération et fetch utilisateur
+    // Meta AI : agent de récupération et fetch utilisateur
     "Meta-ExternalAgent", "Meta-ExternalFetcher",
-    // Mistral (Vibe / Le Chat) — fetch utilisateur
+    // Mistral (Vibe / Le Chat) : fetch utilisateur
     "MistralAI-User",
     // Duck.ai (DuckAssist)
     "DuckAssistBot",
