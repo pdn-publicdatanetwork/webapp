@@ -29,7 +29,7 @@ export async function avecAdmin(req: Request, fn: (a: Admin) => Promise<unknown>
     // connectée, le message exact (Supabase compris) aide au diagnostic.
     const brut = e instanceof Error ? e.message.trim() : "";
     const message = brut.startsWith("Variable d'environnement manquante")
-      ? `${brut} — à ajouter dans les variables du projet sur Vercel`
+      ? `${brut} : à ajouter dans les variables du projet sur Vercel`
       : brut ? `erreur serveur : ${brut.slice(0, 300)}` : "erreur serveur";
     return NextResponse.json({ error: message }, { status: 500, headers: { "Cache-Control": "no-store" } });
   }

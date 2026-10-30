@@ -1,7 +1,7 @@
 import { cookieStorage } from "./cookieStorage";
 import { CLARITY_ID } from "./env";
 
-// Consentement Google (Consent Mode v2), piloté par le bandeau du site —
+// Consentement Google (Consent Mode v2), piloté par le bandeau du site :
 // pas par une bannière Google. Les signaux sont envoyés à GTM et AdSense.
 // Les valeurs par défaut (« denied ») sont définies dans app/layout.tsx,
 // AVANT le chargement des scripts ; ce module ne fait qu'actualiser l'état.
@@ -20,7 +20,7 @@ declare global {
 // Espaces internes (admin.dataparl.fr, webmail.dataparl.fr, mail.dataparl.fr,
 // ou chemins /admin et /webmail servis sur www) : aucune mesure, aucun
 // consentement demandé. GTM, le bandeau et les scripts tiers ne chargent pas
-// là — c'était le conteneur GTM qui affichait la bulle Google « Paramètres
+// là : c'était le conteneur GTM qui affichait la bulle Google « Paramètres
 // concernant la confidentialité et les cookies » (Funding Choices) sur
 // l'admin et le webmail.
 export function espaceInterne(): boolean {
@@ -71,7 +71,7 @@ export function chargerPub() {
 
 // Charge Microsoft Clarity (mesure comportementale : heatmaps, replays),
 // une seule fois, uniquement après un consentement de mesure d'audience.
-// Sans accord, le script n'est jamais injecté — même promesse que la pub.
+// Sans accord, le script n'est jamais injecté : même promesse que la pub.
 // Clarity masque par défaut les zones de saisie dans les replays ; sans
 // identifiant configuré (lib/env.ts), la fonction ne fait rien.
 export function chargerClarity() {

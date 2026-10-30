@@ -41,7 +41,7 @@ export const ADSENSE_SLOT = process.env.NEXT_PUBLIC_ADSENSE_SLOT ?? "2498344789"
 export const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID ?? "yx9kdu8aj0";
 
 // Clé publique AppLixir (client.applixir.com) : visible dans le navigateur par
-// design, comme les autres identifiants NEXT_PUBLIC — défaut intégré pour que
+// design, comme les autres identifiants NEXT_PUBLIC : défaut intégré pour que
 // le déblocage vidéo soit actif dès le build. Le déblocage réel exige AUSSI
 // APPLIXIR_SECRET (secret de rappel serveur, jamais dans le code).
 export const APPLIXIR_API_KEY = process.env.NEXT_PUBLIC_APPLIXIR_API_KEY ?? "dee33c16-4c7b-429d-ab72-68a1b681308c";
@@ -50,7 +50,7 @@ export const DUREE_DEBLOCAGE_H = 24;
 
 export const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID ?? "";
 
-// Base Notion des communiqués de presse (CMS headless) — voir lib/notion.ts.
+// Base Notion des communiqués de presse (CMS headless) : voir lib/notion.ts.
 type Secret =
   | "AUTH_SUPABASE_SERVICE_ROLE_KEY" | "DATA_SUPABASE_SERVICE_ROLE_KEY" | "RESEND_API_KEY" | "CONSENT_SALT"
   | "ADMIN_VAULT_KEY" | "ADMIN_OTP_SECRET" | "RESEND_WEBHOOK_SECRET" | "APPLIXIR_SECRET" | "CRON_SECRET" | "NOTION_TOKEN"

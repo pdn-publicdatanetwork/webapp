@@ -15,8 +15,8 @@ export function modalPost(): Record<string, unknown> {
     submit: { type: "plain_text", text: "Publier" },
     close: { type: "plain_text", text: "Annuler" },
     blocks: [
-      { type: "input", optional: true, block_id: "destination", element: { type: "plain_text_input", action_id: "v", placeholder: { type: "plain_text", text: "https://www.dataparl.fr/… (vide = texte seul)" } }, label: { type: "plain_text", text: "Page à partager (facultatif — crée les liens tracés)" } },
-      { type: "input", block_id: "texte", element: { type: "plain_text_input", action_id: "v", multiline: true, max_length: 500, placeholder: { type: "plain_text", text: "Le texte du post — le lien court est ajouté automatiquement si une page est fournie" } }, label: { type: "plain_text", text: "Texte du post" } },
+      { type: "input", optional: true, block_id: "destination", element: { type: "plain_text_input", action_id: "v", placeholder: { type: "plain_text", text: "https://www.dataparl.fr/… (vide = texte seul)" } }, label: { type: "plain_text", text: "Page à partager (facultatif : crée les liens tracés)" } },
+      { type: "input", block_id: "texte", element: { type: "plain_text_input", action_id: "v", multiline: true, max_length: 500, placeholder: { type: "plain_text", text: "Le texte du post : le lien court est ajouté automatiquement si une page est fournie" } }, label: { type: "plain_text", text: "Texte du post" } },
       { type: "input", block_id: "reseaux", element: { type: "checkboxes", action_id: "v", options: [
         { text: { type: "plain_text", text: "X (Twitter)" }, value: "x" },
         { text: { type: "plain_text", text: "Bluesky" }, value: "bsky" },
@@ -41,7 +41,7 @@ export function modalEnvoi(): Record<string, unknown> {
       { type: "input", block_id: "a", element: { type: "plain_text_input", action_id: "v", placeholder: { type: "plain_text", text: "destinataire@exemple.fr (plusieurs séparés par des virgules)" } }, label: { type: "plain_text", text: "À" } },
       { type: "input", optional: true, block_id: "cc", element: { type: "plain_text_input", action_id: "v", placeholder: { type: "plain_text", text: "copie@exemple.fr (facultatif, virgules acceptées)" } }, label: { type: "plain_text", text: "Cc (facultatif)" } },
       { type: "input", block_id: "sujet", element: { type: "plain_text_input", action_id: "v", max_length: 300 }, label: { type: "plain_text", text: "Objet" } },
-      { type: "input", block_id: "texte", element: { type: "plain_text_input", action_id: "v", multiline: true, max_length: 1400, placeholder: { type: "plain_text", text: "Le message — une confirmation s'affichera avant l'envoi réel" } }, label: { type: "plain_text", text: "Message" } },
+      { type: "input", block_id: "texte", element: { type: "plain_text_input", action_id: "v", multiline: true, max_length: 1400, placeholder: { type: "plain_text", text: "Le message : une confirmation s'affichera avant l'envoi réel" } }, label: { type: "plain_text", text: "Message" } },
     ],
   };
 }
@@ -55,7 +55,7 @@ export function modalRechercheCompte(): Record<string, unknown> {
     close: { type: "plain_text", text: "Annuler" },
     blocks: [
       { type: "input", block_id: "q", element: { type: "plain_text_input", action_id: "v", placeholder: { type: "plain_text", text: "adresse e-mail du compte, ou son identifiant" } }, label: { type: "plain_text", text: "Compte à afficher" } },
-      { type: "context", elements: [{ type: "mrkdwn", text: "Équivaut à la fiche /admin/users/<id> — clés API, connexions, téléchargements, enquête. Lecture seule." }] },
+      { type: "context", elements: [{ type: "mrkdwn", text: "Équivaut à la fiche /admin/users/<id> : clés API, connexions, téléchargements, enquête. Lecture seule." }] },
     ],
   };
 }
@@ -70,14 +70,14 @@ function heure(iso: string): string {
 export async function modalInbox(): Promise<Record<string, unknown>> {
   const messages = await lister("inbox", 12);
   const lignes = messages.map((m) =>
-    (m.read ? "• " : "🔴 ") + "`" + idCourt(m.id) + "` " + m.from_addr + " — *" + (m.subject || "(sans objet)") + "* (" + heure(m.date) + ")");
+    (m.read ? "• " : "🔴 ") + "`" + idCourt(m.id) + "` " + m.from_addr + " : *" + (m.subject || "(sans objet)") + "* (" + heure(m.date) + ")");
   return {
     type: "modal", callback_id: "mail_inbox",
     title: { type: "plain_text", text: "Boîte de réception" },
     close: { type: "plain_text", text: "Fermer" },
     blocks: messages.length ? [
       { type: "section", text: { type: "mrkdwn", text: lignes.join("\n") } },
-      { type: "context", elements: [{ type: "mrkdwn", text: "Lire un message : /mail <id court> · Supprimer : /mail supprimer <id court>" }] },
+      { type: "context", elements: [{ type: "mrkdwn", text: "Lire un message : /mail <id court>, Supprimer : /mail supprimer <id court>" }] },
     ] : [{ type: "section", text: { type: "mrkdwn", text: "📭 Aucun message reçu." } }],
   };
 }
@@ -94,8 +94,8 @@ export async function publierHome(userId: string): Promise<{ ok: boolean; erreur
     type: "home", name: "default",
     blocks: [
       { type: "header", text: { type: "plain_text", text: "Console DataParl'" } },
-      { type: "context", elements: [{ type: "mrkdwn", text: "Pilote le site, les publications, les e-mails et les données — les slash commands (/maintenance, /stats, /post, /mail, /sql) restent disponibles." }] },
-      { type: "section", text: { type: "mrkdwn", text: "*🛠 Site*\n" + (etat?.active ? "🔴 Maintenance en cours" + (etat.motif ? " — " + etat.motif : "") : "🟢 Site ouvert") } },
+      { type: "context", elements: [{ type: "mrkdwn", text: "Pilote le site, les publications, les e-mails et les données : les slash commands (/maintenance, /stats, /post, /mail, /sql) restent disponibles." }] },
+      { type: "section", text: { type: "mrkdwn", text: "*🛠 Site*\n" + (etat?.active ? "🔴 Maintenance en cours" + (etat.motif ? " : " + etat.motif : "") : "🟢 Site ouvert") } },
       { type: "actions", elements: [
         ...boutonsSite,
         { type: "button", text: { type: "plain_text", text: "📊 Statistiques" }, action_id: "home_stats" },

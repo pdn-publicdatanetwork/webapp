@@ -1,4 +1,4 @@
-// Helpers DataParl' Jobs — titre standard, slug, chambres et domaines parlementaires.
+// Helpers DataParl' Jobs : titre standard, slug, chambres et domaines parlementaires.
 
 export type Chambre = "an" | "senat" | "pe";
 

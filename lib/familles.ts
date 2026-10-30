@@ -168,7 +168,7 @@ export type Suggestion = { valeur: string; libelle: string; detail: string; fami
 // famille ECO, puis les groupes correspondants.
 export function suggererGroupes(saisie: string, max = 8): Suggestion[] {
   const q = norm(saisie);
-  if (!q) return FAMILLES.map((f) => ({ valeur: f.code, libelle: `${f.code} · ${f.libelle}`, detail: resume(f), famille: f.code }));
+  if (!q) return FAMILLES.map((f) => ({ valeur: f.code, libelle: `${f.code}, ${f.libelle}`, detail: resume(f), famille: f.code }));
   // Score : sigle ou code exact (3), début du code, du libellé ou d'un sigle (2),
   // mot d'un libellé de groupe (1). Les familles les mieux classées d'abord.
   const score = (f: Famille) => {
@@ -180,11 +180,11 @@ export function suggererGroupes(saisie: string, max = 8): Suggestion[] {
   const out: Suggestion[] = [];
   const classees = FAMILLES.map((f) => ({ f, s: score(f) })).filter((x) => x.s > 0).sort((a, b) => b.s - a.s);
   for (const { f } of classees) {
-    out.push({ valeur: f.code, libelle: `${f.code} · ${f.libelle}`, detail: resume(f), famille: f.code });
+    out.push({ valeur: f.code, libelle: `${f.code}, ${f.libelle}`, detail: resume(f), famille: f.code });
     for (const x of f.groupes) {
       const n = norm(x.sigle);
       if ((n.startsWith(q) || norm(x.libelle).split(" ").some((m) => m.startsWith(q))) && !out.some((o) => o.valeur === x.sigle)) {
-        out.push({ valeur: x.sigle, libelle: `${x.sigle} (${NOM_CHAMBRE[x.chambre]})`, detail: x.libelle + (x.jusqua ? ` · jusqu'en ${x.jusqua}` : ""), famille: f.code });
+        out.push({ valeur: x.sigle, libelle: `${x.sigle} (${NOM_CHAMBRE[x.chambre]})`, detail: x.libelle + (x.jusqua ? `, jusqu'en ${x.jusqua}` : ""), famille: f.code });
       }
     }
   }

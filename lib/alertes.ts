@@ -47,7 +47,7 @@ function ligneHtml(m: MvtAlerte, avecDate: boolean): string {
     : m.type === "depart" ? `${collab} quitte l'équipe de ${elu}`
       : `${collab} passe de l'équipe de ${esc(nomAffiche(m.elu_origine_nom))} à celle de ${elu}`;
   const badge = `<span style="display:inline-block;min-width:74px;font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:.03em;color:${COULEUR_TYPE[m.type] ?? GRIS}">${esc(TYPE[m.type] ?? m.type)}</span>`;
-  const meta = [CHAMBRE[m.chambre], avecDate ? dateLongue(m.date_event) : "", m.fonction ?? ""].filter(Boolean).join(" · ");
+  const meta = [CHAMBRE[m.chambre], avecDate ? dateLongue(m.date_event) : "", m.fonction ?? ""].filter(Boolean).join(", ");
   return `<tr><td style="padding:10px 0;border-bottom:1px solid #E6E3D8;vertical-align:top">${badge}<br>${phrase}<div style="font-size:13px;color:${GRIS};margin-top:2px">${esc(meta)}</div></td></tr>`;
 }
 
@@ -57,7 +57,7 @@ function ligneTexte(m: MvtAlerte): string {
   const p = m.type === "arrivee" ? `${qui} rejoint l'équipe de ${elu}`
     : m.type === "depart" ? `${qui} quitte l'équipe de ${elu}`
       : `${qui} passe de l'équipe de ${nomAffiche(m.elu_origine_nom)} à celle de ${elu}`;
-  return `- ${TYPE[m.type] ?? m.type} · ${p} (${CHAMBRE[m.chambre]}, ${dateLongue(m.date_event)})`;
+  return `- ${TYPE[m.type] ?? m.type}, ${p} (${CHAMBRE[m.chambre]}, ${dateLongue(m.date_event)})`;
 }
 
 const pluriel = (n: number, s: string, p = `${s}s`) => `${n.toLocaleString("fr-FR")} ${n > 1 ? p : s}`;
@@ -70,7 +70,7 @@ export function messageAlerte(mvts: MvtAlerte[], frequence: Abonnement["frequenc
   const titre = hebdo ? `Ta semaine au Parlement : ${pluriel(n, "mouvement")}` : `${pluriel(n, "nouveau mouvement", "nouveaux mouvements")} pour tes alertes`;
   const sujet = hebdo ? `DataParl' Weekly : ${pluriel(n, "mouvement")} cette semaine` : `DataParl' Daily : ${pluriel(n, "mouvement")} chez les collaborateurs parlementaires`;
   const affiches = mvts.slice(0, MAX_LIGNES);
-  const cle = (m: MvtAlerte) => hebdo ? `${m.elu_groupe || "Sans groupe"} · ${CHAMBRE[m.chambre]}` : CHAMBRE_LONG[m.chambre] ?? m.chambre;
+  const cle = (m: MvtAlerte) => hebdo ? `${m.elu_groupe || "Sans groupe"}, ${CHAMBRE[m.chambre]}` : CHAMBRE_LONG[m.chambre] ?? m.chambre;
   const sections = new Map<string, MvtAlerte[]>();
   for (const m of affiches) sections.set(cle(m), [...(sections.get(cle(m)) ?? []), m]);
   const ordre = [...sections.entries()].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], "fr"));

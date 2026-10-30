@@ -4,7 +4,7 @@ import { authAdmin, dataAdmin } from "./supabaseAdmin";
 // Données de l'espace admin accessibles depuis Slack (onglet Accueil →
 // section Données, et commande /sql en complément) : comptes, fiche compte,
 // abonnés newsletter, clés API, téléchargements Sheets, enquête
-// utilisateurs. Requêtes préparées en lecture seule — aucune écriture depuis
+// utilisateurs. Requêtes préparées en lecture seule : aucune écriture depuis
 // Slack : les actions sensibles (révocation de clé, quotas, désinscription,
 // renvoi d'invitation) restent dans l'admin authentifié (OTP). Les modals du
 // Home tab ne sont visibles que de la personne qui clique.
@@ -25,24 +25,24 @@ function dh(iso: string | null | undefined): string {
   });
 }
 
-// ——— Aide (commande /sql) ——————————————————————————————————
+// ::: Aide (commande /sql) ::::::::::::::::::::::::::::::::::
 
 function aide(): Bloc[] {
   return [
-    entete("🗃 /sql — requêtes préparées"),
+    entete("🗃 /sql : requêtes préparées"),
     section(
-      "• `/sql users [n° de page]` — comptes utilisateurs (les derniers inscrits d'abord)\n" +
-      "• `/sql user <email ou id>` — fiche complète d'un compte (clés API, connexions, téléchargements, enquête)\n" +
-      "• `/sql abonnes [adresse ou n° de page]` — abonnés aux alertes\n" +
-      "• `/sql cles` — clés API et consommation\n" +
-      "• `/sql telechargements [feuille]` — exports DataParl' Sheets\n" +
-      "• `/sql survey [id]` — enquête utilisateurs (moyennes, ou le détail d'une réponse)",
+      "• `/sql users [n° de page]` : comptes utilisateurs (les derniers inscrits d'abord)\n" +
+      "• `/sql user <email ou id>` : fiche complète d'un compte (clés API, connexions, téléchargements, enquête)\n" +
+      "• `/sql abonnes [adresse ou n° de page]` : abonnés aux alertes\n" +
+      "• `/sql cles` : clés API et consommation\n" +
+      "• `/sql telechargements [feuille]` : exports DataParl' Sheets\n" +
+      "• `/sql survey [id]` : enquête utilisateurs (moyennes, ou le détail d'une réponse)",
     ),
     contexte("Les mêmes données sont aussi dans l'onglet Accueil de l'app, section Données. Lecture seule."),
   ];
 }
 
-// ——— Comptes (/admin/users) ———————————————————————————————————
+// ::: Comptes (/admin/users) :::::::::::::::::::::::::::::::::::
 
 type Compte = { id: string; email: string; created_at: string; last_sign_in_at: string | null };
 
@@ -55,17 +55,17 @@ export async function comptes(page: number): Promise<Bloc[]> {
     .range(page * PAR_PAGE, page * PAR_PAGE + PAR_PAGE - 1);
   if (error) throw new Error(`comptes_utilisateurs : ${error.message}`);
   const lignes = ((data ?? []) as Compte[]).map(
-    (c) => `• ${c.email} — inscrit le ${dh(c.created_at)}, connexion ${dh(c.last_sign_in_at)} · \`${c.id.slice(0, 8)}\``,
+    (c) => `• ${c.email} : inscrit le ${dh(c.created_at)}, connexion ${dh(c.last_sign_in_at)}, \`${c.id.slice(0, 8)}\``,
   );
   const pages = Math.max(1, Math.ceil((count ?? 1) / PAR_PAGE));
   return [
-    entete(`👥 Comptes — ${count ?? 0} au total`),
+    entete(`👥 Comptes : ${count ?? 0} au total`),
     section(lignes.join("\n") || "Aucun compte sur cette page."),
-    contexte(`Fiche complète : bouton 🔍 Fiche compte de l'accueil · page ${page + 1}/${pages} · /sql users <n°> pour changer de page`),
+    contexte(`Fiche complète : bouton 🔍 Fiche compte de l'accueil, page ${page + 1}/${pages}, /sql users <n°> pour changer de page`),
   ];
 }
 
-// ——— Fiche d'un compte (/admin/users/[id]) ————————————————————
+// ::: Fiche d'un compte (/admin/users/[id]) ::::::::::::::::::::
 
 export async function fiche(q: string): Promise<Bloc[]> {
   const db = authAdmin();
@@ -74,7 +74,7 @@ export async function fiche(q: string): Promise<Bloc[]> {
     const { data: c, error: errCherche } = await db
       .from("comptes_utilisateurs").select("id, email").ilike("email", q).limit(1);
     if (errCherche) throw new Error(`recherche compte : ${errCherche.message}`);
-    if (!c?.length) throw new Error(`Aucun compte pour « ${q} » — vérifie l'adresse ou l'identifiant.`);
+    if (!c?.length) throw new Error(`Aucun compte pour « ${q} » : vérifie l'adresse ou l'identifiant.`);
     id = (c[0] as { id: string }).id;
   }
   const { data: liste } = await db
@@ -88,7 +88,7 @@ export async function fiche(q: string): Promise<Bloc[]> {
   const meta = u.user_metadata ?? {};
   const nom = [meta.prenom, meta.nom].filter(Boolean).join(" ") || meta.full_name || meta.name || "–";
 
-  // Comptage head:true : le total est dans count, pas dans data — déstructuré
+  // Comptage head:true : le total est dans count, pas dans data : déstructuré
   // hors du Promise.all, sinon TypeScript le type comme un tableau.
   const { count: nbVues } = await db.from("pages_vues").select("id", { count: "exact", head: true }).eq("user_id", id);
   const [{ data: cles }, { data: connexions }, { data: enquete }] = await Promise.all([
@@ -104,13 +104,13 @@ export async function fiche(q: string): Promise<Bloc[]> {
     .eq("user_id", id).order("cree_le", { ascending: false }).limit(5);
 
   const blocsCles = ((cles ?? []) as { prefixe: string; nom: string; quota_jour: number; last_used_at: string | null; revoked_at: string | null }[])
-    .map((c) => `• \`${c.prefixe}…\` ${c.nom} — quota ${c.quota_jour}/j, dernier appel ${dh(c.last_used_at)}${c.revoked_at ? " · *révoquée*" : ""}`);
+    .map((c) => `• \`${c.prefixe}…\` ${c.nom} : quota ${c.quota_jour}/j, dernier appel ${dh(c.last_used_at)}${c.revoked_at ? ", *révoquée*" : ""}`);
   const blocsConn = ((connexions ?? []) as { le: string; ip: string; appareil: string | null; fournisseur: string | null }[])
-    .map((c) => `• ${dh(c.le)} — \`${c.ip}\` ${c.appareil ?? ""}${c.fournisseur ? " · " + c.fournisseur : ""}`);
+    .map((c) => `• ${dh(c.le)} : \`${c.ip}\` ${c.appareil ?? ""}${c.fournisseur ? ", " + c.fournisseur : ""}`);
   const blocsTele = ((telechs ?? []) as { feuille: string; lignes: number; cree_le: string }[])
-    .map((t) => `• ${dh(t.cree_le)} — ${t.feuille} (${t.lignes} lignes)`);
+    .map((t) => `• ${dh(t.cree_le)} : ${t.feuille} (${t.lignes} lignes)`);
   const blocsEnquete = ((enquete ?? []) as { id: string; repondu_le: string | null; note_global: number | null }[])
-    .map((e) => `• ${e.repondu_le ? `répondue le ${dh(e.repondu_le)} · \`${e.id.slice(0, 8)}\`` : "invitation en attente"}${e.repondu_le && e.note_global !== null ? ` · note ${e.note_global}/5` : ""}`);
+    .map((e) => `• ${e.repondu_le ? `répondue le ${dh(e.repondu_le)}, \`${e.id.slice(0, 8)}\`` : "invitation en attente"}${e.repondu_le && e.note_global !== null ? `, note ${e.note_global}/5` : ""}`);
 
   const morceaux: Bloc[] = [
     entete(`👤 ${u.email}`),
@@ -120,11 +120,11 @@ export async function fiche(q: string): Promise<Bloc[]> {
   if (blocsConn.length) morceaux.push(section(`*🖥 Dernières connexions*\n${blocsConn.join("\n")}`));
   if (blocsTele.length) morceaux.push(section(`*⬇️ Derniers téléchargements Sheets*\n${blocsTele.join("\n")}`));
   if (blocsEnquete.length) morceaux.push(section(`*📋 Enquête*\n${blocsEnquete.join("\n")}`));
-  morceaux.push(contexte("Fiche équivalente à /admin/users/<id> · lecture seule"));
+  morceaux.push(contexte("Fiche équivalente à /admin/users/<id>, lecture seule"));
   return morceaux;
 }
 
-// ——— Abonnés (/admin/users/abonnes) ——————————————————————————
+// ::: Abonnés (/admin/users/abonnes) ::::::::::::::::::::::::::
 
 type Abonne = { email: string; confirmed: boolean; subscribed_at: string; unsubscribed_at: string | null };
 
@@ -148,17 +148,17 @@ export async function abonnes(arg: string): Promise<Bloc[]> {
   const lignes = ((data ?? []) as Abonne[]).map((a) => {
     const etat = a.unsubscribed_at ? "désinscrit" : a.confirmed ? "confirmé" : "en attente";
     const alr = al.get(a.email);
-    return `• ${a.email} — *${etat}*, inscrit le ${dh(a.subscribed_at)}${alr ? ` · alerte ${alr.active ? "" : "(inactive) "}${alr.frequence}` : ""}`;
+    return `• ${a.email} : *${etat}*, inscrit le ${dh(a.subscribed_at)}${alr ? `, alerte ${alr.active ? "" : "(inactive) "}${alr.frequence}` : ""}`;
   });
   const pages = Math.max(1, Math.ceil((count ?? 1) / PAR_PAGE));
   return [
-    entete(`📬 Abonnés — ${count ?? 0} au total`),
+    entete(`📬 Abonnés : ${count ?? 0} au total`),
     section(lignes.join("\n") || "Aucun abonné."),
-    contexte(`Filtre par adresse : /sql abonnes <adresse> · page ${page + 1}/${pages}`),
+    contexte(`Filtre par adresse : /sql abonnes <adresse>, page ${page + 1}/${pages}`),
   ];
 }
 
-// ——— Clés API (/admin/users/api-keys) —————————————————————————
+// ::: Clés API (/admin/users/api-keys) :::::::::::::::::::::::::
 
 export async function cles(): Promise<Bloc[]> {
   const db = authAdmin();
@@ -185,16 +185,16 @@ export async function cles(): Promise<Bloc[]> {
       const aujourdhui = new Date().toISOString().slice(0, 10);
       const n30 = u.reduce((s, x) => s + x.requetes, 0);
       const nj = u.find((x) => x.jour === aujourdhui)?.requetes ?? 0;
-      return `• \`${c.prefixe}…\` ${c.nom} — ${email.get(c.user_id) ?? "sans compte"} · ${nj} req. aujourd'hui, ${n30} sur 30 j · quota ${c.quota_jour}/j${c.revoked_at ? " · *révoquée*" : ""}`;
+      return `• \`${c.prefixe}…\` ${c.nom} : ${email.get(c.user_id) ?? "sans compte"}, ${nj} req. aujourd'hui, ${n30} sur 30 j, quota ${c.quota_jour}/j${c.revoked_at ? ", *révoquée*" : ""}`;
     });
   return [
-    entete(`🔑 Clés API — ${lignes.length}`),
+    entete(`🔑 Clés API : ${lignes.length}`),
     section(lignes.join("\n") || "Aucune clé."),
     contexte("Révoquer ou changer un quota : admin → Utilisateurs → Clés API (lecture seule ici)"),
   ];
 }
 
-// ——— Téléchargements (/admin/telechargements) —————————————————
+// ::: Téléchargements (/admin/telechargements) :::::::::::::::::
 
 type Tele = { cree_le: string; feuille: string; lignes: number; email: string | null; ip: string | null; user_agent: string | null };
 
@@ -208,16 +208,16 @@ export async function telechargements(feuille: string): Promise<Bloc[]> {
   const { data, error } = await req;
   if (error) throw new Error(`telechargements : ${error.message}`);
   const lignes = ((data ?? []) as Tele[]).map(
-    (t) => `• ${dh(t.cree_le)} — *${t.feuille}* (${t.lignes} lignes) · ${t.email || "visiteur anonyme"} · \`${t.ip || "–"}\``,
+    (t) => `• ${dh(t.cree_le)} : *${t.feuille}* (${t.lignes} lignes), ${t.email || "visiteur anonyme"}, \`${t.ip || "–"}\``,
   );
   return [
     entete("⬇️ Derniers téléchargements Sheets"),
     section(lignes.join("\n") || "Aucun téléchargement."),
-    contexte("Filtre par feuille : /sql telechargements <feuille> · 15 derniers (500 dans l'admin)"),
+    contexte("Filtre par feuille : /sql telechargements <feuille>, 15 derniers (500 dans l'admin)"),
   ];
 }
 
-// ——— Enquête (/admin/content/survey) ——————————————————————————
+// ::: Enquête (/admin/content/survey) ::::::::::::::::::::::::::
 
 type Reponse = {
   id: string; email: string; note_experience: number | null; note_contenu: number | null;
@@ -234,13 +234,13 @@ export async function enquete(id: string): Promise<Bloc[]> {
     const { data, error } = await req;
     if (error) throw new Error(`survey_reponses : ${error.message}`);
     const r = (data ?? [])[0] as Reponse | undefined;
-    if (!r) throw new Error("Réponse introuvable — liste complète via /sql survey ou l'accueil.");
+    if (!r) throw new Error("Réponse introuvable : liste complète via /sql survey ou l'accueil.");
     const NOTE = (n: number | null) => (n === null ? "–" : `${n}/5`);
     return [
       entete("📋 Réponse à l'enquête"),
       section(
         `*Compte :* ${r.email}\n*Envoyée :* ${dh(r.cree_le)}\n*État :* ${r.repondu_le ? `répondue le ${dh(r.repondu_le)}` : "invitation sans réponse"}\n` +
-        `*Expérience :* ${NOTE(r.note_experience)} · *Contenu :* ${NOTE(r.note_contenu)} · *Global :* ${NOTE(r.note_global)}\n` +
+        `*Expérience :* ${NOTE(r.note_experience)}, *Contenu :* ${NOTE(r.note_contenu)}, *Global :* ${NOTE(r.note_global)}\n` +
         (r.commentaire ? `*Commentaire :*\n> ${r.commentaire.replace(/\n/g, "\n> ")}` : "*Commentaire :* –"),
       ),
       contexte(`Id \`${r.id}\``),
@@ -258,16 +258,16 @@ export async function enquete(id: string): Promise<Bloc[]> {
     return v.length ? (v.reduce((a, b) => a + b, 0) / v.length).toFixed(1) : "–";
   };
   const lignes = repondues.slice(0, PAR_PAGE).map(
-    (r) => `• ${dh(r.repondu_le)} — ${r.email} · exp. ${r.note_experience ?? "–"}/5, contenu ${r.note_contenu ?? "–"}/5, global ${r.note_global ?? "–"}/5 · \`${r.id.slice(0, 8)}\``,
+    (r) => `• ${dh(r.repondu_le)} : ${r.email}, exp. ${r.note_experience ?? "–"}/5, contenu ${r.note_contenu ?? "–"}/5, global ${r.note_global ?? "–"}/5, \`${r.id.slice(0, 8)}\``,
   );
   const derniersCommentaires = repondues.filter((r) => r.commentaire).slice(0, 5).map(
     (r) => `> *${r.email}* : ${String(r.commentaire).slice(0, 200)}`,
   );
   const blocs: Bloc[] = [
-    entete(`📋 Enquête — ${repondues.length} réponse(s)`),
+    entete(`📋 Enquête : ${repondues.length} réponse(s)`),
     section(
       `*${attente}* invitation(s) sans réponse\n` +
-      `Note moyenne expérience : *${moyenne((r) => r.note_experience)}* · contenu : *${moyenne((r) => r.note_contenu)}* · global : *${moyenne((r) => r.note_global)}*`,
+      `Note moyenne expérience : *${moyenne((r) => r.note_experience)}*, contenu : *${moyenne((r) => r.note_contenu)}*, global : *${moyenne((r) => r.note_global)}*`,
     ),
   ];
   if (lignes.length) blocs.push(section(lignes.join("\n")));
@@ -276,7 +276,7 @@ export async function enquete(id: string): Promise<Bloc[]> {
   return blocs;
 }
 
-// ——— Aiguillage (commande /sql) ———————————————————————————————
+// ::: Aiguillage (commande /sql) :::::::::::::::::::::::::::::::
 
 export async function executerSql(texte: string): Promise<Bloc[]> {
   const morceaux = texte.trim().split(/\s+/).filter(Boolean);
@@ -309,6 +309,6 @@ export async function executerSql(texte: string): Promise<Bloc[]> {
     case "enquête":
       return enquete(arg.slice(0, 40));
     default:
-      throw new Error(`Requête inconnue « ${morceaux[0]} » — tape \`/sql\` pour la liste.`);
+      throw new Error(`Requête inconnue « ${morceaux[0]} » : tape \`/sql\` pour la liste.`);
   }
 }

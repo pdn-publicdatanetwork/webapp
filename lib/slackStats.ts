@@ -57,7 +57,7 @@ async function bluesky(acteur: string): Promise<Bsky> {
 }
 
 // Buffer (facultatif) : si BUFFER_API_KEY est définie et que les comptes
-// sont connectés dans Buffer, c'est la source privilégiée — une seule clé
+// sont connectés dans Buffer, c'est la source privilégiée : une seule clé
 // pour tous les réseaux (X, Bluesky, Mastodon, Threads…). X et Bluesky
 // n'exposent que le compteur d'abonnés courant, même via Buffer.
 type BufferProfils = Map<string, number>; // service → followers
@@ -163,22 +163,22 @@ const evol = (jour: number | null, veille: number | null) => {
 
 export function blocsStats(s: Stats): Record<string, unknown>[] {
   const blocs: Record<string, unknown>[] = [
-    { type: "header", text: { type: "plain_text", text: "📊 DataParl' — statistiques du site" } },
+    { type: "header", text: { type: "plain_text", text: "📊 DataParl' : statistiques du site" } },
     { type: "section", fields: [
       { type: "mrkdwn", text: `*Pages vues 24 h :* ${fm(s.site.pagesJour)}${evol(s.site.pagesJour, s.site.pagesVeille)}\n*7 jours :* ${fm(s.site.pagesSemaine)}` },
-      { type: "mrkdwn", text: `*Comptes :* ${fm(s.comptes.nouveauxJour)} nouveaux 24 h · ${fm(s.comptes.nouveauxSemaine)} / 7 j\n*Actifs 24 h :* ${fm(s.comptes.actifsJour)} · *Newsletter :* ${fm(s.comptes.newsletterConf)} confirmés` },
+      { type: "mrkdwn", text: `*Comptes :* ${fm(s.comptes.nouveauxJour)} nouveaux 24 h, ${fm(s.comptes.nouveauxSemaine)} / 7 j\n*Actifs 24 h :* ${fm(s.comptes.actifsJour)}, *Newsletter :* ${fm(s.comptes.newsletterConf)} confirmés` },
     ] },
     { type: "section", fields: [
-      { type: "mrkdwn", text: `*Sheets :* ${fm(s.site.dlJour)} exports 24 h · ${fm(s.site.dlSemaine)} / 7 j\n*Chat :* ${fm(s.site.chatJour)} questions 24 h${s.site.chatErreurs ? ` ⚠️ ${fm(s.site.chatErreurs)} erreurs` : ""}` },
-      { type: "mrkdwn", text: `*Contact :* ${fm(s.site.contactJour)} messages 24 h\n*Déblocages :* ${fm(s.site.deblocJour)} · *Oppositions :* ${fm(s.comptes.oppositions)} · *Alertes actives :* ${fm(s.comptes.alertesActives)}` },
+      { type: "mrkdwn", text: `*Sheets :* ${fm(s.site.dlJour)} exports 24 h, ${fm(s.site.dlSemaine)} / 7 j\n*Chat :* ${fm(s.site.chatJour)} questions 24 h${s.site.chatErreurs ? ` ⚠️ ${fm(s.site.chatErreurs)} erreurs` : ""}` },
+      { type: "mrkdwn", text: `*Contact :* ${fm(s.site.contactJour)} messages 24 h\n*Déblocages :* ${fm(s.site.deblocJour)}, *Oppositions :* ${fm(s.comptes.oppositions)}, *Alertes actives :* ${fm(s.comptes.alertesActives)}` },
     ] },
     { type: "section", text: { type: "mrkdwn", text: `*Communautés :* 📨 WhatsApp ${fm(s.comptes.waActifs)} abonnés actifs` } },
     { type: "section", text: { type: "mrkdwn", text: `*Réseaux :* 🟦 Bluesky\n${s.social.bsky.map(b => `• @${b.handle} : ${fm(b.followers)} abonnés, ${fm(b.posts)} posts`).join("\n") || "–"}${s.social.x ? `\n✖️ X : ${fm(s.social.x)} abonnés` : ""}${s.social.telegram !== null ? `\n📨 Telegram : ${fm(s.social.telegram)} abonnés` : ""}` } },
   ];
   if (s.site.top.length) {
-    blocs.push({ type: "section", text: { type: "mrkdwn", text: `*Top pages 24 h :*\n${s.site.top.map((t, i) => `${i + 1}. ${t.chemin} — ${fm(t.vues)} vues`).join("\n")}` } });
+    blocs.push({ type: "section", text: { type: "mrkdwn", text: `*Top pages 24 h :*\n${s.site.top.map((t, i) => `${i + 1}. ${t.chemin} : ${fm(t.vues)} vues`).join("\n")}` } });
   }
-  blocs.push({ type: "context", elements: [{ type: "mrkdwn", text: `🕒 ${new Date(s.le).toLocaleString("fr-FR")} · ${s.maintenance?.active ? "🔴 maintenance en cours" : "🟢 site ouvert"}${s.maintenance?.motif ? ` — ${s.maintenance.motif}` : ""}${s.social.buffer ? " · réseaux via Buffer" : ""}` }] });
+  blocs.push({ type: "context", elements: [{ type: "mrkdwn", text: `🕒 ${new Date(s.le).toLocaleString("fr-FR")}, ${s.maintenance?.active ? "🔴 maintenance en cours" : "🟢 site ouvert"}${s.maintenance?.motif ? ` : ${s.maintenance.motif}` : ""}${s.social.buffer ? ", réseaux via Buffer" : ""}` }] });
   return blocs;
 }
 
