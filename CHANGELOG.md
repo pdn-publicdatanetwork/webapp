@@ -2,6 +2,19 @@
 
 Historique des évolutions de la webapp DataParl' (dataparl.fr).
 
+## 2026-10-30
+
+- **Accueil v2** : page d'accueil refondue, plus aérée et hiérarchisée — hero
+  resserré (« Qui travaille pour vos élus ? »), quatre chiffres clés avec icônes
+  (collaborateurs suivis, Assemblée, Sénat, Parlement européen), les cinq
+  derniers mouvements avec badges en pastilles (arrivée / départ / transfert)
+  et boutons « Voir les mouvements du jour » / « Voir l'historique », carte
+  « Recevoir les mouvements par email », et grille « Explorer » de huit cartes
+  (Mouvements, Collaborateurs, Parlementaires, Gouvernement, VigiParl',
+  MixiParl', Sénatoriales 2026, Alertes). Fin des flèches « → » systématiques ;
+  hovers légers, transitions courtes, grille responsive (4 / 2 / 1 colonnes),
+  chiffres et mouvements toujours dynamiques (ISR 300 s).
+
 ## 2026-10-19
 
 - **Fiches groupes : « L'équipe du groupe » (PR #36)** : nouvelle section sur
