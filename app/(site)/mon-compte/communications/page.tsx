@@ -6,7 +6,7 @@ import StyleCompte from "../style-compte";
 
 // Communications : tout ce qui concerne les e-mails DataParl' au même
 // endroit — newsletter, alertes parlementaires par email et suivi
-(pixels d'ouverture, liens tracés). Les critères des alertes (chambres,
+// (pixels d'ouverture, liens tracés). Les critères des alertes (chambres,
 // types, élus suivis) restent dans Mes alertes ; l'export et la
 // suppression du compte restent dans Données et confidentialité.
 type Etat = { newsletter: boolean; suivi: boolean };
