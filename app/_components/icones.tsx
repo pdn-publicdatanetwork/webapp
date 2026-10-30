@@ -1,4 +1,4 @@
-// Petites icônes de trait (style Feather), inline pour rester sans dépendance. de trait (style Feather), inline pour rester sans dépendance.
+// Petites icônes de trait (style Feather), inline pour rester sans dépendance.
 export function Ic({ d }: { d: string }) {
   return (
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" dangerouslySetInnerHTML={{ __html: d }} />
