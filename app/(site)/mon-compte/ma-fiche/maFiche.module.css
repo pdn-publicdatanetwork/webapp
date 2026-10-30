@@ -1,0 +1,272 @@
+/* Ma fiche : éditeur du profil CV (styles locaux, variables de la charte). */
+
+.entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  justify-content: space-between;
+  margin: 18px 0 26px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card, 10px);
+  background: var(--card);
+}
+
+.enteteGauche {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  flex: none;
+}
+
+.avatarVide {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--line);
+  color: var(--muted);
+  font-size: 1.4rem;
+  background: var(--bg);
+  flex: none;
+}
+
+.photoActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.avancement {
+  flex: 1;
+  min-width: 180px;
+}
+
+.barre {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.barre span {
+  display: block;
+  height: 100%;
+  background: var(--corail);
+  transition: width .3s;
+}
+
+.section {
+  margin: 0 0 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card, 10px);
+  background: var(--card);
+}
+
+.sectionTitre {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.sectionTitre h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.compteur {
+  display: inline-block;
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  font-size: .78rem;
+  text-align: center;
+  color: var(--muted);
+}
+
+.aide {
+  color: var(--muted);
+  font-size: .85rem;
+  flex: 1;
+  min-width: 140px;
+}
+
+.ajoutBouton {
+  margin-left: auto;
+}
+
+.vide {
+  color: var(--muted);
+  font-size: .9rem;
+  margin: 4px 0;
+}
+
+.items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.item {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.itemTitre {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  font-size: .78rem;
+  color: var(--muted);
+}
+
+.futur {
+  font-size: .8rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.itemActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.itemActions button {
+  all: unset;
+  cursor: pointer;
+  font-size: .85rem;
+  color: var(--corail);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Formulaires (ajout, édition, propositions) : champs empilés clairs. */
+.form {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.form label {
+  display: grid;
+  gap: 4px;
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.form input {
+  font: inherit;
+  font-weight: 400;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--ink);
+  outline: none;
+}
+
+.form input:focus {
+  border-color: var(--corail);
+}
+
+.form input::placeholder {
+  font-style: italic;
+  color: var(--muted);
+  opacity: .8;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.actions .lien {
+  all: unset;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: .88rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Import de CV : bouton d'appel + zone de propositions à valider. */
+.importZone {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.importNote {
+  color: var(--muted);
+  font-size: .85rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+.propositions {
+  margin: 0 0 20px;
+  padding: 16px 18px;
+  border: 1px solid var(--corail);
+  border-radius: var(--radius-card, 10px);
+  background: var(--card);
+}
+
+.propositions h2 {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+}
+
+.propositions > p.meta {
+  color: var(--muted);
+  font-size: .85rem;
+  margin: 0 0 12px;
+}
+
+.propositions .actions {
+  margin-top: 12px;
+}
+
+.zoneSensible {
+  margin-top: 28px;
+}
