@@ -51,8 +51,8 @@ function codeCourt(): string {
   return "DP-" + s;
 }
 
-function journal(user_id: string, collab_id: string, evenement: string, detail: Record<string, unknown> = {}): Promise<unknown> {
-  return authAdmin().from("associations_journal").insert({ user_id, collab_id, evenement, detail });
+async function journal(user_id: string, collab_id: string, evenement: string, detail: Record<string, unknown> = {}): Promise<void> {
+  await authAdmin().from("associations_journal").insert({ user_id, collab_id, evenement, detail });
 }
 
 // Crée (ou relance) une demande d'association pour une fiche.
@@ -166,7 +166,7 @@ export async function traiterEmailAssociation(m: {
 
 // Décisions manuelles (admin) : valider, refuser, dissocier.
 export async function deciderManuellement(
-  admin: { id: string }, demandeId: string, action: "valider" | "refuser" | "dissocier",
+  admin: { userId: string }, demandeId: string, action: "valider" | "refuser" | "dissocier",
 ): Promise<{ ok: boolean; error?: string }> {
   const db = authAdmin();
   const { data: demande } = await db.from("associations_fiches").select("*").eq("id", demandeId).maybeSingle();
@@ -176,7 +176,7 @@ export async function deciderManuellement(
     action === "refuser" ? { statut: "refuse" } :
     { statut: "refuse", verifie_par: null, verifie_le: null };
   await db.from("associations_fiches").update({ ...maj, maj_le: new Date().toISOString() }).eq("id", demandeId);
-  await journal(demande.user_id, demande.collab_id, `manuel_${action}`, { par: admin.id });
+  await journal(demande.user_id, demande.collab_id, `manuel_${action}`, { par: admin.userId });
   return { ok: true };
 }
 
