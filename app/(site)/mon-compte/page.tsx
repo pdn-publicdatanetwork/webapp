@@ -31,13 +31,15 @@ function Icone({ nom }: { nom: string }) {
   if (nom === "cloche") return (<svg {...p}><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2H4.5z" /><path d="M10 20a2 2 0 0 0 4 0" /></svg>);
   if (nom === "document") return (<svg {...p}><path d="M7 3h7l4 4v14H7z" /><path d="M14 3v4h4" /></svg>);
   if (nom === "enveloppe") return (<svg {...p}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></svg>);
+  if (nom === "porte") return (<svg {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5" /><path d="M21 12H9" /></svg>);
   return (<svg {...p}><path d="M9 8l-4 4 4 4" /><path d="M15 8l4 4-4 4" /><path d="M13 6l-2 12" /></svg>);
 }
 
 // Mon compte : le centre du compte, à la manière du compte Google — grand
 // avatar et salutation, puis une liste aérée de rubriques avec icône et
 // chevron. Les rubriques en préparation (Achats) ne sont proposées qu'à
-// l'équipe.
+// l'équipe ; Se déconnecter ferme la liste, dans le même système de
+// lignes mais en style destructeur (liseré rouge au survol).
 export default function MonCompte() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [compte, setCompte] = useState<Compte | null>(null);
@@ -109,6 +111,7 @@ export default function MonCompte() {
     { titre: "Ma fiche collaborateur", resume: "Le profil CV publié sur dataparl.fr", href: "/mon-compte/ma-fiche", icone: "document" },
     { titre: "Mon espace API", resume: "Ta clé API, sa consommation et la documentation", href: "https://api.dataparl.fr/mon-espace-api", icone: "code", externe: true },
     ...(compte.equipe ? [{ titre: "Achats et abonnements", resume: "Bientôt : des packs sans publicité", href: "/mon-compte/achats", icone: "document" }] : []),
+    { titre: "Données et confidentialité", resume: "Export de tes données et suppression du compte", href: "/mon-compte/preferences", icone: "bouclier" },
   ];
 
   return (
@@ -117,6 +120,9 @@ export default function MonCompte() {
         .compte-item { display: flex; align-items: center; gap: 16px; min-height: 76px; padding: 12px 14px; margin: 0 -14px; text-decoration: none; border-radius: 10px; transition: background 0.15s ease; }
         .compte-item + .compte-item { border-top: 1px solid rgba(15, 23, 42, 0.06); }
         .compte-item:hover, .compte-item:focus-visible { background: rgba(15, 23, 42, 0.05); }
+        .compte-deconnexion { display: flex; align-items: center; gap: 16px; min-height: 76px; padding: 12px 14px; margin: 24px -14px 0; width: calc(100% + 28px); text-align: left; font: inherit; background: transparent; border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 10px; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease; }
+        .compte-deconnexion:hover, .compte-deconnexion:focus-visible { background: rgba(220, 38, 38, 0.06); border-color: rgba(220, 38, 38, 0.5); color: #DC2626; }
+        .compte-deconnexion:hover .compte-deconnexion-titre { color: #DC2626; }
       `}</style>
       {message && <p className={message.ok ? "ok" : "erreur"} role="status">{message.texte}</p>}
 
@@ -145,11 +151,10 @@ export default function MonCompte() {
         ))}
       </div>
 
-      <p style={{ marginTop: 24, fontSize: 14 }}>
-        <button className="lien" onClick={deconnexion}>Se déconnecter</button>
-        <br />
-        <a className="lien" href="/mon-compte/preferences">Données et confidentialité</a>
-      </p>
+      <button className="compte-deconnexion" onClick={deconnexion}>
+        <span style={{ color: "#5C5C5C", display: "flex" }}><Icone nom="porte" /></span>
+        <span className="compte-deconnexion-titre" style={{ display: "block", fontSize: 16, fontWeight: 600, color: "#1A1A1A" }}>Se déconnecter</span>
+      </button>
     </div>
   );
 }
