@@ -2,6 +2,7 @@ import "server-only";
 import { authAdmin } from "./supabaseAdmin";
 import { collaborateurDepuisSlug } from "./referentiel";
 import { normalizeEmail, sha256 } from "./tokens";
+import { copieSlack, SLACK_CONTACT } from "./slack";
 
 // Association entre un compte DataParl' et sa fiche collaborateur.
 // Vérification par e-mail : depuis son compte, la personne génère un code à
@@ -11,6 +12,8 @@ import { normalizeEmail, sha256 } from "./tokens";
 // tout écart va en revue manuelle côté admin (/admin/users/matchprofile).
 // Fallback sans adresse parlementaire : dépôt d'une pièce justificative
 // (statut piece_jointe), revue admin, purge à la décision ou sous 30 jours.
+// Suivi : copie Slack de chaque événement notable (canal dédié via
+// SLACK_ASSOCIATIONS, repli sur SLACK_CONTACT ; vide = pas de copie).
 
 export const ADRESSE_ASSOCIER = "associer@dataparl.fr"; // à ajouter chez Resend (inbound)
 const EXPIRATION_H = 48;
@@ -61,8 +64,36 @@ function codeCourt(): string {
   return "DP-" + s;
 }
 
-async function journal(user_id: string, collab_id: string, evenement: string, detail: Record<string, unknown> = {}): Promise<void> {
+// Copie Slack des événements d'association : nouvelle demande, contrôle non
+// concluant, pièce déposée, gel, validation. Best-effort, jamais bloquant.
+const CANAL_ASSOCIATION = process.env.SLACK_ASSOCIATIONS ?? SLACK_CONTACT;
+const LIBELLES_SLACK: Record<string, string> = {
+  demande_creee: "nouvelle demande d'association",
+  valide_auto: "association validée automatiquement",
+  a_traiter: "demande à vérifier (contrôles non concluants)",
+  piece_deposee: "pièce justificative déposée",
+  piece_admin: "pièce justificative jointe par l'admin",
+  gele: "demandes gelées (3 échecs)",
+  refus_domaine: "refus automatique (domaine inattendu)",
+  code_expire: "code expiré",
+};
+
+export async function prevenirAssociation(evenement: string, slug: string | null, detail?: string): Promise<void> {
+  const libelle = LIBELLES_SLACK[evenement];
+  if (!libelle) return;
+  const ligne = libelle + (slug ? " — fiche " + slug : "") + (detail ? " (" + detail + ")" : "");
+  await copieSlack(CANAL_ASSOCIATION, {
+    subject: "Association : " + ligne,
+    corpsHtml: "<p>" + ligne + "</p>",
+    text: ligne,
+  });
+}
+
+async function journal(user_id: string, collab_id: string, evenement: string, detail: Record<string, unknown> = {}, slug?: string): Promise<void> {
   await authAdmin().from("associations_journal").insert({ user_id, collab_id, evenement, detail });
+  // Copie Slack (silencieuse si aucun canal configuré).
+  const d = typeof detail?.from === "string" ? "expéditeur : " + String(detail.from) : undefined;
+  await prevenirAssociation(evenement, slug ?? null, d).catch(() => {});
 }
 
 // Crée (ou relance) une demande d'association pour une fiche.
@@ -86,7 +117,7 @@ export async function creerDemande(
     statut: "attente_email", echecs: existante?.echecs ?? 0, gel_jusqu_a: null, verifie_par: null, verifie_le: null,
   };
   await db.from("associations_fiches").upsert(row, { onConflict: "user_id,collab_slug" });
-  await journal(userId, row.collab_id, "demande_creee");
+  await journal(userId, row.collab_id, "demande_creee", {}, slug);
   // Domaine attendu, affiché à la personne (jamais l'adresse dérivée).
   const domaine = domainesAttendusFiche(slug, c.chambres).join(", @");
   return { ok: true, objet: `ASSOC ${slug}`, code, expireLe, domaine };
@@ -153,11 +184,11 @@ export async function traiterEmailAssociation(m: {
       echecs, statut: gele ? "gele" : "attente_email",
       gel_jusqu_a: gele ? new Date(Date.now() + GEL_JOURS * 86400_000).toISOString() : null, maj_le: new Date().toISOString(),
     }).eq("id", demande.id);
-    await journal(demande.user_id, demande.collab_id, gele ? "gele" : "refus_domaine", { from: m.from });
+    await journal(demande.user_id, demande.collab_id, gele ? "gele" : "refus_domaine", { from: m.from }, slug);
     return true;
   }
   if (expiree) {
-    await journal(demande.user_id, demande.collab_id, "code_expire", { from: m.from });
+    await journal(demande.user_id, demande.collab_id, "code_expire", { from: m.from }, slug);
     return true;
   }
   if (nomOk && spfDkimOk) {
@@ -168,14 +199,14 @@ export async function traiterEmailAssociation(m: {
       // preuve d'identité ; purge si la fiche est dissociée).
       email_preuve: normalizeEmail(m.from),
     }).eq("id", demande.id);
-    await journal(demande.user_id, demande.collab_id, "valide_auto", { from: m.from });
+    await journal(demande.user_id, demande.collab_id, "valide_auto", { from: m.from }, slug);
     return true;
   }
   // Domaine bon mais nom ou SPF/DKIM non concluant : revue manuelle, jamais
   // de décision automatique partielle. L'adresse est conservée pour la
   // revue admin, la décision reste manuelle.
   await db.from("associations_fiches").update({ statut: "a_traiter", maj_le: new Date().toISOString(), email_preuve: normalizeEmail(m.from) }).eq("id", demande.id);
-  await journal(demande.user_id, demande.collab_id, "a_traiter", { from: m.from, nomOk, spfDkimOk });
+  await journal(demande.user_id, demande.collab_id, "a_traiter", { from: m.from, nomOk, spfDkimOk }, slug);
   return true;
 }
 

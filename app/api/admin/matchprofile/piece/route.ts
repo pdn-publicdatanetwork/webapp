@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { audit, checkAdmin, refus } from "@/lib/adminAuth";
 import { authAdmin } from "@/lib/supabaseAdmin";
 import { contenuPiece, deposerPiece, mimePieceAutorise, TAILLE_PIECE_MAX } from "@/lib/associationPieces";
+import { prevenirAssociation } from "@/lib/association";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,7 @@ export async function POST(req: Request) {
   }
   const db = authAdmin();
   const { data: demande } = await db.from("associations_fiches")
-    .select("id, user_id, collab_id, statut").eq("id", demandeId).maybeSingle();
+    .select("id, user_id, collab_id, collab_slug, statut").eq("id", demandeId).maybeSingle();
   if (!demande) return NextResponse.json({ error: "demande introuvable" }, { status: 404 });
 
   const r = await deposerPiece({
@@ -53,6 +54,7 @@ export async function POST(req: Request) {
   }
   await db.from("associations_journal")
     .insert({ user_id: demande.user_id, collab_id: demande.collab_id, evenement: "piece_admin", detail: { piece_id: r.id } });
+  await prevenirAssociation("piece_admin", demande.collab_slug).catch(() => {});
   await audit(a, "association.piece_admin", demande.id);
   return NextResponse.json({ ok: true });
 }

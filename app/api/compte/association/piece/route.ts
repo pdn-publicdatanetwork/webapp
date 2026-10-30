@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { utilisateur } from "@/lib/userAuth";
 import { authAdmin } from "@/lib/supabaseAdmin";
 import { deposerPiece, TAILLE_PIECE_MAX, mimePieceAutorise } from "@/lib/associationPieces";
+import { prevenirAssociation } from "@/lib/association";
 
 export const dynamic = "force-dynamic";
 
@@ -57,5 +58,6 @@ export async function POST(req: Request) {
     .eq("id", demande.id);
   await db.from("associations_journal")
     .insert({ user_id: u.id, collab_id: demande.collab_id, evenement: "piece_deposee", detail: { piece_id: r.id } });
+  await prevenirAssociation("piece_deposee", slug).catch(() => {});
   return NextResponse.json({ ok: true });
 }
