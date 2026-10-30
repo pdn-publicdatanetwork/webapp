@@ -55,14 +55,19 @@ export async function POST(req: Request) {
     }
 
     // Alimentation côté admin : texte OCR + propositions brutes conservés
-    // (jamais le PDF). Visibles depuis le back-office, purgés avec la fiche.
+    // (jamais le PDF). Best-effort : un souci côté base admin ne fait pas
+    // échouer l'import de l'utilisateur.
     if (data.propositions) {
-      await dataAdmin().from("cv_imports").insert({
-        user_id: u.id,
-        collab_slug: a.collab_slug,
-        texte: typeof data.texte_ocr === "string" ? data.texte_ocr.slice(0, 60000) : null,
-        propositions: data.propositions,
-      });
+      try {
+        await dataAdmin().from("cv_imports").insert({
+          user_id: u.id,
+          collab_slug: a.collab_slug,
+          texte: typeof data.texte_ocr === "string" ? data.texte_ocr.slice(0, 60000) : null,
+          propositions: data.propositions,
+        });
+      } catch (e) {
+        console.error("cv_imports: insertion impossible", e);
+      }
     }
 
     return NextResponse.json({ propositions: data.propositions ?? null });
