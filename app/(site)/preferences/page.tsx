@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { emailDepuisJeton, logConsent } from "@/lib/consent";
+import { Bouton, Carte, styles } from "@/lib/pagesConsent";
 import { authAdmin } from "@/lib/supabaseAdmin";
 
 export const metadata: Metadata = { title: "Mes préférences", robots: { index: false, follow: false } };
@@ -36,10 +37,9 @@ export default async function Preferences({ searchParams }: { searchParams: Prom
   const email = await emailDepuisJeton(id);
   if (!email || etat === "invalide") {
     return (
-      <div className="card">
-        <h1>Lien expiré</h1>
-        <p>Ce lien de préférences n&apos;est plus valable. Utilisez celui du dernier email reçu.</p>
-      </div>
+      <Carte titre="Lien expiré">
+        <p style={styles.texte}>Ce lien de préférences n'est plus valable. Utilise celui du dernier email reçu.</p>
+      </Carte>
     );
   }
   const db = authAdmin();
@@ -50,27 +50,26 @@ export default async function Preferences({ searchParams }: { searchParams: Prom
   const sub = subs?.[0] ?? { frequence: "quotidienne", chambres: ["assemblee", "senat"] };
 
   return (
-    <div className="card">
-      <h1>Mes préférences</h1>
-      <p className="meta">{email}</p>
-      {etat === "ok" && <p className="ok">Préférences enregistrées.</p>}
+    <Carte titre="Mes préférences">
+      <p style={styles.meta}>{email}</p>
+      {etat === "ok" && <p style={styles.ok}>Préférences enregistrées.</p>}
       <form action={enregistrer}>
         <input type="hidden" name="id" value={id} />
-        <label className="check"><input type="checkbox" name="alertes" defaultChecked={!!prefs?.alertes_enabled} /> Recevoir les alertes</label>
-        <label htmlFor="frequence">Fréquence</label>
-        <select id="frequence" name="frequence" defaultValue={sub.frequence}>
+        <label style={{ ...styles.check, marginTop: 20 }}><input type="checkbox" name="alertes" defaultChecked={!!prefs?.alertes_enabled} style={styles.coche} /> Recevoir les alertes</label>
+        <label htmlFor="frequence" style={styles.libelle}>Fréquence</label>
+        <select id="frequence" name="frequence" defaultValue={sub.frequence} style={styles.select}>
           <option value="quotidienne">Chaque jour où il y a du mouvement</option>
           <option value="hebdomadaire">Un récapitulatif par semaine</option>
         </select>
-        <label>Chambres suivies</label>
+        <label style={styles.libelle}>Chambres suivies</label>
         {CHAMBRES.map((c) => (
-          <label key={c.v} className="check">
-            <input type="checkbox" name="chambres" value={c.v} defaultChecked={(sub.chambres as string[]).includes(c.v)} /> {c.l}
+          <label key={c.v} style={styles.check}>
+            <input type="checkbox" name="chambres" value={c.v} defaultChecked={(sub.chambres as string[]).includes(c.v)} style={styles.coche} /> {c.l}
           </label>
         ))}
-        <button type="submit">Enregistrer</button>
+        <div style={{ margin: "24px 0 0" }}><Bouton>Enregistrer</Bouton></div>
       </form>
-      <p className="meta" style={{ marginTop: 20 }}><a href={`/desinscription?id=${encodeURIComponent(id!)}`}>Me désinscrire de tout</a></p>
-    </div>
+      <p style={{ ...styles.meta, marginTop: 24 }}><a href={`/desinscription?id=${encodeURIComponent(id!)}`} style={styles.lien}>Me désinscrire de tout</a></p>
+    </Carte>
   );
 }
