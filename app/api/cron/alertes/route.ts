@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { aujourdhuiParis, correspond, decaler, lundiDe, messageAlerte, type Abonnement, type MvtAlerte } from "@/lib/alertes";
 import { nouveauJetonPreferences } from "@/lib/consent";
+import { MAIL_WEB_URL } from "@/lib/env";
 import { mouvementExclu } from "@/lib/exclusions";
 import { COLONNES_PUBLIQUES, dataQueryTout } from "@/lib/data";
 import { prenomNomAdresse } from "@/lib/gabarit";
@@ -12,12 +13,12 @@ import { authAdmin } from "@/lib/supabaseAdmin";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-const SITE = "https://www.dataparl.fr";
-
 // Envoi des alertes, appelé chaque matin par la tâche planifiée de Vercel
 // (vercel.json), après le passage quotidien de la collecte. Quotidien : les
 // mouvements d'hier et d'aujourd'hui pas encore envoyés. Le lundi : le
 // récapitulatif des 7 jours précédents. Idempotent (table alert_sends).
+// Les liens de consentement (préférences, désinscription) vivent sur
+// mail.dataparl.fr (MAIL_WEB_URL), l'hôte des versions en ligne des emails.
 function autorise(req: Request): boolean {
   const s = process.env.CRON_SECRET ?? "";
   const recu = req.headers.get("authorization") ?? "";
@@ -120,8 +121,8 @@ export async function GET(req: Request) {
         from: hebdo ? "dataparl-weekly@dataparl.fr" : "dataparl-daily@dataparl.fr",
         nomExpediteur: hebdo ? "DataParl' Weekly" : "DataParl' Daily",
         edition: msg.edition, adressage: { date: jour, pour: await destinataire(s).catch(() => undefined) },
-        pied: piedOptIn(`${SITE}/preferences?id=${jeton}`, `${SITE}/desinscription?id=${jeton}`),
-        unsubscribeUrl: `${SITE}/api/desinscription?id=${jeton}`,
+        pied: piedOptIn(`${MAIL_WEB_URL}/preferences?id=${jeton}`, `${MAIL_WEB_URL}/desinscription?id=${jeton}`),
+        unsubscribeUrl: `${MAIL_WEB_URL}/api/desinscription?id=${jeton}`,
       });
       if (!r.ok) { erreurs.push(r.error); continue; }
       nouvelles = hebdo
