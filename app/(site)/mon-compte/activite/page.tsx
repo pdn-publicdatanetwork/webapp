@@ -82,9 +82,9 @@ export default function MonActivite() {
             ))}
           </ul>
         )}
-        <p style={{ marginTop: 14 }}>
-          <button className="danger" onClick={deconnecterPartout}>Se déconnecter de tous les appareils</button>
-        </p>
+        <p style={{ marginTop: 16, marginBottom: 0 }}><strong>Une activité que tu ne reconnais pas ?</strong></p>
+        <p className="meta" style={{ marginTop: 4 }}>Déconnecte-toi de tous tes appareils, puis change ton mot de passe ou révoque tes sessions depuis <a href="/mon-compte/securite">Sécurité</a>.</p>
+        <p><button className="danger" onClick={deconnecterPartout}>Se déconnecter de tous les appareils</button></p>
         <p className="meta">
           Traces conservées 90 jours. Pour l'instant, seules tes visites sur les pages de ton compte sont notées ;
           les connexions elles-mêmes seront tracées à la prochaine mise à jour.

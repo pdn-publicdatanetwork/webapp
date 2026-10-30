@@ -174,7 +174,6 @@ export default function MesAlertes() {
         <p style={{ marginTop: 18 }}>
           <button className="btn" onClick={enregistrer} disabled={enCours}>Enregistrer</button>
         </p>
-        <p className="meta">Activer ou arrêter les alertes, la newsletter et le suivi : <a href="/mon-compte/communications">Communications</a></p>
       </section>
     </div>
   );
