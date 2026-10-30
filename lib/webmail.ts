@@ -1,5 +1,6 @@
 import "server-only";
 import { audit, type Admin } from "./adminAuth";
+import { traiterEmailAssociation } from "./association";
 import { adresseNue, doitRepondre, entetes } from "./autoReponse";
 import { EXPEDITEURS, secret } from "./env";
 import { esc, expedier, texteVersHtml } from "./mail";
@@ -87,6 +88,12 @@ export async function importerRecu(emailId: string, apercu: ApercuRecu = {}): Pr
   if (error && (error as { code?: string }).code === "23505") return { corps: !!complet, erreur };
   if (error) throw error;
   if (!data?.length) return { corps: !!complet, erreur }; // déjà importé : pas de second accusé
+
+  // Association de fiche : les e-mails reçus sur associer@ ne passent pas par
+  // l'accusé générique mais par le parcours de vérification dédié.
+  if (await traiterEmailAssociation({ to: m.to ?? [], from: m.from, subject: m.subject ?? "", text: m.text, headers: m.headers })) {
+    return { corps: !!complet, erreur };
+  }
   if (!doitRepondre({ from: m.from, subject: m.subject ?? "", headers: h })) return { corps: !!complet, erreur };
   // Livraison tardive (nouvel essai du webhook) : pas d'accusé pour un vieux message.
   if (Date.now() - new Date(m.created_at).getTime() > 6 * 3600_000) return { corps: !!complet, erreur };

@@ -4,7 +4,8 @@ import { suggererGroupes } from "@/lib/familles";
 import { prenomNom } from "@/lib/format";
 
 // Champ de saisie avec autocomplétion (combobox ARIA) : élus, groupes
-// politiques (familles inter-chambres) ou recherche globale élus + collabs.
+// politiques (familles inter-chambres), recherche globale élus + collabs,
+// ou collaborateurs seuls (association de fiche).
 
 export type Option = { valeur: string; libelle: string; detail?: string; href?: string; image?: string; groupe?: string };
 type EluCompact = { s: string; p: string; n: string; c: string; g: string; a: boolean; d: string };
@@ -39,7 +40,7 @@ export function filtrerElus(elus: EluCompact[], saisie: string, chambre?: string
 
 type Props = {
   id?: string;
-  source: "elus" | "groupes" | "global";
+  source: "elus" | "groupes" | "global" | "collabs";
   chambre?: string;
   placeholder?: string;
   valeurInitiale?: string;
@@ -73,17 +74,20 @@ export default function Autocompletion({ id, source, chambre, placeholder, valeu
     if (minuteur.current) clearTimeout(minuteur.current);
     if (norm(saisie).length < 2) { setOptions([]); return; }
     minuteur.current = setTimeout(async () => {
-      const r = await fetch(`/api/search?q=${encodeURIComponent(saisie)}&limit=8`).catch(() => null);
+      const r = await fetch(`/api/search?q=${encodeURIComponent(saisie)}&limit=${source === "collabs" ? 20 : 8}`).catch(() => null);
       const d = r?.ok ? await r.json() : { resultats: [] };
+      let res = (d.resultats ?? []) as Option[];
+      // Association de fiche : uniquement des collaborateurs.
+      if (source === "collabs") res = res.filter((o) => o.valeur.startsWith("collab:"));
       // Sur les pages d'indicateurs (VigiParl'/MixiParl'), un élu proposé
       // ouvre sa page d'indicateurs, pas sa fiche.
-      setOptions(((d.resultats ?? []) as Option[]).map((o) =>
+      setOptions(res.map((o) =>
         outil && typeof o.href === "string" && o.href.startsWith("/parlementaires/")
           ? { ...o, href: `/${outil}/${o.href.slice("/parlementaires/".length)}`, detail: [o.detail, "indicateurs"].filter(Boolean).join(" · ") }
           : o,
       ));
     }, 200);
-  }, [locales, saisie, outil]);
+  }, [locales, saisie, source, outil]);
 
   function choisir(o: Option) {
     setSaisie(source === "groupes" ? o.valeur : o.libelle);

@@ -7,6 +7,7 @@ import { nomAffiche } from "@/lib/format";
 import { cabinetsDeCollab, ministresParIds } from "@/lib/gouvernement";
 import { finEffective, periode } from "@/lib/gouvernementTypes";
 import ParcoursCollab from "./ParcoursCollab";
+import ProfilCV from "./ProfilCV";
 import PubGoogle from "@/app/_components/PubGoogle";
 import BlocRetenir from "@/app/_components/BlocRetenir";
 
@@ -94,6 +95,10 @@ export default async function FicheCollab({ params }: Props) {
 
       <h2>Parcours</h2>
       <ParcoursCollab id={c.collab_id} suite={`/collab/${c.slug}`} />
+
+      {/* Profil CV déclaré par l'intéressé : rubrique séparée, réservée aux
+          comptes, jamais mélangée aux parcours sourcés AN/Sénat. */}
+      <ProfilCV slug={c.slug} />
 
       {cabinets.length > 0 && (
         <>
