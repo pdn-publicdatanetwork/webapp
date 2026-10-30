@@ -74,3 +74,36 @@ export async function anciensDuDepartement(nom: string): Promise<EluCollectif[]>
     new URLSearchParams({ select: COLS, actif: "eq.false", or: `(departement.ilike.*${nom.replace(/[(),]/g, "")}*,circonscription.ilike.*${nom.replace(/[(),]/g, "")}*)`, order: "chambre,nom,prenom" }), 3600);
   return brut.filter((r) => nomDepartement(r.departement || r.circonscription).localeCompare(nom, "fr") === 0);
 }
+
+
+// ── Index /groupe et /parti v2 : mêmes données, avec les compteurs d'élus ──
+
+// Groupes existants avec le nombre d'élus actifs par groupe (chambre + sigle).
+export type GroupeCompte = GroupeExistant & { elus: number };
+export async function groupesAvecComptes(): Promise<GroupeCompte[]> {
+  const rows = await fichesActives();
+  const m = new Map<string, GroupeCompte>();
+  for (const r of rows) {
+    if (sansGroupe(r.groupe)) continue;
+    const cle = r.chambre + "|" + r.groupe;
+    const g = m.get(cle) ?? { chambre: r.chambre, groupe: r.groupe, groupe_libelle: r.groupe_libelle || r.groupe, elus: 0 };
+    g.elus += 1;
+    m.set(cle, g);
+  }
+  return [...m.values()].sort((a, b) => a.chambre.localeCompare(b.chambre) || a.groupe.localeCompare(b.groupe));
+}
+
+// Partis (sigles, toutes chambres) avec la répartition des élus par chambre.
+export type PartiCompte = { sigle: string; total: number; assemblee: number; senat: number; europarl: number };
+export async function partisAvecComptes(): Promise<PartiCompte[]> {
+  const rows = await fichesActives();
+  const m = new Map<string, PartiCompte>();
+  for (const r of rows) {
+    if (sansGroupe(r.groupe)) continue;
+    const p = m.get(r.groupe) ?? { sigle: r.groupe, total: 0, assemblee: 0, senat: 0, europarl: 0 };
+    p.total += 1;
+    if (r.chambre === "assemblee" || r.chambre === "senat" || r.chambre === "europarl") p[r.chambre] += 1;
+    m.set(r.groupe, p);
+  }
+  return [...m.values()].sort((a, b) => b.total - a.total || a.sigle.localeCompare(b.sigle));
+}

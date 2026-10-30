@@ -2,6 +2,10 @@
 
 Historique des évolutions de la webapp DataParl' (dataparl.fr).
 
+## 2026-10-30
+
+- Index /groupe et /parti v2 : les groupes passent en cartes avec effectifs (élus, collaborateurs, renouvellement, part de femmes) et les partis en lignes riches classées par nombre d'élus, avec répartition par chambre — fin des annuaires de liens bleus.
+
 ## 2026-10-31
 
 - **Pages chambres v2** (`/an`, `/senat`, `/pe`) : les landings deviennent de
