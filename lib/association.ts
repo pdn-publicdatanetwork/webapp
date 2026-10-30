@@ -161,13 +161,18 @@ export async function traiterEmailAssociation(m: {
   if (nomOk && spfDkimOk) {
     await db.from("associations_fiches").update({
       statut: "verifie", verifie_par: "email_auto", verifie_le: new Date().toISOString(), maj_le: new Date().toISOString(),
+      // Preuve d'association : l'adresse parlementaire ayant servi à la
+      // vérification, conservée avec la ligne (RGPD : légitime intérêt,
+      // preuve d'identité ; purge si la fiche est dissociée).
+      email_preuve: normalizeEmail(m.from),
     }).eq("id", demande.id);
     await journal(demande.user_id, demande.collab_id, "valide_auto", { from: m.from });
     return true;
   }
   // Domaine bon mais nom ou SPF/DKIM non concluant : revue manuelle, jamais
-  // de décision automatique partielle.
-  await db.from("associations_fiches").update({ statut: "a_traiter", maj_le: new Date().toISOString() }).eq("id", demande.id);
+  // de décision automatique partielle. L'adresse est conservée pour la
+  // revue admin, la décision reste manuelle.
+  await db.from("associations_fiches").update({ statut: "a_traiter", maj_le: new Date().toISOString(), email_preuve: normalizeEmail(m.from) }).eq("id", demande.id);
   await journal(demande.user_id, demande.collab_id, "a_traiter", { from: m.from, nomOk, spfDkimOk });
   return true;
 }
@@ -182,8 +187,8 @@ export async function deciderManuellement(
   const maj =
     action === "valider" ? { statut: "verifie", verifie_par: "manuel", verifie_le: new Date().toISOString() } :
     action === "refuser" ? { statut: "refuse" } :
-    { statut: "refuse", verifie_par: null, verifie_le: null };
-  await db.from("associations_fiches").update({ ...maj, maj_le: new Date().toISOString() }).eq("id", demandeId);
+    { statut: "refuse", verifie_par: null, verifie_le: null, email_preuve: null };
+  await db.from("associations_fiches").update({ ...maj, maj_le: new Date().toISOString() }).eq("id", demande.id);
   await journal(demande.user_id, demande.collab_id, `manuel_${action}`, { par: admin.userId });
   return { ok: true };
 }
