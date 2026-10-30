@@ -10,7 +10,7 @@ import { pct, statsElus, tauxTurnover, type StatElu } from "@/lib/stats";
 export const revalidate = 86400;
 type Props = { params: Promise<{ chambre: string }> };
 
-// /vigiparl/{an,senat,pe} : la page Turnover de chaque chambre — le mot-clé
+// /vigiparl/{an,senat,pe} : la page Turnover de chaque chambre : le mot-clé
 // « turnover » est celui des recherches ; le site parle de renouvellement.
 // /vigiparl/<id-parlementaire> : historique mensuel de l'équipe d'un élu.
 const SEGMENTS: Record<string, "assemblee" | "senat" | "europarl"> = { an: "assemblee", senat: "senat", pe: "europarl" };
@@ -51,7 +51,7 @@ async function PageTurnover({ seg, chambre }: { seg: string; chambre: "assemblee
       <p className="meta"><a href="/vigiparl">VigiParl&apos;</a></p>
       <h1>Turnover <span className="surligne-vigi">{CHAMBRE_LONG[chambre]}</span></h1>
       <p className="lead">
-        Le turnover — le taux de renouvellement — des équipes de collaborateurs {AU[chambre]} : qui garde son
+        Le turnover (le taux de renouvellement) des équipes de collaborateurs {AU[chambre]} : qui garde son
         équipe, qui la renouvelle sans cesse, sur les 12 derniers mois. Le classement complet, élu par élu :{" "}
         <a href={"/vigiparl/" + seg + "/parlementaires"}>voir les {top.length > 0 ? stats.filter((r) => r.effectif + r.departs_12m >= 3).length + " élus" : "la liste"}</a>.{" "}
         <a href="/vigiparl/methode">Méthode</a>
@@ -59,7 +59,7 @@ async function PageTurnover({ seg, chambre }: { seg: string; chambre: "assemblee
       {suivis.length === 0 ? (
         <p className="meta">
           {chambre === "europarl"
-            ? "Parlement européen : le suivi des équipes a repris le 8 octobre 2026 — les indicateurs de renouvellement arriveront avec 12 mois de recul."
+            ? "Parlement européen : le suivi des équipes a repris le 8 octobre 2026 : les indicateurs de renouvellement arriveront avec 12 mois de recul."
             : "Pas encore d'équipe suivie pour cette chambre pour l'instant."}
         </p>
       ) : (
@@ -72,13 +72,13 @@ async function PageTurnover({ seg, chambre }: { seg: string; chambre: "assemblee
           <ClassementTop
             titre="Les 10 équipes les plus renouvelées sur 12 mois"
             barre="surligne-vigi"
-            note={<span className="meta">Départs rapportés à l&apos;effectif moyen · <a href={"/vigiparl/" + seg + "/parlementaires"}>classement complet</a></span>}
+            note={<span className="meta">Départs rapportés à l&apos;effectif moyen, <a href={"/vigiparl/" + seg + "/parlementaires"}>classement complet</a></span>}
             items={top.map((r) => ({
               nom: nomAffiche(r.elu_nom),
               lien: "/parlementaires/" + encodeURIComponent(idParlementaire(r.chambre, r.elu_id, r.elu_cle, r.elu_nom)),
               libelle: r.elu_groupe ?? "",
               valeur: tauxTurnover(r) ?? 0,
-              texte: pct(tauxTurnover(r)) + " · " + r.departs_12m + " départs, équipe de " + r.effectif,
+              texte: pct(tauxTurnover(r)) + ", " + r.departs_12m + " départs, équipe de " + r.effectif,
             }))}
           />
         </>
@@ -86,8 +86,8 @@ async function PageTurnover({ seg, chambre }: { seg: string; chambre: "assemblee
       <p className="meta">
         Le renouvellement des équipes, chambre par chambre :{" "}
         {(["an", "senat", "pe"] as const).filter((s) => s !== seg).map((s, i, a) => (
-          <span key={s}>{i > 0 ? " · " : ""}<a href={"/vigiparl/" + s}>{"Turnover " + (s === "an" ? "Assemblée nationale" : s === "senat" ? "Sénat" : "Parlement européen")}</a></span>
-        ))} · <a href="/mixiparl">MixiParl&apos;</a> (la mixité des équipes)
+          <span key={s}>{i > 0 ? ", " : ""}<a href={"/vigiparl/" + s}>{"Turnover " + (s === "an" ? "Assemblée nationale" : s === "senat" ? "Sénat" : "Parlement européen")}</a></span>
+        ))}, <a href="/mixiparl">MixiParl&apos;</a> (la mixité des équipes)
       </p>
       <script
         type="application/ld+json"
@@ -124,7 +124,7 @@ export default async function Page({ params }: Props) {
 
   return (
     <>
-      <p className="meta"><a href="/vigiparl">VigiParl&apos;</a> · <a href={"/vigiparl/" + (e.chambre === "assemblee" ? "an" : e.chambre === "senat" ? "senat" : "pe")}>Turnover {CHAMBRE_LONG[e.chambre]}</a></p>
+      <p className="meta"><a href="/vigiparl">VigiParl&apos;</a>, <a href={"/vigiparl/" + (e.chambre === "assemblee" ? "an" : e.chambre === "senat" ? "senat" : "pe")}>Turnover {CHAMBRE_LONG[e.chambre]}</a></p>
       <h1>Le renouvellement de l&apos;équipe de <span className="surligne-vigi">{nom}</span></h1>
       <p className="lead">
         L&apos;équipe de collaborateurs de {nom}{e.groupe ? " (" + e.groupe + ")" : ""}, mois par mois depuis le début du mandat : effectif,

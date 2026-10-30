@@ -26,7 +26,7 @@ export default async function Timeline() {
         return (
           <section key={c}>
             <h2>{CHAMBRE_LONG[c]}</h2>
-            <BarresAnnuelles titre={`Renouvellement annuel · ${CHAMBRE_LONG[c]}`} couleur="var(--vigi)" enCours={courante} format={(v) => pct(v)} max={0.8}
+            <BarresAnnuelles titre={`Renouvellement annuel : ${CHAMBRE_LONG[c]}`} couleur="var(--vigi)" enCours={courante} format={(v) => pct(v)} max={0.8}
               points={serie.map((a) => ({ an: a.an, valeur: turnoverAnnuel(a), detail: `${a.departs} départs` }))} />
             <div className="defile">
               <table className="stats">

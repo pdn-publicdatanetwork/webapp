@@ -155,12 +155,12 @@ export default async function MethodeVigiParl() {
           <h2 id="table-annuelle">La table annuelle</h2>
           <p>
             Les graphiques « année par année » de VigiParl&apos;, chiffre par chiffre : effectifs au 1er janvier,
-            arrivées et départs — en distinguant les mouvements comptés dans le taux et ceux exclus
+            arrivées et départs, en distinguant les mouvements comptés dans le taux et ceux exclus
             (fin ou début de mandat de l&apos;élu).
           </p>
           <div className="graphes-annuels">
             {CH.filter((c) => annees.some((a) => a.chambre === c)).map((c) => (
-              <BarresAnnuelles key={c} titre={`Renouvellement annuel · ${CHAMBRE_LONG[c]}`} couleur="var(--vigi)" enCours={anneeCourante}
+              <BarresAnnuelles key={c} titre={`Renouvellement annuel, ${CHAMBRE_LONG[c]}`} couleur="var(--vigi)" enCours={anneeCourante}
                 format={(v) => pct(v)} max={0.8}
                 points={annees.filter((a) => a.chambre === c).map((a) => ({ an: a.an, valeur: turnoverAnnuel(a), detail: `${a.departs} départs, ${a.effectif} collaborateurs au 1er janvier` }))} />
             ))}

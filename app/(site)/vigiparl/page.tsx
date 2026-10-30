@@ -88,7 +88,7 @@ export default async function VigiParl() {
           <h2><a className="titre-lien" href="/vigiparl/timeline">L&apos;évolution année par année →</a></h2>
           <div className="graphiques">
             {CHAMBRES.map((c) => (
-              <BarresAnnuelles key={c} titre={`Renouvellement annuel · ${CHAMBRE_LONG[c]}`} couleur="var(--vigi)" enCours={anneeCourante}
+              <BarresAnnuelles key={c} titre={`Renouvellement annuel : ${CHAMBRE_LONG[c]}`} couleur="var(--vigi)" enCours={anneeCourante}
                 format={(v) => pct(v)} max={0.8}
                 points={annees.filter((a) => a.chambre === c).map((a) => ({ an: a.an, valeur: turnoverAnnuel(a), detail: `${a.departs} départs, ${a.effectif} collaborateurs au 1er janvier` }))} />
             ))}

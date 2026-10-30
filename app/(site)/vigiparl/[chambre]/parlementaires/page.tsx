@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const c = chambreDuSegment(seg);
   if (!c) return {};
   return {
-    title: "Renouvellement des équipes par élu · " + CHAMBRE_LONG[c],
+    title: "Renouvellement des équipes par élu : " + CHAMBRE_LONG[c],
     description: "Le classement des élus " + (LE_DE[c] ?? CHAMBRE_LONG[c]) + " selon le renouvellement de leur équipe de collaborateurs sur 12 mois.",
     alternates: { canonical: "/vigiparl/" + seg + "/parlementaires" },
   };
@@ -53,10 +53,10 @@ export default async function Page({ params }: Props) {
       <p className="lead">
         Du renouvellement le plus fort au plus faible, sur les 12 derniers mois, dans la grille DataParl&apos; Sheets
         (recherche Ctrl+F, export CSV). Les équipes de moins de 3 personnes sur la période sont écartées.{" "}
-        <a href="/vigiparl/methode#taux-12-mois">Définition</a> · {"Voir aussi : "}
+        <a href="/vigiparl/methode#taux-12-mois">Définition</a>, {"Voir aussi : "}
         {autres.map((s, i) => (
           <span key={s}>
-            {i > 0 ? " · " : ""}
+            {i > 0 ? ", " : ""}
             <a href={"/vigiparl/" + s + "/parlementaires"}>{LIBELLE[s]}</a>
           </span>
         ))}
@@ -65,13 +65,13 @@ export default async function Page({ params }: Props) {
         <ClassementTop
           titre="Les 10 équipes les plus renouvelées, en un coup d'œil"
           barre="surligne-vigi"
-          note={<span className="meta">Sur 12 mois · le classement complet suit dans la grille ci-dessous.</span>}
+          note={<span className="meta">Sur 12 mois : le classement complet suit dans la grille ci-dessous.</span>}
           items={top10.map((r) => ({
             nom: nomAffiche(r.elu_nom),
             lien: "/parlementaires/" + encodeURIComponent(idParlementaire(r.chambre, r.elu_id, r.elu_cle, r.elu_nom)),
             libelle: r.elu_groupe ?? "",
             valeur: tauxTurnover(r) ?? 0,
-            texte: pct(tauxTurnover(r)) + " · " + r.departs_12m + " départs, " + r.arrivees_12m + " arrivées (équipe de " + r.effectif + ")",
+            texte: pct(tauxTurnover(r)) + ", " + r.departs_12m + " départs, " + r.arrivees_12m + " arrivées (équipe de " + r.effectif + ")",
           }))}
         />
       )}
@@ -82,7 +82,7 @@ export default async function Page({ params }: Props) {
           id={"vigiparl-elus-" + seg}
           titre="Renouvellement des équipes, élu par élu"
           description=""
-          provenance="Vue stats_turnover_elus (API DataParl'/Supabase) · méthode VigiParl'"
+          provenance="Vue stats_turnover_elus (API DataParl'/Supabase), méthode VigiParl'"
           entetes={entetes}
           donnees={donnees}
           liens={liens}
