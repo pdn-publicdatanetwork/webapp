@@ -38,7 +38,7 @@ export default function Abonnes() {
             <tr key={a.id}>
               <td>{a.email}</td>
               <td>{a.unsubscribed_at ? <span className="meta">désinscrit</span> : a.confirmed ? <span className="ok">confirmé</span> : <span className="meta">en attente</span>}</td>
-              <td className="meta">{a.alerte ? `${a.alerte.active ? "" : "(inactive) "}${a.alerte.frequence} · ${a.alerte.chambres.join(", ")}${a.alerte.groupes.length ? ` · ${a.alerte.groupes.length} groupe(s)` : ""}${a.alerte.elus.length ? ` · ${a.alerte.elus.length} élu(s)` : ""}` : "–"}</td>
+              <td className="meta">{a.alerte ? `${a.alerte.active ? "" : "(inactive) "}${a.alerte.frequence}, ${a.alerte.chambres.join(", ")}${a.alerte.groupes.length ? `, ${a.alerte.groupes.length} groupe(s)` : ""}${a.alerte.elus.length ? `, ${a.alerte.elus.length} élu(s)` : ""}` : "–"}</td>
               <td className="meta">{dateHeure(a.subscribed_at)}</td>
               <td>{!a.unsubscribed_at && <button className="lien" onClick={() => desinscrire(a.email)}>Désinscrire</button>}</td>
             </tr>))}

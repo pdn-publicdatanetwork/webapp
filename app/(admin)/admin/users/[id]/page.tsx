@@ -27,10 +27,10 @@ export default function Utilisateur() {
       {err && <p className="erreur">{err}</p>}
       {data && <>
         <p className="meta">
-          {data.compte.email} · créé le {dateHeure(data.compte.cree_le)} · dernière connexion {dateHeure(data.compte.derniere_connexion)} · {data.compte.fournisseurs.join(", ") || "–"}
+          {data.compte.email}, créé le {dateHeure(data.compte.cree_le)}, dernière connexion {dateHeure(data.compte.derniere_connexion)}, {data.compte.fournisseurs.join(", ") || "–"}
         </p>
         <p className="meta">
-          {data.stats.requetes_api_total} requête(s) API cumulée(s) · {data.stats.pages_vues} page(s) vues (500 max affichées) · {data.stats.telechargements} export(s) Sheets
+          {data.stats.requetes_api_total} requête(s) API cumulée(s), {data.stats.pages_vues} page(s) vues (500 max affichées), {data.stats.telechargements} export(s) Sheets
         </p>
         <p className="meta">Replays Clarity associés au compte via le tag <code>dp_user_id</code> (si le visiteur a consenti à la mesure d'audience).</p>
 

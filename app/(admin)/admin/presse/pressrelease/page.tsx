@@ -75,7 +75,7 @@ function Editeur({ id, retour }: { id: string | null; retour: () => void }) {
               <h3>Suivi</h3>
               {detail.envois.length === 0 ? <p className="meta">Pas encore envoyé.</p> : (
                 <>
-                  <p>{detail.clics} clic(s) sur « Lire le communiqué en ligne »{detail.lien && <> · lien tracé <span className="mono">{detail.lien}</span></>}</p>
+                  <p>{detail.clics} clic(s) sur « Lire le communiqué en ligne »{detail.lien && <>, lien tracé <span className="mono">{detail.lien}</span></>}</p>
                   <table className="stats">
                     <thead><tr><th>Envoi</th><th className="num">Destinataires</th><th className="num">Ouvertures</th><th className="num">Échecs</th></tr></thead>
                     <tbody>{detail.envois.map((e) => (
@@ -108,7 +108,7 @@ export default function Communiques() {
     setOccupe(true); setSync(null);
     try {
       const r = await api<{ publies: number; misAJour: number; retires: number; erreurs: string[] }>("/api/admin/communication/communiques", { method: "POST", body: { action: "sync-notion" } });
-      setSync(r.publies + " publié(s), " + r.misAJour + " mis à jour, " + r.retires + " retiré(s)" + (r.erreurs.length ? " — " + r.erreurs[0] : ""));
+      setSync(r.publies + " publié(s), " + r.misAJour + " mis à jour, " + r.retires + " retiré(s)" + (r.erreurs.length ? " : " + r.erreurs[0] : ""));
       recharger();
     } catch (e) { setSync((e as Error).message); }
     finally { setOccupe(false); }

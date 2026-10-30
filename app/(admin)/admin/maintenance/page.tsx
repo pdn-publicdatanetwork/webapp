@@ -84,7 +84,7 @@ export default function PrevenusMaintenance() {
           <td>{data?.etat.active ? <span className="erreur">🔴 Maintenance active</span> : <span className="ok">🟢 Site ouvert</span>}</td>
           <td className="meta">
             {data && (data.etat.active ? dateHeure(data.etat.ouvert_le) : dateHeure(data.etat.ferme_le))}
-            {data?.etat.par ? ` — ${data.etat.par}` : ""}
+            {data?.etat.par ? ` : ${data.etat.par}` : ""}
           </td>
           <td>
             <input type="text" placeholder="Motif (affiché sur status.dataparl.fr)" value={motif} onChange={(e) => setMotif(e.target.value)} />

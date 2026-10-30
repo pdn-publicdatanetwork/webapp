@@ -25,7 +25,7 @@ export default function Comptes() {
             <tr key={c.id}>
               <td>{c.nom || <span className="meta">–</span>}</td>
               <td><Link href={`/admin/users/${c.id}`}>{c.email}</Link>{c.equipe && <> <span className={`badge-role ${c.equipe}`}>{LIBELLE_ROLE[c.equipe]}</span></>}</td>
-              <td className="meta">{libellesFournisseurs(c.fournisseurs).join(" · ") || "–"}</td>
+              <td className="meta">{libellesFournisseurs(c.fournisseurs).join(", ") || "–"}</td>
               <td className="meta">{c.alerte ? `${c.alerte.active ? "" : "(inactive) "}${c.alerte.frequence === "hebdomadaire" ? "Weekly" : "Daily"}` : "–"}</td>
               <td className="meta">{dateHeure(c.cree_le)}</td><td className="meta">{dateHeure(c.derniere_connexion)}</td>
             </tr>

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import EnTete from "@/app/_components/admin/EnTete";
 import Porte from "@/app/_components/admin/Porte";
 
-export const metadata: Metadata = { title: "Webmail · DataParl'" };
+export const metadata: Metadata = { title: "Webmail, DataParl'" };
 
 export default function WebmailLayout({ children }: { children: React.ReactNode }) {
   return (

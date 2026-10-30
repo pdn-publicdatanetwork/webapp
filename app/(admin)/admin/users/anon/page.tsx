@@ -9,7 +9,7 @@ export default function VisiteursAnonymes() {
   return (
     <>
       <h1>Visiteurs sans compte</h1>
-      <p className="meta"><Link href="/admin/users">← Comptes</Link> · parcours des visiteurs anonymes ayant consenti à la mesure d'audience (90 jours).</p>
+      <p className="meta"><Link href="/admin/users">← Comptes</Link>, parcours des visiteurs anonymes ayant consenti à la mesure d'audience (90 jours).</p>
       {err && <p className="erreur">{err}</p>}
       {data && <>
         <p className="meta">{data.total} visiteur(s) récent(s)</p>
@@ -22,7 +22,7 @@ export default function VisiteursAnonymes() {
               <td className="meta">{dateHeure(v.derniere)}</td>
               <td className="meta">{dateHeure(v.premiere)}</td>
               <td className="meta">{v.ip ?? "–"}</td>
-              <td className="meta">{v.chemins.join(" · ")}</td>
+              <td className="meta">{v.chemins.join(", ")}</td>
             </tr>))}
           </tbody>
         </table></div>
