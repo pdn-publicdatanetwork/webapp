@@ -8,6 +8,9 @@ import { dateHeure } from "@/app/_components/admin/utils";
 type Statut = { statut: string; collab_slug: string | null; gel_jusqu_a: string | null; expire_le: string | null } | null;
 type Fiche = { slug: string; nom?: string; detail?: string };
 
+// Adresse de réception des e-mails de vérification (webhook Resend).
+const ADRESSE_ASSOCIER = "associer@dataparl.fr";
+
 async function appel(url: string, init?: RequestInit) {
   const s = await sessionActuelle();
   const r = await fetch(url, {
@@ -22,7 +25,7 @@ export default function Formulaire() {
   // useSearchParams, qui exige une boundary Suspense et casse le prérendu).
   const pieceInput = useRef<HTMLInputElement>(null);
   const [fiche, setFiche] = useState<Fiche | null>(null);
-  const [demande, setDemande] = useState<{ adresse: string; objet: string; code: string; expireLe: string; domaine: string } | null>(null);
+  const [demande, setDemande] = useState<{ objet: string; code: string; expireLe: string; domaine: string } | null>(null);
   const [statut, setStatut] = useState<Statut>(null);
   const [erreur, setErreur] = useState("");
   const [chargement, setChargement] = useState(false);
@@ -86,7 +89,7 @@ export default function Formulaire() {
 
   const s = statut?.statut;
   const mailto = demande
-    ? `mailto:${demande.adresse}?subject=${encodeURIComponent(demande.objet)}&body=${encodeURIComponent(demande.code + "\n\n(ne pas modifier)")}`
+    ? `mailto:${ADRESSE_ASSOCIER}?subject=${encodeURIComponent(demande.objet)}&body=${encodeURIComponent(demande.code + "\n\n(ne pas modifier)")}`
     : null;
 
   return (
@@ -146,19 +149,20 @@ export default function Formulaire() {
         <div className="card">
           <h2 style={{ marginTop: 0 }}>Envoyez l&apos;e-mail depuis votre adresse professionnelle</h2>
           <p>
-            L&apos;adresse attendue pour votre fiche est en <code>@{demande.domaine}</code>.
-            L&apos;e-mail est entièrement prérempli : cliquez, puis « Envoyer ».
+            L&apos;e-mail doit partir depuis votre adresse en <code>@{demande.domaine}</code>,
+            adressé à <code>{ADRESSE_ASSOCIER}</code> : il est entièrement prérempli, cliquez puis « Envoyer ».
           </p>
           <p>
             <a className="bouton" href={mailto ?? "#"}>Ouvrir l&apos;e-mail prérempli</a>
           </p>
           <div className="meta" style={{ lineHeight: 1.9 }}>
+            <div>À : <code>{ADRESSE_ASSOCIER}</code></div>
             <div>Objet : <code>{demande.objet}</code></div>
             <div>Code : <code>{demande.code}</code></div>
             <div>Valable jusqu&apos;au {dateHeure(demande.expireLe)}</div>
           </div>
           <p className="meta" style={{ marginBottom: 0 }}>
-            Sans modification de l&apos;objet ni du code, la vérification est quasi immédiate.
+            Sans modification du destinataire, de l&apos;objet ni du code, la vérification est quasi immédiate.
           </p>
         </div>
       )}
