@@ -52,14 +52,14 @@ export default async function FicheMembreCabinet({ params }: Props) {
   return (
     <>
       <p className="meta" style={{ marginBottom: 0 }}>
-        {postes.length} poste{postes.length > 1 ? "s" : ""} en cabinet ministériel · {nMinistres} ministre{nMinistres > 1 ? "s" : ""} ·{" "}
+        {postes.length} poste{postes.length > 1 ? "s" : ""} en cabinet ministériel, {nMinistres} ministre{nMinistres > 1 ? "s" : ""},{" "}
         <a href="/gouv/explorer">tous les gouvernements</a>
       </p>
       <h1>{nom}</h1>
       <p className="lead">
-        Parcours en cabinet ministériel d'après les nominations publiées au Journal officiel
+        Parcours en cabinet ministériel d&apos;après les nominations publiées au Journal officiel
         {debut ? ", depuis " + debut.slice(0, 4) : ""}
-        {encoreEnPoste ? " — en poste à ce jour." : finDernier ? ", jusqu'en " + finDernier.slice(0, 4) + " au moins." : "."}
+        {encoreEnPoste ? ", en poste à ce jour." : finDernier ? ", jusqu'en " + finDernier.slice(0, 4) + " au moins." : "."}
       </p>
 
       {rapproche && (
@@ -76,9 +76,9 @@ export default async function FicheMembreCabinet({ params }: Props) {
           return (
             <li key={p.id}>
               {p.fonction || "Membre de cabinet"} au cabinet de{" "}
-              {m ? <a href={"/gouv/m/" + encodeURIComponent(m.id)}>{prenomNom(m.prenom, m.nom)}</a> : "—"}
+              {m ? <a href={"/gouv/m/" + encodeURIComponent(m.id)}>{prenomNom(m.prenom, m.nom)}</a> : "ministre inconnu"}
               <span className="meta">
-                {" — " + (m ? (m.portefeuille || m.fonction) + " · " + m.gouvernement + " · " : "") + periode(p.debut, finEffective(p.fin, m?.fin ?? null))}
+                {" (" + (m ? (m.portefeuille || m.fonction) + ", " + m.gouvernement + ", " : "") + periode(p.debut, finEffective(p.fin, m?.fin ?? null)) + ")"}
               </span>
             </li>
           );

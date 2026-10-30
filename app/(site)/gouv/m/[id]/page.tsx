@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!m) return {};
   const nom = prenomNom(m.prenom, m.nom);
   // Photo en aperçu : photo officielle info.gouv.fr (media.dataparl.fr/gouv/<slug>_gouv_400.png),
-  // sinon repli sur la photo parlementaire de la personne — même logique que la fiche elle-même.
+  // sinon repli sur la photo parlementaire de la personne, même logique que la fiche elle-même.
   // Carte « summary » (carrée) comme les fiches parlementaires.
   const photos = await photosDesPersonnes([m.personne_id ?? ""]);
   const photoObj = photoMinistreDe(m, photos);
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description,
     alternates: { canonical: "/gouv/m/" + encodeURIComponent(m.id) },
     openGraph: { siteName: "DataParl'", title: nom + " : ministre, portefeuille et cabinet", description, type: "profile", images: photo ? [{ url: photo, width: 400, height: 400, alt: "Photo officielle de " + nom }] : undefined },
-    twitter: { card: photo ? "summary" : "summary_large_image", title: nom + " · DataParl'", description, images: photo ? [photo] : undefined },
+    twitter: { card: photo ? "summary" : "summary_large_image", title: nom + ", DataParl'", description, images: photo ? [photo] : undefined },
   };
 }
 
@@ -69,7 +69,7 @@ export default async function FicheMinistre({ params }: Props) {
       <p className="meta" style={{ marginBottom: 0 }}>
         {m.gouvernement ? (
           <>
-            <a href={"/gouv/" + slugGouvernement(m.gouvernement)}>{m.gouvernement}</a> ·{" "}
+            <a href={"/gouv/" + slugGouvernement(m.gouvernement)}>{m.gouvernement}</a>,{" "}
           </>
         ) : null}
         <a href="/gouv/explorer">tous les gouvernements</a>
@@ -79,7 +79,7 @@ export default async function FicheMinistre({ params }: Props) {
         <div>
           <h1 style={{ margin: "2px 0 6px" }}>{nom}</h1>
           <p className="lead" style={{ margin: 0 }}>
-            {(m.portefeuille || m.fonction || "Ministre") + " — " + periode(m.debut, m.fin) + ", au sein du gouvernement " + m.gouvernement + "."}
+            {(m.portefeuille || m.fonction || "Ministre") + ", " + periode(m.debut, m.fin) + ", au sein du gouvernement " + m.gouvernement + "."}
           </p>
           {fiche && (
             <p className="meta" style={{ margin: "6px 0 0" }}>
@@ -92,7 +92,7 @@ export default async function FicheMinistre({ params }: Props) {
       <h2>Cabinet ministériel</h2>
       {equipe.length === 0 ? (
         <p className="meta">
-          Aucune nomination identifiée au JORF pour ce mandat — cabinet non documenté, pas nécessairement inexistant
+          Aucune nomination identifiée au JORF pour ce mandat : cabinet non documenté, pas nécessairement inexistant
           (le recensement est en cours pour les mandats récents).
         </p>
       ) : (
@@ -100,7 +100,7 @@ export default async function FicheMinistre({ params }: Props) {
           {equipe.map((c) => (
             <li key={c.id}>
               <a href={hrefMembre(c)}>{prenomNom(c.collab_prenom, c.collab_nom)}</a>{" "}
-              <span className="meta">— {c.fonction} · {periode(c.debut, finEffective(c.fin, m.fin))}</span>
+              <span className="meta">{", " + c.fonction + ", " + periode(c.debut, finEffective(c.fin, m.fin))}</span>
             </li>
           ))}
         </ul>
@@ -117,7 +117,7 @@ export default async function FicheMinistre({ params }: Props) {
                 ) : (
                   <a href={"/gouv/m/" + encodeURIComponent(x.id)}>{x.portefeuille || x.fonction}</a>
                 )}
-                <span className="meta"> — {x.gouvernement} · {periode(x.debut, x.fin)}</span>
+                <span className="meta">{", " + x.gouvernement + ", " + periode(x.debut, x.fin)}</span>
               </li>
             ))}
           </ul>
@@ -125,7 +125,7 @@ export default async function FicheMinistre({ params }: Props) {
       )}
 
       <p className="meta" style={{ marginTop: 32 }}>
-        Fiche établie d'après les nominations publiées au Journal officiel (DILA). Pour faire rectifier ou masquer une information :{" "}
+        Fiche établie d&apos;après les nominations publiées au Journal officiel (DILA). Pour faire rectifier ou masquer une information :{" "}
         <a href="/contact?sujet=rgpd">formulaire de contact</a>.
       </p>
       <script

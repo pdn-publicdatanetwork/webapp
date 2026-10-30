@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: nom + " : son cabinet ministériel (gouvernement)",
     description:
-      "Membres du cabinet de " + nom + ", " + (m.portefeuille || m.fonction) + " — directeurs, chefs de cabinet, conseillers — d'après le Journal officiel.",
+      "Membres du cabinet de " + nom + ", " + (m.portefeuille || m.fonction) + " (directeurs, chefs de cabinet, conseillers), d'après le Journal officiel.",
     alternates: { canonical: "/gouv/" + gouvSlug + "/collabs/" + encodeURIComponent(slugMinistre(m.prenom, m.nom)) },
   };
 }
@@ -78,14 +78,14 @@ export default async function CabinetMinistre({ params }: Props) {
     <>
       <p className="meta" style={{ marginBottom: 0 }}>
         <a href={"/gouv/" + gouvSlug}>Gouvernement {g.nom}</a>
-        {" · "}<a href={"/gouv/m/" + encodeURIComponent(principal.id)}>fiche complète de {nom}</a>
+        {", "}<a href={"/gouv/m/" + encodeURIComponent(principal.id)}>fiche complète de {nom}</a>
       </p>
       <div className="entete-elu">
         <Photo chambre={photo?.chambre} slug={photo?.slug} src={photo?.photo_url} nom={nom} />
         <div>
           <h1 style={{ margin: "2px 0 6px" }}>{nom}</h1>
           <p className="lead" style={{ margin: 0 }}>
-            {principal.portefeuille || principal.fonction} · {libelleRang(principal.rang)} · {periode(principal.debut, principal.fin)}
+            {principal.portefeuille || principal.fonction}, {libelleRang(principal.rang)}, {periode(principal.debut, principal.fin)}
           </p>
         </div>
       </div>
@@ -99,18 +99,18 @@ export default async function CabinetMinistre({ params }: Props) {
         return (
           <section key={m.id}>
             <h2>
-              {m.portefeuille || m.fonction} <span className="meta">· {periode(m.debut, m.fin)}</span>
+              {m.portefeuille || m.fonction} <span className="meta">, {periode(m.debut, m.fin)}</span>
             </h2>
             {equipe.length === 0 ? (
               <p className="meta">
-                Aucune nomination identifiée au JORF pour ce mandat — cabinet non documenté ici, pas nécessairement inexistant.
+                Aucune nomination identifiée au JORF pour ce mandat : cabinet non documenté ici, pas nécessairement inexistant.
               </p>
             ) : (
               <ul>
                 {equipe.map((c) => (
                   <li key={c.id}>
                     <a href={hrefMembre(c)}>{prenomNom(c.collab_prenom, c.collab_nom)}</a>{" "}
-                    <span className="meta">— {c.fonction} · {periode(c.debut, finEffective(c.fin, m.fin))}{c.collab_id ? " · aussi collaborateur parlementaire" : ""}</span>
+                    <span className="meta">{", " + c.fonction + ", " + periode(c.debut, finEffective(c.fin, m.fin))}{c.collab_id ? ", aussi collaborateur parlementaire" : ""}</span>
                   </li>
                 ))}
               </ul>

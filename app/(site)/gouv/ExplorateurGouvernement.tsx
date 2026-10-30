@@ -99,7 +99,7 @@ export default function ExplorateurGouvernement({ mandats, cabinets, slugCollab 
       <div>
         <label htmlFor="gouv-q">
           <strong>Rechercher un ministre ou un membre de cabinet</strong>{" "}
-          <span className="meta">(nom, fonction, portefeuille, gouvernement — insensible aux accents)</span>
+          <span className="meta">(nom, fonction, portefeuille, gouvernement, insensible aux accents)</span>
         </label>
         <input
           id="gouv-q" type="search" value={q}
@@ -136,7 +136,7 @@ export default function ExplorateurGouvernement({ mandats, cabinets, slugCollab 
             </button>
           )}
         </p>
-        <p className="meta">L'URL reflète vos filtres : copiez-la pour partager exactement cette vue.</p>
+        <p className="meta">L&apos;URL reflète vos filtres : copiez-la pour partager exactement cette vue.</p>
       </div>
 
       {filtre ? (
@@ -144,7 +144,7 @@ export default function ExplorateurGouvernement({ mandats, cabinets, slugCollab 
           <h2>Résultats</h2>
           {aucun && (
             <p className="meta">
-              Aucun résultat. Essayez un nom de famille seul, ou vérifiez l'orthographe : les nominations sont publiées au JORF
+              Aucun résultat. Essayez un nom de famille seul, ou vérifiez l&apos;orthographe : les nominations sont publiées au JORF
               sous le nom exact de la personne.
             </p>
           )}
@@ -155,11 +155,11 @@ export default function ExplorateurGouvernement({ mandats, cabinets, slugCollab 
                 {ministresTrouves.slice(0, 200).map((m) => (
                   <li key={m.id}>
                     <a href={hrefM(m.id)}>{prenomNom(m.prenom, m.nom)}</a>{" "}
-                    <span className="meta">— {m.portefeuille || m.fonction} · {m.gouvernement} · {periode(m.debut, m.fin)}</span>
+                    <span className="meta">{", " + (m.portefeuille || m.fonction) + ", " + m.gouvernement + ", " + periode(m.debut, m.fin)}</span>
                   </li>
                 ))}
               </ul>
-              {ministresTrouves.length > 200 && <p className="meta">{ministresTrouves.length} ministres trouvés — 200 affichés, affinez la recherche.</p>}
+              {ministresTrouves.length > 200 && <p className="meta">{ministresTrouves.length + " ministres trouvés, 200 affichés, affinez la recherche."}</p>}
             </>
           )}
           {cabinetsTrouves.length > 0 && (
@@ -172,15 +172,15 @@ export default function ExplorateurGouvernement({ mandats, cabinets, slugCollab 
                     <li key={c.id}>
                       <a href={hrefC(c)}>{prenomNom(c.collab_prenom, c.collab_nom)}</a>{" "}
                       <span className="meta">
-                        — {c.fonction} · cabinet de {m ? prenomNom(m.prenom, m.nom) : "—"}
-                        {m?.portefeuille ? " (" + m.portefeuille + ")" : ""} · {periode(c.debut, finEffective(c.fin, m?.fin ?? null))}
-                        {c.collab_id ? " · aussi collaborateur parlementaire" : ""}
+                        {", " + c.fonction + ", cabinet de " + (m ? prenomNom(m.prenom, m.nom) : "ministre inconnu")}
+                        {m?.portefeuille ? " (" + m.portefeuille + ")" : ""}{", " + periode(c.debut, finEffective(c.fin, m?.fin ?? null))}
+                        {c.collab_id ? ", aussi collaborateur parlementaire" : ""}
                       </span>
                     </li>
                   );
                 })}
               </ul>
-              {cabinetsTrouves.length > 300 && <p className="meta">{cabinetsTrouves.length} membres trouvés — 300 affichés, affinez la recherche.</p>}
+              {cabinetsTrouves.length > 300 && <p className="meta">{cabinetsTrouves.length + " membres trouvés, 300 affichés, affinez la recherche."}</p>}
             </>
           )}
         </>
@@ -205,8 +205,8 @@ export default function ExplorateurGouvernement({ mandats, cabinets, slugCollab 
                     ) : g}
                   </h2>{" "}
                   <span className="meta">
-                    — {duGouvernement.length} ministre{duGouvernement.length > 1 ? "s" : ""} · {membres} membre{membres > 1 ? "s" : ""} identifié{membres > 1 ? "s" : ""}
-                    {nonDocumentes > 0 ? " · " + nonDocumentes + " cabinet" + (nonDocumentes > 1 ? "s" : "") + " sans publication identifiée" : ""}
+                    {", " + duGouvernement.length + " ministre" + (duGouvernement.length > 1 ? "s" : "") + ", " + membres + " membre" + (membres > 1 ? "s" : "") + " identifié" + (membres > 1 ? "s" : "")}
+                    {nonDocumentes > 0 ? ", " + nonDocumentes + " cabinet" + (nonDocumentes > 1 ? "s" : "") + " sans publication identifiée" : ""}
                   </span>
                 </summary>
                 <ul className="gouvernement">
@@ -217,22 +217,22 @@ export default function ExplorateurGouvernement({ mandats, cabinets, slugCollab 
                       <li key={m.id}>
                         <h3>
                           <a href={hrefM(m.id)}>{prenomNom(m.prenom, m.nom)}</a>
-                          <span className="meta"> — {m.portefeuille || m.fonction} · {periode(m.debut, m.fin)} · {LIBELLE_STATUT[st]}</span>
+                          <span className="meta">{", " + (m.portefeuille || m.fonction) + ", " + periode(m.debut, m.fin) + ", " + LIBELLE_STATUT[st]}</span>
                         </h3>
                         {st === "documente" ? (
                           <ul>
                             {equipe.map((c) => (
                               <li key={c.id}>
                                 <a href={hrefC(c)}>{prenomNom(c.collab_prenom, c.collab_nom)}</a>{" "}
-                                <span className="meta">— {c.fonction} · {periode(c.debut, finEffective(c.fin, m.fin))}{c.collab_id ? " · aussi collaborateur parlementaire" : ""}</span>
+                                <span className="meta">{", " + c.fonction + ", " + periode(c.debut, finEffective(c.fin, m.fin))}{c.collab_id ? ", aussi collaborateur parlementaire" : ""}</span>
                               </li>
                             ))}
                           </ul>
                         ) : (
                           <p className="meta">
                             {st === "verification"
-                              ? "Mandat récent — recensement en cours : aucune nomination identifiée à ce jour au JORF (les décrets paraissent au fil de l'eau)."
-                              : "Publication non retrouvée au JORF pour ce mandat — cabinet non documenté ici, pas nécessairement inexistant."}
+                              ? "Mandat récent, recensement en cours : aucune nomination identifiée à ce jour au JORF (les décrets paraissent au fil de l'eau)."
+                              : "Publication non retrouvée au JORF pour ce mandat : cabinet non documenté ici, pas nécessairement inexistant."}
                           </p>
                         )}
                       </li>

@@ -34,8 +34,8 @@ function CarteMinistre({ m, equipe, hote, gouvSlug, photo }: {
         <p style={{ margin: "3px 0 0", fontWeight: 600 }}>{m.portefeuille || m.fonction}</p>
         <p className="meta" style={{ margin: "3px 0 0" }}>
           {libelleRang(m.rang)}
-          {hote ? " · auprès de " + prenomNom(hote.prenom, hote.nom) : ""}
-          {" · " + periode(m.debut, m.fin)}
+          {hote ? ", auprès de " + prenomNom(hote.prenom, hote.nom) : ""}
+          {", " + periode(m.debut, m.fin)}
         </p>
         <p style={{ margin: "8px 0 0" }}>
           <a className="btn secondaire" href={hrefCollabs(gouvSlug, m)}>
@@ -61,7 +61,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: "Gouvernement " + g.nom + " : les ministres et leurs cabinets",
     description:
-      "Composition du gouvernement " + g.nom + " — Premier ministre, ministres, ministres délégués — et, pour chacun, les membres de son cabinet ministériel d'après le Journal officiel.",
+      "Composition du gouvernement " + g.nom + " (Premier ministre, ministres, ministres délégués) et, pour chacun, les membres de son cabinet ministériel d'après le Journal officiel.",
     alternates: { canonical: "/gouv/" + g.slug },
   };
 }
@@ -116,23 +116,23 @@ export default async function PageGouvernement({ params }: Props) {
     <>
       <p className="meta" style={{ marginBottom: 0 }}>
         <a href="/gouv/explorer">Tous les gouvernements depuis 2012</a>
-        {" · "}ordre protocolaire : Premier ministre, ministres, ministres délégués (ordre alphabétique au sein de chaque rang)
+        {", "}ordre protocolaire : Premier ministre, ministres, ministres délégués (ordre alphabétique au sein de chaque rang)
       </p>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 12, flexWrap: "wrap" }}>
         <h1>Gouvernement {g.nom}{enExercice ? " (en exercice)" : ""}</h1>
         <p className="meta" style={{ margin: 0 }}>
           {plusAncien && <a href={"/gouv/" + plusAncien.slug}>← {plusAncien.nom}</a>}
-          {plusAncien && plusRecent && " · "}
+          {plusAncien && plusRecent && ", "}
           {plusRecent && <a href={"/gouv/" + plusRecent.slug}>{plusRecent.nom} →</a>}
         </p>
       </div>
       <p className="lead">
         {enExercice
-          ? "Gouvernement en exercice depuis le " + dateLongue(g.debut) + " — " + affiches.length + " membres en poste."
-          : "Gouvernement du " + dateLongue(g.debut) + (g.fin ? " au " + dateLongue(g.fin) : "") + " — " + affiches.length + " membres."}
+          ? "Gouvernement en exercice depuis le " + dateLongue(g.debut) + ", " + affiches.length + " membres en poste."
+          : "Gouvernement du " + dateLongue(g.debut) + (g.fin ? " au " + dateLongue(g.fin) : "") + ", " + affiches.length + " membres."}
       </p>
       <p className="meta">
-        {documentes} cabinet{documentes > 1 ? "s" : ""} documenté{documentes > 1 ? "s" : ""} sur {affiches.length} · {membresIdentifies} membre{membresIdentifies > 1 ? "s" : ""} de cabinet identifié{membresIdentifies > 1 ? "s" : ""} · source : Journal officiel (DILA).
+        {documentes} cabinet{documentes > 1 ? "s" : ""} documenté{documentes > 1 ? "s" : ""} sur {affiches.length}, {membresIdentifies} membre{membresIdentifies > 1 ? "s" : ""} de cabinet identifié{membresIdentifies > 1 ? "s" : ""}, source : Journal officiel (DILA).
       </p>
 
       {pm.length > 0 && (
@@ -149,7 +149,7 @@ export default async function PageGouvernement({ params }: Props) {
       )}
       {delegues.length > 0 && (
         <section>
-          <h2>Ministres délégués et secrétaires d'État</h2>
+          <h2>Ministres délégués et secrétaires d&apos;État</h2>
           {grille(delegues)}
         </section>
       )}
@@ -173,7 +173,7 @@ export default async function PageGouvernement({ params }: Props) {
             "@type": "GovernmentOrganization",
             name: "Gouvernement " + g.nom,
             url: "https://www.dataparl.fr/gouv/" + g.slug,
-          }).replace(/</g, "\\u003c"),
+          }).replace(/</g, "\u003c"),
         }}
       />
     </>

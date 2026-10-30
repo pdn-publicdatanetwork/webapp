@@ -10,7 +10,7 @@ export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Tous les gouvernements et leurs cabinets depuis 2012",
-  description: "La composition des gouvernements français depuis mai 2012 et la liste des membres de chaque cabinet ministériel — directeurs, chefs de cabinet, conseillers — d'après les nominations publiées au Journal officiel.",
+  description: "La composition des gouvernements français depuis mai 2012 et la liste des membres de chaque cabinet ministériel (directeurs, chefs de cabinet, conseillers), d'après les nominations publiées au Journal officiel.",
   alternates: { canonical: "/gouv/explorer" },
 };
 
@@ -25,11 +25,11 @@ const FAQ = [
   },
   {
     q: "Que signifient les statuts « publication non retrouvée » et « en cours de vérification » ?",
-    r: "« Cabinet documenté » : au moins un membre a été identifié au JORF. « Publication non retrouvée » : aucune nomination identifiée dans les sources consultées — le cabinet n'est pas documenté ici, pas nécessairement inexistant. « En cours de vérification » : mandat récent, le recensement suit les publications au fil de l'eau. Le Journal officiel publie en effet les nominations de cabinet avec un certain retard, surtout à la formation d'un gouvernement.",
+    r: "« Cabinet documenté » : au moins un membre a été identifié au JORF. « Publication non retrouvée » : aucune nomination identifiée dans les sources consultées, le cabinet n'est pas documenté ici, pas nécessairement inexistant. « En cours de vérification » : mandat récent, le recensement suit les publications au fil de l'eau. Le Journal officiel publie en effet les nominations de cabinet avec un certain retard, surtout à la formation d'un gouvernement.",
   },
   {
     q: "Un membre de cabinet peut-il aussi être collaborateur parlementaire ?",
-    r: "Oui, c'est fréquent : un même parcours peut passer d'un cabinet de député à un cabinet ministériel. Quand c'est la même personne, DataParl' relie sa fiche unique de collaborateur — l'appartenance aux deux mondes est visible sur la même page.",
+    r: "Oui, c'est fréquent : un même parcours peut passer d'un cabinet de député à un cabinet ministériel. Quand c'est la même personne, DataParl' relie sa fiche unique de collaborateur : l'appartenance aux deux mondes est visible sur la même page.",
   },
 ];
 
@@ -63,7 +63,7 @@ export default async function ExplorerGouvernements() {
     <>
       <h1>Tous les <span className="surligne">gouvernements</span> et leurs cabinets</h1>
       <p className="lead">
-        Qui gouverne, et qui travaille pour qui : la composition des gouvernements français depuis mai 2012, avec pour chaque ministre la liste des membres de son cabinet — directeurs, chefs de cabinet, conseillers — telle que publiée au Journal officiel.
+        Qui gouverne, et qui travaille pour qui : la composition des gouvernements français depuis mai 2012, avec pour chaque ministre la liste des membres de son cabinet (directeurs, chefs de cabinet, conseillers) telle que publiée au Journal officiel.
         {courant && <> Le gouvernement en exercice a sa page dédiée : <a href={"/gouv/" + courant.slug}>gouvernement {courant.nom}</a>.</>}
       </p>
 
@@ -76,9 +76,9 @@ export default async function ExplorerGouvernements() {
         ))}
       </div>
       <p className="meta">
-        {aVerifier > 0 ? aVerifier + " mandat" + (aVerifier > 1 ? "s" : "") + " récent" + (aVerifier > 1 ? "s" : "") + " en cours de vérification · " : ""}
+        {aVerifier > 0 ? aVerifier + " mandat" + (aVerifier > 1 ? "s" : "") + " récent" + (aVerifier > 1 ? "s" : "") + " en cours de vérification, " : ""}
         Dernière nomination identifiée : {dateLongue(derniere)}
-        {releve ? " · dernier relevé du JORF : " + dateLongue(releve) : ""} · source : Journal officiel (DILA).
+        {releve ? ", dernier relevé du JORF : " + dateLongue(releve) : ""}, source : Journal officiel (DILA).
       </p>
 
       <ExplorateurGouvernement mandats={mandats} cabinets={cabinets} slugCollab={slugCollab} />
@@ -92,7 +92,7 @@ export default async function ExplorerGouvernements() {
           </div>
         ))}
       </dl>
-      <p className="meta">À voir aussi : <a href="/collab">la liste des collaborateurs parlementaires</a> — les mêmes personnes apparaissent parfois dans les deux, avec une fiche unique.</p>
+      <p className="meta">À voir aussi : <a href="/collab">la liste des collaborateurs parlementaires</a> : les mêmes personnes apparaissent parfois dans les deux, avec une fiche unique.</p>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -123,7 +123,7 @@ export default async function ExplorerGouvernements() {
                 ],
               },
             ],
-          }).replace(/</g, "\\u003c"),
+          }).replace(/</g, "\u003c"),
         }}
       />
     </>
