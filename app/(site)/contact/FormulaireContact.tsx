@@ -67,7 +67,8 @@ export default function FormulaireContact({ sujetInitial }: { sujetInitial?: str
   const [reqFiche, setReqFiche] = useState("");
   const [suggestions, setSuggestions] = useState<Resultat[]>([]);
   const [sugIdx, setSugIdx] = useState(-1);
-  const champ = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+  const champInput = useRef<HTMLInputElement | null>(null);
+  const champZone = useRef<HTMLTextAreaElement | null>(null);
   const ecran = pile[pile.length - 1];
 
   // Session : préremplit prénom, nom et e-mail si l'utilisateur est connecté.
@@ -96,7 +97,8 @@ export default function FormulaireContact({ sujetInitial }: { sujetInitial?: str
   }, [ecran, v.sujet, reqFiche]);
 
   useEffect(() => {
-    if (["cible", "detail", "email"].includes(ecran)) setTimeout(() => champ.current?.focus(), 60);
+    if (ecran === "detail") setTimeout(() => champZone.current?.focus(), 60);
+    else if (["cible", "email"].includes(ecran)) setTimeout(() => champInput.current?.focus(), 60);
   }, [ecran]);
 
   const avancer = () => setPile((p) => [...p, chemin(connecte, v.sujet || undefined)[chemin(connecte, v.sujet || undefined).indexOf(ecran) + 1]]);
@@ -256,7 +258,7 @@ export default function FormulaireContact({ sujetInitial }: { sujetInitial?: str
           {v.sujet === "erreur" ? (
             <div className="autocompletion">
               <input
-                ref={champ}
+                ref={champInput}
                 value={reqFiche}
                 onChange={(e) => { setReqFiche(e.target.value); setV((x) => ({ ...x, cible: e.target.value })); setErr(""); }}
                 onKeyDown={(e) => {
@@ -288,7 +290,7 @@ export default function FormulaireContact({ sujetInitial }: { sujetInitial?: str
             </div>
           ) : (
             <>
-              <input ref={champ} value={v.cible} onChange={(e) => { setV((x) => ({ ...x, cible: e.target.value })); setErr(""); }} placeholder={CIBLE[v.sujet]?.aide} aria-label="Réponse" />
+              <input ref={champInput} value={v.cible} onChange={(e) => { setV((x) => ({ ...x, cible: e.target.value })); setErr(""); }} placeholder={CIBLE[v.sujet]?.aide} aria-label="Réponse" />
               <p className="meta">{CIBLE[v.sujet]?.aide}</p>
             </>
           )}
@@ -318,7 +320,7 @@ export default function FormulaireContact({ sujetInitial }: { sujetInitial?: str
         <form className="ct-ecran" key="detail" onSubmit={validerDetail}>
           <p className="ct-etape">{etapes.indexOf(ecran) + 1} / {etapes.length}</p>
           <h2 className="ct-question">{DETAIL[v.sujet]?.libelle}</h2>
-          <textarea ref={champ} value={v.detail} onChange={(e) => { setV((x) => ({ ...x, detail: e.target.value })); setErr(""); }} maxLength={5000} aria-label={DETAIL[v.sujet]?.libelle} />
+          <textarea ref={champInput} value={v.detail} onChange={(e) => { setV((x) => ({ ...x, detail: e.target.value })); setErr(""); }} maxLength={5000} aria-label={DETAIL[v.sujet]?.libelle} />
           <p className="meta">{DETAIL[v.sujet]?.aide}</p>
           {err && <p className="erreur">{err}</p>}
           <button type="submit">Continuer</button>
@@ -329,7 +331,7 @@ export default function FormulaireContact({ sujetInitial }: { sujetInitial?: str
         <form className="ct-ecran" key="email" onSubmit={validerEmail}>
           <p className="ct-etape">{etapes.indexOf(ecran) + 1} / {etapes.length}</p>
           <h2 className="ct-question">Sur quel e-mail vous répondre ?</h2>
-          <input ref={champ} type="email" value={v.email} onChange={(e) => { setV((x) => ({ ...x, email: e.target.value })); setErr(""); }} maxLength={254} autoComplete="email" />
+          <input ref={champInput} type="email" value={v.email} onChange={(e) => { setV((x) => ({ ...x, email: e.target.value })); setErr(""); }} maxLength={254} autoComplete="email" />
           {connecte && <p className="meta">Adresse de votre compte : vous pouvez la modifier pour cette fois.</p>}
           {err && <p className="erreur">{err}</p>}
           <button type="submit">Continuer</button>
