@@ -4,6 +4,7 @@ import { CHAMBRE_COURTE, slugCollectif } from "@/lib/collectifs";
 import { partFemmes, pct, tauxTurnover, type Agregat } from "@/lib/stats";
 import { couleurParti, NOM_CHAMBRE } from "@/lib/couleurs";
 import { cheminLogoGroupe } from "@/lib/media";
+import LogoGroupe from "./LogoGroupe";
 
 // Section « groupes d'une chambre » de l'index /groupe : cartes riches dans
 // le même style que les pages par chambre (pastille colorée ou logo pour
@@ -39,9 +40,7 @@ export default function GroupesChambre({ chambre, groupes, equipes, mandatures, 
                   style={{ ["--c" as string]: couleurParti(g.groupe) }}
                   href={`/groupe/${CHAMBRE_COURTE[chambre]}-${slugCollectif(g.groupe)}/`}
                 >
-                  {logo
-                    ? <img className="groupe-carte-logo" src={logo} alt="" width={42} height={42} loading="lazy" />
-                    : <span className="groupe-pastille">{g.groupe}</span>}
+                  <LogoGroupe sigle={g.groupe} logo={logo} couleur={couleurParti(g.groupe)} />
                   <span className="groupe-carte-corps">
                     <strong>{g.groupe_libelle || g.groupe}</strong>
                     <span><b>{fr(g.elus)}</b> élus{agg ? <> ; <b>{fr(agg.effectif)}</b> collaborateurs</> : null}</span>

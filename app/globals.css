@@ -786,7 +786,9 @@ img.groupe-carte-logo { width: 42px; height: 42px; object-fit: contain; border-r
 .nav-liens { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 26px; }
 .nav-liens a { display: inline-flex; padding: 5px 12px; background: var(--card); border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: .86rem; text-decoration: none; }
 .nav-liens a:hover, .nav-liens a:focus-visible { color: var(--ink); border-color: var(--bleu); }
-.vue-groupes { margin: 8px 0 12px; }
+.vue-groupes { position: relative; margin: 8px 0 12px; }
+.btn.hemi-export { position: absolute; top: 0; right: 0; margin-top: 0; padding: 8px 14px; font-size: .85rem; }
+@media (max-width: 640px) { .btn.hemi-export { position: static; display: inline-block; margin: 0 0 10px; } }
 .hemi-svg { width: 100%; max-width: 560px; height: auto; display: block; margin: 0 auto; }
 .hemi-svg a { text-decoration: none; outline: none; }
 .hemi-svg path { cursor: pointer; transition: opacity .15s ease; stroke: var(--bg); stroke-width: 1; }

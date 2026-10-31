@@ -87,7 +87,7 @@ export default async function PageGroupesChambre({ chambre }: { chambre: string 
       </nav>
 
       <h2>L&apos;hémicycle en un coup d&apos;œil</h2>
-      <VueGroupes groupes={vue} dateMaj={dateMaj} resume={resume} />
+      <VueGroupes groupes={vue} dateMaj={dateMaj} resume={resume} seg={seg} titre={"Groupes parlementaires : " + NOM_CHAMBRE[chambre]} />
 
       <p className="meta">
         Survolez un secteur, une pastille ou une carte : le groupe s&apos;illumine partout ; cliquez pour ouvrir sa fiche.
