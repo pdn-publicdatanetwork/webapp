@@ -320,7 +320,7 @@ export default function FormulaireContact({ sujetInitial }: { sujetInitial?: str
         <form className="ct-ecran" key="detail" onSubmit={validerDetail}>
           <p className="ct-etape">{etapes.indexOf(ecran) + 1} / {etapes.length}</p>
           <h2 className="ct-question">{DETAIL[v.sujet]?.libelle}</h2>
-          <textarea ref={champInput} value={v.detail} onChange={(e) => { setV((x) => ({ ...x, detail: e.target.value })); setErr(""); }} maxLength={5000} aria-label={DETAIL[v.sujet]?.libelle} />
+          <textarea ref={champZone} value={v.detail} onChange={(e) => { setV((x) => ({ ...x, detail: e.target.value })); setErr(""); }} maxLength={5000} aria-label={DETAIL[v.sujet]?.libelle} />
           <p className="meta">{DETAIL[v.sujet]?.aide}</p>
           {err && <p className="erreur">{err}</p>}
           <button type="submit">Continuer</button>
