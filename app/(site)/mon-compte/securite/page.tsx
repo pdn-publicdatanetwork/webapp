@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import { startRegistration } from "@simplewebauthn/browser";
 import type { Session, UserIdentity } from "@supabase/supabase-js";
 import { authBrowser, sessionActuelle } from "@/lib/supabaseBrowser";
 import StyleCompte from "../style-compte";
@@ -24,6 +25,9 @@ export default function Securite() {
   const [code, setCode] = useState("");
   const [message, setMessage] = useState<{ ok: boolean; texte: string } | null>(null);
   const [enCours, setEnCours] = useState(false);
+  const [cles, setCles] = useState<{ id: string; nom: string; cree_le: string; utilisee_le: string | null }[]>([]);
+  const [disponible, setDisponible] = useState(true);
+  const [nomCle, setNomCle] = useState("");
 
   const appel = useCallback(async (url: string, init: RequestInit = {}) => {
     return fetch(url, { ...init, headers: { "Content-Type": "application/json", ...(init.headers ?? {}), Authorization: `Bearer ${(await sessionActuelle())?.access_token}` } });
@@ -58,6 +62,12 @@ export default function Securite() {
     });
     chargerFacteurs();
     chargerIdentites();
+    appel("/api/compte/passkeys").then(async (r) => {
+      if (!r.ok) return;
+      const b = (await r.json()) as { cles: typeof cles; disponible: boolean };
+      setCles(b.cles ?? []);
+      setDisponible(b.disponible !== false);
+    });
   }, [session, appel]);
 
   if (session === undefined) return <p className="meta">Chargement…</p>;
@@ -134,6 +144,38 @@ export default function Securite() {
     setMessage({ ok: true, texte: "Validation en deux étapes désactivée." });
   }
 
+  async function ajouterCle() {
+    if (!window.PublicKeyCredential) return setMessage({ ok: false, texte: "Ton navigateur ne gère pas les clés d'accès." });
+    setEnCours(true);
+    setMessage(null);
+    try {
+      const o = await appel("/api/compte/passkeys", { method: "POST", body: JSON.stringify({ action: "options" }) });
+      if (!o.ok) throw new Error();
+      const { options } = (await o.json()) as { options: Parameters<typeof startRegistration>[0]["optionsJSON"] };
+      const reponse = await startRegistration({ optionsJSON: options });
+      const r = await appel("/api/compte/passkeys", {
+        method: "POST",
+        body: JSON.stringify({ action: "enregistrer", nom: nomCle.trim() || "Clé d'accès", reponse }),
+      });
+      if (!r.ok) throw new Error();
+      const rl = await appel("/api/compte/passkeys");
+      if (rl.ok) setCles(((await rl.json()) as { cles: typeof cles }).cles ?? []);
+      setNomCle("");
+      setMessage({ ok: true, texte: "Clé d'accès enregistrée : tu peux maintenant te connecter avec elle." });
+    } catch {
+      setMessage({ ok: false, texte: "La clé d'accès n'a pas pu être enregistrée. Réessaie." });
+    }
+    setEnCours(false);
+  }
+
+  async function retirerCle(id: string, nom: string) {
+    if (!window.confirm(`Retirer la clé d'accès \${nom} ?`)) return;
+    setEnCours(true);
+    await appel("/api/compte/passkeys?id=" + encodeURIComponent(id), { method: "DELETE" });
+    setCles((c) => c.filter((x) => x.id !== id));
+    setEnCours(false);
+  }
+
   async function associer(provider: "google" | "github" | "twitter") {
     const { error } = await authBrowser().auth.linkIdentity({
       provider,
@@ -146,7 +188,7 @@ export default function Securite() {
         texte: /already|exists|linked|conflict/i.test(m)
           ? "Ce compte est déjà relié à un autre compte DataParl'. Supprime d'abord l'autre compte (ou écris-nous via le formulaire de contact) pour pouvoir l'associer ici."
           : /provider|unsupported|not enabled|disabled/i.test(m)
-            ? "Ce moyen de connexion n'est pas encore activé sur DataParl' — l'équipe travaille dessus."
+            ? "Ce moyen de connexion n'est pas encore activé sur DataParl', l'équipe travaille dessus."
             : `L'association n'a pas abouti : ${m}. Réessaie.`,
       });
     }
@@ -228,7 +270,27 @@ export default function Securite() {
 
       <section className="section-compte">
         <h2>Clés d'accès et clés de sécurité</h2>
-        <p>Bientôt disponibles : Touch ID, Face ID, l'empreinte de ton téléphone ou une clé de sécurité physique.</p>
+        {disponible ? (
+          <>
+            <p>Touch ID, Face ID, l'empreinte de ton téléphone ou une clé de sécurité physique : connecte-toi sans mot de passe. La vérification de l'utilisateur est toujours exigée, une clé vaut donc deux facteurs.</p>
+            {cles.length > 0 && (
+              <ul style={{ paddingLeft: 18, margin: "8px 0" }}>
+                {cles.map((c) => (
+                  <li key={c.id} style={{ margin: "8px 0", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                    <span>{c.nom}</span>
+                    <button className="lien" onClick={() => retirerCle(c.id, c.nom)} disabled={enCours}>Retirer</button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+              <input type="text" placeholder="Nom (ex. : MacBook)" maxLength={60} value={nomCle} onChange={(e) => setNomCle(e.target.value)} style={{ maxWidth: 220 }} />
+              <button className="btn secondaire" onClick={ajouterCle} disabled={enCours}>Ajouter une clé d'accès</button>
+            </div>
+          </>
+        ) : (
+          <p className="meta">Les clés d'accès s'enregistrent depuis www.dataparl.fr.</p>
+        )}
       </section>
 
       <section className="section-compte">

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { startAuthentication } from "@simplewebauthn/browser";
 import { authBrowser, sessionActuelle } from "@/lib/supabaseBrowser";
 
 // DataParl' Auth : connexion ou création de compte. Servie sur www., api. et
@@ -170,6 +171,31 @@ export default function Connexion() {
     });
   }
 
+  // Connexion par clé d'accès (passkey) : la clé désigne le compte, le serveur
+  // vérifie la réponse puis émet un lien de connexion à usage unique.
+  async function connexionPasskey() {
+    if (bloque) return setMessage(motif);
+    setEnCours(true);
+    setMessage("");
+    try {
+      const r1 = await fetch("/api/compte/passkeys/connexion", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "options" }),
+      });
+      if (!r1.ok) throw new Error();
+      const { options } = (await r1.json()) as { options: Parameters<typeof startAuthentication>[0]["optionsJSON"] };
+      const reponse = await startAuthentication({ optionsJSON: options });
+      const r2 = await fetch("/api/compte/passkeys/connexion", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reponse }),
+      });
+      const j2 = (await r2.json()) as { lien?: string; error?: string };
+      if (!r2.ok || !j2.lien) throw new Error(j2.error ?? "");
+      window.location.href = j2.lien;
+    } catch {
+      setEnCours(false);
+      setMessage("La clé d'accès n'a pas pu être utilisée. Si tu n'en as pas encore ajouté une, choisis un autre moyen de connexion.");
+    }
+  }
+
   async function envoyerCode(e: React.FormEvent) {
     e.preventDefault();
     if (bloque) return setMessage(motif);
@@ -280,6 +306,9 @@ export default function Connexion() {
                 </button>
                 <button className="fournisseur" onClick={() => oauth("twitter")} disabled={bloque}>
                   <IconeX /> Continuer avec X
+                </button>
+                <button className="fournisseur" onClick={connexionPasskey} disabled={bloque}>
+                  Continuer avec une clé d&apos;accès
                 </button>
               </>
             )}
