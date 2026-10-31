@@ -1,6 +1,7 @@
 import "server-only";
-import { authAdmin } from "@/lib/supabaseAdmin";
-import { gabarit, texteVersHtml } from "@/lib/gabarit";
+import { authAdmin } from "./supabaseAdmin";
+import { gabarit, texteVersHtml } from "./gabarit";
+import { completerCorps } from "./webmail";
 
 // Console Slack /mail : lecture, envoi et suppression des e-mails de la
 // table emails (dataparl-auth) : même base que le webmail de l'admin.
@@ -11,38 +12,63 @@ import { gabarit, texteVersHtml } from "@/lib/gabarit";
 export const EXPEDITEURS = ["hello@dataparl.fr", "contact@dataparl.fr", "presse@dataparl.fr", "rgpd@dataparl.fr", "support@dataparl.fr", "it@dataparl.fr"];
 
 export type MessageCourt = { id: string; from_addr: string; to_addr: string; subject: string; date: string; read: boolean };
-type Message = MessageCourt & { direction: string; cc_addr: string | null; body_text: string | null; attachments: unknown };
+export type MessageComplet = MessageCourt & { direction: string; cc_addr: string | null; body_text: string | null; body_html: string | null; attachments: { filename?: string }[] | null };
+type MessageLigne = MessageComplet & { resend_id: string | null };
 
 export function idCourt(id: string): string {
   return id.replace(/-/g, "").slice(0, 8);
 }
 
-async function chercher(prefixe: string): Promise<{ ok: true; message: Message } | { ok: false; erreur: string }> {
+async function chercher(prefixe: string): Promise<{ ok: true; message: MessageLigne } | { ok: false; erreur: string }> {
   const p = prefixe.replace(/-/g, "").toLowerCase();
   if (!/^[0-9a-f]{4,12}$/.test(p)) return { ok: false, erreur: "id invalide (4 à 12 caractères hexadécimaux, ex. 3f2a19b4)" };
   const { data } = await authAdmin().from("emails")
-    .select("id, direction, from_addr, to_addr, cc_addr, subject, date, read, body_text, attachments")
+    .select("id, direction, from_addr, to_addr, cc_addr, subject, date, read, body_text, body_html, attachments, resend_id")
     .ilike("id", p + "%").limit(2);
-  const rows = (data ?? []) as Message[];
+  const rows = (data ?? []) as MessageLigne[];
   if (!rows.length) return { ok: false, erreur: "message introuvable : /mail pour la liste" };
   if (rows.length > 1) return { ok: false, erreur: "id ambigu : ajoute des caractères" };
   return { ok: true, message: rows[0] };
 }
 
-export async function lister(dossier: string, limite: number): Promise<MessageCourt[]> {
+export async function lister(dossier: string, limite: number, decalage = 0): Promise<MessageCourt[]> {
   const { data } = await authAdmin().from("emails")
     .select("id, from_addr, to_addr, subject, date, read")
     .eq("folder", dossier).eq("deleted", false)
-    .order("date", { ascending: false }).limit(limite);
+    .order("date", { ascending: false }).range(decalage, decalage + limite - 1);
   return (data ?? []) as MessageCourt[];
 }
 
+export type CompteDossiers = { inbox: number; sent: number; trash: number; nonLus: number };
+
+// Compteurs par dossier (Home tab) : totals et messages non lus.
+export async function compterDossiers(): Promise<CompteDossiers> {
+  const db = authAdmin();
+  const compte = async (filtre: { folder: string; nonLusSeulement?: boolean }) => {
+    let q = db.from("emails").select("id", { count: "exact", head: true }).eq("folder", filtre.folder).eq("deleted", false);
+    if (filtre.nonLusSeulement) q = q.eq("read", false);
+    const { count } = await q;
+    return count ?? 0;
+  };
+  const [inbox, sent, trash, nonLus] = await Promise.all([
+    compte({ folder: "inbox" }), compte({ folder: "sent" }), compte({ folder: "trash" }), compte({ folder: "inbox", nonLusSeulement: true }),
+  ]);
+  return { inbox, sent, trash, nonLus };
+}
+
 // Lit un message (le marque lu) ; prefixe = début de l'uuid sans tirets.
-export async function lire(prefixe: string): Promise<{ ok: true; message: Message } | { ok: false; erreur: string }> {
+// Un message reçu dont le corps n'a pas pu être lu par le webhook est
+// complété à la demande (lib/webmail completerCorps).
+export async function lire(prefixe: string): Promise<{ ok: true; message: MessageComplet } | { ok: false; erreur: string }> {
   const r = await chercher(prefixe);
   if (!r.ok) return r;
-  if (!r.message.read) await authAdmin().from("emails").update({ read: true }).eq("id", r.message.id);
-  return { ok: true, message: { ...r.message, read: true } };
+  let m = r.message;
+  if (m.direction === "in" && !m.body_text && !m.body_html && m.resend_id) {
+    try { m = await completerCorps(m); } catch { /* corps indisponible pour l'instant */ }
+  }
+  if (!m.read) await authAdmin().from("emails").update({ read: true }).eq("id", m.id);
+  const { resend_id, ...complet } = m;
+  return { ok: true, message: { ...complet, read: true } };
 }
 
 // Déplace vers la corbeille (folder=trash, même comportement que le webmail).
