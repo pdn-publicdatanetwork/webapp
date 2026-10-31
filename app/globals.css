@@ -158,8 +158,15 @@ textarea { width: 100%; min-height: 140px; padding: 10px 12px; border: 1px solid
 /* Famille de marques : VigiParl' (rouge), MixiParl' (violet) */
 :root { --vigi: #E30613; --mixi: #7B3FE4; }
 @media (prefers-color-scheme: dark) { :root { --vigi: #FF6B7D; --mixi: #A78BFA; } }
-.surligne-vigi { background: var(--vigi); color: #fff; padding: 0 .12em; }
-.surligne-mixi { background: var(--mixi); color: #fff; padding: 0 .12em; }
+/* Blocs de marque : couleur profonde fixe (clair et sombre) pour que
+   « Parl' » reste toujours blanc et lisible ; les variables --vigi/--mixi
+   (éclaircies en mode sombre) servent uniquement aux textes et barres. */
+.surligne-vigi { background: #E30613; color: #fff; padding: 0 .12em; }
+.surligne-mixi { background: #7B3FE4; color: #fff; padding: 0 .12em; }
+@media (prefers-color-scheme: dark) {
+  .surligne-vigi { background: #FF4D5E; color: #071A41; }
+  .surligne-mixi { background: #9B7BF0; color: #071A41; }
+}
 .chiffres.vigi strong { color: var(--vigi); }
 .chiffres.mixi strong { color: var(--mixi); }
 .barre { height: 8px; border-radius: 4px; background: color-mix(in srgb, var(--line) 70%, transparent); overflow: hidden; min-width: 80px; }
