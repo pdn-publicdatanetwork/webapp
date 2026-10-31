@@ -3,16 +3,41 @@ import { useEffect } from "react";
 import { espaceInterne } from "@/lib/consentement";
 
 // Google Tag Manager (GTM-KW3MJMTK), chargé uniquement sur les espaces
-// publics (www.dataparl.fr, api, jobs, media…). Le conteneur était avant
-// injecté dans le <head> de app/layout.tsx sur TOUTES les pages, y compris
-// admin.dataparl.fr et webmail.dataparl.fr : c'est un tag de ce conteneur
-// (message de consentement Google / Funding Choices, CMP ID 300) qui
-// affichait la bulle « Paramètres concernant la confidentialité et les
-// cookies » sur ces espaces internes. Chargé côté client au montage, il
-// n'est donc plus ni chargé ni exécuté sur ces pages.
+// publics (www.dataparl.fr, api, jobs, media…). Le conteneur n'est jamais
+// injecté sur les espaces internes (admin.dataparl.fr, webmail.dataparl.fr).
+// Le consentement est piloté par le bandeau maison (signaux Consent Mode v2
+// posés dans app/layout.tsx puis actualisés dans lib/consentement.ts) :
+// le message de consentement Google (Funding Choices, CMP ID 300), tag de
+// ce conteneur, est superflu et doublonnait le bandeau maison en bas du
+// site (« Paramètres concernant la confidentialité et les cookies »). On
+// empêche donc son script (fundingchoicesmessages.google.com) de se
+// charger, tout en gardant GTM, AdSense et Clarity.
+
+const w2 = window as unknown as { __fcBloque?: boolean };
+
+function estScriptFC(n: Node): boolean {
+  if (n.nodeName !== "SCRIPT") return false;
+  const s = n as HTMLScriptElement;
+  return /fundingchoices(messages)?\.google\.com/.test(s.src || s.getAttribute("src") || "");
+}
+
+// Une seule fois : intercepter l'insertion des scripts Funding Choices
+// avant leur exécution. Les autres scripts passent normalement.
+function bloquerFundingChoices() {
+  if (typeof document === "undefined" || w2.__fcBloque) return;
+  w2.__fcBloque = true;
+  for (const h of [document.head, document.body]) {
+    const ac = h.appendChild.bind(h);
+    (h as unknown as { appendChild: (n: Node) => Node }).appendChild = (n: Node) => (estScriptFC(n) ? n : ac(n));
+    const ib = h.insertBefore.bind(h);
+    (h as unknown as { insertBefore: (n: Node, r: Node | null) => Node }).insertBefore = (n: Node, r: Node | null) => (estScriptFC(n) ? n : ib(n, r));
+  }
+}
+
 export default function TagsGoogle() {
   useEffect(() => {
     if (espaceInterne()) return;
+    bloquerFundingChoices();
     if (document.getElementById("gtm-dataparl")) return;
     const w = window as unknown as { dataLayer?: unknown[] };
     w.dataLayer = w.dataLayer || [];
