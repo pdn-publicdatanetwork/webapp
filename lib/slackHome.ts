@@ -91,7 +91,7 @@ export async function publierHome(userId: string): Promise<{ ok: boolean; erreur
     ? [{ type: "button", text: { type: "plain_text", text: "🟢 Rétablir le site" }, style: "primary", action_id: "home_maintenance_off" }]
     : [{ type: "button", text: { type: "plain_text", text: "🔴 Basculer en maintenance" }, style: "danger", action_id: "home_maintenance_on" }];
   const view = {
-    type: "home", name: "default",
+    type: "home",
     blocks: [
       { type: "header", text: { type: "plain_text", text: "Console DataParl'" } },
       { type: "context", elements: [{ type: "mrkdwn", text: "Pilote le site, les publications, les e-mails et les données : les slash commands (/maintenance, /stats, /post, /mail, /sql) restent disponibles." }] },
