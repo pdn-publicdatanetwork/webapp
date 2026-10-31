@@ -51,7 +51,8 @@ export async function modalRechercheCrm(): Promise<Record<string, unknown>> {
     const e = (email ?? "").trim().toLowerCase();
     if (!EMAIL_RE.test(e) || vus.has(e) || options.length >= NB_MAX) return;
     vus.add(e);
-    options.push({ text: { type: "plain_text", text: (etiquette ? etiquette + " : " : "") + e }.slice(0, 75) as never, value: e });
+    const t = (etiquette ? etiquette + " : " : "") + e;
+    options.push({ text: { type: "plain_text", text: t.slice(0, 75) }, value: e });
   };
   ((crm.data ?? []) as { email: string; statut: string | null }[]).forEach((r) => ajouter(r.email, "🎯 " + (LIBELLE[r.statut ?? "nouveau"] ?? r.statut ?? "Suivi")));
   ((comptes.data ?? []) as { email: string; user_metadata: Record<string, string> | null }[]).forEach((r) => {
