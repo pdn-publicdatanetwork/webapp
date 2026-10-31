@@ -4,6 +4,10 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
 
 ## 2026-10-31
 
+- **Pages groupes par chambre v3** (`/groupe/an`, `/groupe/senat`, `/groupe/pe`) : palette des groupes alignée sur la charte (teintes douces ; EPR, Dem, DR et LIOT ajoutés à la table des couleurs), hémicycle avec interstices, labels internes pour les grands groupes et labels externes avec filet pour les petits, tooltip au survol, légende cliquable, date de dernière extraction, résumé chiffré (élus, collaborateurs, renouvellement VigiParl', part de femmes MixiParl') et cartes enrichies avec logo du groupe (Assemblée nationale : logos Datan servis par media.dataparl.fr) ou pastille colorée ; le survol lie secteur, pastille de légende et carte.
+- **Index /groupe et /parti** : cartes et lignes dans le même style (pastille colorée ou logo, total discret en tête de liste).
+## 2026-10-31
+
 - **Pages groupes par chambre** : `/groupe/an`, `/groupe/senat` et `/groupe/pe` (qui répondaient « Groupe introuvable ») deviennent de vraies pages de destination : titre par chambre, cartes de groupes avec effectifs, liens par mandature, retour vers tous les groupes et les partis.
 - **Hémicycle de l'Assemblée nationale** sur `/groupe/an` : SVG léger, arcs proportionnels aux effectifs de chaque groupe, couleurs usuelles de la charte (lib/couleurs.ts), sigle + effectif dans les grands secteurs, panneau de détail au survol (élus, collaborateurs suivis, renouvellement 12 mois, part de femmes, lien vers la fiche) et légende complète ; les cartes sous le graphique servent de version accessible sans souris.
 

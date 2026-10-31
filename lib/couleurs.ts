@@ -22,35 +22,39 @@ export const COULEUR_NEUTRE = "#8A8F98";
 // sont rangés à part, en dessous.
 export const COULEUR_PARTI: Record<string, string> = {
   // Métropole
-  RN: "#002B5C",            // Rassemblement national : bleu marine
-  "RN-UDR": "#002B5C",      // groupe RN-UDR au Sénat : même famille
-  UDR: "#0E4C9A",           // Union des droites pour la République
+  RN: "#0F2C5B",            // Rassemblement national : bleu marine
+  "RN-UDR": "#0F2C5B",      // groupe RN-UDR au Sénat : même famille
+  UDR: "#1A2F4B",           // Union des droites pour la République
   LR: "#0066CC",            // Les Républicains
   "LR/DVD": "#0066CC",
   PS: "#FF8080",            // Parti socialiste : rose
-  SOC: "#FF8080",           // Socialistes (Sénat) : rose
+  SOC: "#E05A6D",           // Socialistes (Sénat) : rose
   SER: "#FF8080",           // Socialistes, écologistes et républicains : rose
   RDSE: "#E76FB5",          // Rassemblement démocratique et social européen : rose radical
   LFI: "#E30613",           // La France insoumise : rouge
-  "LFI-NFP": "#E30613",
+  "LFI-NFP": "#C62828",
   NFP: "#E30613",
   PCF: "#B01218",           // Parti communiste : rouge sombre
   CRC: "#B01218",           // Communiste, républicain, citoyen et écologiste (Sénat)
   "CRCE-K": "#B01218",
-  GDR: "#A6192E",           // Gauche démocrate et républicaine
+  GDR: "#8B1E1E",           // Gauche démocrate et républicaine
   EELV: "#00A95C",          // Les Écologistes : vert
-  ECOS: "#00A95C",          // Écologiste (Sénat) : vert
+  ECOS: "#2E8B57",          // Écologiste (Sénat) : vert
   RE: "#F9A52A",            // Renaissance : orange
   ENS: "#F9A52A",           // Ensemble
+  EPR: "#4A7FE5",           // Ensemble pour la République : bleu clair
+  Dem: "#E9A23B",           // Groupe Démocrate : orange doux
+  DR: "#4A6FA5",            // Droite républicaine : bleu-gris
+  LIOT: "#8A8A8A",          // Libertés, indépendants, outre-mer et territoires : gris
   MODEM: "#FBB03B",         // MoDem : orange
-  HOR: "#0092C3",           // Horizon : bleu clair
+  HOR: "#3A86FF",           // Horizon : bleu clair
   UDI: "#009FE3",
   RDPI: "#F19E38",          // Rassemblement des démocrates... : orange radical
   UC: "#0EA5E9",            // Union des centristes (Sénat) : bleu clair
   IRT: "#0E9AA7",           // Les Indépendants – République et Territoires : sarcelle
   INDEP: "#0E9AA7",
   GEST: "#6B5B95",          // teinte violette (pas de couleur usuelle connue)
-  NI: "#8A8F98",            // Non-inscrits : gris neutre
+  NI: "#B0B7BF",            // Non-inscrits : gris neutre
   DVC: "#E6C700",           // Divers centre : jaune
   DVD: "#4D94DB",           // Divers droite : bleu clair
   DVG: "#F78FA7",           // Divers gauche : rose clair
