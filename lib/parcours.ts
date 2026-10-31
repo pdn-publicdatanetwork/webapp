@@ -28,7 +28,13 @@ function enrichir(periodes: Periode[], fiches: Parlementaire[], apps: Appartenan
     return {
       ...p,
       elu: {
-        nom: f ? prenomNom(f.prenom, f.nom) : nomAffiche(p.elu_nom),
+        nom: f
+          ? prenomNom(f.prenom, f.nom)
+          : p.elu_nom
+            ? nomAffiche(p.elu_nom)
+            : /groupement/i.test(p.fonction ?? "")
+              ? "groupe politique (groupement)"
+              : "",
         slug: f?.slug ?? null, photo: f?.photo_url ?? null, circonscription: f?.circonscription ?? "",
       },
       groupe: groupes[0]?.sigle || f?.groupe || "",
