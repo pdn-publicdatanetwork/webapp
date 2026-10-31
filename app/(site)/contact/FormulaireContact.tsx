@@ -194,7 +194,7 @@ export default function FormulaireContact({ sujetInitial }: { sujetInitial?: str
 
       {ecran === "intro" && (
         <div className="ct-ecran" key="intro">
-          <h2 className="ct-question">Une question, une correction, une idée ?</h2>
+          <h2 className="ct-question">Une question, une <span className="surligne">correction</span>, une idée ?</h2>
           <p className="meta">Quelques questions, une réponse par email. Comptez deux minutes.</p>
           {connecte && <p className="meta">Connecté en tant que {v.prenom || v.email} : votre e-mail sera déjà rempli.</p>}
           <form onSubmit={(e) => { e.preventDefault(); setPile((p) => [...p, chemin(connecte)[1]]); }}>
