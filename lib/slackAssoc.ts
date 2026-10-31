@@ -81,6 +81,8 @@ export async function compteAssoc(): Promise<number> {
   } catch { return 0; }
 }
 
+// Lectures tolérantes : une erreur ou une table absente ne casse pas la
+// vue, on renvoie une carte vide.
 async function fichesParId(ids: string[]): Promise<Map<string, { prenom: string | null; nom: string | null }>> {
   const carte = new Map<string, { prenom: string | null; nom: string | null }>();
   if (!ids.length) return carte;
@@ -99,6 +101,27 @@ async function emailsComptes(userIds: string[]): Promise<Map<string, string>> {
     const { data } = await authAdmin().from("comptes_utilisateurs").select("user_id, email").in("user_id", userIds);
     ((data ?? []) as { user_id: string; email: string }[]).forEach((c) => carte.set(c.user_id, c.email));
   } catch { /* repli : identifiant tronqué */ }
+  return carte;
+}
+
+async function slugsParId(collabIds: string[]): Promise<Map<string, string>> {
+  const carte = new Map<string, string>();
+  if (!collabIds.length) return carte;
+  try {
+    const { data } = await authAdmin().from("associations_fiches").select("collab_id, collab_slug").in("collab_id", collabIds).limit(100);
+    ((data ?? []) as { collab_id: string; collab_slug: string }[]).forEach((d) => carte.set(d.collab_id, d.collab_slug));
+  } catch { /* repli : identifiant brut */ }
+  return carte;
+}
+
+async function cvParId(collabIds: string[]): Promise<Map<string, number>> {
+  const carte = new Map<string, number>();
+  if (!collabIds.length) return carte;
+  try {
+    const { data } = await authAdmin().from("collab_declarations").select("collab_id, supprime_le").in("collab_id", collabIds).limit(500);
+    ((data ?? []) as { collab_id: string; supprime_le: string | null }[]).filter((d) => !d.supprime_le)
+      .forEach((d) => carte.set(d.collab_id, (carte.get(d.collab_id) ?? 0) + 1));
+  } catch { /* pas de déclaration lisible : affiché sans CV */ }
   return carte;
 }
 
@@ -153,10 +176,10 @@ export async function blocsAssoc(): Promise<Bloc[]> {
 export async function blocsCvAssoc(): Promise<Bloc[]> {
   const db = authAdmin();
   const { data, error } = await db.from("associations_fiches")
-    .select("id, user_id, collab_slug, collab_id, verifie_le, verifie_par, email_preuve")
+    .select("id, user_id, collab_slug, collab_id, verifie_le, verifie_par")
     .eq("statut", "verifie").order("verifie_le", { ascending: false }).limit(25);
   if (error) throw new Error("associations_fiches : " + error.message);
-  const verifiees = (data ?? []) as { id: string; user_id: string; collab_slug: string; collab_id: string; verifie_le: string | null; verifie_par: string | null; email_preuve: string | null }[];
+  const verifiees = (data ?? []) as { id: string; user_id: string; collab_slug: string; collab_id: string; verifie_le: string | null; verifie_par: string | null }[];
   if (!verifiees.length) {
     return [
       { type: "header", text: { type: "plain_text", text: "CV associés", emoji: true } },
@@ -166,15 +189,11 @@ export async function blocsCvAssoc(): Promise<Bloc[]> {
   }
   const ids = [...new Set(verifiees.map((v) => v.collab_id))];
   const userIds = [...new Set(verifiees.map((v) => v.user_id))];
-  const [emailDe, fiches, decl] = await Promise.all([
+  const [emailDe, fiches, cvDe] = await Promise.all([
     emailsComptes(userIds),
     fichesParId(ids),
-    db.from("collab_declarations").select("collab_id, supprime_le").in("collab_id", ids).limit(500)
-      .then((r) => r, () => ({ data: [] as { collab_id: string; supprime_le: string | null }[] })),
+    cvParId(ids),
   ]);
-  const cvDe = new Map<string, number>();
-  (((decl.data ?? []) as { collab_id: string; supprime_le: string | null }[]).filter((d) => !d.supprime_le))
-    .forEach((d) => cvDe.set(d.collab_id, (cvDe.get(d.collab_id) ?? 0) + 1));
   const blocs: Bloc[] = [
     { type: "header", text: { type: "plain_text", text: "CV associés", emoji: true } },
     { type: "section", text: { type: "mrkdwn", text: "*" + verifiees.length + " compte(s) avec fiche associée*" } },
@@ -207,13 +226,11 @@ export async function blocsJournalAssoc(): Promise<Bloc[]> {
   const lignes = (data ?? []) as { user_id: string; collab_id: string; evenement: string; detail: Record<string, unknown> | null; le: string }[];
   const userIds = [...new Set(lignes.map((l) => l.user_id))];
   const collabIds = [...new Set(lignes.map((l) => l.collab_id))];
-  const [emailDe, fiches, slugsRes] = await Promise.all([
+  const [emailDe, fiches, slugDe] = await Promise.all([
     emailsComptes(userIds),
     fichesParId(collabIds),
-    db.from("associations_fiches").select("collab_id, collab_slug").in("collab_id", collabIds)
-      .then((r) => r, () => ({ data: [] as { collab_id: string; collab_slug: string }[] })),
+    slugsParId(collabIds),
   ]);
-  const slugDe = new Map(((slugsRes.data ?? []) as { collab_id: string; collab_slug: string }[]).map((d) => [d.collab_id, d.collab_slug]));
   const texte = lignes.map((l) => {
     const f = fiches.get(l.collab_id);
     const nom = f && (f.prenom || f.nom) ? [f.prenom, f.nom].filter(Boolean).join(" ") : nomDepuisSlug(slugDe.get(l.collab_id) ?? l.collab_id);
