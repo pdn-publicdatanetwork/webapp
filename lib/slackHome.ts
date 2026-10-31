@@ -1,12 +1,13 @@
 import "server-only";
 import { lireMaintenance } from "./maintenanceAdmin";
 import { EXPEDITEURS, lister, idCourt } from "./slackMail";
+import { compteAssoc } from "./slackAssoc";
 
 // Home tab de l'app Slack « DataParl' Console » : une vraie interface avec
-// des sections (Site, Publication, E-mail, Données) et des boutons, à la
-// place des seules slash commands. Publiée par views.publish à l'ouverture
-// (événement app_home_opened → /api/slack/events) et rafraîchie après chaque
-// action.
+// des sections (Site, Publication, E-mail, Données, Associations, CRM) et
+// des boutons, à la place des seules slash commands. Publiée par views.publish
+// à l'ouverture (événement app_home_opened → /api/slack/events) et rafraîchie
+// après chaque action.
 
 export function modalPost(): Record<string, unknown> {
   return {
@@ -70,7 +71,7 @@ function heure(iso: string): string {
 export async function modalInbox(): Promise<Record<string, unknown>> {
   const messages = await lister("inbox", 12);
   const lignes = messages.map((m) =>
-    (m.read ? "• " : "🔴 ") + "`" + idCourt(m.id) + "` " + m.from_addr + " : *" + (m.subject || "(sans objet)") + "* (" + heure(m.date) + ")");
+    (m.read ? "• " : "🔴 ") + "\`" + idCourt(m.id) + "\` " + m.from_addr + " : *" + (m.subject || "(sans objet)") + "* (" + heure(m.date) + ")");
   return {
     type: "modal", callback_id: "mail_inbox",
     title: { type: "plain_text", text: "Boîte de réception" },
@@ -87,6 +88,7 @@ export async function publierHome(userId: string): Promise<{ ok: boolean; erreur
   const bot = process.env.SLACK_BOT_TOKEN ?? "";
   if (!bot || !userId) return { ok: false, erreur: "SLACK_BOT_TOKEN ou user_id absent" };
   const etat = await lireMaintenance().catch(() => null);
+  const nAssoc = await compteAssoc().catch(() => 0);
   const boutonsSite: Record<string, unknown>[] = etat?.active
     ? [{ type: "button", text: { type: "plain_text", text: "🟢 Rétablir le site" }, style: "primary", action_id: "home_maintenance_off" }]
     : [{ type: "button", text: { type: "plain_text", text: "🔴 Basculer en maintenance" }, style: "danger", action_id: "home_maintenance_on" }];
@@ -94,7 +96,7 @@ export async function publierHome(userId: string): Promise<{ ok: boolean; erreur
     type: "home",
     blocks: [
       { type: "header", text: { type: "plain_text", text: "Console DataParl'" } },
-      { type: "context", elements: [{ type: "mrkdwn", text: "Pilote le site, les publications, les e-mails et les données : les slash commands (/maintenance, /stats, /post, /mail, /sql) restent disponibles." }] },
+      { type: "context", elements: [{ type: "mrkdwn", text: "Pilote le site, les publications, les e-mails, les données, les associations de fiches et le CRM : les slash commands (/maintenance, /stats, /post, /mail, /sql) restent disponibles." }] },
       { type: "section", text: { type: "mrkdwn", text: "*🛠 Site*\n" + (etat?.active ? "🔴 Maintenance en cours" + (etat.motif ? " : " + etat.motif : "") : "🟢 Site ouvert") } },
       { type: "actions", elements: [
         ...boutonsSite,
@@ -119,6 +121,15 @@ export async function publierHome(userId: string): Promise<{ ok: boolean; erreur
         { type: "button", text: { type: "plain_text", text: "🔑 Clés API" }, action_id: "home_data_cles" },
         { type: "button", text: { type: "plain_text", text: "⬇️ Téléchargements" }, action_id: "home_data_telechargements" },
         { type: "button", text: { type: "plain_text", text: "📋 Enquête" }, action_id: "home_data_survey" },
+      ] },
+      { type: "section", text: { type: "mrkdwn", text: "*🔗 Associations de fiches*\n" + (nAssoc ? nAssoc + " demande(s) à vérifier" : "Aucune demande en cours") } },
+      { type: "actions", elements: [
+        { type: "button", text: { type: "plain_text", text: "📋 À vérifier" }, action_id: "home_assoc" },
+        { type: "button", text: { type: "plain_text", text: "🕘 Journal" }, action_id: "home_assoc_journal" },
+      ] },
+      { type: "section", text: { type: "mrkdwn", text: "*🎯 CRM*\nFiche 360° par e-mail : compte, messages, abonnements, suivi." } },
+      { type: "actions", elements: [
+        { type: "button", text: { type: "plain_text", text: "🔍 Fiche contact" }, action_id: "home_crm" },
       ] },
     ],
   };
