@@ -28,6 +28,8 @@ import { estPageReseaux, journaliserVueReseaux } from "./lib/vuesReseaux";
 //                           (/assets/pe/reseau) et les exports CSV
 //                           (/assets/collab/{an,senat,pe}.csv) ; tout autre
 //                           chemin : message de 15 s puis bascule vers www
+//                           NB : les fichiers du bucket « assets » sont servis
+//                           par /assets/* (dépôt admin.dataparl.fr/assets).
 //   raw.dataparl.fr        /schemas/*.json (schémas de données bruts) ; le reste -> www
 //   survey.dataparl.fr     / -> /enquete (questionnaire d'avis, jeton ?j=) ; le reste -> www
 //   drive.dataparl.fr      ancien domaine du tableur -> media (308)
@@ -266,10 +268,11 @@ export async function proxy(req: NextRequest) {
   // media.dataparl.fr : les photos des élus et des groupes, le tableur
   // DataParl' Sheets (/sheets/*, /search), l'export SVG du réseau des
   // structures (/assets/pe/reseau ; l'ancien chemin /assets/collab-reseau
-  // redirige en 308) et les exports CSV bruts des collaborateurs par chambre
-  // (/assets/collab/{an,senat,pe}.csv, publiés aussi sur data.gouv.fr). Tout
-  // autre chemin affiche un message pendant 15 secondes avant la bascule vers
-  // www.dataparl.fr.
+  // redirige en 308), les exports CSV bruts des collaborateurs par chambre
+  // (/assets/collab/{an,senat,pe}.csv, publiés aussi sur data.gouv.fr) et les
+  // fichiers du bucket public Supabase « assets » (/assets/*, déposés depuis
+  // admin.dataparl.fr/assets). Tout autre chemin affiche un message pendant
+  // 15 secondes avant la bascule vers www.dataparl.fr.
   if (host === `media.${DOMAINE}`) {
     if (/^\/(an|senat|pe|gouv)\/[^/]+\.png$/.test(path)) {
       const url = req.nextUrl.clone();
@@ -331,6 +334,14 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
     // Ancien chemin de l'export SVG : redirection 308 vers le nouveau.
     if (path === "/assets/collab-reseau" || path === "/assets/collab-reseau.svg") {
       return vers(req, host, "/assets/pe/reseau", 308);
+    }
+    // media.dataparl.fr/assets/… : fichiers du bucket public Supabase « assets »
+    // (logos, visuels déposés depuis l'admin : admin.dataparl.fr/assets). Les
+    // exports CSV et l'export SVG du réseau sont gérés plus haut (routes app).
+    if (path === "/assets" || path.startsWith("/assets/")) {
+      const url = req.nextUrl.clone();
+      url.pathname = `/media${path}`;
+      return NextResponse.rewrite(url);
     }
     // Favicon du domaine : Σ' bleu encre sur blanc, servi depuis /media/*.
     if (path === "/icon.svg" || path === "/apple-icon") {
