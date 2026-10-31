@@ -1,25 +1,26 @@
 /* Formulaire de contact conversationnel : une question par écran.
-   La zone s'étale sur la page (pas de carte étroite), typographie généreuse,
-   charte v2 : corail pour l'action, bleu pour la navigation, jaune en accent. */
-.ct-zone { max-width: 660px; margin: 10px auto 0; }
-.ct-progression { height: 4px; border-radius: 999px; background: color-mix(in srgb, var(--line) 60%, transparent); overflow: hidden; margin-bottom: 34px; }
+   L'écran EST la page : zone centrée verticalement, question dominante en
+   Spectral, charte v2 (corail pour l'action, jaune en accent final). */
+.ct-h1-cache { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.ct-zone { max-width: 620px; margin: 0 auto; min-height: min(620px, 68vh); display: flex; flex-direction: column; justify-content: center; padding: 24px 0 56px; }
+.ct-progression { height: 4px; border-radius: 999px; background: color-mix(in srgb, var(--line) 60%, transparent); overflow: hidden; margin-bottom: 44px; }
 .ct-progression > span { display: block; height: 100%; background: var(--corail); border-radius: 999px; transition: width .35s ease; }
 .ct-ecran { animation: ct-apparait .3s ease; }
-@keyframes ct-apparait { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-.ct-etape { color: var(--muted); font-size: .85rem; margin: 0 0 10px; }
-.ct-question { font-family: var(--font-spectral), "Spectral", Georgia, serif; font-weight: 700; font-size: clamp(1.6rem, 3.2vw, 2.1rem); line-height: 1.2; margin: 0 0 22px; }
+@keyframes ct-apparait { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.ct-etape { color: var(--muted); font-size: .85rem; margin: 0 0 12px; }
+.ct-question { font-family: var(--font-spectral), "Spectral", Georgia, serif; font-weight: 700; font-size: clamp(1.8rem, 4vw, 2.4rem); line-height: 1.15; margin: 0 0 24px; }
 
 /* Champs : grands, calmes, focus bleu net */
 .ct-zone input[type="text"], .ct-zone input[type="email"], .ct-zone textarea {
-  width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-btn);
-  font: inherit; font-size: 1.05rem; background: var(--card); color: var(--ink);
+  width: 100%; padding: 13px 15px; border: 1px solid var(--line); border-radius: var(--radius-btn);
+  font: inherit; font-size: 1.1rem; background: var(--card); color: var(--ink);
 }
-.ct-zone textarea { min-height: 150px; resize: vertical; }
+.ct-zone textarea { min-height: 160px; resize: vertical; }
 .ct-zone input:focus-visible, .ct-zone textarea:focus-visible { outline: 2px solid var(--bleu); outline-offset: 1px; border-color: var(--bleu); }
-.ct-zone label { margin: 16px 0 6px; }
-.ct-zone .grille-filtres { gap: 14px; margin-top: 0; }
-.ct-zone button { margin-top: 22px; }
-.ct-zone .meta { margin-top: 10px; }
+.ct-zone label { margin: 18px 0 6px; font-size: .9rem; }
+.ct-zone .grille-filtres { gap: 16px; }
+.ct-zone button { margin-top: 26px; font-size: 1.02rem; padding: 12px 22px; }
+.ct-zone .meta { margin-top: 12px; }
 
 /* Cartes de choix (sujet, droit RGPD) */
 .ct-choix { list-style: none; padding: 0; margin: 6px 0 0; display: grid; gap: 10px; }
@@ -30,10 +31,9 @@
 .ct-choix .ct-corps { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .ct-choix .ct-corps strong { font-weight: 600; }
 .ct-choix .ct-corps span { color: var(--muted); font-size: .88rem; }
-.ct-astuce { color: var(--muted); font-size: .82rem; margin-top: 12px; }
 
 /* Actions, récap, écran final */
-.ct-actions { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 20px; }
+.ct-actions { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 22px; }
 .ct-actions button, .ct-actions .btn { margin-top: 0; }
 .ct-recap { width: 100%; border-collapse: collapse; margin: 10px 0 8px; }
 .ct-recap th, .ct-recap td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 1px solid var(--line); }
@@ -41,4 +41,4 @@
 .ct-recap td { white-space: pre-wrap; }
 .ct-ok-titre { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
 .ct-coche { width: 48px; height: 48px; border-radius: 50%; background: var(--jaune); color: #071A41; display: inline-flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; flex: none; }
-.ct-retour { margin-top: 14px; }
+.ct-retour { margin-top: 16px; font-size: .88rem; }

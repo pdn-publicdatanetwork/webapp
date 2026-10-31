@@ -7,8 +7,7 @@ export default async function Contact({ searchParams }: { searchParams: Promise<
   const { sujet } = await searchParams;
   return (
     <>
-      <h1><span className="surligne">Contact</span></h1>
-      <p className="lead">Une question, une erreur dans les données, une demande presse ou RGPD : un seul formulaire, et une réponse par email.</p>
+      <h1 className="ct-h1-cache">Contact</h1>
       <div className="ct-zone"><FormulaireContact sujetInitial={sujet} /></div>
     </>
   );
