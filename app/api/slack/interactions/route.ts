@@ -132,9 +132,21 @@ export async function POST(req: Request) {
     }
     if (act.action_id === "mail_supprimer_ok") {
       const err = await supprimer(act.value ?? "");
-      const msg = err ? "⚠️ " + err : "🗑️ Message déplacé vers la corbeille.";
-      if (charge.view) return NextResponse.json({ response_action: "update", view: vueResultat(msg) });
-      return NextResponse.json({ text: msg, replace_original: true });
+      if (err) {
+        const echec = vueResultat("⚠️ " + err);
+        if (charge.view) return NextResponse.json({ response_action: "update", view: echec });
+        return NextResponse.json({ text: "⚠️ " + err, replace_original: true });
+      }
+      // Succès : on rafraîchit la liste au lieu d'afficher un simple message.
+      let dossier = "inbox";
+      let page = 0;
+      try {
+        const meta = JSON.parse(charge.view?.private_metadata ?? "{}") as { dossier?: string; page?: number };
+        if (meta.dossier) dossier = meta.dossier;
+        if (typeof meta.page === "number") page = meta.page;
+      } catch { /* métadonnée illisible : boîte de réception */ }
+      if (charge.view) return NextResponse.json({ response_action: "update", view: await modalBoitePage(dossier, page) });
+      return NextResponse.json({ text: "🗑️ Message déplacé vers la corbeille.", replace_original: true });
     }
     if (act.action_id === "mail_supprimer_annuler") {
       if (charge.view) return NextResponse.json({ response_action: "update", view: vueResultat("Annulé : rien n'a été supprimé.") });
