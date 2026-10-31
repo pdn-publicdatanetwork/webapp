@@ -45,7 +45,7 @@ export type DemandeAssociation = {
 };
 
 function sansAccents(s: string): string {
-  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return s.normalize("NFD").replace(/[\u0300-\u036F]/g, "");
 }
 function localNettoie(email: string): string {
   return sansAccents(normalizeEmail(email).split("@")[0] ?? "").replace(/[^a-z0-9]/g, "");
@@ -234,6 +234,30 @@ async function accuseRefus(user_id: string, fiche: string, gele: boolean, prenom
   }).catch((e) => console.error("accuse refus", String(e).slice(0, 200)));
 }
 
+// Dissociation : la fiche complétée part du site (photo, profil CV), la
+// personne en est informée avec la marche à suivre si ce n'était pas elle.
+async function accuseDissociation(user_id: string, fiche: string, prenom: string | null): Promise<void> {
+  const email = await adresseDe(user_id);
+  if (!email) return;
+  await expedier({
+    to: [email],
+    from: FROM_ASSOCIATION,
+    nomExpediteur: "L'équipe DataParl'",
+    subject: "Votre fiche DataParl' n'est plus associée à votre compte",
+    titre: "Fiche dissociée de votre compte",
+    corpsHtml:
+      badgeStatut("Profil CV retiré du site") +
+      bonjour(prenom) +
+      blocFiche(fiche, "Ancienne fiche") +
+      "<p>Le lien entre votre compte et cette fiche vient d'être rompu. Votre profil CV déclaré et votre photo ont été retirés du site ; ils restent conservés en interne comme sauvegarde, restaurables sur simple demande.</p>" +
+      "<p>Si vous êtes à l'origine de cette demande, rien à faire. Sinon, écrivez-nous via le formulaire de contact : nous vérifierons et rétablirons si besoin.</p>" +
+      bouton(SITE_URL + "/contact", "Nous écrire") + SIGNATURE_HTML,
+    text: "Bonjour " + ((prenom ?? "").trim() || "") + ",\n\nLe lien entre votre compte et la fiche " + fiche + " vient d'être rompu. Votre profil CV déclaré et votre photo ont été retirés du site ; ils restent conservés en interne comme sauvegarde, restaurables sur simple demande.\n\nSi vous êtes à l'origine de cette demande, rien à faire. Sinon, écrivez-nous via le formulaire de contact : " + SITE_URL + "/contact\n\nL'équipe DataParl'\n\n" + PIED_AUTO_TXT,
+    pied: PIED_AUTO,
+    type: "transactionnel",
+  }).catch((e) => console.error("accuse dissociation", String(e).slice(0, 200)));
+}
+
 // Confirmation de dépôt d'une pièce justificative.
 export async function accuserPiece(user_id: string, slug: string): Promise<void> {
   const f = await ficheFraiche(slug).catch(() => null);
@@ -387,6 +411,7 @@ export async function deciderManuellement(
   await journal(demande.user_id, demande.collab_id, `manuel_${action}`, { par: admin.userId }, libelle);
   if (action === "valider") await accuseValidation(demande.user_id, libelle, f?.prenom ?? null);
   if (action === "refuser") await accuseRefus(demande.user_id, libelle, false, f?.prenom ?? null);
+  if (action === "dissocier") await accuseDissociation(demande.user_id, libelle, f?.prenom ?? null);
   return { ok: true };
 }
 
