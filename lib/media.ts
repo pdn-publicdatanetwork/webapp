@@ -69,11 +69,31 @@ export function logoSource(chambre: string, sigle: string): string | null {
 }
 
 // URL du logo servi par DataParl' : media.dataparl.fr/groupes/dem-an-XVIIe.png
+// Sigles des groupes Sénat et Parlement européen dont un logo peut être
+// servi par DataParl' : media.dataparl.fr/groupes/<sigle>-<chambre>.png
+// (sans mandature). La page retombe sur une pastille colorée si le fichier
+// n'existe pas encore.
+export const LOGOS_GROUPES_SENAT: readonly string[] = [
+  "CRC", "CRCE-K", "RDSE", "RDPI", "ECOS", "GEST", "UC", "UNT", "INDEP", "IRT",
+  "SOC", "PS", "LR", "RN", "RN-UDR", "UDR", "NI",
+];
+export const LOGOS_GROUPES_PE: readonly string[] = [
+  "PPE", "S&D", "Renew", "PfE", "GUE/NGL", "ECR", "ESN", "Verts/ALE", "Verts", "NI",
+];
+
 export function cheminLogoGroupe(chambre: string, sigle: string): string | null {
-  const leg = LEGISLATURES[chambre];
   const s = (sigle ?? "").toLowerCase().replace(/[^a-z0-9-]/g, "");
-  if (!leg || !logoSource(chambre, sigle) || !s) return null;
-  return `${MEDIA_BASE}/groupes/${s}-${CODE_CHAMBRE[chambre]}-${leg.romain}.png`;
+  if (!s) return null;
+  if (chambre === "assemblee") {
+    const leg = LEGISLATURES[chambre];
+    return leg && logoSource(chambre, sigle)
+      ? `${MEDIA_BASE}/groupes/${s}-${CODE_CHAMBRE[chambre]}-${leg.romain}.png`
+      : null;
+  }
+  const connus = chambre === "senat" ? LOGOS_GROUPES_SENAT : chambre === "europarl" ? LOGOS_GROUPES_PE : null;
+  return connus && connus.some((x) => x.toLowerCase() === (sigle ?? "").toLowerCase())
+    ? `${MEDIA_BASE}/groupes/${s}-${CODE_CHAMBRE[chambre]}.png`
+    : null;
 }
 
 // « dem-an-XVIIe.png » -> { sigle: "dem", chambre: "assemblee", romain: "XVIIe" }

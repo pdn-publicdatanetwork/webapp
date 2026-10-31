@@ -30,8 +30,23 @@ export default async function TrombinoChambre({ chambre }: { chambre: "assemblee
       3600).catch((): Collab[] => []),
   ]);
   const noms = new Map(collabs.map((c) => [c.collab_id, [c.prenom, c.nom].filter(Boolean).join(" ")]));
+  // Déduplication : une ligne par personne, employeur et fonction (les
+  // périodes d'un même collaborateur peuvent exister en plusieurs
+  // exemplaires). Les assistants « (groupement) » sont rattachés au groupe
+  // politique, pas à un élu individuel.
+  const vus = new Set<string>();
   const lignes: LigneCollab[] = rows
-    .map((r) => ({ nom: noms.get(r.collab_id) ?? "", elu: r.elu_nom, fonction: r.fonction || "" }))
+    .filter((r) => {
+      const cle = r.collab_id + "|" + r.elu_id + "|" + r.fonction;
+      if (vus.has(cle)) return false;
+      vus.add(cle);
+      return true;
+    })
+    .map((r) => ({
+      nom: noms.get(r.collab_id) ?? "",
+      elu: r.elu_nom || (/groupement/i.test(r.fonction) ? "groupe politique (groupement)" : "–"),
+      fonction: r.fonction || "",
+    }))
     .filter((r) => r.nom !== "");
   const maj = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(new Date());
   const total = lignes.length;

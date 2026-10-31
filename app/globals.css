@@ -156,8 +156,8 @@ textarea { width: 100%; min-height: 140px; padding: 10px 12px; border: 1px solid
 .puce button { margin: 0; padding: 0 2px; background: none; border: 0; color: var(--ink); font-weight: 700; }
 
 /* Famille de marques : VigiParl' (rouge), MixiParl' (violet) */
-:root { --vigi: #C8102E; --mixi: #7B3FE4; }
-@media (prefers-color-scheme: dark) { :root { --vigi: #FF6B7D; --mixi: #B794FF; } }
+:root { --vigi: #F87171; --mixi: #3B82F6; }
+@media (prefers-color-scheme: dark) { :root { --vigi: #FCA5A5; --mixi: #93C5FD; } }
 .surligne-vigi { background: var(--vigi); color: #fff; padding: 0 .12em; }
 .surligne-mixi { background: var(--mixi); color: #fff; padding: 0 .12em; }
 .chiffres.vigi strong { color: var(--vigi); }
@@ -393,8 +393,8 @@ h1.marque { font-size: clamp(1.8rem, 4vw, 2.6rem); }
 .logo-marque a { display: block; text-decoration: none; color: var(--ink); white-space: nowrap; }
 .logo-marque .haut { font-family: var(--font-spectral), "Spectral", serif; font-weight: 700; font-size: 1.7rem; display: flex; align-items: center; justify-content: flex-end; }
 .logo-marque .haut span { display: block; color: #fff; padding: .36em .08em .36em .1em; margin-left: .03em; }
-.logo-marque.vigi .haut span { background: #B42B34; }
-.logo-marque.mixi .haut span { background: #7341DC; }
+.logo-marque.vigi .haut span { background: #F87171; }
+.logo-marque.mixi .haut span { background: #3B82F6; }
 .logo-marque .par { font-size: .7rem; color: var(--muted); margin-top: -.55em; position: relative; display: flex; align-items: center; justify-content: flex-end; }
 .logo-marque .par b { font-family: var(--font-spectral), "Spectral", serif; font-size: .95rem; color: #0D1B3E; margin-left: .45em; display: flex; align-items: center; }
 .logo-marque .par b span { display: block; background: #F8D45C; color: #0D1B3E; padding: .5em .12em .5em .1em; margin-left: .04em; }
@@ -786,7 +786,9 @@ img.groupe-carte-logo { width: 42px; height: 42px; object-fit: contain; border-r
 .nav-liens { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 26px; }
 .nav-liens a { display: inline-flex; padding: 5px 12px; background: var(--card); border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: .86rem; text-decoration: none; }
 .nav-liens a:hover, .nav-liens a:focus-visible { color: var(--ink); border-color: var(--bleu); }
-.vue-groupes { margin: 8px 0 12px; }
+.vue-groupes { position: relative; margin: 8px 0 12px; }
+.btn.hemi-export { position: absolute; top: 0; right: 0; margin-top: 0; padding: 8px 14px; font-size: .85rem; }
+@media (max-width: 640px) { .btn.hemi-export { position: static; display: inline-block; margin: 0 0 10px; } }
 .hemi-svg { width: 100%; max-width: 560px; height: auto; display: block; margin: 0 auto; }
 .hemi-svg a { text-decoration: none; outline: none; }
 .hemi-svg path { cursor: pointer; transition: opacity .15s ease; stroke: var(--bg); stroke-width: 1; }

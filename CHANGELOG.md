@@ -4,6 +4,12 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
 
 ## 2026-10-31
 
+- **Logos des groupes Sénat et Parlement européen** : les cartes de groupes pointent vers les logos téléversés sur media.dataparl.fr (chemins `<sigle>-senat.png` / `<sigle>-europarl.png`, sans rognage grâce à object-fit: contain), avec repli automatique en pastille colorée tant qu'un logo manque (composant LogoGroupe).
+- **Couleurs des marques VigiParl' et MixiParl'** alignées sur la charte : bloc corail #F87171 derrière « Parl' » pour VigiParl', bloc bleu #3B82F6 pour MixiParl', même traitement que le jaune de DataParl'.
+- **Export de l'hémicycle** : bouton « Télécharger l'image » sur les pages /groupe/an, /groupe/senat, /groupe/pe ; le PNG embarque l'hémicycle, sa légende, le logo DataParl' et la mention « dataparl.fr ; données au … » pour citer la source.
+- **Assistants « (groupement) » du Parlement européen** : déduplication stricte des « Assistants rattachés au groupe » (une ligne par personne et par fonction), noms en casse normale, effectif exact affiché et tri alphabétique ; le trombinoscope PE dédoublonne de la même façon et affiche « groupe politique (groupement) » pour les assistants sans élu employeur.
+## 2026-10-31
+
 - **Pages groupes par chambre v3** (`/groupe/an`, `/groupe/senat`, `/groupe/pe`) : palette des groupes alignée sur la charte (teintes douces ; EPR, Dem, DR et LIOT ajoutés à la table des couleurs), hémicycle avec interstices, labels internes pour les grands groupes et labels externes avec filet pour les petits, tooltip au survol, légende cliquable, date de dernière extraction, résumé chiffré (élus, collaborateurs, renouvellement VigiParl', part de femmes MixiParl') et cartes enrichies avec logo du groupe (Assemblée nationale : logos Datan servis par media.dataparl.fr) ou pastille colorée ; le survol lie secteur, pastille de légende et carte.
 - **Index /groupe et /parti** : cartes et lignes dans le même style (pastille colorée ou logo, total discret en tête de liste).
 ## 2026-10-31

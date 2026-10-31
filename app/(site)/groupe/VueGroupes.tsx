@@ -1,5 +1,6 @@
 "use client";
 import { useState, type ReactNode } from "react";
+import LogoGroupe from "./LogoGroupe";
 
 // Vue interactive d'une chambre (/groupe/an, /groupe/senat, /groupe/pe) :
 // hémicycle proportionnel, légende cliquable, résumé chiffré et cartes de
@@ -7,6 +8,9 @@ import { useState, type ReactNode } from "react";
 // en lumière partout ailleurs (lien bidirectionnel) et un tooltip suit le
 // curseur. Le composant ne porte que de l'affichage : chiffres, couleurs et
 // adresses sont préformatés côté serveur (lib/stats est server-only).
+// Le bouton « Télécharger l'image » exporte l'hémicycle et sa légende en PNG
+// (fond crème, logo DataParl' et mention dataparl.fr intégrés, pour citer la
+// source en réutilisant le graphique).
 
 export type GroupeVue = {
   sigle: string; libelle: string; elus: number; collaborateurs: string;
@@ -29,15 +33,14 @@ function texteSur(couleur: string): string {
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.62 ? "#071A41" : "#FFFDF5";
 }
 
-export default function VueGroupes({ groupes, dateMaj, resume }: { groupes: GroupeVue[]; dateMaj: string; resume: ReactNode }) {
-  const [actif, setActif] = useState<number | null>(null);
-  const [curseur, setCurseur] = useState<{ x: number; y: number } | null>(null);
-  const total = groupes.reduce((n, g) => n + g.elus, 0);
-  if (total === 0) return null;
-  const fr = (n: number) => n.toLocaleString("fr-FR");
+// Échappement XML pour le SVG exporté (noms de groupes avec & < >).
+function esc(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
 
-  // Bornes angulaires : de 180° (gauche) à 0° (droite), proportionnelles aux
-  // effectifs ; les secteurs sont séparés par un interstice (pas de traits durs).
+// Bornes angulaires : de 180° (gauche) à 0° (droite), proportionnelles aux
+// effectifs ; les secteurs sont séparés par un interstice (pas de traits durs).
+function bornesGroupes(groupes: GroupeVue[], total: number) {
   const bornes: { a1: number; a2: number; mid: number }[] = [];
   let depart = Math.PI;
   for (const g of groupes) {
@@ -46,6 +49,71 @@ export default function VueGroupes({ groupes, dateMaj, resume }: { groupes: Grou
     bornes.push({ a1: depart, a2: fin, mid: (depart + fin) / 2 });
     depart = fin;
   }
+  return bornes;
+}
+
+// SVG autonome de l'hémicycle + légende, fond crème, titre, logo DataParl'
+// (bloc jaune derrière « Parl' ») et mention de la source et de la date.
+function svgExport(groupes: GroupeVue[], total: number, titre: string, dateMaj: string): string {
+  const bornes = bornesGroupes(groupes, total);
+  const L = 1040, H = 760;
+  const pol2 = (r: number, a: number): [number, number] => [520 + r * Math.cos(a), 272 + r * Math.sin(a)];
+  const sect = (a1: number, a2: number) => {
+    const [x1, y1] = pol2(R, a1), [x2, y2] = pol2(R, a2), [x3, y3] = pol2(R_IN, a2), [x4, y4] = pol2(R_IN, a1);
+    return `M ${x1.toFixed(1)} ${y1.toFixed(1)} A ${R} ${R} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)} L ${x3.toFixed(1)} ${y3.toFixed(1)} A ${R_IN} ${R_IN} 0 0 0 ${x4.toFixed(1)} ${y4.toFixed(1)} Z`;
+  };
+  let corps = "";
+  groupes.forEach((gr, i) => {
+    const b = bornes[i];
+    const ampl = ((b.a2 - b.a1) * 180) / Math.PI;
+    corps += `<path d="${sect(b.a1 + ECART, b.a2 - ECART)}" fill="${gr.couleur}" stroke="#FFFDF5" stroke-width="1"/>`;
+    if (gr.elus >= 35 && ampl >= 9) {
+      const [tx, ty] = pol2((R + R_IN) / 2, b.mid);
+      const fill = texteSur(gr.couleur);
+      corps += `<text x="${tx.toFixed(1)}" y="${(ty - 5).toFixed(1)}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="${fill}">${esc(gr.sigle)}</text>`;
+      corps += `<text x="${tx.toFixed(1)}" y="${(ty + 10).toFixed(1)}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="${fill}" opacity="0.92">${gr.elus}</text>`;
+    } else {
+      const [ix, iy] = pol2(R + 2, b.mid);
+      const [lx, ly] = pol2(R + 22, b.mid);
+      const cosMid = Math.cos(b.mid);
+      const ancre = cosMid > 0.35 ? "start" : cosMid < -0.35 ? "end" : "middle";
+      corps += `<line x1="${ix.toFixed(1)}" y1="${iy.toFixed(1)}" x2="${lx.toFixed(1)}" y2="${ly.toFixed(1)}" stroke="#B9B4A5" stroke-width="1"/>`;
+      const xT = ancre === "start" ? lx + 4 : ancre === "end" ? lx - 4 : lx;
+      corps += `<text x="${xT.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${ancre}" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#4A5670">${esc(gr.sigle + " " + gr.elus)}</text>`;
+    }
+  });
+  // Légende : rangées de 5 pastilles + sigle gras + effectif.
+  let legende = "";
+  groupes.forEach((gr, i) => {
+    const col = i % 5, ligne = Math.floor(i / 5);
+    const x = 90 + col * 194, y = 560 + ligne * 34;
+    legende += `<rect x="${x}" y="${y - 11}" width="12" height="12" rx="3" fill="${gr.couleur}"/>`;
+    legende += `<text x="${x + 20}" y="${y}" font-family="system-ui, sans-serif" font-size="13" fill="#071A41"><tspan font-weight="700">${esc(gr.sigle)}</tspan><tspan font-weight="400" fill="#4A5670"> ${gr.elus}</tspan></text>`;
+  });
+  const lignesLegende = Math.ceil(groupes.length / 5);
+  const yPied = 560 + lignesLegende * 34 + 40;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${L}" height="${H}" viewBox="0 0 ${L} ${H}">
+<rect width="${L}" height="${H}" fill="#FFFDF5"/>
+<text x="${L / 2}" y="66" text-anchor="middle" font-family="Georgia, serif" font-size="30" font-weight="700" fill="#071A41">${esc(titre)}</text>
+<g>${corps}</g>
+${legende}
+<text x="60" y="${yPied}" font-family="Georgia, serif" font-size="26" font-weight="700" fill="#071A41">Data</text>
+<rect x="126" y="${yPied - 24}" width="80" height="34" fill="#FFD23F"/>
+<text x="131" y="${yPied}" font-family="Georgia, serif" font-size="26" font-weight="700" fill="#071A41">Parl'</text>
+<text x="${L - 60}" y="${yPied}" text-anchor="end" font-family="system-ui, sans-serif" font-size="14" fill="#4A5670">dataparl.fr ; données au ${esc(dateMaj)}</text>
+</svg>`;
+}
+
+export default function VueGroupes({ groupes, dateMaj, resume, seg, titre }: {
+  groupes: GroupeVue[]; dateMaj: string; resume: ReactNode; seg: string; titre: string;
+}) {
+  const [actif, setActif] = useState<number | null>(null);
+  const [curseur, setCurseur] = useState<{ x: number; y: number } | null>(null);
+  const [exporte, setExporte] = useState(false);
+  const total = groupes.reduce((n, g) => n + g.elus, 0);
+  if (total === 0) return null;
+  const fr = (n: number) => n.toLocaleString("fr-FR");
+  const bornes = bornesGroupes(groupes, total);
 
   const g = actif === null ? null : groupes[actif];
   const survol = (i: number) => ({
@@ -55,8 +123,40 @@ export default function VueGroupes({ groupes, dateMaj, resume }: { groupes: Grou
     onBlur: () => setActif(null),
   });
 
+  // Export PNG : le SVG autonome est dessiné sur un canvas 2x puis téléchargé.
+  const telecharger = () => {
+    const xml = svgExport(groupes, total, titre, dateMaj);
+    const url = URL.createObjectURL(new Blob([xml], { type: "image/svg+xml;charset=utf-8" }));
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas");
+      c.width = 1040 * 2; c.height = 760 * 2;
+      const ctx = c.getContext("2d");
+      if (!ctx) return;
+      ctx.fillStyle = "#FFFDF5";
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob((b) => {
+        if (!b) return;
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(b);
+        a.download = "hemicycle-" + seg + ".png";
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        setExporte(true);
+        setTimeout(() => setExporte(false), 3000);
+      }, "image/png");
+    };
+    img.onerror = () => URL.revokeObjectURL(url);
+    img.src = url;
+  };
+
   return (
     <div className="vue-groupes">
+      <button type="button" className="btn secondaire hemi-export" onClick={telecharger}>
+        {exporte ? "Image téléchargée" : "Télécharger l'image"}
+      </button>
       <svg
         className={"hemi-svg" + (actif !== null ? " dim" : "")}
         viewBox="0 0 560 300"
@@ -129,9 +229,7 @@ export default function VueGroupes({ groupes, dateMaj, resume }: { groupes: Grou
               href={gr.href}
               {...survol(i)}
             >
-              {gr.logo
-                ? <img className="groupe-carte-logo" src={gr.logo} alt="" width={42} height={42} loading="lazy" />
-                : <span className="groupe-pastille">{gr.sigle}</span>}
+              <LogoGroupe sigle={gr.sigle} logo={gr.logo} couleur={gr.couleur} />
               <span className="groupe-carte-corps">
                 <strong>{gr.libelle}</strong>
                 <span><b>{fr(gr.elus)}</b> élus ; <b>{gr.collaborateurs}</b> collaborateurs</span>

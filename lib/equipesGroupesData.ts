@@ -28,7 +28,7 @@ export async function equipeDuGroupe(chambre: string, sigle: string): Promise<Me
 
 // Assistants du Parlement européen rattachés au groupement (et non à un eurodéputé).
 export async function assistantsGroupement(sigle: string): Promise<AssistantGroupement[]> {
-  return dataQueryTout<AssistantGroupement>("affectations",
+  const rows = await dataQueryTout<AssistantGroupement>("affectations",
     new URLSearchParams({
       select: "collab_civilite,collab_prenom,collab_nom,fonction",
       chambre: "eq.europarl",
@@ -36,4 +36,16 @@ export async function assistantsGroupement(sigle: string): Promise<AssistantGrou
       fonction: "ilike.*(groupement)*",
       order: "collab_nom,collab_prenom",
     }), 3600);
+  // Déduplication : les affectations « (groupement) » peuvent exister en
+  // plusieurs exemplaires (imports successifs) ; une seule ligne par
+  // personne et fonction.
+  const vus = new Set<string>();
+  const out: AssistantGroupement[] = [];
+  for (const r of rows) {
+    const cle = `${r.collab_prenom}|${r.collab_nom}|${r.fonction}`.toLowerCase();
+    if (vus.has(cle)) continue;
+    vus.add(cle);
+    out.push(r);
+  }
+  return out;
 }
