@@ -91,7 +91,7 @@ export async function importerRecu(emailId: string, apercu: ApercuRecu = {}): Pr
   // Notification Slack (canal #mail) : best-effort, jamais bloquante.
   try {
     const { notifierRecu } = await import("./slackNotify");
-    await notifierRecu({ id: String(data[0].id), from: m.from, sujet: m.subject ?? "", texte: m.text, pour: (m.to ?? []).join(", ") });
+    await notifierRecu({ id: String(data[0].id), from: m.from, sujet: m.subject ?? "", texte: m.text ?? null, pour: (m.to ?? []).join(", ") });
   } catch { /* panne Slack : l'e-mail reste traité */ }
 
   // Association de fiche : les e-mails reçus sur associer@ ne passent pas par
