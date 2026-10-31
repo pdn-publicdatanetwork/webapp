@@ -39,9 +39,17 @@ type P = { x: number; y: number };
 export default function GrapheReseau({
   noeuds,
   aretes,
+  nomsElus = false,
+  libelleStructures = "Structures",
 }: {
   noeuds: NoeudReseau[];
   aretes: { source: string; target: string }[];
+  // Afficher le nom sous chaque nœud élu (utile quand ils sont peu nombreux
+  // et que la légende ne suffit pas à les identifier, ex. employeurs partagés).
+  nomsElus?: boolean;
+  // Libellé de légende pour les nœuds centraux : "Structures" pour le réseau
+  // de tiers payants, le nom du collaborateur sur la fiche d'un assistant.
+  libelleStructures?: string;
 }) {
   const W = 1100, H = 720;
   const n = noeuds.length;
@@ -136,6 +144,11 @@ export default function GrapheReseau({
                   {court(x.label, 26)}
                 </text>
               )}
+              {nomsElus && x.type === "elu" && (
+                <text x={p.x} y={p.y + r + 11} textAnchor="middle" fontSize="9" fill="#334155">
+                  {court(x.label, 18)}
+                </text>
+              )}
             </>
           );
           return x.href ? <a key={x.id} href={x.href}>{contenu}</a> : <g key={x.id}>{contenu}</g>;
@@ -144,7 +157,7 @@ export default function GrapheReseau({
       <figcaption className="meta" style={{ textAlign: "center" }}>
         <span style={{ marginLeft: "12px" }}>
           <span style={{ display: "inline-block", width: "10px", height: "10px", borderRadius: "50%", background: "#b45309", marginRight: "4px", verticalAlign: "middle" }} />
-          Structures
+          {libelleStructures}
         </span>
         {groupes.map((g) => (
           <span key={g} style={{ marginLeft: "12px", whiteSpace: "nowrap" }}>
