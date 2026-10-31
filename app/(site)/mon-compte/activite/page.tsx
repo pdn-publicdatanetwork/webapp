@@ -5,7 +5,7 @@ import { authBrowser, sessionActuelle } from "@/lib/supabaseBrowser";
 
 // Mon activité : les traces récentes sur les pages du compte (appareil et
 // adresse IP), conservées 90 jours. Chaque visite de cette page est notée.
-type Ligne = { cree_le: string; ip: string | null; agent: string | null };
+type Ligne = { cree_le: string; ip: string | null; agent: string | null; type?: string | null };
 
 function appareil(agent: string | null): string {
   if (!agent) return "Appareil inconnu";
@@ -75,7 +75,7 @@ export default function MonActivite() {
           <ul style={{ paddingLeft: 18, margin: 0 }}>
             {lignes.map((l, i) => (
               <li key={l.cree_le + i} style={{ margin: "8px 0" }}>
-                <strong>{fmt.format(new Date(l.cree_le))}</strong>, {appareil(l.agent)}
+                <strong>{fmt.format(new Date(l.cree_le))}</strong>, {l.type === "connexion" ? "connexion" : "visite des pages du compte"}, {appareil(l.agent)}
                 {l.ip ? <span className="meta"> ({l.ip})</span> : null}
                 {i === 0 ? <span className="meta"> (cet appareil, maintenant)</span> : null}
               </li>
@@ -86,8 +86,7 @@ export default function MonActivite() {
         <p className="meta" style={{ marginTop: 4 }}>Déconnecte-toi de tous tes appareils, puis change ton mot de passe ou révoque tes sessions depuis <a href="/mon-compte/securite">Sécurité</a>.</p>
         <p><button className="danger" onClick={deconnecterPartout}>Se déconnecter de tous les appareils</button></p>
         <p className="meta">
-          Traces conservées 90 jours. Pour l'instant, seules tes visites sur les pages de ton compte sont notées ;
-          les connexions elles-mêmes seront tracées à la prochaine mise à jour.
+          Traces conservées 90 jours : connexions et visites sur les pages de ton compte.
         </p>
       </section>
     </div>

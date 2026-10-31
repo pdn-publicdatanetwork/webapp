@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { utilisateur } from "@/lib/userAuth";
 import { fournisseurs } from "@/lib/userAuth";
+import { normalizeEmail } from "@/lib/tokens";
 import { authAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
@@ -50,6 +51,12 @@ export async function POST(req: Request) {
     fournisseur: fournisseurs(user).join(", ") || null,
   });
   if (error) return NextResponse.json({ error: "insertion_impossible" }, { status: 500 });
+
+  // L'activité du compte (consultable dans /mon-compte/activite) reçoit aussi
+  // l'événement, marqué comme une vraie connexion (et non une simple visite).
+  await db.from("activite_connexions").insert({
+    user_id: user.id, email: normalizeEmail(user.email!), ip, agent: ua ? ua.slice(0, 200) : null, type: "connexion",
+  });
 
   return NextResponse.json({ ok: true });
 }
