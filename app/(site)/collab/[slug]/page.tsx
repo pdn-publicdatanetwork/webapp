@@ -185,7 +185,7 @@ export default async function FicheCollab({ params }: Props) {
               {nom} travaille pour {uniques.length} eurodéputés à la fois (assistant de groupement) : le nœud
               central, c'est {nom} ; chaque nœud est un élu employeur, coloré selon son groupe politique.
             </p>
-            <GrapheReseau noeuds={noeuds} aretes={aretes} />
+            <GrapheReseau noeuds={noeuds} aretes={aretes} nomsElus libelleStructures="Collaborateur" />
           </section>
         );
       })()}
