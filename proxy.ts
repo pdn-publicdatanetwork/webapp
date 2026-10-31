@@ -17,11 +17,15 @@ import { estPageReseaux, journaliserVueReseaux } from "./lib/vuesReseaux";
 //                           /connexion et /api/* servis tels quels
 //   admin.dataparl.fr       /x -> /admin/x, sauf /connexion et /api/*
 //   webmail.dataparl.fr    /x -> /webmail/x, sauf /connexion et /api/*
-//   mail.dataparl.fr        /lire/<jeton> (version en ligne des emails), le reste -> www
+//   mail.dataparl.fr        /lire/<jeton> (version en ligne des emails) et
+//                           pages de consentement (/preferences, /desinscription,
+//                           /api/desinscription), le reste -> www
 //   link.dataparl.fr        /<code> -> /l/<code> (liens tracés), le reste -> www
-//   media.dataparl.fr       photos des élus et des ministres (/an|senat|pe|gouv)/…, le tableur
-//                           DataParl' Sheets (/sheets/*, /search), l'export SVG
-//                           du réseau (/assets/pe/reseau), les exports CSV
+//   media.dataparl.fr       photos des élus et des ministres (/an|senat|pe|gouv)/…,
+//                           photos de profil déclarées des collaborateurs
+//                           (/cldb/<collab_id>.<ext>), le tableur DataParl' Sheets
+//                           (/sheets/*, /search), l'export SVG du réseau
+//                           (/assets/pe/reseau), les exports CSV
 //                           (/assets/collab/{an,senat,pe}.csv) et les fichiers du
 //                           bucket « assets » (/assets/*, dépôt admin) ; tout autre
 //                           chemin : message de 15 s puis bascule vers www
@@ -75,6 +79,52 @@ function vers(req: NextRequest, host: string, pathname: string, status: 307 | 30
   return NextResponse.redirect(url, status);
 }
 
+// ── Anti-CSRF (R38, guide ANSSI « Maîtriser les standards de sécurité côté
+// navigateur ») ────────────────────────────────────────────────────────────
+// Vérification serveur de l'origine des requêtes mutantes (POST/PUT/PATCH/
+// DELETE) vers /api/* : un site tiers ne peut plus déclencher ces requêtes
+// avec les cookies du visiteur (SameSite=Lax protège déjà les POST, mais pas
+// les navigateurs anciens ni les sous-domaines compromis).
+// Deux signaux, tous deux impossible à spoofing côté client :
+//   - Sec-Fetch-Site (en-tête Navigateur Fetch Metadata) : « cross-site »
+//     suffit à rejeter ;
+//   - Origin : doit être l'hôte de la requête ou un domaine autorisé
+//     (dataparl.fr et les anciens domaines cavaparlement.eu / dataparl.com,
+//     encore servis pendant la transition).
+// Une requête sans Origin NI Sec-Fetch-Site vient d'un client non-navigateur
+// (curl, webhook, script serveur) : elle passe.
+// Les routes machine-à-machine (webhooks Slack/Notion/Resend/Applixir, cron,
+// revalidation, commande Slack de maintenance, rapports CSP) sont exclues :
+// elles reçoivent des appels tiers légitimes.
+const METHODES_MUTANTES = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+const API_MACHINE = [
+  /^\/api\/webhooks\//,
+  /^\/api\/slack\//,
+  /^\/api\/cron\//,
+  /^\/api\/revalidate$/,
+  /^\/api\/chat-telegram$/,
+  /^\/api\/maintenance\/slack$/,
+  /^\/api\/csp-rapport$/,
+];
+const DOMAINES_ORIGINE = [DOMAINE, ...ANCIENS];
+
+function origineRequeteValide(req: NextRequest): boolean {
+  const secFetchSite = req.headers.get("sec-fetch-site");
+  if (secFetchSite === "cross-site") return false;
+  const origine = req.headers.get("origin");
+  if (!origine) return true; // client non-navigateur ou requête même origine sans Origin
+  let hote: string;
+  try {
+    hote = new URL(origine).hostname.toLowerCase();
+  } catch {
+    return false; // Origin malformée : par prudence, on rejette
+  }
+  // Même origine (aperçus Vercel, localhost, tests) ou domaine autorisé.
+  const hoteRequete = (req.headers.get("host") ?? "").split(":")[0].toLowerCase();
+  if (hote === hoteRequete) return true;
+  return DOMAINES_ORIGINE.some((d) => hote === d || hote.endsWith(`.${d}`));
+}
+
 function protege(res: NextResponse): NextResponse {
   res.headers.set("X-Robots-Tag", "noindex, nofollow");
   res.headers.set("X-Frame-Options", "DENY");
@@ -86,6 +136,15 @@ function protege(res: NextResponse): NextResponse {
 export async function proxy(req: NextRequest) {
   const host = (req.headers.get("host") ?? "").split(":")[0].toLowerCase();
   const path = req.nextUrl.pathname;
+
+  // Anti-CSRF (R38) : rejet des requêtes mutantes cross-site vers /api/*.
+  if (METHODES_MUTANTES.has(req.method) && path.startsWith("/api/") &&
+      !API_MACHINE.some((r) => r.test(path)) && !origineRequeteValide(req)) {
+    return new NextResponse("Requête refusée : origine non autorisée.\n", {
+      status: 403,
+      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+    });
+  }
 
   // ── Journal des pages WhatsApp/Telegram ────────────────────────────────────
   // Les pages qui affichent les liens des canaux (Daily Telegram/WhatsApp) sont
@@ -189,6 +248,13 @@ export async function proxy(req: NextRequest) {
   // mail.cavaparlement.eu : uniquement les versions en ligne des emails.
   if (host === `mail.${DOMAINE}`) {
     if (path.startsWith("/lire/")) return protege(NextResponse.next());
+    // Pages de consentement (préférences, désinscription) et leur API : les
+    // liens des emails — pied des alertes et mailings, en-tête
+    // List-Unsubscribe des webmails — pointent sur cet hôte, comme les
+    // versions en ligne (/lire/).
+    if (path === "/preferences" || path.startsWith("/preferences/") ||
+        path === "/desinscription" || path.startsWith("/desinscription/") ||
+        path === "/api/desinscription") return protege(NextResponse.next());
     // Favicon du domaine : Σ' blanc sur rouge, servi depuis /mail/*.
     if (path === "/icon.svg" || path === "/apple-icon") {
       const url = req.nextUrl.clone();
@@ -237,6 +303,15 @@ export async function proxy(req: NextRequest) {
       url.pathname = `/media${path}`;
       return NextResponse.rewrite(url);
     }
+    // media.dataparl.fr/cldb/<collab_id>.<ext> : photo de profil déclarée par
+    // un collaborateur (Ma fiche), servie par la webapp depuis le bucket
+    // photos-profils. L'intéressé peut la remplacer ou la retirer à tout
+    // moment (la route répond alors 404).
+    if (/^\/cldb\/[0-9a-f]{8}\.(png|jpe?g|webp)$/.test(path)) {
+      const url = req.nextUrl.clone();
+      url.pathname = `/media${path}`;
+      return NextResponse.rewrite(url);
+    }
     if (path.startsWith("/photo-credit")) return vers(req, `www.${DOMAINE}`, "/", 307);
     // media.dataparl.fr/assets/collab/{an,senat,pe}.csv : export CSV brut des
     // collaborateurs d'une chambre, généré par la webapp (app/assets/collab).
@@ -271,7 +346,7 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
     if (path === "/icon.svg" || path === "/apple-icon") {
       const url = req.nextUrl.clone();
       url.pathname = `/media${path}`;
-      return NextResponse.rewrite(url);
+      return protege(NextResponse.rewrite(url));
     }
     const autorise =
       path === "/sheets" || path.startsWith("/sheets/") ||
@@ -310,7 +385,7 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
     if (path === "/icon.svg" || path === "/apple-icon") {
       const url = req.nextUrl.clone();
       url.pathname = `/raw${path}`;
-      return NextResponse.rewrite(url);
+      return protege(NextResponse.rewrite(url));
     }
     return vers(req, `www.${DOMAINE}`, path, 308);
   }
@@ -369,10 +444,9 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
     }
 
     if (path === "/api" || path === "/api/") return vers(req, `api.${DOMAINE}`, "/", 308);
-    // DataParl' Jobs vit sur son sous-domaine, sans préfixe /jobs.
+    // DataParl' Jobs vit sur son sous-domaine, sans le préfixe /jobs.
     if (path === "/jobs" || path.startsWith("/jobs/")) {
-  
-    const cibleJobs = path === "/jobs" ? "/" : path.slice("/jobs".length) || "/";
+      const cibleJobs = path === "/jobs" ? "/" : path.slice("/jobs".length) || "/";
       return vers(req, `jobs.${DOMAINE}`, cibleJobs, 308);
     }
     // Le tableur vit sur media.dataparl.fr.
@@ -386,6 +460,12 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
         return vers(req, host, "/collab/pe/" + path.slice("/collab/".length), 308);
       }
     }
+    // Anciens formats d'URL de fiche parlementaire avec suffixe de chambre ou
+    // de législature (ex. /parlementaires/124760-0, /parlementaires/PA720334-8)
+    // découverts par Google : redirection 308 vers la fiche sans suffixe, au
+    // lieu d'un 404 (Search Console : « Introuvable (404) »).
+    const suffixeFiche = path.match(/^\/parlementaires\/([^/]+)-\d+$/);
+    if (suffixeFiche) return vers(req, host, "/parlementaires/" + suffixeFiche[1], 308);
     if (path.startsWith("/admin")) {
       const cible = (path.replace(/^\/admin/, "") || "/").replace(/\/$/, "") || "/";
       return protege(vers(req, `admin.${DOMAINE}`, nouvelCheminAdmin(cible) ?? cible, 307));
