@@ -7,6 +7,8 @@ import { modalEnvoi, modalInbox, modalPost, modalRechercheCompte, ouvrirModal, p
 import { basculeMaintenance } from "@/lib/maintenanceAdmin";
 import { blocsStats, collecterStats } from "@/lib/slackStats";
 import { abonnes, cles, comptes, enquete, fiche, telechargements } from "@/lib/slackData";
+import { blocsAssoc, blocsJournalAssoc, deciderDepuisSlack } from "@/lib/slackAssoc";
+import { crmCourant, ficheCrm, majCrm, modalRechercheCrm, modalSuivi } from "@/lib/slackCrm";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -16,7 +18,9 @@ export const maxDuration = 60;
 //  - boutons de confirmation d'envoi et de suppression (block_actions) ;
 //  - boutons du Home tab (home_*) qui ouvrent les modals, y compris la
 //    section Données (comptes, fiche compte, abonnés, clés API,
-//    téléchargements, enquête : lecture seule).
+//    téléchargements, enquête : lecture seule) et les sections
+//    Associations (file à vérifier, journal, décisions valider/refuser)
+//    et CRM (fiche 360°, édition du suivi).
 
 function repondre(urlReponse: string, corps: string) {
   if (!urlReponse) return;
@@ -58,7 +62,8 @@ function vueResultat(texte: string) {
     blocks: [{ type: "section", text: { type: "mrkdwn", text: texte } }] };
 }
 
-// Vue de données (section Données du Home tab) : blocs de lib/slackData en modal.
+// Vue de données (sections Données / Associations / CRM du Home tab) :
+// blocs de lib/slackData, slackAssoc et slackCrm en modal.
 function vueDonnees(titre: string, blocs: Record<string, unknown>[]) {
   return { type: "modal", callback_id: "resultat", title: { type: "plain_text", text: titre.slice(0, 24) }, close: { type: "plain_text", text: "Fermer" }, blocks: blocs };
 }
@@ -90,7 +95,7 @@ export async function POST(req: Request) {
   const corps = new URLSearchParams(await req.text());
   const charge = JSON.parse(corps.get("payload") ?? "{}") as {
     type?: string;
-    view?: { callback_id?: string; state?: { values?: Record<string, Record<string, unknown>> } };
+    view?: { callback_id?: string; private_metadata?: string; state?: { values?: Record<string, Record<string, unknown>> } };
     response_url?: string; trigger_id?: string;
     user?: { name?: string; id?: string };
     actions?: { action_id?: string; value?: string }[];
@@ -141,6 +146,31 @@ export async function POST(req: Request) {
     if (act.action_id === "home_data_cles") { await ouvrirModal(vueDonnees("Clés API", await cles()), trigger); return NextResponse.json({}); }
     if (act.action_id === "home_data_telechargements") { await ouvrirModal(vueDonnees("Téléchargements", await telechargements("")), trigger); return NextResponse.json({}); }
     if (act.action_id === "home_data_survey") { await ouvrirModal(vueDonnees("Enquête", await enquete("")), trigger); return NextResponse.json({}); }
+    // Home tab : section Associations (file à vérifier, journal, décisions).
+    if (act.action_id === "home_assoc") { await ouvrirModal(vueDonnees("Associations", await blocsAssoc()), trigger); return NextResponse.json({}); }
+    if (act.action_id === "home_assoc_journal") { await ouvrirModal(vueDonnees("Journal", await blocsJournalAssoc()), trigger); return NextResponse.json({}); }
+    if (act.action_id === "assoc_valider" || act.action_id === "assoc_refuser") {
+      const action = act.action_id === "assoc_valider" ? "valider" : "refuser";
+      const r = await deciderDepuisSlack(charge.user?.name ?? "slack", act.value ?? "", action);
+      const msg = r.ok
+        ? "✅ Demande " + (action === "valider" ? "validée" : "refusée") + " : la personne est prévenue par e-mail."
+        : "⚠️ " + r.erreur;
+      try {
+        return NextResponse.json({ response_action: "update", view: vueDonnees("Associations", [{ type: "section", text: { type: "mrkdwn", text: msg } }, ...await blocsAssoc()]) });
+      } catch {
+        return NextResponse.json({ response_action: "update", view: vueResultat(msg) });
+      }
+    }
+    // Home tab : section CRM (fiche 360° puis édition du suivi).
+    if (act.action_id === "home_crm") { await ouvrirModal(modalRechercheCrm(), trigger); return NextResponse.json({}); }
+    if (act.action_id === "crm_editer") {
+      const email = (act.value ?? "").slice(0, 200);
+      if (!email) return NextResponse.json({});
+      try {
+        await ouvrirModal(modalSuivi(email, await crmCourant(email)), trigger);
+      } catch { /* fiche illisible : rien à ouvrir */ }
+      return NextResponse.json({});
+    }
     if (act.action_id === "home_maintenance_on") {
       await ouvrirModal({ type: "modal", callback_id: "maintenance_on",
         title: { type: "plain_text", text: "Maintenance" },
@@ -173,6 +203,29 @@ export async function POST(req: Request) {
     } catch (e) {
       return NextResponse.json({ response_action: "errors", errors: { q: e instanceof Error ? e.message : String(e) } });
     }
+  }
+
+  // --- CRM : recherche d'une fiche contact (vue 360°) ---
+  if (charge.view?.callback_id === "crm_recherche") {
+    const q = String((v.q?.v as { value?: string })?.value ?? "").trim();
+    if (!q) return NextResponse.json({ response_action: "errors", errors: { q: "Indique une adresse e-mail." } });
+    try {
+      return NextResponse.json({ response_action: "update", view: vueDonnees("Fiche contact", await ficheCrm(q.slice(0, 100))) });
+    } catch (e) {
+      return NextResponse.json({ response_action: "errors", errors: { q: e instanceof Error ? e.message : String(e) } });
+    }
+  }
+
+  // --- CRM : enregistrement du suivi (statut, tags, note) ---
+  if (charge.view?.callback_id === "crm_maj") {
+    let email = "";
+    try { email = String((JSON.parse(charge.view?.private_metadata ?? "{}") as { email?: string }).email ?? ""); } catch { /* métadonnée illisible */ }
+    const statut = String((v.statut?.v as { selected_option?: { value: string } })?.selected_option?.value ?? "");
+    const tags = String((v.tags?.v as { value?: string })?.value ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+    const note = String((v.note?.v as { value?: string })?.value ?? "");
+    if (!email) return NextResponse.json({ response_action: "update", view: vueResultat("⚠️ Adresse illisible : relance la fiche depuis l'accueil.") });
+    const r = await majCrm(qui, email, statut || undefined, tags.length ? tags : undefined, note !== "" ? note : undefined);
+    return NextResponse.json({ response_action: "update", view: vueResultat(r.ok ? "✅ Suivi enregistré pour " + email : "⚠️ " + r.erreur) });
   }
 
   // --- /mail envoyer : vérifie puis affiche la confirmation par boutons ---
