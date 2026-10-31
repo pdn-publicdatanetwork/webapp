@@ -52,7 +52,9 @@ export default function Connexion() {
   const [cgu, setCgu] = useState(false);
   const [prenom, setPrenom] = useState("");
   const [nom, setNom] = useState("");
-  const [etape, setEtape] = useState<"choix" | "email" | "code" | "mdp">("choix");
+  const [etape, setEtape] = useState<"choix" | "email" | "code" | "mdp" | "otp">("choix");
+  const [codeOtp, setCodeOtp] = useState("");
+  const [defi, setDefi] = useState<{ facteurId: string; challengeId: string } | null>(null);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [mdp, setMdp] = useState("");
@@ -75,8 +77,28 @@ export default function Connexion() {
     return window.location.hostname.startsWith("admin.") ? "/" : "/mon-compte";
   }
 
-  async function apresConnexion(token: string) {
+  async function apresConnexion(token: string, dejaValide = false) {
     if (redirige) return;
+    // Validation en deux étapes : si le compte a un facteur actif (TOTP) et
+    // que la session n'est pas encore au niveau aal2, le code est exigé
+    // avant d'entrer dans le site.
+    if (!dejaValide) {
+      try {
+        const sb = authBrowser();
+        const s = await sessionActuelle();
+        const aal = (s?.user as unknown as { aal?: string } | null)?.aal;
+        const { data: facteurs } = await sb.auth.mfa.listFactors();
+        const actif = (facteurs?.all ?? []).find((f) => f.status === "verified");
+        if (actif && aal !== "aal2") {
+          const { data: ch, error } = await sb.auth.mfa.challenge({ factorId: actif.id });
+          if (!error && ch) {
+            setDefi({ facteurId: actif.id, challengeId: ch.id });
+            setEtape("otp");
+            return;
+          }
+        }
+      } catch {}
+    }
     redirige = true;
     try {
       const id = sessionStorage.getItem(IDENTITE);
@@ -174,6 +196,25 @@ export default function Connexion() {
     if (error) setMessage("Code incorrect ou expiré.");
   }
 
+  // Deuxième étape : code de l'application d'authentification (TOTP).
+  async function verifierOtp(e: React.FormEvent) {
+    e.preventDefault();
+    if (!defi) return;
+    setEnCours(true);
+    setMessage("");
+    const { error } = await authBrowser().auth.mfa.verify({
+      factorId: defi.facteurId,
+      challengeId: defi.challengeId,
+      code: codeOtp.trim(),
+    });
+    setEnCours(false);
+    if (error) return setMessage("Code incorrect ou expiré.");
+    setDefi(null);
+    setCodeOtp("");
+    const s = await sessionActuelle();
+    if (s) await apresConnexion(s.access_token, true);
+  }
+
   // Connexion par mot de passe : disponible pour les comptes qui en ont
   // défini un (Sécurité et connexion, mon compte).
   async function connexionMotDePasse(e: React.FormEvent) {
@@ -215,7 +256,7 @@ export default function Connexion() {
           </label>
         )}
 
-        {etape !== "code" && etape !== "mdp" && (
+        {etape !== "code" && etape !== "mdp" && etape !== "otp" && (
           <>
             {surAdmin ? (
               <>
@@ -277,6 +318,16 @@ export default function Connexion() {
             <p className="meta" style={{ marginTop: 12 }}>
               <button type="button" className="lien" onClick={() => { setEtape("email"); setCode(""); }}>Changer d&apos;adresse</button>
             </p>
+          </form>
+        )}
+
+        {etape === "otp" && (
+          <form onSubmit={verifierOtp}>
+            <p>Validation en deux étapes : saisis le code à 6 chiffres de ton application d&apos;authentification.</p>
+            <label htmlFor="otp">Code de validation</label>
+            <input id="otp" type="text" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} required value={codeOtp}
+              onChange={(e) => setCodeOtp(e.target.value)} autoComplete="one-time-code" autoFocus />
+            <button type="submit" disabled={enCours} style={{ width: "100%" }}>Valider et continuer</button>
           </form>
         )}
 
