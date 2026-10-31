@@ -788,3 +788,18 @@ ul.lignes-partis { list-style: none; padding: 0; margin: 0; border-top: 1px soli
 .ligne-parti-chiffres b { font-family: var(--font-spectral), "Spectral", serif; font-size: 1.15rem; }
 .ligne-parti > .meta { grid-column: 1 / -1; margin: 0; }
 @media (max-width: 560px) { .ligne-parti { grid-template-columns: 1fr; } .ligne-parti-chiffres { text-align: left; } }
+
+
+/* ── Hémicycle (/groupe/an) : SVG proportionnel, panneau et légende ───────── */
+.hemicycle { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; margin: 16px 0 8px; }
+.hemicycle svg { flex: 1 1 340px; max-width: 460px; width: 100%; height: auto; }
+.hemicycle svg a { text-decoration: none; }
+.hemicycle path { stroke: var(--bg); stroke-width: 1.5; cursor: pointer; transition: opacity .15s ease; }
+.hemicycle path.actif, .hemicycle a:focus-visible path { opacity: .8; }
+.hemicycle text.hemi-texte { font-family: var(--font-dm-sans), "DM Sans", system-ui, sans-serif; font-size: 11px; font-weight: 700; pointer-events: none; }
+.hemi-panel { flex: 1 1 230px; min-width: 210px; display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--card); padding: 12px 16px; font-size: .92rem; }
+.hemi-panel .hemi-nom { font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.hemi-panel .meta { font-size: .82rem; }
+ul.hemi-legende { list-style: none; flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 0; margin: 0; }
+.hemi-legende li { display: inline-flex; align-items: center; gap: 6px; font-size: .85rem; color: var(--muted); white-space: nowrap; }
+.hemi-legende .point { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex: 0 0 auto; }

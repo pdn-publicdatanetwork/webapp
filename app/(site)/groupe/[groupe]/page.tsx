@@ -8,6 +8,7 @@ import { mandaturesExistantes, type MandatureExistante } from "@/lib/mandaturesD
 import { CHAMBRE_COURTE, hrefParti, groupeDepuisSlug, slugCollectif } from "@/lib/collectifs";
 import { couleurParti } from "@/lib/couleurs";
 import { cheminLogoGroupe } from "@/lib/media";
+import PageGroupesChambre from "../PageGroupesChambre";
 
 export const revalidate = 86400;
 type Props = { params: Promise<{ groupe: string }> };
@@ -44,9 +45,21 @@ function GroupesExistants({ groupes }: { groupes: { chambre: string; groupe: str
   );
 }
 
+// Slug de chambre seul (an, senat, pe) : page « groupes de la chambre », pas une fiche de groupe.
+const chambreDepuisSlug = (slug: string): string | null =>
+  Object.entries(CHAMBRE_COURTE).find(([, courte]) => courte === slug)?.[0] ?? null;
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const slug = (await params).groupe;
   const g = groupeDepuisSlug(slug, await groupesExistants().catch(() => []));
+  const chambre = chambreDepuisSlug(slug);
+  if (chambre) {
+    return {
+      title: `Groupes parlementaires : ${CHAMBRE_LONG[chambre]}`,
+      description: `Tous les groupes politiques de ${CHAMBRE_LONG[chambre]} : leurs élus, leurs collaborateurs suivis et le renouvellement de leurs équipes.`,
+      alternates: { canonical: `/groupe/${slug}` },
+    };
+  }
   if (!g) return { title: "Groupe parlementaire" };
   const titre = `Groupe ${g.groupe_libelle || g.groupe} : ${CHAMBRE_LONG[g.chambre]}`;
   return {
@@ -59,6 +72,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function FicheGroupe({ params }: Props) {
   const slug = (await params).groupe;
   const groupes = await groupesExistants().catch(() => []);
+  const chambreSlug = chambreDepuisSlug(slug);
+  if (chambreSlug) return <PageGroupesChambre chambre={chambreSlug} />;
+
   const g = groupeDepuisSlug(slug, groupes);
   if (!g) {
     return (
