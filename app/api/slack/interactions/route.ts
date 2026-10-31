@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { CODE, destinationValide, genererCode } from "@/lib/liens";
 import { authAdmin } from "@/lib/supabaseAdmin";
 import { canaux, creerPost, type ModePost } from "@/lib/buffer";
-import { envoyerDepuisSlack, supprimer } from "@/lib/slackMail";
-import { modalEnvoi, modalInbox, modalPost, modalRechercheCompte, ouvrirModal, publierHome } from "@/lib/slackHome";
+import { compterDossiers, envoyerDepuisSlack, lister, lire, supprimer } from "@/lib/slackMail";
+import { modalBoite, modalEnvoi, modalPost, modalRechercheCompte, ouvrirModal, publierHome, TAILLE_PAGE_MAIL, vueMessage } from "@/lib/slackHome";
 import { basculeMaintenance } from "@/lib/maintenanceAdmin";
 import { blocsStats, collecterStats } from "@/lib/slackStats";
 import { abonnes, cles, comptes, enquete, fiche, inviterEnquete, telechargements } from "@/lib/slackData";
@@ -89,6 +89,14 @@ function vueConfirmation(draft: string, from: string, aListe: string[], ccListe:
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
+// Vue d'un dossier e-mail avec compteurs et page demandée (pagination).
+async function modalBoitePage(dossier: string, page: number) {
+  const dossiers = await compterDossiers();
+  const total = dossier === "sent" ? dossiers.sent : dossier === "trash" ? dossiers.trash : dossiers.inbox;
+  const messages = await lister(dossier, TAILLE_PAGE_MAIL, Math.max(0, page) * TAILLE_PAGE_MAIL);
+  return modalBoite(dossier, Math.max(0, page), messages, dossiers.nonLus, total);
+}
+
 export async function POST(req: Request) {
   const attendu = process.env.MAINTENANCE_TOKEN ?? "";
   const u = new URL(req.url);
@@ -152,7 +160,47 @@ export async function POST(req: Request) {
     // Home tab : boutons qui ouvrent les modals.
     if (act.action_id === "home_post") { await ouvrirModal(modalPost(), trigger); return NextResponse.json({}); }
     if (act.action_id === "home_mail_nouveau") { await ouvrirModal(modalEnvoi(), trigger); return NextResponse.json({}); }
-    if (act.action_id === "home_mail_inbox") { await ouvrirModal(await modalInbox(), trigger); return NextResponse.json({}); }
+    if (act.action_id === "home_mail_inbox") { await ouvrirModal(await modalBoitePage("inbox", 0), trigger); return NextResponse.json({}); }
+    if (act.action_id === "home_mail_envoyes") { await ouvrirModal(await modalBoitePage("sent", 0), trigger); return NextResponse.json({}); }
+    if (act.action_id === "home_mail_corbeille") { await ouvrirModal(await modalBoitePage("trash", 0), trigger); return NextResponse.json({}); }
+    if (act.action_id === "mail_page") {
+      const morceaux = (act.value ?? "").split(":");
+      const vue = await modalBoitePage(morceaux[0] ?? "inbox", Number(morceaux[1] ?? "0") || 0);
+      if (charge.view) return NextResponse.json({ response_action: "update", view: vue });
+      await ouvrirModal(vue, trigger);
+      return NextResponse.json({});
+    }
+    if (act.action_id === "mail_lire" || act.action_id === "mail_notif_lire") {
+      const r = await lire(act.value ?? "");
+      if (!r.ok) {
+        const echec = vueResultat("⚠️ " + r.erreur);
+        if (charge.view) return NextResponse.json({ response_action: "update", view: echec });
+        await ouvrirModal(echec, trigger);
+        return NextResponse.json({});
+      }
+      const vue = vueMessage(r.message);
+      if (charge.view) return NextResponse.json({ response_action: "update", view: vue });
+      await ouvrirModal(vue, trigger);
+      return NextResponse.json({});
+    }
+    if (act.action_id === "mail_repondre" || act.action_id === "mail_transferer") {
+      const r = await lire(act.value ?? "");
+      if (!r.ok) {
+        const echec = vueResultat("⚠️ " + r.erreur);
+        if (charge.view) return NextResponse.json({ response_action: "update", view: echec });
+        await ouvrirModal(echec, trigger);
+        return NextResponse.json({});
+      }
+      const m = r.message;
+      const reponse = act.action_id === "mail_repondre";
+      const a = reponse ? (m.direction === "in" ? m.from_addr : m.to_addr).slice(0, 150) : "";
+      const sujetBrut = m.subject || "";
+      const sujet = (reponse ? (/^re\s*:/i.test(sujetBrut) ? sujetBrut : "Re: " + sujetBrut) : (/^fwd?\s*:/i.test(sujetBrut) ? sujetBrut : "Fw: " + sujetBrut)).slice(0, 300);
+      const corps = (m.body_text ?? "").trim();
+      const texte = (reponse ? "" : "(transfert d'un message " + (m.direction === "in" ? "reçu" : "envoyé") + ")\n\n") + corps.slice(0, reponse ? 500 : 700);
+      await ouvrirModal(modalEnvoi({ a, sujet, texte }), trigger);
+      return NextResponse.json({});
+    }
     if (act.action_id === "home_stats") {
       const s = await collecterStats();
       await ouvrirModal({ type: "modal", callback_id: "resultat", title: { type: "plain_text", text: "Statistiques" }, close: { type: "plain_text", text: "Fermer" }, blocks: blocsStats(s) }, trigger);

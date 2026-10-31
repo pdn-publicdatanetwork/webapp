@@ -92,7 +92,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ response_type: "ephemeral", blocks: [
       { type: "section", text: { type: "mrkdwn", text: "*Déplacer ce message vers la corbeille ?*\nDe : " + (m.from_addr || "?") + "\nObjet : *" + (m.subject || "(sans objet)") + "* (" + heure(m.date) + ")" } },
       { type: "actions", elements: [
-        { type: "button", text: { type: "plain_text", text: "Supprimer" }, style: "danger", action_id: "mail_supprimer_ok", value: m.id },
+        { type: "button", text: { type: "plain_text", text: "Supprimer" }, style: "danger", action_id: "mail_supprimer_ok", value: idCourt(m.id) },
         { type: "button", text: { type: "plain_text", text: "Annuler" }, action_id: "mail_supprimer_annuler", value: "-" },
       ] },
     ] });

@@ -88,6 +88,11 @@ export async function importerRecu(emailId: string, apercu: ApercuRecu = {}): Pr
   if (error && (error as { code?: string }).code === "23505") return { corps: !!complet, erreur };
   if (error) throw error;
   if (!data?.length) return { corps: !!complet, erreur }; // déjà importé : pas de second accusé
+  // Notification Slack (canal #mail) : best-effort, jamais bloquante.
+  try {
+    const { notifierRecu } = await import("./slackNotify");
+    await notifierRecu({ id: String(data[0].id), from: m.from, sujet: m.subject ?? "", texte: m.text, pour: (m.to ?? []).join(", ") });
+  } catch { /* panne Slack : l'e-mail reste traité */ }
 
   // Association de fiche : les e-mails reçus sur associer@ ne passent pas par
   // l'accusé générique mais par le parcours de vérification dédié.
