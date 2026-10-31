@@ -54,7 +54,7 @@ export default function DemandeCle() {
   return (
     <form className="card" onSubmit={demander}>
       <p style={{ marginTop: 0 }}>
-        1. Lis les <a href={CGU} target="_blank" onClick={() => setLu(true)}>conditions d&apos;utilisation de l&apos;API</a> (clé personnelle, quota, licence ODbL, usages interdits).
+        1. Lis les <a href={CGU} target="_blank" rel="noopener noreferrer" onClick={() => setLu(true)}>conditions d&apos;utilisation de l&apos;API</a> (clé personnelle, quota, licence ODbL, usages interdits).
       </p>
       <label className="check">
         <input type="checkbox" disabled={!lu} checked={accepte} onChange={(e) => setAccepte(e.target.checked)} />

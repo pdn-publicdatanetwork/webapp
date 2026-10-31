@@ -10,11 +10,12 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()" },
-  // CSP en mode Report-Only d'abord : mesurer les violations réelles
-  // (GA4/GTM, Clarity, AdSense, AppLixir, Sentry, Supabase) avant activation effective.
-  // Étape 2 : rapport vers un endpoint (Sentry ou /api/csp-report).
-  // Étape 3 : basculer en Content-Security-Policy + nonces middleware.
-  { key: "Content-Security-Policy-Report-Only", value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.clarity.ms https://pagead2.googlesyndication.com https://*.google.com https://vercel.live https://cdn.applixir.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.sentry.io https://*.google-analytics.com https://*.analytics.google.com https://*.clarity.ms https://vercel.live https://cdn.applixir.com https://*.applixir.com; frame-src https://googleads.g.doubleclick.net https://vercel.live https://cdn.applixir.com https://*.applixir.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests" },
+  // CSP en mode effectif (audit ANSSI R14/R19, 31/10/2026) : la phase
+  // Report-Only a servi de transition ; les violations sont désormais
+  // collectées par /api/csp-rapport (visible dans les logs Vercel).
+  // 'unsafe-inline' reste nécessaire pour les chargeurs GTM/Clarity/AdSense ;
+  // retrait prévu avec les nonces middleware (étape 3).
+  { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.clarity.ms https://pagead2.googlesyndication.com https://*.google.com https://vercel.live https://cdn.applixir.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.sentry.io https://*.google-analytics.com https://*.analytics.google.com https://*.clarity.ms https://vercel.live https://cdn.applixir.com https://*.applixir.com; frame-src https://googleads.g.doubleclick.net https://vercel.live https://cdn.applixir.com https://*.applixir.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests; report-uri /api/csp-rapport" },
 ];
 
 const config: NextConfig = {
