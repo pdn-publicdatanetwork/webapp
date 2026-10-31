@@ -124,7 +124,9 @@ export async function blocsAssoc(): Promise<Bloc[]> {
   return blocs;
 }
 
-// 20 derniers événements du journal des associations.
+// 20 derniers événements du journal des associations, avec le nom du
+// collaborateur, la fiche et l'e-mail du compte (et l'adresse de preuve
+// quand l'événement en porte une).
 export async function blocsJournalAssoc(): Promise<Bloc[]> {
   const db = authAdmin();
   const { data, error } = await db.from("associations_journal")
@@ -132,17 +134,30 @@ export async function blocsJournalAssoc(): Promise<Bloc[]> {
   if (error) throw new Error("associations_journal : " + error.message);
   const lignes = (data ?? []) as { user_id: string; collab_id: string; evenement: string; detail: Record<string, unknown> | null; le: string }[];
   const userIds = [...new Set(lignes.map((l) => l.user_id))];
-  const { data: comptes } = userIds.length
-    ? await db.from("comptes_utilisateurs").select("user_id, email").in("user_id", userIds)
-    : { data: [] as { user_id: string; email: string }[] };
-  const emailDe = new Map(((comptes ?? []) as { user_id: string; email: string }[]).map((c) => [c.user_id, c.email]));
-  const texte = lignes.map((l) =>
-    "• " + dh(l.le) + " : " + (LIBELLE_EVENEMENT[l.evenement] ?? l.evenement) + ", " + (emailDe.get(l.user_id) ?? l.user_id.slice(0, 8)) + " (fiche \`" + l.collab_id + "\`)"
-  ).join("\n") || "Aucun événement.";
+  const collabIds = [...new Set(lignes.map((l) => l.collab_id))];
+  const [comptesRes, fiches, demandesRes] = await Promise.all([
+    userIds.length
+      ? db.from("comptes_utilisateurs").select("user_id, email").in("user_id", userIds)
+      : Promise.resolve({ data: [] as { user_id: string; email: string }[] }),
+    fichesParId(collabIds),
+    collabIds.length
+      ? db.from("associations_fiches").select("collab_id, collab_slug").in("collab_id", collabIds)
+      : Promise.resolve({ data: [] as { collab_id: string; collab_slug: string }[] }),
+  ]);
+  const emailDe = new Map(((comptesRes.data ?? []) as { user_id: string; email: string }[]).map((c) => [c.user_id, c.email]));
+  const slugDe = new Map(((demandesRes.data ?? []) as { collab_id: string; collab_slug: string }[]).map((d) => [d.collab_id, d.collab_slug]));
+  const texte = lignes.map((l) => {
+    const f = fiches.get(l.collab_id);
+    const nom = f && (f.prenom || f.nom) ? [f.prenom, f.nom].filter(Boolean).join(" ") : nomDepuisSlug(slugDe.get(l.collab_id) ?? l.collab_id);
+    const slug = slugDe.get(l.collab_id);
+    const detail = (l.detail ?? {}) as Record<string, unknown>;
+    const from = typeof detail.from === "string" ? ", depuis \`" + detail.from + "\`" : typeof detail.par === "string" ? ", par " + detail.par : "";
+    return "• " + dh(l.le) + " : " + (LIBELLE_EVENEMENT[l.evenement] ?? l.evenement) + " : *" + nom + "*" + (slug ? " (fiche \`" + slug + "\`)" : "") + ", compte " + (emailDe.get(l.user_id) ?? l.user_id.slice(0, 8)) + from;
+  }).join("\n") || "Aucun événement.";
   return [
     { type: "header", text: { type: "plain_text", text: "🕘 Journal des associations", emoji: true } },
     { type: "section", text: { type: "mrkdwn", text: texte } },
-    { type: "context", elements: [{ type: "mrkdwn", text: "20 derniers événements, toutes décisions confondues (automatiques et manuelles)." }] },
+    { type: "context", elements: [{ type: "mrkdwn", text: "20 derniers événements, toutes décisions confondues (automatiques et manuelles). Le nom vient du référentiel collaborateurs, l'adresse de preuve du détail de l'événement." }] },
   ];
 }
 
