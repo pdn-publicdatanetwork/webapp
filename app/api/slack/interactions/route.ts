@@ -6,20 +6,24 @@ import { envoyerDepuisSlack, supprimer } from "@/lib/slackMail";
 import { modalEnvoi, modalInbox, modalPost, modalRechercheCompte, ouvrirModal, publierHome } from "@/lib/slackHome";
 import { basculeMaintenance } from "@/lib/maintenanceAdmin";
 import { blocsStats, collecterStats } from "@/lib/slackStats";
-import { abonnes, cles, comptes, enquete, fiche, telechargements } from "@/lib/slackData";
+import { abonnes, cles, comptes, enquete, fiche, inviterEnquete, telechargements } from "@/lib/slackData";
 import { blocsAssoc, blocsCvAssoc, blocsJournalAssoc, deciderDepuisSlack } from "@/lib/slackAssoc";
 import { crmCourant, ficheCrm, majCrm, modalRechercheCrm, modalSuivi } from "@/lib/slackCrm";
+import { blocsPub, collecterPub, modalSaisiePub, saisirPub } from "@/lib/slackPub";
+import { sources } from "@/lib/slackSources";
+import { supprimerLigne } from "@/lib/slackSuppression";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 // Interactivity Request URL de l'app Slack (?t=<MAINTENANCE_TOKEN>) :
-//  - soumissions des modals /post, /mail envoyer, maintenance (Home tab) ;
+//  - soumissions des modals /post, /mail envoyer, maintenance, pub (Home tab) ;
 //  - boutons de confirmation d'envoi et de suppression (block_actions) ;
-//  - boutons du Home tab (home_*) qui ouvrent les modals, y compris la
-//    section Données (lecture seule) et les sections Associations
-//    (file à vérifier, CV associés, journal, décisions valider/refuser/
-//    dissocier) et CRM (fiche contact en liste filtrable, suivi).
+//  - boutons du Home tab (home_*) qui ouvrent les modals : Données (listes
+//    avec suppression des lignes de test), Associations (file, CV, journal,
+//    décisions, suppression d'une ligne de journal), CRM (fiche, suivi,
+//    suppression du suivi), Publication (posts, pub/vidéos/revenus,
+//    sources de trafic).
 
 function repondre(urlReponse: string, corps: string) {
   if (!urlReponse) return;
@@ -62,20 +66,20 @@ function vueResultat(texte: string) {
 }
 
 // Vue de données (sections Données / Associations / CRM du Home tab) :
-// blocs de lib/slackData, slackAssoc et slackCrm en modal.
+// blocs de lib/slackData, slackAssoc, slackCrm, slackPub, slackSources.
 function vueDonnees(titre: string, blocs: Record<string, unknown>[]) {
   return { type: "modal", callback_id: "resultat", title: { type: "plain_text", text: titre.slice(0, 24) }, close: { type: "plain_text", text: "Fermer" }, blocks: blocs };
 }
 
 // Confirmation d'envoi : modal avec boutons, affiché dans le modal courant.
 function vueConfirmation(draft: string, from: string, aListe: string[], ccListe: string[], sujet: string, texte: string) {
-  const lignes = "*Confirmer l'envoi ?*\nDe : \`" + from + "\`\nÀ : " + aListe.join(", ") + (ccListe.length ? "\nCc : " + ccListe.join(", ") : "") + "\nObjet : *" + sujet + "*";
+  const lignes = "*Confirmer l'envoi ?*\nDe : `" + from + "`\nÀ : " + aListe.join(", ") + (ccListe.length ? "\nCc : " + ccListe.join(", ") : "") + "\nObjet : *" + sujet + "*";
   return { type: "modal", callback_id: "mail_confirme",
     title: { type: "plain_text", text: "Confirmer l'envoi" },
     close: { type: "plain_text", text: "Annuler" },
     blocks: [
       { type: "section", text: { type: "mrkdwn", text: lignes } },
-      { type: "section", text: { type: "mrkdwn", text: "\`\`\`" + texte.slice(0, 800) + (texte.length > 800 ? "\n…" : "") + "\`\`\`" } },
+      { type: "section", text: { type: "mrkdwn", text: "```" + texte.slice(0, 800) + (texte.length > 800 ? "\n…" : "") + "```" } },
       { type: "actions", elements: [
         { type: "button", text: { type: "plain_text", text: "Envoyer" }, style: "primary", action_id: "mail_envoyer_ok", value: draft },
         { type: "button", text: { type: "plain_text", text: "Annuler" }, action_id: "mail_envoyer_annuler", value: "-" },
@@ -129,6 +133,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ text: "Annulé : rien n'a été supprimé.", replace_original: true });
     }
 
+    // Suppression d'une ligne (listes de données, journal, suivi CRM) :
+    // confirmation déjà donnée par le dialogue Slack du bouton.
+    if (act.action_id === "supprimer_ligne") {
+      const r = await supprimerLigne(charge.user?.name ?? "slack", act.value ?? "");
+      const msg = r.ok ? r.message : "⚠️ " + r.erreur;
+      if (charge.view) return NextResponse.json({ response_action: "update", view: vueResultat(msg) });
+      return NextResponse.json({ text: msg, replace_original: true });
+    }
+    // Enquête : renvoyer l'invitation à une personne sans réponse.
+    if (act.action_id === "enquete_inviter") {
+      const r = await inviterEnquete(charge.user?.name ?? "slack", act.value ?? "");
+      const msg = r.ok ? r.message : "⚠️ " + r.erreur;
+      if (charge.view) return NextResponse.json({ response_action: "update", view: vueResultat(msg) });
+      return NextResponse.json({ text: msg, replace_original: true });
+    }
+
     // Home tab : boutons qui ouvrent les modals.
     if (act.action_id === "home_post") { await ouvrirModal(modalPost(), trigger); return NextResponse.json({}); }
     if (act.action_id === "home_mail_nouveau") { await ouvrirModal(modalEnvoi(), trigger); return NextResponse.json({}); }
@@ -138,7 +158,7 @@ export async function POST(req: Request) {
       await ouvrirModal({ type: "modal", callback_id: "resultat", title: { type: "plain_text", text: "Statistiques" }, close: { type: "plain_text", text: "Fermer" }, blocks: blocsStats(s) }, trigger);
       return NextResponse.json({});
     }
-    // Home tab : section Données (lecture seule, mêmes sources que l'admin).
+    // Home tab : section Données (listes avec suppression des lignes de test).
     if (act.action_id === "home_data_users") { await ouvrirModal(vueDonnees("Comptes", await comptes(Number(act.value ?? "0") || 0)), trigger); return NextResponse.json({}); }
     if (act.action_id === "home_data_recherche") { await ouvrirModal(modalRechercheCompte(), trigger); return NextResponse.json({}); }
     if (act.action_id === "home_data_abonnes") { await ouvrirModal(vueDonnees("Abonnés", await abonnes("")), trigger); return NextResponse.json({}); }
@@ -183,6 +203,10 @@ export async function POST(req: Request) {
       } catch { /* fiche illisible : rien à ouvrir */ }
       return NextResponse.json({});
     }
+    // Home tab : section Publication (chiffres pub, saisies, trafic).
+    if (act.action_id === "home_pub") { await ouvrirModal(vueDonnees("Pub et revenus", await blocsPub(await collecterPub())), trigger); return NextResponse.json({}); }
+    if (act.action_id === "home_pub_saisir") { await ouvrirModal(modalSaisiePub(), trigger); return NextResponse.json({}); }
+    if (act.action_id === "home_sources") { await ouvrirModal(vueDonnees("Sources de trafic", await sources()), trigger); return NextResponse.json({}); }
     if (act.action_id === "home_maintenance_on") {
       await ouvrirModal({ type: "modal", callback_id: "maintenance_on",
         title: { type: "plain_text", text: "Maintenance" },
@@ -239,6 +263,23 @@ export async function POST(req: Request) {
     if (!email) return NextResponse.json({ response_action: "update", view: vueResultat("⚠️ Adresse illisible : relance la fiche depuis l'accueil.") });
     const r = await majCrm(qui, email, statut || undefined, tags.length ? tags : undefined, note !== "" ? note : undefined);
     return NextResponse.json({ response_action: "update", view: vueResultat(r.ok ? "✅ Suivi enregistré pour " + email : "⚠️ " + r.erreur) });
+  }
+
+  // --- Publication : saisie manuelle des chiffres pub (AppLixir, AdSense) ---
+  if (charge.view?.callback_id === "pub_saisie") {
+    const jour = String((v.jour?.v as { value?: string })?.value ?? "").trim();
+    const applixir = String((v.applixir?.v as { value?: string })?.value ?? "").trim();
+    const adsense = String((v.adsense?.v as { value?: string })?.value ?? "").trim();
+    const videos = String((v.videos?.v as { value?: string })?.value ?? "").trim();
+    const impressions = String((v.impressions?.v as { value?: string })?.value ?? "").trim();
+    if (!jour) return NextResponse.json({ response_action: "errors", errors: { jour: "Indique le jour (format AAAA-MM-JJ)." } });
+    const r = await saisirPub(qui, jour.slice(0, 10), applixir.slice(0, 20), adsense.slice(0, 20), videos.slice(0, 10), impressions.slice(0, 12));
+    if (!r.ok) {
+      const champ = r.erreur.startsWith("jour") ? "jour" : r.erreur.startsWith("revenus AppLixir") ? "applixir" : r.erreur.startsWith("revenus AdSense") ? "adsense" : r.erreur.startsWith("vidéos") ? "videos" : r.erreur.startsWith("impressions") ? "impressions" : "";
+      if (champ) return NextResponse.json({ response_action: "errors", errors: { [champ]: r.erreur } });
+      return NextResponse.json({ response_action: "update", view: vueResultat("⚠️ " + r.erreur) });
+    }
+    return NextResponse.json({ response_action: "update", view: vueResultat(r.message) });
   }
 
   // --- /mail envoyer : vérifie puis affiche la confirmation par boutons ---

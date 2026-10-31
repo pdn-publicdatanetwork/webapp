@@ -4,7 +4,7 @@ import { EXPEDITEURS, lister, idCourt } from "./slackMail";
 import { compteAssoc } from "./slackAssoc";
 
 // Home tab de l'app Slack « DataParl' Console » : une vraie interface avec
-// des sections (Site, Publication, E-mail, Données, Associations, CRM) et
+// des sections (Site, Données, Associations, CRM, Publication, E-mail) et
 // des boutons, à la place des seules slash commands. Publiée par views.publish
 // à l'ouverture (événement app_home_opened → /api/slack/events) et rafraîchie
 // après chaque action.
@@ -71,7 +71,7 @@ function heure(iso: string): string {
 export async function modalInbox(): Promise<Record<string, unknown>> {
   const messages = await lister("inbox", 12);
   const lignes = messages.map((m) =>
-    (m.read ? "• " : "🔴 ") + "\`" + idCourt(m.id) + "\` " + m.from_addr + " : *" + (m.subject || "(sans objet)") + "* (" + heure(m.date) + ")");
+    (m.read ? "• " : "🔴 ") + "`" + idCourt(m.id) + "` " + m.from_addr + " : *" + (m.subject || "(sans objet)") + "* (" + heure(m.date) + ")");
   return {
     type: "modal", callback_id: "mail_inbox",
     title: { type: "plain_text", text: "Boîte de réception" },
@@ -83,7 +83,10 @@ export async function modalInbox(): Promise<Record<string, unknown>> {
   };
 }
 
-// Publie (ou rafraîchit) le Home tab de l'utilisateur.
+// Publie (ou rafraîchit) le Home tab de l'utilisateur. Sections dans
+// l'ordre d'usage courant : d'abord ce qui demande une décision (site,
+// données, associations, CRM), ensuite la publication (posts, chiffres
+// pub), enfin les e-mails.
 export async function publierHome(userId: string): Promise<{ ok: boolean; erreur: string }> {
   const bot = process.env.SLACK_BOT_TOKEN ?? "";
   if (!bot || !userId) return { ok: false, erreur: "SLACK_BOT_TOKEN ou user_id absent" };
@@ -96,22 +99,13 @@ export async function publierHome(userId: string): Promise<{ ok: boolean; erreur
     type: "home",
     blocks: [
       { type: "header", text: { type: "plain_text", text: "Console DataParl'" } },
-      { type: "context", elements: [{ type: "mrkdwn", text: "Pilote le site, les publications, les e-mails, les données, les associations de fiches et le CRM : les slash commands (/maintenance, /stats, /post, /mail, /sql) restent disponibles." }] },
+      { type: "context", elements: [{ type: "mrkdwn", text: "Pilote le site, les données, les associations de fiches, le CRM, la publication (posts, publicité, revenus) et les e-mails : les slash commands (/maintenance, /stats, /post, /mail, /sql) restent disponibles." }] },
       { type: "section", text: { type: "mrkdwn", text: "*🛠 Site*\n" + (etat?.active ? "🔴 Maintenance en cours" + (etat.motif ? " : " + etat.motif : "") : "🟢 Site ouvert") } },
       { type: "actions", elements: [
         ...boutonsSite,
         { type: "button", text: { type: "plain_text", text: "📊 Statistiques" }, action_id: "home_stats" },
       ] },
-      { type: "section", text: { type: "mrkdwn", text: "*📣 Publication*" } },
-      { type: "actions", elements: [
-        { type: "button", text: { type: "plain_text", text: "Publier sur les réseaux (X, Bluesky)" }, action_id: "home_post" },
-      ] },
-      { type: "section", text: { type: "mrkdwn", text: "*✉️ E-mail*" } },
-      { type: "actions", elements: [
-        { type: "button", text: { type: "plain_text", text: "Nouveau message" }, style: "primary", action_id: "home_mail_nouveau" },
-        { type: "button", text: { type: "plain_text", text: "📥 Boîte de réception" }, action_id: "home_mail_inbox" },
-      ] },
-      { type: "section", text: { type: "mrkdwn", text: "*📊 Données (lecture seule)*" } },
+      { type: "section", text: { type: "mrkdwn", text: "*📊 Données*\nLes lignes de test peuvent être supprimées (bouton 🗑 avec confirmation)." } },
       { type: "actions", elements: [
         { type: "button", text: { type: "plain_text", text: "👥 Comptes" }, action_id: "home_data_users" },
         { type: "button", text: { type: "plain_text", text: "🔍 Fiche compte" }, action_id: "home_data_recherche" },
@@ -131,6 +125,20 @@ export async function publierHome(userId: string): Promise<{ ok: boolean; erreur
       { type: "section", text: { type: "mrkdwn", text: "*🎯 CRM*\nFiche 360° par e-mail : compte, messages, abonnements, suivi." } },
       { type: "actions", elements: [
         { type: "button", text: { type: "plain_text", text: "🔍 Fiche contact" }, action_id: "home_crm" },
+      ] },
+      { type: "section", text: { type: "mrkdwn", text: "*📣 Publication et revenus*\nPosts, vidéos AppLixir jouées, AdSense, revenus estimés, provenance du trafic." } },
+      { type: "actions", elements: [
+        { type: "button", text: { type: "plain_text", text: "📣 Publier (X, Bluesky)" }, style: "primary", action_id: "home_post" },
+        { type: "button", text: { type: "plain_text", text: "📺 Pub et revenus" }, action_id: "home_pub" },
+      ] },
+      { type: "actions", elements: [
+        { type: "button", text: { type: "plain_text", text: "✍️ Saisir des chiffres" }, action_id: "home_pub_saisir" },
+        { type: "button", text: { type: "plain_text", text: "🔎 Sources de trafic" }, action_id: "home_sources" },
+      ] },
+      { type: "section", text: { type: "mrkdwn", text: "*✉️ E-mail*" } },
+      { type: "actions", elements: [
+        { type: "button", text: { type: "plain_text", text: "Nouveau message" }, style: "primary", action_id: "home_mail_nouveau" },
+        { type: "button", text: { type: "plain_text", text: "📥 Boîte de réception" }, action_id: "home_mail_inbox" },
       ] },
     ],
   };
