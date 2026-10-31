@@ -1,5 +1,5 @@
 import "server-only";
-import { Reader } from "maxmind";
+import { Reader, type CountryResponse } from "maxmind";
 import { authAdmin } from "./supabaseAdmin";
 
 // Pays d'une adresse IP, sans aucun appel externe : la base mmdb
@@ -13,14 +13,14 @@ const BUCKET = "geoip";
 const FICHIER = "dbip-country-lite.mmdb";
 const TTL_MS = 6 * 3600_000;
 
-let cache: { le: number; reader: Reader | null } = { le: 0, reader: null };
+let cache: { le: number; reader: Reader<CountryResponse> | null } = { le: 0, reader: null };
 
-async function lecteur(): Promise<Reader | null> {
+async function lecteur(): Promise<Reader<CountryResponse> | null> {
   if (cache.reader && Date.now() - cache.le < TTL_MS) return cache.reader;
   const { data, error } = await authAdmin().storage.from(BUCKET).download(FICHIER);
   if (error || !data) return null;
   try {
-    cache = { le: Date.now(), reader: new Reader(Buffer.from(await data.arrayBuffer())) };
+    cache = { le: Date.now(), reader: new Reader<CountryResponse>(Buffer.from(await data.arrayBuffer())) };
     return cache.reader;
   } catch (e) {
     console.error("geoip", String(e).slice(0, 200));

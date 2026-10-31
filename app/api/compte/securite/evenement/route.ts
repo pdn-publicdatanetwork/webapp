@@ -30,8 +30,8 @@ export async function POST(req: Request) {
 
   if (parsed.data.type === "2fa") {
     // L'état réel des facteurs décide : actifs = validation activée.
-    const { data } = await admin.listFactors({ userId: user.id });
-    const actifs = (data?.all ?? []).filter((f) => f.status === "verified").length;
+    const { data } = await admin.getUserById(user.id);
+    const actifs = (data?.user?.factors ?? []).filter((f) => f.status === "verified").length;
     await mail2FA(user.id, actifs > 0);
     return NextResponse.json({ ok: true, active: actifs > 0 });
   }
