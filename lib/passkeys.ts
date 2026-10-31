@@ -16,7 +16,7 @@ import { authAdmin } from "./supabaseAdmin";
 // la biométrie). Le défi est porté par un cookie signé, valable 5 minutes.
 const COOKIE = "dp-wa";
 const DUREE_S = 300;
-const HOTES = ["admin.dataparl.fr", "webmail.dataparl.fr"];
+const HOTES = ["admin.dataparl.fr", "webmail.dataparl.fr", "www.dataparl.fr", "dataparl.fr"];
 
 export function contexte(req: Request): { rpID: string; origine: string } | null {
   const hote = (req.headers.get("host") ?? "").toLowerCase();
@@ -28,9 +28,9 @@ export function contexte(req: Request): { rpID: string; origine: string } | null
 
 const signer = (v: string) => createHmac("sha256", secret("ADMIN_OTP_SECRET")).update(`wa:${v}`).digest("base64url");
 
-export function poserDefi(res: NextResponse, defi: string, lie: string): void {
+export function poserDefi(res: NextResponse, defi: string, lie: string, chemin = "/api/admin/passkeys"): void {
   const v = `${defi}.${lie}.${Math.floor(Date.now() / 1000) + DUREE_S}`;
-  res.headers.append("Set-Cookie", `${COOKIE}=${v}.${signer(v)}; Path=/api/admin/passkeys; Max-Age=${DUREE_S}; HttpOnly; SameSite=Strict; Secure`);
+  res.headers.append("Set-Cookie", `${COOKIE}=${v}.${signer(v)}; Path=${chemin}; Max-Age=${DUREE_S}; HttpOnly; SameSite=Strict; Secure`);
 }
 
 // Lit le défi (usage unique : le cookie est effacé par la réponse). `lie` : compte attendu, ou "" à la connexion.
@@ -46,8 +46,8 @@ export function lireDefi(req: Request, lie: string): string | null {
   return defi;
 }
 
-export function effacerDefi(res: NextResponse): void {
-  res.headers.append("Set-Cookie", `${COOKIE}=; Path=/api/admin/passkeys; Max-Age=0; HttpOnly; SameSite=Strict; Secure`);
+export function effacerDefi(res: NextResponse, chemin = "/api/admin/passkeys"): void {
+  res.headers.append("Set-Cookie", `${COOKIE}=; Path=${chemin}; Max-Age=0; HttpOnly; SameSite=Strict; Secure`);
 }
 
 // Un défi ne sert qu'une fois : rejouer une réponse capturée échoue.
