@@ -3,8 +3,9 @@ import { authAdmin, dataAdmin } from "./supabaseAdmin";
 import { lireMaintenance } from "./maintenanceAdmin";
 
 // Console Slack de DataParl' : collecte des statistiques du site (usage,
-// comptes, exports, chat, qualité) et des réseaux sociaux (Telegram,
-// Bluesky, X), pour la commande /stats et le digest quotidien #monitoring.
+// comptes, exports, chat, qualité), des fiches collaborateurs associées
+// (validées, à vérifier) et des réseaux sociaux (Telegram, Bluesky, X),
+// pour la commande /stats et le digest quotidien #monitoring.
 // Chaque source est indépendante : une panne n'empêche pas les autres
 // chiffres (valeur null = indisponible).
 
@@ -99,7 +100,7 @@ export async function collecterStats() {
   const auth = authAdmin();
   const data = dataAdmin() as unknown as Db;
 
-  const [pagesJour, pagesVeille, pagesSemaine, dlJour, dlSemaine, chatJour, chatErreurs, nouveauxJour, nouveauxSemaine, actifsJour, contactJour, deblocJour, newsletterConf, alertesActives, oppositions, waActifs, telegram, bsky1, bsky2, x, buffer, etat] = await Promise.all([
+  const [pagesJour, pagesVeille, pagesSemaine, dlJour, dlSemaine, chatJour, chatErreurs, nouveauxJour, nouveauxSemaine, actifsJour, contactJour, deblocJour, newsletterConf, alertesActives, oppositions, waActifs, assocEnCours, assocVerifiees, telegram, bsky1, bsky2, x, buffer, etat] = await Promise.all([
     compterSur(auth, "pages_vues", "le", 24),
     (async () => { try { const { count } = await auth.from("pages_vues").select("*", { count: "exact", head: true }).gte("le", depuis(48)).lt("le", depuis(24)); return count ?? null; } catch { return null; } })(),
     compterSur(auth, "pages_vues", "le", 7 * 24),
@@ -116,6 +117,8 @@ export async function collecterStats() {
     compterFiltre(auth, "alert_subscriptions", { active: true }),
     compterFiltre(auth, "opposition_emails", {}),
     compterFiltre(auth, "wa_abonnes", { actif: true }),
+    (async () => { try { const { count, error } = await auth.from("associations_fiches").select("*", { count: "exact", head: true }).in("statut", ["attente_email", "a_traiter", "piece_jointe", "gele"]); if (error) throw error; return count ?? null; } catch { return null; } })(),
+    (async () => { try { const { count, error } = await auth.from("associations_fiches").select("*", { count: "exact", head: true }).eq("statut", "verifie"); if (error) throw error; return count ?? null; } catch { return null; } })(),
     telegramAbonnes(),
     bluesky("dataparl.fr"),
     bluesky("jobs.dataparl.fr"),
@@ -147,6 +150,7 @@ export async function collecterStats() {
     le: new Date().toISOString(),
     site: { pagesJour, pagesVeille, pagesSemaine, top, dlJour, dlSemaine, chatJour, chatErreurs, contactJour, deblocJour },
     comptes: { nouveauxJour, nouveauxSemaine, actifsJour, newsletterConf, alertesActives, oppositions, waActifs },
+    associations: { enCours: assocEnCours, verifiees: assocVerifiees },
     social: { telegram, bsky: [bsky1, bsky2].filter((b): b is NonNullable<Bsky> => !!b), x: xFinal, buffer: !!buffer },
     maintenance: etat ? { active: etat.active, motif: etat.motif } : null,
   };
@@ -172,6 +176,7 @@ export function blocsStats(s: Stats): Record<string, unknown>[] {
       { type: "mrkdwn", text: `*Sheets :* ${fm(s.site.dlJour)} exports 24 h, ${fm(s.site.dlSemaine)} / 7 j\n*Chat :* ${fm(s.site.chatJour)} questions 24 h${s.site.chatErreurs ? ` ⚠️ ${fm(s.site.chatErreurs)} erreurs` : ""}` },
       { type: "mrkdwn", text: `*Contact :* ${fm(s.site.contactJour)} messages 24 h\n*Déblocages :* ${fm(s.site.deblocJour)}, *Oppositions :* ${fm(s.comptes.oppositions)}, *Alertes actives :* ${fm(s.comptes.alertesActives)}` },
     ] },
+    { type: "section", text: { type: "mrkdwn", text: `*Fiches collaborateurs :* ${fm(s.associations.verifiees)} associée(s) à un compte${s.associations.enCours ? ` ⚠️ ${fm(s.associations.enCours)} à vérifier (Home tab → À vérifier)` : ""}` } },
     { type: "section", text: { type: "mrkdwn", text: `*Communautés :* 📨 WhatsApp ${fm(s.comptes.waActifs)} abonnés actifs` } },
     { type: "section", text: { type: "mrkdwn", text: `*Réseaux :* 🟦 Bluesky\n${s.social.bsky.map(b => `• @${b.handle} : ${fm(b.followers)} abonnés, ${fm(b.posts)} posts`).join("\n") || "–"}${s.social.x ? `\n✖️ X : ${fm(s.social.x)} abonnés` : ""}${s.social.telegram !== null ? `\n📨 Telegram : ${fm(s.social.telegram)} abonnés` : ""}` } },
   ];
@@ -183,7 +188,7 @@ export function blocsStats(s: Stats): Record<string, unknown>[] {
 }
 
 export function texteStats(s: Stats): string {
-  return `DataParl' 24 h : ${fm(s.site.pagesJour)} pages vues${evol(s.site.pagesJour, s.site.pagesVeille)}, ${fm(s.comptes.nouveauxJour)} nouveaux comptes, ${fm(s.site.dlJour)} exports Sheets, ${fm(s.site.chatJour)} questions au chat, ${fm(s.site.contactJour)} messages contact. Réseaux : ${s.social.bsky.map(b => `@${b.handle} ${fm(b.followers)} ab.`).join(", ")}${s.social.telegram !== null ? `, Telegram ${fm(s.social.telegram)} ab.` : ""}.`;
+  return `DataParl' 24 h : ${fm(s.site.pagesJour)} pages vues${evol(s.site.pagesJour, s.site.pagesVeille)}, ${fm(s.comptes.nouveauxJour)} nouveaux comptes, ${fm(s.site.dlJour)} exports Sheets, ${fm(s.site.chatJour)} questions au chat, ${fm(s.site.contactJour)} messages contact${s.associations.verifiees !== null ? `, ${fm(s.associations.verifiees)} fiches collaborateurs associées` : ""}${s.associations.enCours ? `, ⚠️ ${fm(s.associations.enCours)} association(s) à vérifier` : ""}. Réseaux : ${s.social.bsky.map(b => `@${b.handle} ${fm(b.followers)} ab.`).join(", ")}${s.social.telegram !== null ? `, Telegram ${fm(s.social.telegram)} ab.` : ""}.`;
 }
 
 // Publication via webhook entrant Slack (SLACK_WEBHOOK_URL) ; silencieuse si

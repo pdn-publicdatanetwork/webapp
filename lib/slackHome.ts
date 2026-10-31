@@ -125,6 +125,7 @@ export async function publierHome(userId: string): Promise<{ ok: boolean; erreur
       { type: "section", text: { type: "mrkdwn", text: "*🔗 Associations de fiches*\n" + (nAssoc ? nAssoc + " demande(s) à vérifier" : "Aucune demande en cours") } },
       { type: "actions", elements: [
         { type: "button", text: { type: "plain_text", text: "📋 À vérifier" }, action_id: "home_assoc" },
+        { type: "button", text: { type: "plain_text", text: "📄 CV associés" }, action_id: "home_assoc_cv" },
         { type: "button", text: { type: "plain_text", text: "🕘 Journal" }, action_id: "home_assoc_journal" },
       ] },
       { type: "section", text: { type: "mrkdwn", text: "*🎯 CRM*\nFiche 360° par e-mail : compte, messages, abonnements, suivi." } },

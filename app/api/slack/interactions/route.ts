@@ -7,7 +7,7 @@ import { modalEnvoi, modalInbox, modalPost, modalRechercheCompte, ouvrirModal, p
 import { basculeMaintenance } from "@/lib/maintenanceAdmin";
 import { blocsStats, collecterStats } from "@/lib/slackStats";
 import { abonnes, cles, comptes, enquete, fiche, telechargements } from "@/lib/slackData";
-import { blocsAssoc, blocsJournalAssoc, deciderDepuisSlack } from "@/lib/slackAssoc";
+import { blocsAssoc, blocsCvAssoc, blocsJournalAssoc, deciderDepuisSlack } from "@/lib/slackAssoc";
 import { crmCourant, ficheCrm, majCrm, modalRechercheCrm, modalSuivi } from "@/lib/slackCrm";
 
 export const dynamic = "force-dynamic";
@@ -17,11 +17,9 @@ export const maxDuration = 60;
 //  - soumissions des modals /post, /mail envoyer, maintenance (Home tab) ;
 //  - boutons de confirmation d'envoi et de suppression (block_actions) ;
 //  - boutons du Home tab (home_*) qui ouvrent les modals, y compris la
-//    section Données (comptes, fiche compte, abonnés, clés API,
-//    téléchargements, enquête : lecture seule) et les sections
-//    Associations (file à vérifier, journal, décisions valider/refuser)
-//    et CRM (fiche contact choisie dans une liste filtrable, édition
-//    du suivi).
+//    section Données (lecture seule) et les sections Associations
+//    (file à vérifier, CV associés, journal, décisions valider/refuser/
+//    dissocier) et CRM (fiche contact en liste filtrable, suivi).
 
 function repondre(urlReponse: string, corps: string) {
   if (!urlReponse) return;
@@ -147,8 +145,9 @@ export async function POST(req: Request) {
     if (act.action_id === "home_data_cles") { await ouvrirModal(vueDonnees("Clés API", await cles()), trigger); return NextResponse.json({}); }
     if (act.action_id === "home_data_telechargements") { await ouvrirModal(vueDonnees("Téléchargements", await telechargements("")), trigger); return NextResponse.json({}); }
     if (act.action_id === "home_data_survey") { await ouvrirModal(vueDonnees("Enquête", await enquete("")), trigger); return NextResponse.json({}); }
-    // Home tab : section Associations (file à vérifier, journal, décisions).
+    // Home tab : section Associations (file, CV associés, journal, décisions).
     if (act.action_id === "home_assoc") { await ouvrirModal(vueDonnees("Associations", await blocsAssoc()), trigger); return NextResponse.json({}); }
+    if (act.action_id === "home_assoc_cv") { await ouvrirModal(vueDonnees("CV associés", await blocsCvAssoc()), trigger); return NextResponse.json({}); }
     if (act.action_id === "home_assoc_journal") { await ouvrirModal(vueDonnees("Journal", await blocsJournalAssoc()), trigger); return NextResponse.json({}); }
     if (act.action_id === "assoc_valider" || act.action_id === "assoc_refuser") {
       const action = act.action_id === "assoc_valider" ? "valider" : "refuser";
@@ -158,6 +157,17 @@ export async function POST(req: Request) {
         : "⚠️ " + r.erreur;
       try {
         return NextResponse.json({ response_action: "update", view: vueDonnees("Associations", [{ type: "section", text: { type: "mrkdwn", text: msg } }, ...await blocsAssoc()]) });
+      } catch {
+        return NextResponse.json({ response_action: "update", view: vueResultat(msg) });
+      }
+    }
+    if (act.action_id === "assoc_dissocier") {
+      const r = await deciderDepuisSlack(charge.user?.name ?? "slack", act.value ?? "", "dissocier");
+      const msg = r.ok
+        ? "✅ Fiche dissociée : profil CV et photo retirés du site, personne prévenue par e-mail."
+        : "⚠️ " + r.erreur;
+      try {
+        return NextResponse.json({ response_action: "update", view: vueDonnees("CV associés", [{ type: "section", text: { type: "mrkdwn", text: msg } }, ...await blocsCvAssoc()]) });
       } catch {
         return NextResponse.json({ response_action: "update", view: vueResultat(msg) });
       }
