@@ -20,7 +20,8 @@ export const maxDuration = 60;
 //    section Données (comptes, fiche compte, abonnés, clés API,
 //    téléchargements, enquête : lecture seule) et les sections
 //    Associations (file à vérifier, journal, décisions valider/refuser)
-//    et CRM (fiche 360°, édition du suivi).
+//    et CRM (fiche contact choisie dans une liste filtrable, édition
+//    du suivi).
 
 function repondre(urlReponse: string, corps: string) {
   if (!urlReponse) return;
@@ -161,8 +162,9 @@ export async function POST(req: Request) {
         return NextResponse.json({ response_action: "update", view: vueResultat(msg) });
       }
     }
-    // Home tab : section CRM (fiche 360° puis édition du suivi).
-    if (act.action_id === "home_crm") { await ouvrirModal(modalRechercheCrm(), trigger); return NextResponse.json({}); }
+    // Home tab : section CRM (fiche contact choisie dans une liste, puis
+    // édition du suivi).
+    if (act.action_id === "home_crm") { await ouvrirModal(await modalRechercheCrm(), trigger); return NextResponse.json({}); }
     if (act.action_id === "crm_editer") {
       const email = (act.value ?? "").slice(0, 200);
       if (!email) return NextResponse.json({});
@@ -205,12 +207,13 @@ export async function POST(req: Request) {
     }
   }
 
-  // --- CRM : recherche d'une fiche contact (vue 360°) ---
+  // --- CRM : recherche d'une fiche contact (liste filtrable ou saisie) ---
   if (charge.view?.callback_id === "crm_recherche") {
+    const choisi = String((v.liste?.v as { selected_option?: { value: string } })?.selected_option?.value ?? "").trim();
     const q = String((v.q?.v as { value?: string })?.value ?? "").trim();
-    if (!q) return NextResponse.json({ response_action: "errors", errors: { q: "Indique une adresse e-mail." } });
+    if (!choisi && !q) return NextResponse.json({ response_action: "errors", errors: { q: "Choisis un contact dans la liste ou saisis une adresse." } });
     try {
-      return NextResponse.json({ response_action: "update", view: vueDonnees("Fiche contact", await ficheCrm(q.slice(0, 100))) });
+      return NextResponse.json({ response_action: "update", view: vueDonnees("Fiche contact", await ficheCrm((choisi || q).slice(0, 100))) });
     } catch (e) {
       return NextResponse.json({ response_action: "errors", errors: { q: e instanceof Error ? e.message : String(e) } });
     }

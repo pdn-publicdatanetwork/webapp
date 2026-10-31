@@ -17,6 +17,7 @@ const LIBELLE: Record<string, string> = {
 };
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+const NB_MAX = 150;
 
 function dh(iso: string | null | undefined): string {
   if (!iso) return "–";
@@ -33,17 +34,45 @@ export async function crmCourant(email: string): Promise<SuiviCrm | null> {
   return (data as SuiviCrm | null) ?? null;
 }
 
-// Modal de recherche (Home tab, section CRM).
-export function modalRechercheCrm(): Record<string, unknown> {
+// Modal de recherche (Home tab, section CRM) : liste déroulante filtrable
+// (le select Slack se filtre en tapant) des contacts connus (suivi CRM
+// récent, comptes récents, derniers messages contact), plus un champ
+// libre pour une adresse absente de la liste.
+export async function modalRechercheCrm(): Promise<Record<string, unknown>> {
+  const db = authAdmin();
+  const [crm, comptes, contacts] = await Promise.all([
+    db.from("crm_contacts").select("email, statut, maj_le").order("maj_le", { ascending: false }).limit(100).catch(() => ({ data: [] as { email: string; statut: string | null }[] })),
+    db.from("comptes_utilisateurs").select("email, user_metadata, created_at").order("created_at", { ascending: false }).limit(100).catch(() => ({ data: [] as { email: string; user_metadata: Record<string, string> | null }[] })),
+    db.from("contact_messages").select("email, created_at").order("created_at", { ascending: false }).limit(50).catch(() => ({ data: [] as { email: string }[] })),
+  ]);
+  const vus = new Set<string>();
+  const options: { text: { type: "plain_text"; text: string }; value: string }[] = [];
+  const ajouter = (email: string, etiquette: string) => {
+    const e = (email ?? "").trim().toLowerCase();
+    if (!EMAIL_RE.test(e) || vus.has(e) || options.length >= NB_MAX) return;
+    vus.add(e);
+    const t = (etiquette ? etiquette + " : " : "") + e;
+    options.push({ text: { type: "plain_text", text: t.slice(0, 75) }, value: e });
+  };
+  ((crm.data ?? []) as { email: string; statut: string | null }[]).forEach((r) => ajouter(r.email, "🎯 " + (LIBELLE[r.statut ?? "nouveau"] ?? r.statut ?? "Suivi")));
+  ((comptes.data ?? []) as { email: string; user_metadata: Record<string, string> | null }[]).forEach((r) => {
+    const meta = r.user_metadata ?? {};
+    const nom = [meta.prenom, meta.nom].filter(Boolean).join(" ");
+    ajouter(r.email, nom ? "👤 " + nom : "👤 Compte");
+  });
+  ((contacts.data ?? []) as { email: string }[]).forEach((r) => ajouter(r.email, "✉️ Contact"));
+  const blocs: Bloc[] = [];
+  if (options.length) {
+    blocs.push({ type: "input", optional: true, block_id: "liste", element: { type: "static_select", action_id: "v", placeholder: { type: "plain_text", text: "Tape pour filtrer (" + options.length + " contacts)" }, options }, label: { type: "plain_text", text: "Dans la liste" } });
+  }
+  blocs.push({ type: "input", optional: true, block_id: "q", element: { type: "plain_text_input", action_id: "v", placeholder: { type: "plain_text", text: "adresse e-mail absente de la liste" } }, label: { type: "plain_text", text: options.length ? "Ou saisis une adresse" : "Adresse e-mail" } });
+  blocs.push({ type: "context", elements: [{ type: "mrkdwn", text: "Vue 360° : compte, messages contact, newsletter, alertes, enquête et suivi CRM. Équivalent de /admin/crm/<email>." }] });
   return {
     type: "modal", callback_id: "crm_recherche",
     title: { type: "plain_text", text: "Fiche contact" },
     submit: { type: "plain_text", text: "Chercher" },
     close: { type: "plain_text", text: "Annuler" },
-    blocks: [
-      { type: "input", block_id: "q", element: { type: "plain_text_input", action_id: "v", placeholder: { type: "plain_text", text: "adresse e-mail de la personne" } }, label: { type: "plain_text", text: "Adresse e-mail" } },
-      { type: "context", elements: [{ type: "mrkdwn", text: "Vue 360° : compte, messages contact, newsletter, alertes, enquête et suivi CRM. Équivalent de /admin/crm/<email>." }] },
-    ],
+    blocks: blocs,
   };
 }
 
