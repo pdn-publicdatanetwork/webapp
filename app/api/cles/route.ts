@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { genererCle, MAX_CLES } from "@/lib/apiKeys";
 import { logConsent } from "@/lib/consent";
+import { mailCleApi } from "@/lib/securiteMail";
 import { normalizeEmail } from "@/lib/tokens";
 import { authAdmin } from "@/lib/supabaseAdmin";
 import { utilisateur } from "@/lib/userAuth";
@@ -26,7 +27,8 @@ export async function GET(req: Request) {
 }
 
 // POST : crée LA clé de l'utilisateur (une seule par compte), après acceptation
-// des CGU de l'API ; la valeur en clair n'est renvoyée qu'ici.
+// des CGU de l'API ; la valeur en clair n'est renvoyée qu'ici, puis la
+// notification part depuis api@dataparl.fr (le préfixe, jamais la clé).
 export async function POST(req: Request) {
   const user = await utilisateur(req);
   if (!user) return NextResponse.json({ error: "non connecté" }, { status: 401 });
@@ -39,15 +41,21 @@ export async function POST(req: Request) {
   const { error } = await db.from("api_keys").insert({ user_id: user.id, nom: parsed.data.nom, prefixe, key_hash: hash });
   if (error) return NextResponse.json({ error: "création impossible, réessaie" }, { status: 500 });
   await logConsent(normalizeEmail(user.email!), "subscribe", "api");
+  await mailCleApi(user.id, { nom: parsed.data.nom, prefixe }, true);
   return NextResponse.json({ cle, prefixe });
 }
 
-// DELETE ?id= : révoque une de mes clés.
+// DELETE ?id= : révoque une de mes clés, puis notifie depuis api@dataparl.fr.
 export async function DELETE(req: Request) {
   const user = await utilisateur(req);
   if (!user) return NextResponse.json({ error: "non connecté" }, { status: 401 });
   const id = new URL(req.url).searchParams.get("id") ?? "";
   if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "clé inconnue" }, { status: 400 });
-  await authAdmin().from("api_keys").update({ revoked_at: new Date().toISOString() }).eq("id", id).eq("user_id", user.id);
+  const db = authAdmin();
+  const { data: cle } = await db.from("api_keys").select("id, nom, prefixe")
+    .eq("id", id).eq("user_id", user.id).is("revoked_at", null).maybeSingle();
+  if (!cle) return NextResponse.json({ ok: true });
+  await db.from("api_keys").update({ revoked_at: new Date().toISOString() }).eq("id", id).eq("user_id", user.id);
+  await mailCleApi(user.id, { nom: cle.nom as string, prefixe: cle.prefixe as string }, false);
   return NextResponse.json({ ok: true });
 }

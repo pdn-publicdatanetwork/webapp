@@ -10,6 +10,8 @@ const PROC: Array<"google" | "github" | "twitter"> = ["google", "github", "twitt
 
 // Sécurité et connexion : méthodes de connexion, mot de passe, validation
 // en deux étapes (TOTP), clés d'accès (à venir) et mon activité.
+// Chaque action réussie ici signale l'événement à /api/compte/securite/evenement :
+// le serveur relit l'état réel du compte puis envoie l'e-mail de notification.
 type Facteur = { id: string; nom: string };
 
 export default function Securite() {
@@ -32,6 +34,12 @@ export default function Securite() {
   const appel = useCallback(async (url: string, init: RequestInit = {}) => {
     return fetch(url, { ...init, headers: { "Content-Type": "application/json", ...(init.headers ?? {}), Authorization: `Bearer ${(await sessionActuelle())?.access_token}` } });
   }, []);
+
+  // Signalement silencieux d'un événement de sécurité : la route serveur
+  // vérifie l'état réel du compte avant d'envoyer quoi que ce soit.
+  const signaler = useCallback((corps: Record<string, unknown>) => {
+    appel("/api/compte/securite/evenement", { method: "POST", body: JSON.stringify(corps) }).catch(() => {});
+  }, [appel]);
 
   async function chargerFacteurs() {
     const { data, error } = await authBrowser().auth.mfa.listFactors();
@@ -69,6 +77,17 @@ export default function Securite() {
       setDisponible(b.disponible !== false);
     });
   }, [session, appel]);
+
+  // Retour d'association d'une méthode (redirect OAuth avec ?lie=fournisseur) :
+  // la méthode vient d'être ajoutée, le serveur le vérifie avant d'informer.
+  useEffect(() => {
+    if (!session) return;
+    const lie = new URLSearchParams(window.location.search).get("lie") ?? "";
+    if (!["google", "github", "twitter"].includes(lie)) return;
+    signaler({ type: "methode", fournisseur: lie, ajoute: true });
+    chargerIdentites();
+    window.history.replaceState(null, "", "/mon-compte/securite");
+  }, [session, signaler]);
 
   if (session === undefined) return <p className="meta">Chargement…</p>;
   if (!session) {
@@ -129,6 +148,7 @@ export default function Securite() {
       setCode("");
       setFacteurId("");
       await chargerFacteurs();
+      signaler({ type: "2fa" });
       setMessage({ ok: true, texte: "Validation en deux étapes activée." });
     } else {
       setMessage({ ok: false, texte: "Code incorrect ou expiré, réessaie." });
@@ -141,6 +161,7 @@ export default function Securite() {
     for (const f of facteurs) await authBrowser().auth.mfa.unenroll({ factorId: f.id });
     setEnCours(false);
     setFacteurs([]);
+    signaler({ type: "2fa" });
     setMessage({ ok: true, texte: "Validation en deux étapes désactivée." });
   }
 
@@ -179,7 +200,9 @@ export default function Securite() {
   async function associer(provider: "google" | "github" | "twitter") {
     const { error } = await authBrowser().auth.linkIdentity({
       provider,
-      options: { redirectTo: `${window.location.origin}/mon-compte` },
+      // Retour sur cette page avec ?lie= : le signalement part au retour,
+      // quand la méthode est réellement reliée côté serveur.
+      options: { redirectTo: `${window.location.origin}/mon-compte/securite?lie=${provider}` },
     });
     if (error) {
       const m = error.message ?? "";
@@ -199,6 +222,9 @@ export default function Securite() {
     const { error } = await authBrowser().auth.unlinkIdentity(identite);
     if (error) return setMessage({ ok: false, texte: "Retrait impossible : garde au moins une méthode de connexion." });
     await chargerIdentites();
+    if (["google", "github", "twitter"].includes(identite.provider)) {
+      signaler({ type: "methode", fournisseur: identite.provider, ajoute: false });
+    }
     setMessage({ ok: true, texte: "Méthode retirée." });
   }
 
