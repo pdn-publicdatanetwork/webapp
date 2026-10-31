@@ -74,13 +74,24 @@ export function chargerPub() {
 // Sans accord, le script n'est jamais injecté : même promesse que la pub.
 // Clarity masque par défaut les zones de saisie dans les replays ; sans
 // identifiant configuré (lib/env.ts), la fonction ne fait rien.
+// Le chargeur officiel est un script inline (filet de file d'attente) : on
+// l'évite pour ne pas dépendre de « unsafe-inline » dans la CSP (R15). La
+// file d'attente est posée ici en JS ordinaire — non concernée par la CSP,
+// qui ne restreint que le chargement de scripts — puis le script officiel
+// (https://www.clarity.ms/tag/<id>, déjà en liste blanche dans la CSP) la
+// remplace au chargement.
 export function chargerClarity() {
   if (typeof document === "undefined" || !CLARITY_ID) return;
   if (document.getElementById("clarity-dataparl")) return;
+  const w = window as unknown as { clarity?: (...args: unknown[]) => void };
+  if (typeof w.clarity !== "function") {
+    const file: unknown[][] = [];
+    w.clarity = (...args: unknown[]) => file.push(args);
+  }
   const s = document.createElement("script");
   s.id = "clarity-dataparl";
-  s.type = "text/javascript";
-  s.text = `(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","${CLARITY_ID}");`;
+  s.async = true;
+  s.src = `https://www.clarity.ms/tag/${CLARITY_ID}`;
   document.head.appendChild(s);
 }
 

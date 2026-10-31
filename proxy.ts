@@ -78,6 +78,52 @@ function vers(req: NextRequest, host: string, pathname: string, status: 307 | 30
   return NextResponse.redirect(url, status);
 }
 
+// ── Anti-CSRF (R38, guide ANSSI « Maîtriser les standards de sécurité côté
+// navigateur ») ────────────────────────────────────────────────────────────
+// Vérification serveur de l'origine des requêtes mutantes (POST/PUT/PATCH/
+// DELETE) vers /api/* : un site tiers ne peut plus déclencher ces requêtes
+// avec les cookies du visiteur (SameSite=Lax protège déjà les POST, mais pas
+// les navigateurs anciens ni les sous-domaines compromis).
+// Deux signaux, tous deux impossible à spoofing côté client :
+//   - Sec-Fetch-Site (en-tête Navigateur Fetch Metadata) : « cross-site »
+//     suffit à rejeter ;
+//   - Origin : doit être l'hôte de la requête ou un domaine autorisé
+//     (dataparl.fr et les anciens domaines cavaparlement.eu / dataparl.com,
+//     encore servis pendant la transition).
+// Une requête sans Origin NI Sec-Fetch-Site vient d'un client non-navigateur
+// (curl, webhook, script serveur) : elle passe.
+// Les routes machine-à-machine (webhooks Slack/Notion/Resend/Applixir, cron,
+// revalidation, commande Slack de maintenance, rapports CSP) sont exclues :
+// elles reçoivent des appels tiers légitimes.
+const METHODES_MUTANTES = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+const API_MACHINE = [
+  /^\/api\/webhooks\//,
+  /^\/api\/slack\//,
+  /^\/api\/cron\//,
+  /^\/api\/revalidate$/,
+  /^\/api\/chat-telegram$/,
+  /^\/api\/maintenance\/slack$/,
+  /^\/api\/csp-rapport$/,
+];
+const DOMAINES_ORIGINE = [DOMAINE, ...ANCIENS];
+
+function origineRequeteValide(req: NextRequest): boolean {
+  const secFetchSite = req.headers.get("sec-fetch-site");
+  if (secFetchSite === "cross-site") return false;
+  const origine = req.headers.get("origin");
+  if (!origine) return true; // client non-navigateur ou requête même origine sans Origin
+  let hote: string;
+  try {
+    hote = new URL(origine).hostname.toLowerCase();
+  } catch {
+    return false; // Origin malformée : par prudence, on rejette
+  }
+  // Même origine (aperçus Vercel, localhost, tests) ou domaine autorisé.
+  const hoteRequete = (req.headers.get("host") ?? "").split(":")[0].toLowerCase();
+  if (hote === hoteRequete) return true;
+  return DOMAINES_ORIGINE.some((d) => hote === d || hote.endsWith(`.${d}`));
+}
+
 function protege(res: NextResponse): NextResponse {
   res.headers.set("X-Robots-Tag", "noindex, nofollow");
   res.headers.set("X-Frame-Options", "DENY");
@@ -89,6 +135,15 @@ function protege(res: NextResponse): NextResponse {
 export async function proxy(req: NextRequest) {
   const host = (req.headers.get("host") ?? "").split(":")[0].toLowerCase();
   const path = req.nextUrl.pathname;
+
+  // Anti-CSRF (R38) : rejet des requêtes mutantes cross-site vers /api/*.
+  if (METHODES_MUTANTES.has(req.method) && path.startsWith("/api/") &&
+      !API_MACHINE.some((r) => r.test(path)) && !origineRequeteValide(req)) {
+    return new NextResponse("Requête refusée : origine non autorisée.\n", {
+      status: 403,
+      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+    });
+  }
 
   // ── Journal des pages WhatsApp/Telegram ────────────────────────────────────
   // Les pages qui affichent les liens des canaux (Daily Telegram/WhatsApp) sont
