@@ -77,6 +77,18 @@ export const LOGOS_GROUPES_SENAT: readonly string[] = [
   "CRC", "CRCE-K", "RDSE", "RDPI", "ECOS", "GEST", "UC", "UNT", "INDEP", "IRT",
   "SOC", "PS", "LR", "RN", "RN-UDR", "UDR", "NI",
 ];
+// Logos des groupes du Sénat embarqués dans la webapp, servis par
+// /media/logos-groupes/<fichier> (modules base64, sans stockage externe).
+// Source : pages Wikipedia des groupes, miniatures 200px.
+export const LOGOS_GROUPES_SENAT_EMBARQUES: Record<string, string> = {
+  SOC: "soc-senat.png",
+  LR: "lr-senat.png",
+  RDSE: "rdse-senat.png",
+  PS: "ps-senat.png",
+  "CRCE-K": "crce-k-senat.jpg",
+  ECOS: "ecos-senat.jpg",
+};
+
 export const LOGOS_GROUPES_PE: readonly string[] = [
   "PPE", "S&D", "Renew", "PfE", "GUE/NGL", "ECR", "ESN", "Verts/ALE", "Verts", "NI",
 ];
@@ -89,6 +101,10 @@ export function cheminLogoGroupe(chambre: string, sigle: string): string | null 
     return leg && logoSource(chambre, sigle)
       ? `${MEDIA_BASE}/groupes/${s}-${CODE_CHAMBRE[chambre]}-${leg.romain}.png`
       : null;
+  }
+  if (chambre === "senat") {
+    const embarque = Object.entries(LOGOS_GROUPES_SENAT_EMBARQUES).find(([s]) => s.toLowerCase() === (sigle ?? "").toLowerCase());
+    if (embarque) return `/media/logos-groupes/${embarque[1]}`;
   }
   const connus = chambre === "senat" ? LOGOS_GROUPES_SENAT : chambre === "europarl" ? LOGOS_GROUPES_PE : null;
   return connus && connus.some((x) => x.toLowerCase() === (sigle ?? "").toLowerCase())

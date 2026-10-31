@@ -4,6 +4,11 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
 
 ## 2026-10-31
 
+- **Couleurs des marques VigiParl' et MixiParl'** : retour aux couleurs du kit logo (VigiParl' rouge #E30613, MixiParl' violet #7B3FE4, texte blanc), appliqué partout : surlignages, cartes chiffres, barres, wordmarks, mode clair et sombre.
+- **Logos des groupes du Sénat servis par le site** : SOC, LR, RDSE, PS, CRCE-K et ECOS embarqués dans la webapp (base64, miniatures 200px des pages Wikipedia) et servis par /media/logos-groupes/<fichier> avec un an de cache ; plus aucune dépendance à un téléversement sur media.dataparl.fr pour ces groupes.
+- **Réseau des employeurs partagés** : sur les fiches /collab/<slug> des assistants reliés à 3 eurodéputés ou plus (assistants de groupement), un graphe de nœuds montre d'un coup d'œil tous les élus employeurs, colorés par groupe politique, sur le modèle du réseau des tiers payants et prestataires.
+## 2026-10-31
+
 - **Fiches individuelles des assistants « (groupement) »** : les assistants rattachés à un groupe politique du Parlement européen ont une fiche /collab/<slug> comme les autres collaborateurs ; la fiche nomme et lie désormais l'employeur collectif (« Assistant accrédité rattaché au groupe politique PfE (groupement) » vers la fiche du groupe), déduplique les postes en cours (fin des « Assistant accrédité (groupement) » répétés) et le parcours enrichi affiche « groupe politique (groupement) » à la place d'un employeur vide.
 - **Liens vers les fiches individuelles** : le trombinoscope PE (cartes et tableau) et la section « Assistants rattachés au groupe » des fiches de groupes PE pointent chaque nom vers sa fiche individuelle.
 - **Export PNG de l'hémicycle refait** : composition propre et centrée prête à partager, hémicycle agrandi, sous-titre « N élus, N groupes », légende en rangées de 5, logo DataParl' (bloc jaune) et mention « dataparl.fr ; données au … » (mention de la date seulement si elle est connue).

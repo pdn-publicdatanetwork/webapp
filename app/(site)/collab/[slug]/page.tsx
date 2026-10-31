@@ -9,6 +9,7 @@ import { groupesDuCollab } from "@/lib/equipesGroupesData";
 import { cabinetsDeCollab, ministresParIds } from "@/lib/gouvernement";
 import { finEffective, periode } from "@/lib/gouvernementTypes";
 import ParcoursCollab from "./ParcoursCollab";
+import GrapheReseau, { type NoeudReseau } from "@/app/_components/GrapheReseau";
 import ProfilCV from "./ProfilCV";
 import Partager from "./Partager";
 import styles from "./fiche.module.css";
@@ -154,6 +155,40 @@ export default async function FicheCollab({ params }: Props) {
 
         <ParcoursCollab id={c.collab_id} suite={`/collab/${c.slug}`} />
       </section>
+
+      {/* Réseau des employeurs partagés : quand la personne travaille pour
+          plusieurs eurodéputés (assistant de groupement en particulier), le
+          graphe montre d'un coup d'œil tous les élus reliés, comme le réseau
+          des tiers payants et prestataires. */}
+      {(() => {
+        const employeursPe = actuellesVues
+          .filter((p) => p.chambre === "europarl" && p.elu_id)
+          .map((p) => ({ p, f: fiches.find((x) => x.chambre === p.chambre && x.elu_id === p.elu_id) }))
+          .filter(({ p, f }) => f || p.elu_nom);
+        const uniques = [...new Map(employeursPe.map(({ p, f }) => [p.elu_id, { p, f }])).values()];
+        if (uniques.length < 3) return null;
+        const noeuds: NoeudReseau[] = [
+          { id: "collab", label: c.nom, type: "structure", poids: uniques.length },
+          ...uniques.map(({ p, f }) => ({
+            id: p.elu_id,
+            label: f ? prenomNom(f.prenom, f.nom) : nomAffiche(p.elu_nom),
+            type: "elu" as const,
+            groupe: f?.groupe || undefined,
+            href: f ? `/parlementaires/${encodeURIComponent(f.slug)}` : undefined,
+          })),
+        ];
+        const aretes = uniques.map(({ p }) => ({ source: "collab", target: p.elu_id }));
+        return (
+          <section>
+            <h2>Le réseau des employeurs partagés</h2>
+            <p className="meta" style={{ marginTop: 0 }}>
+              {nom} travaille pour {uniques.length} eurodéputés à la fois (assistant de groupement) : le nœud
+              central, c'est {nom} ; chaque nœud est un élu employeur, coloré selon son groupe politique.
+            </p>
+            <GrapheReseau noeuds={noeuds} aretes={aretes} />
+          </section>
+        );
+      })()}
 
       {/* Profil CV déclaré par l'intéressé : rubrique séparée, réservée aux
           comptes, jamais mélangée aux parcours sourcés AN/Sénat. */}
