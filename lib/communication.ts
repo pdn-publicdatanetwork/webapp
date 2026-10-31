@@ -87,12 +87,22 @@ export async function lienDuCommunique(c: Communique, a: Admin): Promise<string>
   return `${LIENS_BASE}/${code}?utm_source=communique`;
 }
 
+// Opt-out du suivi (communication_preferences.tracking_optout) : la
+// personne reçoit le même message, mais avec le lien direct (non tracé) et
+// sans mesure d'ouverture (ignorée côté webhook).
+async function sansSuivi(email: string): Promise<boolean> {
+  const { data } = await authAdmin().from("communication_preferences").select("tracking_optout").eq("email", email.toLowerCase()).maybeSingle();
+  return data?.tracking_optout === true;
+}
+
 export async function envoyerCommunique(a: Admin, c: Communique, destinataires: { email: string; prenom: string }[], test = false) {
   const lien = await lienDuCommunique(c, a);
-  const { html, texte } = corpsCommunique(c, lien);
+  const lienDirect = `${SITE}/presse/communiques/${c.slug}`;
   let envoyes = 0, echecs = 0;
   const envoiId = test ? null : await ouvrirEnvoi(a, "communique", c.id, c.titre, "carnet presse");
   for (const d of destinataires.slice(0, MAX_DESTINATAIRES)) {
+    const suivi = await sansSuivi(d.email);
+    const { html, texte } = corpsCommunique(c, suivi ? lienDirect : lien);
     const stop = `${SITE}/api/presse/desinscription?e=${encodeURIComponent(d.email)}&s=${signaturePresse(d.email)}`;
     const r = await expedier({
       from: "presse@dataparl.fr", replyTo: "presse@dataparl.fr", to: [d.email], subject: `${test ? "[Test] " : ""}${c.titre}`, titre: c.titre,

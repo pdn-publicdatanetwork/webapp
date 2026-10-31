@@ -178,8 +178,20 @@ const CHAMP_EVENEMENT: Record<string, string> = {
   "email.opened": "opened_at", "email.clicked": "clicked_at", "email.bounced": "bounced_at", "email.complained": "bounced_at",
 };
 
+// Opt-out du suivi : si le destinataire a refusé le suivi dans ses
+// préférences, ses ouvertures et ses clics ne sont ni mesurés ni conservés.
+async function sansSuivi(emailId: string): Promise<boolean> {
+  const db = authAdmin();
+  const { data } = await db.from("emails").select("to_addr").eq("resend_id", emailId).maybeSingle();
+  const destinataire = ((data?.to_addr ?? "").split(",")[0] ?? "").trim().toLowerCase();
+  if (!destinataire) return false;
+  const { data: pref } = await db.from("communication_preferences").select("tracking_optout").eq("email", destinataire).maybeSingle();
+  return pref?.tracking_optout === true;
+}
+
 export async function enregistrerEvenement(type: string, emailId: string, payload: unknown): Promise<void> {
   const db = authAdmin();
+  if ((type === "email.opened" || type === "email.clicked") && (await sansSuivi(emailId))) return;
   await db.from("email_events").insert({ message_id: emailId, type, payload: payload ?? {} });
   const champ = CHAMP_EVENEMENT[type];
   if (champ) await db.from("emails").update({ [champ]: new Date().toISOString() }).eq("resend_id", emailId).is(champ, null);
