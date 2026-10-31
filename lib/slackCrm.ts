@@ -1,5 +1,6 @@
 import "server-only";
 import { authAdmin } from "./supabaseAdmin";
+import { boutonSuppression } from "./slackSuppression";
 
 // Console Slack « CRM » : fiche 360° par e-mail (compte, messages contact,
 // newsletter, alertes, enquête, suivi) et édition du suivi (statut, tags,
@@ -154,6 +155,7 @@ export async function ficheCrm(q: string): Promise<Bloc[]> {
   morceaux.push({ type: "actions", elements: [
     { type: "button", text: { type: "plain_text", text: "🎯 Modifier le suivi" }, action_id: "crm_editer", value: email },
   ] });
+  if (suivi) morceaux.push(boutonSuppression("crm", email, "🗑 Supprimer le suivi"));
   return morceaux;
 }
 
