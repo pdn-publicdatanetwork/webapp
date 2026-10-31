@@ -3,6 +3,7 @@ import Link from "next/link";
 import { partisAvecComptes, type PartiCompte } from "@/lib/collectifsData";
 import { hrefParti } from "@/lib/collectifs";
 import { libelleParti } from "@/lib/partisNoms";
+import { couleurParti } from "@/lib/couleurs";
 import { agreger, partFemmes, pct, statsElus, tauxTurnover, type Agregat, type StatElu } from "@/lib/stats";
 
 export const revalidate = 86400;
@@ -24,6 +25,7 @@ export default async function IndexPartis() {
     statsElus().catch((): StatElu[] => []),
   ]);
   const fr = (n: number) => n.toLocaleString("fr-FR");
+  const totalElus = partis.reduce((n, p) => n + p.total, 0);
 
   // Stats équipes par parti (sigle, toutes chambres confondues).
   const equipes = new Map<string, Agregat>();
@@ -41,6 +43,7 @@ export default async function IndexPartis() {
         Les collaborateurs de chaque parti : <Link href="/collab/parti">collaborateurs par parti</Link>.
       </p>
       {partis.length === 0 && <p className="meta">Aucun parti actif enregistré pour l&apos;instant.</p>}
+      {partis.length > 0 && <p className="meta">{partis.length} partis ; {fr(totalElus)} élus suivis, du plus représenté au moins représenté.</p>}
       <ul className="lignes-partis">
         {partis.map((p) => {
           const agg = equipes.get(p.sigle);
@@ -53,7 +56,7 @@ export default async function IndexPartis() {
           return (
             <li key={p.sigle}>
               <a className="ligne-parti" href={hrefParti(p.sigle) ?? "#"}>
-                <span><strong>{"Élus du " + libelleParti(p.sigle)}</strong><span className="badge-sigle">{p.sigle}</span></span>
+                <span className="ligne-parti-tete"><span className="point" style={{ ["--c" as string]: couleurParti(p.sigle) }} /><strong>{"Élus du " + libelleParti(p.sigle)}</strong><span className="badge-sigle">{p.sigle}</span></span>
                 <span className="ligne-parti-chiffres"><b>{fr(p.total)}</b>{" élu" + (p.total > 1 ? "s" : "")}</span>
                 {repartition && <span className="meta">{repartition}</span>}
               </a>
