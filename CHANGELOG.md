@@ -2,6 +2,11 @@
 
 Historique des évolutions de la webapp DataParl' (dataparl.fr).
 
+## 2026-10-31
+
+- **Pages groupes par chambre** : `/groupe/an`, `/groupe/senat` et `/groupe/pe` (qui répondaient « Groupe introuvable ») deviennent de vraies pages de destination : titre par chambre, cartes de groupes avec effectifs, liens par mandature, retour vers tous les groupes et les partis.
+- **Hémicycle de l'Assemblée nationale** sur `/groupe/an` : SVG léger, arcs proportionnels aux effectifs de chaque groupe, couleurs usuelles de la charte (lib/couleurs.ts), sigle + effectif dans les grands secteurs, panneau de détail au survol (élus, collaborateurs suivis, renouvellement 12 mois, part de femmes, lien vers la fiche) et légende complète ; les cartes sous le graphique servent de version accessible sans souris.
+
 ## 2026-10-30
 
 - Index /groupe et /parti v2 : les groupes passent en cartes avec effectifs (élus, collaborateurs, renouvellement, part de femmes) et les partis en lignes riches classées par nombre d'élus, avec répartition par chambre : fin des annuaires de liens bleus.
