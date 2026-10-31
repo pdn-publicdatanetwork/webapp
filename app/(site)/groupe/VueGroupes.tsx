@@ -52,15 +52,18 @@ function bornesGroupes(groupes: GroupeVue[], total: number) {
   return bornes;
 }
 
-// SVG autonome de l'hémicycle + légende, fond crème, titre, logo DataParl'
-// (bloc jaune derrière « Parl' ») et mention de la source et de la date.
-function svgExport(groupes: GroupeVue[], total: number, titre: string, dateMaj: string): string {
+// SVG autonome de l'hémicycle + légende : composition prête à partager
+// (fond crème, titre, marges équilibrées, logo DataParl' avec le bloc jaune
+// derrière « Parl' », mention de la source et de la date). Retourne le XML
+// et les dimensions pour le rendu canvas.
+function svgExport(groupes: GroupeVue[], total: number, titre: string, dateMaj: string): { xml: string; l: number; h: number } {
   const bornes = bornesGroupes(groupes, total);
-  const L = 1040, H = 760;
-  const pol2 = (r: number, a: number): [number, number] => [520 + r * Math.cos(a), 272 + r * Math.sin(a)];
+  const L = 1080;
+  const CXE = 540, CYE = 430, RE = 310, RE_IN = 128;
+  const polE = (r: number, a: number): [number, number] => [CXE + r * Math.cos(a), CYE + r * Math.sin(a)];
   const sect = (a1: number, a2: number) => {
-    const [x1, y1] = pol2(R, a1), [x2, y2] = pol2(R, a2), [x3, y3] = pol2(R_IN, a2), [x4, y4] = pol2(R_IN, a1);
-    return `M ${x1.toFixed(1)} ${y1.toFixed(1)} A ${R} ${R} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)} L ${x3.toFixed(1)} ${y3.toFixed(1)} A ${R_IN} ${R_IN} 0 0 0 ${x4.toFixed(1)} ${y4.toFixed(1)} Z`;
+    const [x1, y1] = polE(RE, a1), [x2, y2] = polE(RE, a2), [x3, y3] = polE(RE_IN, a2), [x4, y4] = polE(RE_IN, a1);
+    return `M ${x1.toFixed(1)} ${y1.toFixed(1)} A ${RE} ${RE} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)} L ${x3.toFixed(1)} ${y3.toFixed(1)} A ${RE_IN} ${RE_IN} 0 0 0 ${x4.toFixed(1)} ${y4.toFixed(1)} Z`;
   };
   let corps = "";
   groupes.forEach((gr, i) => {
@@ -68,40 +71,43 @@ function svgExport(groupes: GroupeVue[], total: number, titre: string, dateMaj: 
     const ampl = ((b.a2 - b.a1) * 180) / Math.PI;
     corps += `<path d="${sect(b.a1 + ECART, b.a2 - ECART)}" fill="${gr.couleur}" stroke="#FFFDF5" stroke-width="1"/>`;
     if (gr.elus >= 35 && ampl >= 9) {
-      const [tx, ty] = pol2((R + R_IN) / 2, b.mid);
+      const [tx, ty] = polE((RE + RE_IN) / 2, b.mid);
       const fill = texteSur(gr.couleur);
-      corps += `<text x="${tx.toFixed(1)}" y="${(ty - 5).toFixed(1)}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="${fill}">${esc(gr.sigle)}</text>`;
-      corps += `<text x="${tx.toFixed(1)}" y="${(ty + 10).toFixed(1)}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="${fill}" opacity="0.92">${gr.elus}</text>`;
+      corps += `<text x="${tx.toFixed(1)}" y="${(ty - 6).toFixed(1)}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="700" fill="${fill}">${esc(gr.sigle)}</text>`;
+      corps += `<text x="${tx.toFixed(1)}" y="${(ty + 12).toFixed(1)}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" fill="${fill}" opacity="0.92">${gr.elus}</text>`;
     } else {
-      const [ix, iy] = pol2(R + 2, b.mid);
-      const [lx, ly] = pol2(R + 22, b.mid);
+      const [ix, iy] = polE(RE + 2, b.mid);
+      const [lx, ly] = polE(RE + 26, b.mid);
       const cosMid = Math.cos(b.mid);
       const ancre = cosMid > 0.35 ? "start" : cosMid < -0.35 ? "end" : "middle";
+      const xT = ancre === "start" ? lx + 6 : ancre === "end" ? lx - 6 : lx;
       corps += `<line x1="${ix.toFixed(1)}" y1="${iy.toFixed(1)}" x2="${lx.toFixed(1)}" y2="${ly.toFixed(1)}" stroke="#B9B4A5" stroke-width="1"/>`;
-      const xT = ancre === "start" ? lx + 4 : ancre === "end" ? lx - 4 : lx;
-      corps += `<text x="${xT.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${ancre}" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#4A5670">${esc(gr.sigle + " " + gr.elus)}</text>`;
+      corps += `<text x="${xT.toFixed(1)}" y="${(ly + 4).toFixed(1)}" text-anchor="${ancre}" font-family="system-ui, sans-serif" font-size="13" font-weight="600" fill="#4A5670">${esc(gr.sigle + " " + gr.elus)}</text>`;
     }
   });
-  // Légende : rangées de 5 pastilles + sigle gras + effectif.
+  // Légende : rangées de 5, pastille + sigle gras + effectif.
   let legende = "";
   groupes.forEach((gr, i) => {
     const col = i % 5, ligne = Math.floor(i / 5);
-    const x = 90 + col * 194, y = 560 + ligne * 34;
-    legende += `<rect x="${x}" y="${y - 11}" width="12" height="12" rx="3" fill="${gr.couleur}"/>`;
-    legende += `<text x="${x + 20}" y="${y}" font-family="system-ui, sans-serif" font-size="13" fill="#071A41"><tspan font-weight="700">${esc(gr.sigle)}</tspan><tspan font-weight="400" fill="#4A5670"> ${gr.elus}</tspan></text>`;
+    const x = 110 + col * 190, y = 816 + ligne * 36;
+    legende += `<rect x="${x}" y="${y - 12}" width="14" height="14" rx="3" fill="${gr.couleur}"/>`;
+    legende += `<text x="${x + 24}" y="${y}" font-family="system-ui, sans-serif" font-size="14" fill="#071A41"><tspan font-weight="700">${esc(gr.sigle)}</tspan><tspan font-weight="400" fill="#4A5670"> ${gr.elus}</tspan></text>`;
   });
-  const lignesLegende = Math.ceil(groupes.length / 5);
-  const yPied = 560 + lignesLegende * 34 + 40;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${L}" height="${H}" viewBox="0 0 ${L} ${H}">
+  const yPied = 816 + Math.ceil(groupes.length / 5) * 36 + 44;
+  const H = yPied + 42;
+  const mention = "dataparl.fr" + (dateMaj ? " ; données au " + esc(dateMaj) : "");
+  const xml = `<svg xmlns="http://www.w3.org/2000/svg" width="${L}" height="${H}" viewBox="0 0 ${L} ${H}">
 <rect width="${L}" height="${H}" fill="#FFFDF5"/>
-<text x="${L / 2}" y="66" text-anchor="middle" font-family="Georgia, serif" font-size="30" font-weight="700" fill="#071A41">${esc(titre)}</text>
+<text x="${L / 2}" y="66" text-anchor="middle" font-family="Georgia, serif" font-size="32" font-weight="700" fill="#071A41">${esc(titre)}</text>
+<text x="${L / 2}" y="96" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" fill="#4A5670">${total} élus, ${groupes.length} groupes</text>
 <g>${corps}</g>
 ${legende}
-<text x="60" y="${yPied}" font-family="Georgia, serif" font-size="26" font-weight="700" fill="#071A41">Data</text>
-<rect x="126" y="${yPied - 24}" width="80" height="34" fill="#FFD23F"/>
-<text x="131" y="${yPied}" font-family="Georgia, serif" font-size="26" font-weight="700" fill="#071A41">Parl'</text>
-<text x="${L - 60}" y="${yPied}" text-anchor="end" font-family="system-ui, sans-serif" font-size="14" fill="#4A5670">dataparl.fr ; données au ${esc(dateMaj)}</text>
+<text x="110" y="${yPied}" font-family="Georgia, serif" font-size="26" font-weight="700" fill="#071A41">Data</text>
+<rect x="178" y="${yPied - 25}" width="86" height="33" fill="#FFD23F"/>
+<text x="184" y="${yPied}" font-family="Georgia, serif" font-size="26" font-weight="700" fill="#071A41">Parl'</text>
+<text x="${L - 110}" y="${yPied}" text-anchor="end" font-family="system-ui, sans-serif" font-size="14" fill="#4A5670">${mention}</text>
 </svg>`;
+  return { xml, l: L, h: H };
 }
 
 export default function VueGroupes({ groupes, dateMaj, resume, seg, titre }: {
@@ -125,12 +131,12 @@ export default function VueGroupes({ groupes, dateMaj, resume, seg, titre }: {
 
   // Export PNG : le SVG autonome est dessiné sur un canvas 2x puis téléchargé.
   const telecharger = () => {
-    const xml = svgExport(groupes, total, titre, dateMaj);
+    const { xml, l, h } = svgExport(groupes, total, titre, dateMaj);
     const url = URL.createObjectURL(new Blob([xml], { type: "image/svg+xml;charset=utf-8" }));
     const img = new Image();
     img.onload = () => {
       const c = document.createElement("canvas");
-      c.width = 1040 * 2; c.height = 760 * 2;
+      c.width = l * 2; c.height = h * 2;
       const ctx = c.getContext("2d");
       if (!ctx) return;
       ctx.fillStyle = "#FFFDF5";
