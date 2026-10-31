@@ -13,8 +13,6 @@ import { espaceInterne } from "@/lib/consentement";
 // empêche donc son script (fundingchoicesmessages.google.com) de se
 // charger, tout en gardant GTM, AdSense et Clarity.
 
-const w2 = window as unknown as { __fcBloque?: boolean };
-
 function estScriptFC(n: Node): boolean {
   if (n.nodeName !== "SCRIPT") return false;
   const s = n as HTMLScriptElement;
@@ -24,8 +22,9 @@ function estScriptFC(n: Node): boolean {
 // Une seule fois : intercepter l'insertion des scripts Funding Choices
 // avant leur exécution. Les autres scripts passent normalement.
 function bloquerFundingChoices() {
-  if (typeof document === "undefined" || w2.__fcBloque) return;
-  w2.__fcBloque = true;
+  const w = window as unknown as { __fcBloque?: boolean };
+  if (typeof document === "undefined" || w.__fcBloque) return;
+  w.__fcBloque = true;
   for (const h of [document.head, document.body]) {
     const ac = h.appendChild.bind(h);
     (h as unknown as { appendChild: (n: Node) => Node }).appendChild = (n: Node) => (estScriptFC(n) ? n : ac(n));
