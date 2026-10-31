@@ -4,6 +4,7 @@ import { dataQuery } from "./data";
 import type { Collaborateur } from "./referentiel";
 import { deciderManuellement } from "./association";
 import { purgerPiecesDemande } from "./associationPieces";
+import { boutonSuppression } from "./slackSuppression";
 
 // Console Slack « Associations » : file des demandes de rattachement d'une
 // fiche collaborateur à un compte, à vérifier manuellement (contrôles non
@@ -153,7 +154,7 @@ export async function blocsAssoc(): Promise<Bloc[]> {
   demandes.forEach((d) => {
     const f = fiches.get(d.collab_id);
     const nom = f && (f.prenom || f.nom) ? [f.prenom, f.nom].filter(Boolean).join(" ") : nomDepuisSlug(d.collab_slug);
-    const preuve = d.email_preuve ? ", preuve : \`" + d.email_preuve + "\`" : "";
+    const preuve = d.email_preuve ? ", preuve : `" + d.email_preuve + "`" : "";
     const gel = d.gel_jusqu_a ? ", gel jusqu'au " + d.gel_jusqu_a.slice(0, 10) : "";
     blocs.push({
       type: "section",
@@ -205,7 +206,7 @@ export async function blocsCvAssoc(): Promise<Bloc[]> {
     const mode = v.verifie_par ? (LIBELLE_VERIFIE_PAR[v.verifie_par] ?? v.verifie_par) : "";
     blocs.push({
       type: "section",
-      text: { type: "mrkdwn", text: "*" + nom + "* (fiche \`" + v.collab_slug + "\`)\nCompte : " + (emailDe.get(v.user_id) ?? v.user_id.slice(0, 8)) + ", associée le " + dj(v.verifie_le) + (mode ? ", " + mode : "") + "\n" + (cv ? "📄 Profil CV : " + cv + " élément(s) publié(s)" : "_Pas encore de profil CV publié_") },
+      text: { type: "mrkdwn", text: "*" + nom + "* (fiche `" + v.collab_slug + "`)\nCompte : " + (emailDe.get(v.user_id) ?? v.user_id.slice(0, 8)) + ", associée le " + dj(v.verifie_le) + (mode ? ", " + mode : "") + "\n" + (cv ? "📄 Profil CV : " + cv + " élément(s) publié(s)" : "_Pas encore de profil CV publié_") },
     });
     blocs.push({ type: "actions", elements: [
       { type: "button", text: { type: "plain_text", text: "❌ Dissocier" }, style: "danger", action_id: "assoc_dissocier", value: v.id },
@@ -217,13 +218,14 @@ export async function blocsCvAssoc(): Promise<Bloc[]> {
 
 // 20 derniers événements du journal des associations, avec le nom du
 // collaborateur, la fiche et l'e-mail du compte (et l'adresse de preuve
-// quand l'événement en porte une).
+// quand l'événement en porte une). Les 10 premières lignes peuvent être
+// supprimées (nettoyage de tests), avec confirmation.
 export async function blocsJournalAssoc(): Promise<Bloc[]> {
   const db = authAdmin();
   const { data, error } = await db.from("associations_journal")
-    .select("user_id, collab_id, evenement, detail, le").order("le", { ascending: false }).limit(20);
+    .select("id, user_id, collab_id, evenement, detail, le").order("le", { ascending: false }).limit(20);
   if (error) throw new Error("associations_journal : " + error.message);
-  const lignes = (data ?? []) as { user_id: string; collab_id: string; evenement: string; detail: Record<string, unknown> | null; le: string }[];
+  const lignes = (data ?? []) as { id: number; user_id: string; collab_id: string; evenement: string; detail: Record<string, unknown> | null; le: string }[];
   const userIds = [...new Set(lignes.map((l) => l.user_id))];
   const collabIds = [...new Set(lignes.map((l) => l.collab_id))];
   const [emailDe, fiches, slugDe] = await Promise.all([
@@ -231,19 +233,29 @@ export async function blocsJournalAssoc(): Promise<Bloc[]> {
     fichesParId(collabIds),
     slugsParId(collabIds),
   ]);
-  const texte = lignes.map((l) => {
+  const texteDe = (l: typeof lignes[number]): string => {
     const f = fiches.get(l.collab_id);
     const nom = f && (f.prenom || f.nom) ? [f.prenom, f.nom].filter(Boolean).join(" ") : nomDepuisSlug(slugDe.get(l.collab_id) ?? l.collab_id);
     const slug = slugDe.get(l.collab_id);
     const detail = (l.detail ?? {}) as Record<string, unknown>;
-    const from = typeof detail.from === "string" ? ", depuis \`" + detail.from + "\`" : typeof detail.par === "string" ? ", par " + detail.par : "";
-    return "• " + dh(l.le) + " : " + (LIBELLE_EVENEMENT[l.evenement] ?? l.evenement) + " : *" + nom + "*" + (slug ? " (fiche \`" + slug + "\`)" : "") + ", compte " + (emailDe.get(l.user_id) ?? l.user_id.slice(0, 8)) + from;
-  }).join("\n") || "Aucun événement.";
-  return [
-    { type: "header", text: { type: "plain_text", text: "Journal", emoji: true } },
-    { type: "section", text: { type: "mrkdwn", text: texte } },
-    { type: "context", elements: [{ type: "mrkdwn", text: "20 derniers événements, toutes décisions confondues (automatiques et manuelles)." }] },
-  ];
+    const from = typeof detail.from === "string" ? ", depuis `" + detail.from + "`" : typeof detail.par === "string" ? ", par " + detail.par : "";
+    return "• " + dh(l.le) + " : " + (LIBELLE_EVENEMENT[l.evenement] ?? l.evenement) + " : *" + nom + "*" + (slug ? " (fiche `" + slug + "`)" : "") + ", compte " + (emailDe.get(l.user_id) ?? l.user_id.slice(0, 8)) + from;
+  };
+  if (!lignes.length) {
+    return [
+      { type: "header", text: { type: "plain_text", text: "Journal", emoji: true } },
+      { type: "section", text: { type: "mrkdwn", text: "Aucun événement." } },
+      { type: "context", elements: [{ type: "mrkdwn", text: "20 derniers événements, toutes décisions confondues (automatiques et manuelles)." }] },
+    ];
+  }
+  const blocs: Bloc[] = [{ type: "header", text: { type: "plain_text", text: "Journal", emoji: true } }];
+  lignes.slice(0, 10).forEach((l) => {
+    blocs.push({ type: "section", text: { type: "mrkdwn", text: texteDe(l) } });
+    blocs.push(boutonSuppression("journal", String(l.id), "🗑 ligne du " + dh(l.le).slice(0, 14)));
+  });
+  if (lignes.length > 10) blocs.push({ type: "section", text: { type: "mrkdwn", text: lignes.slice(10).map(texteDe).join("\n") } });
+  blocs.push({ type: "context", elements: [{ type: "mrkdwn", text: "20 derniers événements. La suppression d'une ligne sert au nettoyage de tests : elle est définitive et tracée dans l'audit." }] });
+  return blocs;
 }
 
 // Décision manuelle depuis Slack : mêmes effets que l'admin (e-mail à la

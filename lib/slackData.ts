@@ -1,13 +1,17 @@
 import "server-only";
 import { authAdmin, dataAdmin } from "./supabaseAdmin";
+import { boutonSuppression } from "./slackSuppression";
+import { bouton, expedier, hashJeton, piedObligatoire } from "./mail";
+import { randomToken } from "./tokens";
 
 // Données de l'espace admin accessibles depuis Slack (onglet Accueil →
 // section Données, et commande /sql en complément) : comptes, fiche compte,
 // abonnés newsletter, clés API, téléchargements Sheets, enquête
-// utilisateurs. Requêtes préparées en lecture seule : aucune écriture depuis
-// Slack : les actions sensibles (révocation de clé, quotas, désinscription,
-// renvoi d'invitation) restent dans l'admin authentifié (OTP). Les modals du
-// Home tab ne sont visibles que de la personne qui clique.
+// utilisateurs. Chaque liste permet de supprimer les lignes de test
+// (bouton 🗑, confirmation Slack, DELETE réel, trace admin_audit).
+// Les écritures métier sensibles (révocation de clé avec historique,
+// suppression d'un compte complet GoTrue) restent dans l'admin : ici, la
+// suppression ne vise que le nettoyage de lignes parasites.
 
 type Bloc = Record<string, unknown>;
 
@@ -38,7 +42,7 @@ function aide(): Bloc[] {
       "• `/sql telechargements [feuille]` : exports DataParl' Sheets\n" +
       "• `/sql survey [id]` : enquête utilisateurs (moyennes, ou le détail d'une réponse)",
     ),
-    contexte("Les mêmes données sont aussi dans l'onglet Accueil de l'app, section Données. Lecture seule."),
+    contexte("Les mêmes données sont aussi dans l'onglet Accueil de l'app, section Données. Les listes du Home tab proposent la suppression des lignes de test (bouton 🗑)."),
   ];
 }
 
@@ -55,13 +59,13 @@ export async function comptes(page: number): Promise<Bloc[]> {
     .range(page * PAR_PAGE, page * PAR_PAGE + PAR_PAGE - 1);
   if (error) throw new Error(`comptes_utilisateurs : ${error.message}`);
   const lignes = ((data ?? []) as Compte[]).map(
-    (c) => `• ${c.email} : inscrit le ${dh(c.created_at)}, connexion ${dh(c.last_sign_in_at)}, \`${c.id.slice(0, 8)}\``,
+    (c) => `• ${c.email} : inscrit le ${dh(c.created_at)}, connexion ${dh(c.last_sign_in_at)}, \`${c.id.slice(0, 8)}\`,
   );
   const pages = Math.max(1, Math.ceil((count ?? 1) / PAR_PAGE));
   return [
     entete(`👥 Comptes : ${count ?? 0} au total`),
     section(lignes.join("\n") || "Aucun compte sur cette page."),
-    contexte(`Fiche complète : bouton 🔍 Fiche compte de l'accueil, page ${page + 1}/${pages}, /sql users <n°> pour changer de page`),
+    contexte(`Fiche complète : bouton 🔍 Fiche compte de l'accueil, page ${page + 1}/${pages}, /sql users <n°> pour changer de page. La suppression complète d'un compte (GoTrue, dépendances) passe par l'admin : comptes_utilisateurs est une vue.`),
   ];
 }
 
@@ -126,7 +130,7 @@ export async function fiche(q: string): Promise<Bloc[]> {
 
 // ::: Abonnés (/admin/users/abonnes) ::::::::::::::::::::::::::
 
-type Abonne = { email: string; confirmed: boolean; subscribed_at: string; unsubscribed_at: string | null };
+type Abonne = { id: string; email: string; confirmed: boolean; subscribed_at: string; unsubscribed_at: string | null };
 
 export async function abonnes(arg: string): Promise<Bloc[]> {
   const page = /^\d+$/.test(arg) ? Number(arg) : 0;
@@ -134,7 +138,7 @@ export async function abonnes(arg: string): Promise<Bloc[]> {
   const db = authAdmin();
   let req = db
     .from("newsletter_subscribers")
-    .select("email, confirmed, subscribed_at, unsubscribed_at", { count: "exact" })
+    .select("id, email, confirmed, subscribed_at, unsubscribed_at", { count: "exact" })
     .order("subscribed_at", { ascending: false })
     .range(page * PAR_PAGE, page * PAR_PAGE + PAR_PAGE - 1);
   if (q) req = req.ilike("email", `%${q}%`);
@@ -145,17 +149,23 @@ export async function abonnes(arg: string): Promise<Bloc[]> {
     ? await db.from("alert_subscriptions").select("email, frequence, active").in("email", emails)
     : { data: [] as { email: string; frequence: string; active: boolean }[] };
   const al = new Map((alertes ?? []).map((x) => [x.email, x]));
-  const lignes = ((data ?? []) as Abonne[]).map((a) => {
-    const etat = a.unsubscribed_at ? "désinscrit" : a.confirmed ? "confirmé" : "en attente";
-    const alr = al.get(a.email);
-    return `• ${a.email} : *${etat}*, inscrit le ${dh(a.subscribed_at)}${alr ? `, alerte ${alr.active ? "" : "(inactive) "}${alr.frequence}` : ""}`;
-  });
   const pages = Math.max(1, Math.ceil((count ?? 1) / PAR_PAGE));
-  return [
+  const blocs: Bloc[] = [
     entete(`📬 Abonnés : ${count ?? 0} au total`),
-    section(lignes.join("\n") || "Aucun abonné."),
-    contexte(`Filtre par adresse : /sql abonnes <adresse>, page ${page + 1}/${pages}`),
   ];
+  if (!((data ?? []) as Abonne[]).length) {
+    blocs.push(section("Aucun abonné."));
+  } else {
+    ((data ?? []) as Abonne[]).slice(0, 10).forEach((a) => {
+      const etat = a.unsubscribed_at ? "désinscrit" : a.confirmed ? "confirmé" : "en attente";
+      const alr = al.get(a.email);
+      blocs.push(section(`• ${a.email} : *${etat}*, inscrit le ${dh(a.subscribed_at)}${alr ? `, alerte ${alr.active ? "" : "(inactive) "}${alr.frequence}` : ""}`));
+      blocs.push(boutonSuppression("abonne", a.id));
+    });
+    if (((data ?? []) as Abonne[]).length > 10) blocs.push(contexte("Boutons de suppression pour les 10 premiers de la page : change de page pour les suivants."));
+  }
+  blocs.push(contexte(`Filtre par adresse : /sql abonnes <adresse>, page ${page + 1}/${pages}`));
+  return blocs;
 }
 
 // ::: Clés API (/admin/users/api-keys) :::::::::::::::::::::::::
@@ -179,42 +189,47 @@ export async function cles(): Promise<Bloc[]> {
       : Promise.resolve({ data: [] as { id: string; email: string }[] }),
   ]);
   const email = new Map((profils ?? []).map((p) => [p.id, p.email]));
-  const lignes = ((data ?? []) as { id: string; user_id: string; nom: string; prefixe: string; quota_jour: number; last_used_at: string | null; revoked_at: string | null }[])
-    .map((c) => {
+  const blocs: Bloc[] = [entete(`🔑 Clés API : ${((data ?? []) as unknown[]).length}`)];
+  const liste = ((data ?? []) as { id: string; user_id: string; nom: string; prefixe: string; quota_jour: number; last_used_at: string | null; revoked_at: string | null }[]);
+  if (!liste.length) {
+    blocs.push(section("Aucune clé."));
+  } else {
+    liste.slice(0, 10).forEach((c) => {
       const u = (usage ?? []).filter((x) => x.key_id === c.id);
       const aujourdhui = new Date().toISOString().slice(0, 10);
       const n30 = u.reduce((s, x) => s + x.requetes, 0);
       const nj = u.find((x) => x.jour === aujourdhui)?.requetes ?? 0;
-      return `• \`${c.prefixe}…\` ${c.nom} : ${email.get(c.user_id) ?? "sans compte"}, ${nj} req. aujourd'hui, ${n30} sur 30 j, quota ${c.quota_jour}/j${c.revoked_at ? ", *révoquée*" : ""}`;
+      blocs.push(section(`• \`${c.prefixe}…\` ${c.nom} : ${email.get(c.user_id) ?? "sans compte"}, ${nj} req. aujourd'hui, ${n30} sur 30 j, quota ${c.quota_jour}/j${c.revoked_at ? ", *révoquée*" : ""}`));
+      blocs.push(boutonSuppression("cle", c.id));
     });
-  return [
-    entete(`🔑 Clés API : ${lignes.length}`),
-    section(lignes.join("\n") || "Aucune clé."),
-    contexte("Révoquer ou changer un quota : admin → Utilisateurs → Clés API (lecture seule ici)"),
-  ];
+    if (liste.length > 10) blocs.push(contexte("Boutons de suppression pour les 10 premières clés : " + liste.length + " au total (révocation durable avec historique : dans l'admin)."));
+  }
+  blocs.push(contexte("Supprimer retire définitivement la clé (nettoyage de tests). Révoquer temporairement ou changer un quota : admin → Utilisateurs → Clés API."));
+  return blocs;
 }
 
 // ::: Téléchargements (/admin/telechargements) :::::::::::::::::
 
-type Tele = { cree_le: string; feuille: string; lignes: number; email: string | null; ip: string | null; user_agent: string | null };
+type Tele = { id: number; cree_le: string; feuille: string; lignes: number; email: string | null; ip: string | null; user_agent: string | null };
 
 export async function telechargements(feuille: string): Promise<Bloc[]> {
   let req = dataAdmin()
     .from("telechargements")
-    .select("cree_le, feuille, lignes, email, ip, user_agent")
+    .select("id, cree_le, feuille, lignes, email, ip, user_agent")
     .order("cree_le", { ascending: false })
     .limit(PAR_PAGE);
   if (feuille) req = req.ilike("feuille", `%${feuille}%`);
   const { data, error } = await req;
   if (error) throw new Error(`telechargements : ${error.message}`);
-  const lignes = ((data ?? []) as Tele[]).map(
-    (t) => `• ${dh(t.cree_le)} : *${t.feuille}* (${t.lignes} lignes), ${t.email || "visiteur anonyme"}, \`${t.ip || "–"}\``,
-  );
-  return [
-    entete("⬇️ Derniers téléchargements Sheets"),
-    section(lignes.join("\n") || "Aucun téléchargement."),
-    contexte("Filtre par feuille : /sql telechargements <feuille>, 15 derniers (500 dans l'admin)"),
-  ];
+  const liste = (data ?? []) as Tele[];
+  const blocs: Bloc[] = [entete("⬇️ Derniers téléchargements Sheets")];
+  liste.slice(0, 10).forEach((t) => {
+    blocs.push(section(`• ${dh(t.cree_le)} : *${t.feuille}* (${t.lignes} lignes), ${t.email || "visiteur anonyme"}, \`${t.ip || "–"}\``));
+    blocs.push(boutonSuppression("telechargement", String(t.id)));
+  });
+  if (!liste.length) blocs.push(section("Aucun téléchargement."));
+  blocs.push(contexte("Filtre par feuille : /sql telechargements <feuille>, 15 derniers (500 dans l'admin). Suppression définitive, utile pour les téléchargements de test."));
+  return blocs;
 }
 
 // ::: Enquête (/admin/content/survey) ::::::::::::::::::::::::::
@@ -223,6 +238,47 @@ type Reponse = {
   id: string; email: string; note_experience: number | null; note_contenu: number | null;
   note_global: number | null; commentaire: string | null; cree_le: string; repondu_le: string | null;
 };
+
+// Renvoie l'invitation à l'enquête : même logique que l'admin
+// (POST /api/admin/content/survey) : nouvelle ligne avec un nouveau jeton,
+// puis e-mail depuis enquetes@dataparl.fr. Auditée au nom slack:<pseudo>.
+export async function inviterEnquete(qui: string, id: string): Promise<{ ok: true; message: string } | { ok: false; erreur: string }> {
+  if (!id) return { ok: false, erreur: "invitation inconnue" };
+  const db = authAdmin();
+  let ligneId = id;
+  if (!UUID.test(id)) {
+    const { data: cherche } = await db.from("survey_reponses").select("id").ilike("id", id + "%").limit(1);
+    ligneId = ((cherche ?? [])[0] as { id: string } | undefined)?.id ?? "";
+    if (!ligneId) return { ok: false, erreur: "invitation introuvable" };
+  }
+  const { data: ligne } = await db.from("survey_reponses").select("email, user_id, repondu_le").eq("id", ligneId).limit(1);
+  const r = (ligne ?? [])[0] as { email: string; user_id: string | null; repondu_le: string | null } | undefined;
+  if (!r) return { ok: false, erreur: "invitation introuvable" };
+  if (r.repondu_le) return { ok: false, erreur: "déjà répondue : pas besoin de renvoyer" };
+  const jeton = randomToken(24);
+  const { error } = await db.from("survey_reponses").insert({ user_id: r.user_id, email: r.email, jeton_hash: hashJeton(jeton) });
+  if (error) return { ok: false, erreur: "survey_reponses : " + error.message };
+  const url = "https://survey.dataparl.fr/?j=" + jeton;
+  const res = await expedier({
+    from: "enquetes@dataparl.fr", to: [r.email], subject: "Ton avis sur DataParl'", titre: "Ton avis compte",
+    corpsHtml: [
+      "<p>Bonjour,</p>",
+      "<p>La dernière fois, notre questionnaire n'a malheureusement pas abouti à cause d'un problème de notre côté — il est corrigé depuis. Si tu as 2 minutes, ton avis nous aiderait beaucoup à améliorer DataParl'.</p>",
+      bouton(url, "Donner mon avis (2 min)"),
+      '<p style="color:#4A5670">Si le bouton ne fonctionne pas, copie-colle ce lien : <a href="' + url + '" style="color:#4A5670">' + url + "</a></p>",
+    ].join(""),
+    text: ["Bonjour,", "", "La dernière fois, notre questionnaire n'a malheureusement pas abouti à cause d'un problème de notre côté — il est corrigé depuis. Si tu as 2 minutes, ton avis nous aiderait beaucoup à améliorer DataParl'.", "", url, "", "Merci !", "L'équipe DataParl'"].join("\n"),
+    type: "transactionnel", pied: piedObligatoire(),
+  });
+  if (!res.ok) {
+    await db.from("survey_reponses").delete().eq("jeton_hash", hashJeton(jeton));
+    return { ok: false, erreur: "e-mail non envoyé : " + res.error };
+  }
+  try {
+    await db.from("admin_audit").insert({ github_login: "slack:" + qui, action: "enquete.inviter", cible: r.email });
+  } catch { /* audit best-effort */ }
+  return { ok: true, message: "✅ Invitation renvoyée à " + r.email + "." };
+}
 
 export async function enquete(id: string): Promise<Bloc[]> {
   const db = authAdmin();
@@ -236,15 +292,20 @@ export async function enquete(id: string): Promise<Bloc[]> {
     const r = (data ?? [])[0] as Reponse | undefined;
     if (!r) throw new Error("Réponse introuvable : liste complète via /sql survey ou l'accueil.");
     const NOTE = (n: number | null) => (n === null ? "–" : `${n}/5`);
-    return [
+    const blocs: Bloc[] = [
       entete("📋 Réponse à l'enquête"),
       section(
         `*Compte :* ${r.email}\n*Envoyée :* ${dh(r.cree_le)}\n*État :* ${r.repondu_le ? `répondue le ${dh(r.repondu_le)}` : "invitation sans réponse"}\n` +
         `*Expérience :* ${NOTE(r.note_experience)}, *Contenu :* ${NOTE(r.note_contenu)}, *Global :* ${NOTE(r.note_global)}\n` +
         (r.commentaire ? `*Commentaire :*\n> ${r.commentaire.replace(/\n/g, "\n> ")}` : "*Commentaire :* –"),
       ),
-      contexte(`Id \`${r.id}\``),
     ];
+    if (!r.repondu_le) blocs.push({ type: "actions", elements: [
+      { type: "button", text: { type: "plain_text", text: "✉️ Renvoyer l'invitation" }, style: "primary", action_id: "enquete_inviter", value: r.id },
+    ] });
+    blocs.push(boutonSuppression("enquete", r.id));
+    blocs.push(contexte(`Id \`${r.id}\``));
+    return blocs;
   }
   const { data, error } = await db.from("survey_reponses")
     .select("id, email, note_experience, note_contenu, note_global, commentaire, cree_le, repondu_le")
@@ -252,27 +313,39 @@ export async function enquete(id: string): Promise<Bloc[]> {
   if (error) throw new Error(`survey_reponses : ${error.message}`);
   const toutes = (data ?? []) as Reponse[];
   const repondues = toutes.filter((r) => r.repondu_le);
-  const attente = toutes.length - repondues.length;
+  const attente = toutes.filter((r) => !r.repondu_le);
   const moyenne = (f: (r: Reponse) => number | null) => {
     const v = repondues.map(f).filter((x): x is number => x !== null);
     return v.length ? (v.reduce((a, b) => a + b, 0) / v.length).toFixed(1) : "–";
   };
-  const lignes = repondues.slice(0, PAR_PAGE).map(
-    (r) => `• ${dh(r.repondu_le)} : ${r.email}, exp. ${r.note_experience ?? "–"}/5, contenu ${r.note_contenu ?? "–"}/5, global ${r.note_global ?? "–"}/5, \`${r.id.slice(0, 8)}\``,
-  );
-  const derniersCommentaires = repondues.filter((r) => r.commentaire).slice(0, 5).map(
-    (r) => `> *${r.email}* : ${String(r.commentaire).slice(0, 200)}`,
-  );
   const blocs: Bloc[] = [
     entete(`📋 Enquête : ${repondues.length} réponse(s)`),
     section(
-      `*${attente}* invitation(s) sans réponse\n` +
+      `*${attente.length}* invitation(s) sans réponse\n` +
       `Note moyenne expérience : *${moyenne((r) => r.note_experience)}*, contenu : *${moyenne((r) => r.note_contenu)}*, global : *${moyenne((r) => r.note_global)}*`,
     ),
   ];
-  if (lignes.length) blocs.push(section(lignes.join("\n")));
+  if (attente.length) {
+    blocs.push(section("*Invitations en attente (10 dernières) :*\n" + attente.slice(0, 10).map((r) => "• " + r.email + ", envoyée le " + dh(r.cree_le) + ", `" + r.id.slice(0, 8) + "`").join("\n")));
+    attente.slice(0, 5).forEach((r) => {
+      blocs.push({ type: "actions", elements: [
+        { type: "button", text: { type: "plain_text", text: "✉️ Inviter " + (r.email.split("@")[0] || "?").slice(0, 20) }, style: "primary", action_id: "enquete_inviter", value: r.id },
+        { type: "button", text: { type: "plain_text", text: "🗑" }, style: "danger", action_id: "supprimer_ligne", value: "enquete:" + r.id,
+          confirm: { title: { type: "plain_text", text: "Supprimer ?" }, text: { type: "plain_text", text: "Ligne de test ou e-mail erroné : l'invitation sera définitivement supprimée." }, confirm: { type: "plain_text", text: "Supprimer" }, deny: { type: "plain_text", text: "Annuler" }, style: "danger" } },
+      ] });
+    });
+  }
+  if (repondues.length) {
+    blocs.push(section("*Dernières réponses :*\n" + repondues.slice(0, 5).map(
+      (r) => `• ${dh(r.repondu_le)} : ${r.email}, exp. ${r.note_experience ?? "–"}/5, contenu ${r.note_contenu ?? "–"}/5, global ${r.note_global ?? "–"}/5, \`${r.id.slice(0, 8)}\`,
+    ).join("\n")));
+    repondues.slice(0, 5).forEach((r) => blocs.push(boutonSuppression("enquete", r.id, "🗑 " + (r.email.split("@")[0] || "?").slice(0, 15))));
+  }
+  const derniersCommentaires = repondues.filter((r) => r.commentaire).slice(0, 3).map(
+    (r) => `> *${r.email}* : ${String(r.commentaire).slice(0, 200)}`,
+  );
   if (derniersCommentaires.length) blocs.push(section(`*Derniers commentaires*\n${derniersCommentaires.join("\n>\n")}`));
-  blocs.push(contexte("Détail d'une réponse : /sql survey <id> (id court accepté)"));
+  blocs.push(contexte("Détail d'une réponse : /sql survey <id> (id court accepté). Renvoyer une invitation : bouton ✉️ (nouveaux jeton et e-mail). Suppression : nettoyage des lignes de test."));
   return blocs;
 }
 
