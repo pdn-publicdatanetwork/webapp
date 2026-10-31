@@ -12,7 +12,7 @@ import BandeauPub from "../_components/BandeauPub";
 // et les requêtes Supabase, principale source de « Fluid Active CPU » sur le
 // plan Hobby de Vercel). L'hôte jobs.dataparl.fr est désormais détecté côté
 // client par l'en-tête et le pied de page (app/_components/useHoteJobs.ts).
-export default function SiteLayout({ children }: React.ReactNode' | never = never as never } => { children }: { children: React.ReactNode }) {
+export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="page">
       <EnteteSiteRoute />
