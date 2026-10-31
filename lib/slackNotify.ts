@@ -7,7 +7,7 @@ import "server-only";
 // webhook Resend (il réessaierait de son côté).
 
 export async function notifierRecu(m: { id: string; from: string; sujet: string; texte: string | null; pour: string }): Promise<void> {
-  const bot = process.env.SLACK_BOT_TOKEN ?? "";
+  const bot = process.env.SLACK_MAILAPP_BOT_TOKEN || process.env.SLACK_BOT_TOKEN || "";
   if (!bot) return;
   // Les e-mails de vérification d'association (associer@) sont du bruit :
   // ils sont déjà traités automatiquement, pas besoin d'annoncer chacun.
