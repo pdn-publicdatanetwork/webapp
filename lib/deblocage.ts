@@ -8,6 +8,9 @@ import { authAdmin } from "./supabaseAdmin";
 // contenu n'est jamais envoyé avant qu'un rappel signé d'AppLixir (webhook)
 // ait enregistré le déblocage. Le signal « vidéo
 // terminée » du navigateur ne sert qu'à déclencher la vérification.
+// Exception no-fill (règle du 31/10/2026) : si AppLixir n'a aucune vidéo
+// à proposer, le contenu est débloqué quand même. Jamais de blocage dur
+// faute de publicité.
 
 // Cibles de déblocage : identifiant court d'un collaborateur (8 chiffres
 // hexadécimaux, format historique), « bio:<personne_id> » pour la biographie
@@ -48,6 +51,17 @@ export async function demandeDe(jeton: string): Promise<{ userId: string; cible:
   const depuis = new Date(Date.now() - 2 * 3600_000).toISOString(); // une demande vaut 2 heures
   const { data } = await authAdmin().from("pub_demandes").select("user_id, collab_id").eq("jeton", jeton).gt("cree_le", depuis).maybeSingle();
   return data ? { userId: data.user_id as string, cible: data.collab_id as string } : null;
+}
+
+// Jeton de la demande la plus récente (moins de 10 minutes) pour ce compte
+// et cette cible : preuve qu'une tentative de lecture a bien été lancée
+// avant d'accorder un déblocage no-fill.
+export async function jetonDemandeRecente(userId: string, cible: string): Promise<string | null> {
+  const depuis = new Date(Date.now() - 10 * 60_000).toISOString();
+  const { data } = await authAdmin().from("pub_demandes").select("jeton")
+    .eq("user_id", userId).eq("collab_id", cible).gt("cree_le", depuis)
+    .order("cree_le", { ascending: false }).limit(1).maybeSingle();
+  return (data?.jeton as string) ?? null;
 }
 
 export async function enregistrerDeblocage(userId: string, cible: string, tid: string): Promise<"ok" | "deja"> {

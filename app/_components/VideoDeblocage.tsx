@@ -7,6 +7,8 @@ import { APPLIXIR_API_KEY, APPLIXIR_SDK, DUREE_DEBLOCAGE_H } from "@/lib/env";
 // une courte vidéo publicitaire (AppLixir). Le lecteur n'est chargé qu'après un
 // clic (et donc l'accord) de la personne. Le déblocage est accordé par le
 // serveur, sur rappel signé d'AppLixir : ici, on attend seulement ce rappel.
+// Si aucune vidéo n'est disponible (no-fill) ou que le lecteur échoue, le
+// serveur débloque quand même le contenu (jamais de blocage dur).
 
 type Statut = { type: string };
 declare global {
@@ -50,6 +52,16 @@ export default function VideoDeblocage({
     }, 1500);
   }
 
+  // Aucune vidéo disponible (no-fill) ou erreur du lecteur : le serveur
+  // débloque le contenu quand même, pourvu qu'une demande de vidéo récente
+  // existe pour ce compte et cette fiche.
+  async function deblocageNoFill() {
+    const r = await fetch(`/api/deblocage?id=${encodeURIComponent(cible)}`, { method: "PUT", headers: { Authorization: `Bearer ${session.access_token}` } }).catch(() => null);
+    const d = r?.ok ? await r.json().catch(() => null) : null;
+    if (d?.debloque) { if (attente.current) clearInterval(attente.current); onDebloque(); return; }
+    setEtat((e) => (e === "verification" ? e : "indisponible"));
+  }
+
   async function lancer() {
     setEtat("chargement");
     const r = await fetch(`/api/deblocage?id=${encodeURIComponent(cible)}`, { method: "POST", headers: { Authorization: `Bearer ${session.access_token}` } }).catch(() => null);
@@ -66,14 +78,14 @@ export default function VideoDeblocage({
         else if (s.type === "skipped" || s.type === "manuallyEnded") setEtat("interrompue");
         else if (s.type === "consentDeclined") setEtat("refus");
       },
-      adErrorCallbackFn: () => setEtat((e) => (e === "verification" ? e : "indisponible")),
+      adErrorCallbackFn: () => { void deblocageNoFill(); },
     });
   }
 
   const messages: Partial<Record<Etat, string>> = {
     bloqueur: "Un bloqueur de publicité empêche la vidéo de se charger. Autorise les publicités sur dataparl.fr (ou désactive le bloqueur pour ce site), puis réessaie.",
     interrompue: "La vidéo a été interrompue avant la fin : le contenu n'est pas débloqué.",
-    indisponible: "Aucune vidéo n'est disponible pour le moment. Réessaie dans quelques minutes.",
+    indisponible: "La vidéo n'a pas pu être affichée et le déblocage de secours a échoué. Recharge la page et réessaie dans un instant.",
     refus: "Tu as refusé les publicités personnalisées : une vidéo non personnalisée peut quand même être proposée, réessaie.",
     delai: "La confirmation tarde à arriver. Recharge la page dans un instant : si la vidéo a bien été vue, le contenu sera débloqué.",
   };
