@@ -130,8 +130,12 @@ export async function publierHome(userId: string): Promise<{ ok: boolean; erreur
       cache: "no-store",
       signal: AbortSignal.timeout(8000),
     });
-    const j = (await r.json()) as { ok: boolean; error?: string; needed?: string; provided?: string };
-    return { ok: j.ok, erreur: j.ok ? "" : j.error + (j.needed ? " (scope requis : " + j.needed + ", fourni : " + (j.provided ?? "aucun") + ")" : "") };
+    const j = (await r.json()) as { ok: boolean; error?: string; needed?: string; provided?: string; response_metadata?: { messages?: string[] } };
+    // Slack renvoie le détail exact du refus (invalid_arguments, etc.) dans
+    // response_metadata.messages : invalid user_id, ou json-pointer du bloc
+    // fautif (/view/blocks/3/…). On le remonte dans l'avertissement #monitoring.
+    const detail = j.response_metadata?.messages?.length ? " (" + j.response_metadata.messages.join(" ; ") + ")" : "";
+    return { ok: j.ok, erreur: j.ok ? "" : (j.error ?? "erreur inconnue") + detail + (j.needed ? " (scope requis : " + j.needed + ", fourni : " + (j.provided ?? "aucun") + ")" : "") };
   } catch (e) {
     return { ok: false, erreur: e instanceof Error ? e.message : String(e) };
   }
