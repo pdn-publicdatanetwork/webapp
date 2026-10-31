@@ -26,6 +26,15 @@ function dh(iso: string | null | undefined): string {
   });
 }
 
+// Lecture de liste tolérante aux pannes : une table absente ou une erreur
+// ne casse pas la liste des contacts (repli sur liste vide).
+async function lire<T>(table: string, colonnes: string, ordre: string, limite: number): Promise<T[]> {
+  try {
+    const { data } = await authAdmin().from(table).select(colonnes).order(ordre, { ascending: false }).limit(limite);
+    return (data ?? []) as T[];
+  } catch { return []; }
+}
+
 export type SuiviCrm = { statut: string | null; tags: string[] | null; note: string | null };
 
 export async function crmCourant(email: string): Promise<SuiviCrm | null> {
@@ -39,11 +48,10 @@ export async function crmCourant(email: string): Promise<SuiviCrm | null> {
 // récent, comptes récents, derniers messages contact), plus un champ
 // libre pour une adresse absente de la liste.
 export async function modalRechercheCrm(): Promise<Record<string, unknown>> {
-  const db = authAdmin();
   const [crm, comptes, contacts] = await Promise.all([
-    db.from("crm_contacts").select("email, statut, maj_le").order("maj_le", { ascending: false }).limit(100).catch(() => ({ data: [] as { email: string; statut: string | null }[] })),
-    db.from("comptes_utilisateurs").select("email, user_metadata, created_at").order("created_at", { ascending: false }).limit(100).catch(() => ({ data: [] as { email: string; user_metadata: Record<string, string> | null }[] })),
-    db.from("contact_messages").select("email, created_at").order("created_at", { ascending: false }).limit(50).catch(() => ({ data: [] as { email: string }[] })),
+    lire<{ email: string; statut: string | null }>("crm_contacts", "email, statut", "maj_le", 100),
+    lire<{ email: string; user_metadata: Record<string, string> | null }>("comptes_utilisateurs", "email, user_metadata", "created_at", 100),
+    lire<{ email: string }>("contact_messages", "email", "created_at", 50),
   ]);
   const vus = new Set<string>();
   const options: { text: { type: "plain_text"; text: string }; value: string }[] = [];
@@ -54,13 +62,13 @@ export async function modalRechercheCrm(): Promise<Record<string, unknown>> {
     const t = (etiquette ? etiquette + " : " : "") + e;
     options.push({ text: { type: "plain_text", text: t.slice(0, 75) }, value: e });
   };
-  ((crm.data ?? []) as { email: string; statut: string | null }[]).forEach((r) => ajouter(r.email, "🎯 " + (LIBELLE[r.statut ?? "nouveau"] ?? r.statut ?? "Suivi")));
-  ((comptes.data ?? []) as { email: string; user_metadata: Record<string, string> | null }[]).forEach((r) => {
+  crm.forEach((r) => ajouter(r.email, "🎯 " + (LIBELLE[r.statut ?? "nouveau"] ?? r.statut ?? "Suivi")));
+  comptes.forEach((r) => {
     const meta = r.user_metadata ?? {};
     const nom = [meta.prenom, meta.nom].filter(Boolean).join(" ");
     ajouter(r.email, nom ? "👤 " + nom : "👤 Compte");
   });
-  ((contacts.data ?? []) as { email: string }[]).forEach((r) => ajouter(r.email, "✉️ Contact"));
+  contacts.forEach((r) => ajouter(r.email, "✉️ Contact"));
   const blocs: Bloc[] = [];
   if (options.length) {
     blocs.push({ type: "input", optional: true, block_id: "liste", element: { type: "static_select", action_id: "v", placeholder: { type: "plain_text", text: "Tape pour filtrer (" + options.length + " contacts)" }, options }, label: { type: "plain_text", text: "Dans la liste" } });
@@ -132,7 +140,9 @@ export async function ficheCrm(q: string): Promise<Bloc[]> {
   if (sv.length) identite += "\n*Enquête :* " + (sv[0].repondu_le ? "répondue le " + dh(sv[0].repondu_le) + ", note " + (sv[0].note_global ?? "–") + "/5" : "invitation sans réponse");
 
   const morceaux: Bloc[] = [
-    { type: "header", text: { type: "plain_text", text: "👤 " + (u?.email ?? email), emoji: true } },
+    // En-tête en mrkdwn (le bloc header est limité à 24 caractères :
+    // une adresse e-mail le dépasserait et le modal serait rejeté).
+    { type: "section", text: { type: "mrkdwn", text: "*👤 " + (u?.email ?? email) + "*" } },
     { type: "section", text: { type: "mrkdwn", text: identite } },
   ];
   if (msgs.length) {
