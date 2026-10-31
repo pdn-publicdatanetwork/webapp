@@ -133,7 +133,7 @@ export default function ReglageAlertes() {
 
       <label className="check" style={{ marginTop: 22 }}>
         <input type="checkbox" checked={cgu} onChange={(e) => setCgu(e.target.checked)} />
-        <span>J&apos;ai lu et j&apos;accepte les <a href="/informations-legales/cgu" target="_blank">conditions d&apos;utilisation</a>.</span>
+        <span>J&apos;ai lu et j&apos;accepte les <a href="/informations-legales/cgu" target="_blank" rel="noopener noreferrer">conditions d&apos;utilisation</a>.</span>
       </label>
       <label className="check">
         <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />

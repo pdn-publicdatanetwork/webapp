@@ -276,8 +276,8 @@ export default function Connexion() {
           <label className="check" style={{ marginTop: 12 }}>
             <input type="checkbox" checked={cgu} onChange={(e) => setCgu(e.target.checked)} />
             <span>
-              J&apos;accepte les <a href="/informations-legales/cgu" target="_blank">conditions d&apos;utilisation</a> et la{" "}
-              <a href="/informations-legales/confidentialite" target="_blank">politique de données personnelles</a>.
+              J&apos;accepte les <a href="/informations-legales/cgu" target="_blank" rel="noopener noreferrer">conditions d&apos;utilisation</a> et la{" "}
+              <a href="/informations-legales/confidentialite" target="_blank" rel="noopener noreferrer">politique de données personnelles</a>.
             </span>
           </label>
         )}
