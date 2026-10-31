@@ -57,7 +57,7 @@ function bornesGroupes(groupes: GroupeVue[], total: number) {
 function svgExport(groupes: GroupeVue[], total: number, titre: string, dateMaj: string): string {
   const bornes = bornesGroupes(groupes, total);
   const L = 1040, H = 760;
-  const pol2 = (r: number, a: number): [number, number] => [260 + r * Math.cos(a), 272 + r * Math.sin(a)];
+  const pol2 = (r: number, a: number): [number, number] => [520 + r * Math.cos(a), 272 + r * Math.sin(a)];
   const sect = (a1: number, a2: number) => {
     const [x1, y1] = pol2(R, a1), [x2, y2] = pol2(R, a2), [x3, y3] = pol2(R_IN, a2), [x4, y4] = pol2(R_IN, a1);
     return `M ${x1.toFixed(1)} ${y1.toFixed(1)} A ${R} ${R} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)} L ${x3.toFixed(1)} ${y3.toFixed(1)} A ${R_IN} ${R_IN} 0 0 0 ${x4.toFixed(1)} ${y4.toFixed(1)} Z`;
@@ -95,7 +95,7 @@ function svgExport(groupes: GroupeVue[], total: number, titre: string, dateMaj: 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${L}" height="${H}" viewBox="0 0 ${L} ${H}">
 <rect width="${L}" height="${H}" fill="#FFFDF5"/>
 <text x="${L / 2}" y="66" text-anchor="middle" font-family="Georgia, serif" font-size="30" font-weight="700" fill="#071A41">${esc(titre)}</text>
-<g transform="translate(260, 90) scale(1)">${corps.replace(/translate/g, "noop")}</g>
+<g>${corps}</g>
 ${legende}
 <text x="60" y="${yPied}" font-family="Georgia, serif" font-size="26" font-weight="700" fill="#071A41">Data</text>
 <rect x="126" y="${yPied - 24}" width="80" height="34" fill="#FFD23F"/>
