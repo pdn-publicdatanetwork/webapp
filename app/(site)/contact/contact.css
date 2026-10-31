@@ -1,24 +1,44 @@
-/* Formulaire de contact conversationnel : une question par écran,
-   façon Typeform. Réutilise la charte (variables, .card, .suggestions). */
-.ct-progression { height: 6px; border-radius: 999px; background: color-mix(in srgb, var(--line) 70%, transparent); overflow: hidden; margin-bottom: 26px; }
+/* Formulaire de contact conversationnel : une question par écran.
+   La zone s'étale sur la page (pas de carte étroite), typographie généreuse,
+   charte v2 : corail pour l'action, bleu pour la navigation, jaune en accent. */
+.ct-zone { max-width: 660px; margin: 10px auto 0; }
+.ct-progression { height: 4px; border-radius: 999px; background: color-mix(in srgb, var(--line) 60%, transparent); overflow: hidden; margin-bottom: 34px; }
 .ct-progression > span { display: block; height: 100%; background: var(--corail); border-radius: 999px; transition: width .35s ease; }
-.ct-ecran { animation: ct-apparait .25s ease; }
-@keyframes ct-apparait { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-.ct-etape { color: var(--muted); font-size: .82rem; margin: 0 0 4px; }
-.ct-question { font-family: var(--font-spectral), "Spectral", Georgia, serif; font-weight: 700; font-size: 1.45rem; line-height: 1.25; margin: 0 0 14px; }
-.ct-choix { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 8px; }
-.ct-choix button { all: unset; box-sizing: border-box; display: flex; gap: 12px; align-items: center; width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--card); color: var(--ink); cursor: pointer; font: inherit; }
-.ct-choix button:hover, .ct-choix button:focus-visible { border-color: var(--bleu); box-shadow: 0 0 0 3px color-mix(in srgb, var(--bleu) 12%, transparent); }
-.ct-lettre { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: .82rem; flex: none; color: var(--muted); }
-.ct-choix button:hover .ct-lettre, .ct-choix button:focus-visible .ct-lettre { border-color: var(--bleu); color: var(--bleu); }
-.ct-choix .ct-corps { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.ct-choix .ct-corps span { color: var(--muted); font-size: .85rem; }
-.ct-retour { margin-top: 14px; }
-.ct-actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
-.ct-actions button { margin-top: 0; }
-.ct-recap { width: 100%; border-collapse: collapse; margin: 8px 0 4px; }
-.ct-recap th, .ct-recap td { text-align: left; vertical-align: top; padding: 8px 6px; border-bottom: 1px solid var(--line); }
-.ct-recap th { color: var(--muted); font-weight: 600; white-space: nowrap; }
+.ct-ecran { animation: ct-apparait .3s ease; }
+@keyframes ct-apparait { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.ct-etape { color: var(--muted); font-size: .85rem; margin: 0 0 10px; }
+.ct-question { font-family: var(--font-spectral), "Spectral", Georgia, serif; font-weight: 700; font-size: clamp(1.6rem, 3.2vw, 2.1rem); line-height: 1.2; margin: 0 0 22px; }
+
+/* Champs : grands, calmes, focus bleu net */
+.ct-zone input[type="text"], .ct-zone input[type="email"], .ct-zone textarea {
+  width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-btn);
+  font: inherit; font-size: 1.05rem; background: var(--card); color: var(--ink);
+}
+.ct-zone textarea { min-height: 150px; resize: vertical; }
+.ct-zone input:focus-visible, .ct-zone textarea:focus-visible { outline: 2px solid var(--bleu); outline-offset: 1px; border-color: var(--bleu); }
+.ct-zone label { margin: 16px 0 6px; }
+.ct-zone .grille-filtres { gap: 14px; margin-top: 0; }
+.ct-zone button { margin-top: 22px; }
+.ct-zone .meta { margin-top: 10px; }
+
+/* Cartes de choix (sujet, droit RGPD) */
+.ct-choix { list-style: none; padding: 0; margin: 6px 0 0; display: grid; gap: 10px; }
+.ct-choix button { all: unset; box-sizing: border-box; display: flex; gap: 14px; align-items: center; width: 100%; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--card); color: var(--ink); cursor: pointer; font: inherit; transition: border-color .15s, box-shadow .15s; }
+.ct-choix button:hover, .ct-choix button:focus-visible { border-color: var(--corail); box-shadow: 0 2px 12px rgb(7 26 65 / 10%); }
+.ct-lettre { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--line); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: .85rem; flex: none; color: var(--muted); }
+.ct-choix button:hover .ct-lettre, .ct-choix button:focus-visible .ct-lettre { border-color: var(--corail); color: var(--corail); }
+.ct-choix .ct-corps { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ct-choix .ct-corps strong { font-weight: 600; }
+.ct-choix .ct-corps span { color: var(--muted); font-size: .88rem; }
+.ct-astuce { color: var(--muted); font-size: .82rem; margin-top: 12px; }
+
+/* Actions, récap, écran final */
+.ct-actions { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 20px; }
+.ct-actions button, .ct-actions .btn { margin-top: 0; }
+.ct-recap { width: 100%; border-collapse: collapse; margin: 10px 0 8px; }
+.ct-recap th, .ct-recap td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 1px solid var(--line); }
+.ct-recap th { color: var(--muted); font-weight: 600; white-space: nowrap; width: 1%; }
 .ct-recap td { white-space: pre-wrap; }
-.ct-ok-titre { display: flex; align-items: center; gap: 12px; }
-.ct-coche { width: 42px; height: 42px; border-radius: 50%; background: var(--jaune); color: #071A41; display: inline-flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 700; flex: none; }
+.ct-ok-titre { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+.ct-coche { width: 48px; height: 48px; border-radius: 50%; background: var(--jaune); color: #071A41; display: inline-flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; flex: none; }
+.ct-retour { margin-top: 14px; }
