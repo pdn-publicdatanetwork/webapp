@@ -25,10 +25,11 @@ import { estPageReseaux, journaliserVueReseaux } from "./lib/vuesReseaux";
 //                           photos de profil déclarées des collaborateurs
 //                           (/cldb/<collab_id>.<ext>), le tableur DataParl' Sheets
 //                           (/sheets/*, /search), l'export SVG du réseau
-//                           (/assets/pe/reseau), les exports CSV
-//                           (/assets/collab/{an,senat,pe}.csv) et les fichiers du
-//                           bucket « assets » (/assets/*, dépôt admin) ; tout autre
+//                           (/assets/pe/reseau) et les exports CSV
+//                           (/assets/collab/{an,senat,pe}.csv) ; tout autre
 //                           chemin : message de 15 s puis bascule vers www
+//                           NB : les fichiers du bucket « assets » sont servis
+//                           par /assets/* (dépôt admin.dataparl.fr/assets).
 //   raw.dataparl.fr        /schemas/*.json (schémas de données bruts) ; le reste -> www
 //   survey.dataparl.fr     / -> /enquete (questionnaire d'avis, jeton ?j=) ; le reste -> www
 //   drive.dataparl.fr      ancien domaine du tableur -> media (308)
