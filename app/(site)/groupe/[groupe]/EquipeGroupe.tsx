@@ -53,12 +53,20 @@ export default async function EquipeGroupe({ chambre, sigle }: { chambre: string
             (et non aux élus individuels), par ordre alphabétique.
           </p>
           <ul>
-            {groupement.map((m, i) => (
-              <li key={`grp-${i}`}>
-                <strong>{nomComplet({ prenom: m.collab_prenom, nom: m.collab_nom })}</strong>
-                {m.fonction ? <> : {m.fonction}</> : null}
-              </li>
-            ))}
+            {groupement.map((m, i) => {
+              // Lien vers la fiche individuelle : la cle /collab/k/… retrouve
+              // la fiche par le nom (prenom + nom en minuscules).
+              const nom = nomComplet({ prenom: m.collab_prenom, nom: m.collab_nom });
+              const cle = [m.collab_prenom, m.collab_nom].filter(Boolean).join(" ").toLowerCase();
+              return (
+                <li key={`grp-${i}`}>
+                  <strong>
+                    {cle ? <a href={"/collab/k/" + encodeURIComponent(cle)}>{nom}</a> : nom}
+                  </strong>
+                  {m.fonction ? <> : {m.fonction}</> : null}
+                </li>
+              );
+            })}
           </ul>
         </>
       )}

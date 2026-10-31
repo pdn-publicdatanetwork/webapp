@@ -49,3 +49,17 @@ export async function assistantsGroupement(sigle: string): Promise<AssistantGrou
   }
   return out;
 }
+
+// Groupes politiques (Parlement européen) auxquels un collaborateur est
+// rattaché par une affectation « (groupement) » : sert aux fiches
+// individuelles /collab/<slug> pour nommer et lier le groupe employeur.
+export async function groupesDuCollab(collabId: string): Promise<string[]> {
+  const rows = await dataQueryTout<{ elu_groupe: string }>("affectations",
+    new URLSearchParams({
+      select: "elu_groupe",
+      or: `(collab_cle.like.${collabId}*,collab_id.eq.${collabId})`,
+      chambre: "eq.europarl",
+      fonction: "ilike.*(groupement)*",
+    }), 3600).catch((): { elu_groupe: string }[] => []);
+  return [...new Set(rows.map((r) => r.elu_groupe).filter(Boolean))];
+}

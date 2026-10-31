@@ -10,7 +10,7 @@ import TableauCollabs, { type LigneCollab } from "./TableauCollabs";
 // reprend les mots des publications officielles (« Trombinoscope des
 // collaborateurs de Sénateur », « Liste des collaborateurs par député »).
 type Periode = { collab_id: string; elu_id: string; elu_nom: string; fonction: string };
-type Collab = { collab_id: string; nom: string; prenom: string };
+type Collab = { collab_id: string; nom: string; prenom: string; slug: string | null };
 const AU: Record<string, string> = { assemblee: "à l'Assemblée nationale", senat: "au Sénat", europarl: "au Parlement européen" };
 const TITRE: Record<string, string> = {
   assemblee: "Trombinoscope des collaborateurs de député",
@@ -26,10 +26,14 @@ export default async function TrombinoChambre({ chambre }: { chambre: "assemblee
       new URLSearchParams({ select: "collab_id,elu_id,elu_nom,fonction", chambre: "eq." + chambre, en_cours: "eq.true", order: "elu_nom.asc" }),
       3600).catch((): Periode[] => []),
     dataQueryTout<Collab>("collaborateurs",
-      new URLSearchParams({ select: "collab_id,nom,prenom" }),
+      new URLSearchParams({ select: "collab_id,nom,prenom,slug" }),
       3600).catch((): Collab[] => []),
   ]);
   const noms = new Map(collabs.map((c) => [c.collab_id, [c.prenom, c.nom].filter(Boolean).join(" ")]));
+  // Lien vers la fiche individuelle de chaque collaborateur (y compris
+  // les assistants rattachés au groupement, qui ont une fiche comme les
+  // autres collaborateurs).
+  const slugs = new Map(collabs.filter((c) => c.slug).map((c) => [c.collab_id, "/collab/" + c.slug]));
   // Déduplication : une ligne par personne, employeur et fonction (les
   // périodes d'un même collaborateur peuvent exister en plusieurs
   // exemplaires). Les assistants « (groupement) » sont rattachés au groupe
@@ -46,6 +50,7 @@ export default async function TrombinoChambre({ chambre }: { chambre: "assemblee
       nom: noms.get(r.collab_id) ?? "",
       elu: r.elu_nom || (/groupement/i.test(r.fonction) ? "groupe politique (groupement)" : "–"),
       fonction: r.fonction || "",
+      href: slugs.get(r.collab_id),
     }))
     .filter((r) => r.nom !== "");
   const maj = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(new Date());

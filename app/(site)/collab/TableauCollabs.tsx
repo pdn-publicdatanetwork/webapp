@@ -8,7 +8,7 @@ import { useMemo, useState, type ReactNode } from "react";
 // Toutes les lignes sont rendues côté serveur puis filtrées dans le
 // navigateur : la page reste indexable, l'interaction est immédiate.
 
-export type LigneCollab = { nom: string; elu: string; fonction: string };
+export type LigneCollab = { nom: string; elu: string; fonction: string; href?: string };
 
 const PAR_PAGE = 200;
 const PAR_PAGE_ELUS = 50;
@@ -150,7 +150,9 @@ function Cartes({ lignes }: { lignes: LigneCollab[] }) {
         <li key={r.nom + "-" + r.elu + "-" + i} style={{ display: "flex", gap: 10, alignItems: "center", border: "1px solid #e3e3e3", borderRadius: 10, padding: "8px 12px" }}>
           <Initiales nom={r.nom} />
           <span style={{ overflow: "hidden" }}>
-            <strong style={{ display: "block" }}>{r.nom}</strong>
+            <strong style={{ display: "block" }}>
+              {r.href ? <a href={r.href} style={{ color: "inherit", textDecoration: "none" }}>{r.nom}</a> : r.nom}
+            </strong>
             <span className="meta">{"Collaborateur de " + r.elu}</span>
             {r.fonction && <span className="meta" style={{ display: "block" }}>{r.fonction}</span>}
           </span>
@@ -174,7 +176,7 @@ function Tableau({ lignes, tri, boutonTri }: { lignes: LigneCollab[]; tri: strin
         <tbody>
           {lignes.map((r, i) => (
             <tr key={r.nom + "-" + r.elu + "-" + i}>
-              <td>{r.nom}</td>
+              <td>{r.href ? <a href={r.href} style={{ color: "inherit" }}>{r.nom}</a> : r.nom}</td>
               <td>{r.elu}</td>
               <td>{r.fonction || ""}</td>
             </tr>
