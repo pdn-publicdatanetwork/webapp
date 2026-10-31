@@ -4,6 +4,7 @@ import type { Admin } from "./adminAuth";
 import { nouveauJetonPreferences } from "./consent";
 import { LIENS_BASE, MAIL_WEB_URL, secret } from "./env";
 import { esc, texteVersHtml } from "./gabarit";
+import { normalizeEmail } from "./tokens";
 import { expedier, piedOptIn } from "./mail";
 import { authAdmin } from "./supabaseAdmin";
 
@@ -91,7 +92,7 @@ export async function lienDuCommunique(c: Communique, a: Admin): Promise<string>
 // personne reçoit le même message, mais avec le lien direct (non tracé) et
 // sans mesure d'ouverture (ignorée côté webhook).
 async function sansSuivi(email: string): Promise<boolean> {
-  const { data } = await authAdmin().from("communication_preferences").select("tracking_optout").eq("email", email.toLowerCase()).maybeSingle();
+  const { data } = await authAdmin().from("communication_preferences").select("tracking_optout").eq("email", normalizeEmail(email)).maybeSingle();
   return data?.tracking_optout === true;
 }
 
