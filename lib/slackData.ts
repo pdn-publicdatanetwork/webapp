@@ -59,7 +59,7 @@ export async function comptes(page: number): Promise<Bloc[]> {
     .range(page * PAR_PAGE, page * PAR_PAGE + PAR_PAGE - 1);
   if (error) throw new Error(`comptes_utilisateurs : ${error.message}`);
   const lignes = ((data ?? []) as Compte[]).map(
-    (c) => `• ${c.email} : inscrit le ${dh(c.created_at)}, connexion ${dh(c.last_sign_in_at)}, \`${c.id.slice(0, 8)}\`,
+    (c) => `• ${c.email} : inscrit le ${dh(c.created_at)}, connexion ${dh(c.last_sign_in_at)}, \`${c.id.slice(0, 8)}\`\`,
   );
   const pages = Math.max(1, Math.ceil((count ?? 1) / PAR_PAGE));
   return [
@@ -337,7 +337,7 @@ export async function enquete(id: string): Promise<Bloc[]> {
   }
   if (repondues.length) {
     blocs.push(section("*Dernières réponses :*\n" + repondues.slice(0, 5).map(
-      (r) => `• ${dh(r.repondu_le)} : ${r.email}, exp. ${r.note_experience ?? "–"}/5, contenu ${r.note_contenu ?? "–"}/5, global ${r.note_global ?? "–"}/5, \`${r.id.slice(0, 8)}\`,
+      (r) => `• ${dh(r.repondu_le)} : ${r.email}, exp. ${r.note_experience ?? "–"}/5, contenu ${r.note_contenu ?? "–"}/5, global ${r.note_global ?? "–"}/5, \`${r.id.slice(0, 8)}\`\`,
     ).join("\n")));
     repondues.slice(0, 5).forEach((r) => blocs.push(boutonSuppression("enquete", r.id, "🗑 " + (r.email.split("@")[0] || "?").slice(0, 15))));
   }
