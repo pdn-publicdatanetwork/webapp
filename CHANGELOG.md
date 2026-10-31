@@ -4,6 +4,11 @@ Historique des évolutions de la webapp DataParl' (dataparl.fr).
 
 ## 2026-10-31
 
+- **Fiches individuelles des assistants « (groupement) »** : les assistants rattachés à un groupe politique du Parlement européen ont une fiche /collab/<slug> comme les autres collaborateurs ; la fiche nomme et lie désormais l'employeur collectif (« Assistant accrédité rattaché au groupe politique PfE (groupement) » vers la fiche du groupe), déduplique les postes en cours (fin des « Assistant accrédité (groupement) » répétés) et le parcours enrichi affiche « groupe politique (groupement) » à la place d'un employeur vide.
+- **Liens vers les fiches individuelles** : le trombinoscope PE (cartes et tableau) et la section « Assistants rattachés au groupe » des fiches de groupes PE pointent chaque nom vers sa fiche individuelle.
+- **Export PNG de l'hémicycle refait** : composition propre et centrée prête à partager, hémicycle agrandi, sous-titre « N élus, N groupes », légende en rangées de 5, logo DataParl' (bloc jaune) et mention « dataparl.fr ; données au … » (mention de la date seulement si elle est connue).
+## 2026-10-31
+
 - **Logos des groupes Sénat et Parlement européen** : les cartes de groupes pointent vers les logos téléversés sur media.dataparl.fr (chemins `<sigle>-senat.png` / `<sigle>-europarl.png`, sans rognage grâce à object-fit: contain), avec repli automatique en pastille colorée tant qu'un logo manque (composant LogoGroupe).
 - **Couleurs des marques VigiParl' et MixiParl'** alignées sur la charte : bloc corail #F87171 derrière « Parl' » pour VigiParl', bloc bleu #3B82F6 pour MixiParl', même traitement que le jaune de DataParl'.
 - **Export de l'hémicycle** : bouton « Télécharger l'image » sur les pages /groupe/an, /groupe/senat, /groupe/pe ; le PNG embarque l'hémicycle, sa légende, le logo DataParl' et la mention « dataparl.fr ; données au … » pour citer la source.
