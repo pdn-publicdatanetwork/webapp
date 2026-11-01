@@ -30,7 +30,7 @@ export default async function Presse() {
   let dernier: { slug: string; titre: string; chapo: string; publie_le: string } | null = null;
   try {
     const { data } = await authAdmin().from("communiques").select("slug, titre, chapo, publie_le").eq("statut", "publie").order("publie_le", { ascending: false }).limit(1).maybeSingle();
-    dernier = data as typeof dernier;
+    dernier = data as { slug: string; titre: string; chapo: string; publie_le: string } | null;
   } catch { /* pas de teaser sans communiqué */ }
   const aujourdhui = new Date().toISOString().slice(0, 10);
   return (
