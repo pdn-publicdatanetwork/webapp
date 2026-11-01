@@ -899,3 +899,34 @@ html.dark a { transition: color .2s ease; }
 /* ═══ Bascule de thème clair / sombre (app/_components/BasculeTheme.tsx) ═══ */
 .bascule-theme { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; margin-top: 0; padding: 0; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; font-size: 1.05rem; line-height: 1; flex: 0 0 auto; transition: background-color .3s ease, border-color .3s ease, color .3s ease; }
 .bascule-theme:hover, .bascule-theme:focus-visible { border-color: var(--bleu); color: var(--bleu); background: var(--card-elevated); outline: none; }
+
+/* ═══ Accents tricolores : chambres françaises uniquement (Assemblée, Sénat) ═══
+   Les pages /an et /senat posent chambre-an / chambre-senat sur le bloc de
+   chiffres (LandingChambre). Barre verticale bleu-blanc-rouge à gauche de
+   chaque carte, petit drapeau en haut à droite de la première. Le Parlement
+   européen n'est pas concerné. Pure CSS, couleurs officielles du drapeau. */
+.chambre-an .chiffre-carte, .chambre-senat .chiffre-carte { position: relative; }
+.chambre-an .chiffre-carte::before, .chambre-senat .chiffre-carte::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to bottom, #002395 0 33.33%, #FFFDF5 33.33% 66.66%, #ED2939 66.66% 100%);
+  border-radius: var(--radius-card) 0 0 var(--radius-card);
+  pointer-events: none;
+}
+.chambre-an .chiffre-carte:first-child::after, .chambre-senat .chiffre-carte:first-child::after {
+  content: "";
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 18px;
+  height: 12px;
+  background: linear-gradient(to right, #002395 0 33.33%, #FFFDF5 33.33% 66.66%, #ED2939 66.66% 100%);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(7, 26, 65, .12);
+  opacity: .9;
+  pointer-events: none;
+}
