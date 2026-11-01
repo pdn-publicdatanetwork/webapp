@@ -26,6 +26,8 @@ export default async function Presse() {
   const c = await chiffres();
   return (
     <>
+      {/* Bandeau d'accueil presse : marine plein, chiffres du jour poses dessus. */}
+      <section className="presse-hero">
       <h1>DataParl&apos; pour les <span className="surligne">rédactions</span></h1>
       <p className="lead">Savoir qui arrive, qui part et qui change d&apos;équipe, chaque matin, avant tout le monde.</p>
       <div className="chiffres">
@@ -34,6 +36,7 @@ export default async function Presse() {
         {c.mouvements > 0 && <div><strong>{n(c.mouvements)}</strong><span>arrivées, départs et transferts recensés</span></div>}
         <div><strong>Chaque matin</strong><span>mise à jour d&apos;après les listes officielles</span></div>
       </div>
+      </section>
 
       <h2>Ce que DataParl&apos; permet de raconter</h2>
       <div className="atouts colonnes-3">
