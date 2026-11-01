@@ -79,7 +79,7 @@ export default async function LandingChambre({ chambre }: { chambre: Chambre }) 
       </div>
       <p className="lead">{SOUS_TITRE[chambre]}</p>
 
-      <div className="chiffres hero">
+      <div className={"chiffres hero" + (chambre === "assemblee" ? " chambre-an" : chambre === "senat" ? " chambre-senat" : "")}>
         {chiffres.map((c, i) => {
           const corps = (
             <>
