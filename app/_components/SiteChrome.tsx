@@ -39,6 +39,7 @@ export function EnTeteSite({ maintenance = false }: { maintenance?: boolean }) {
               {liens.map((l) => (
                 <a key={l.href} href={l.href}>{l.label}</a>
               ))}
+              <div className="menu-separateur" aria-hidden="true" />
               {/* VigiParl’ / MixiParl’ : pointent sur l’élu courant depuis une fiche */}
               <LiensVigiMixi />
               <MenuDeconnexion />
