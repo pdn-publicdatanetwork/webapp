@@ -930,3 +930,8 @@ html.dark a { transition: color .2s ease; }
   opacity: .9;
   pointer-events: none;
 }
+
+/* Fine barre tricolore sous le titre des chambres francaises (version tres
+   subtile : 3 px, arrets nets, opacite 0,85). Posee par LandingChambre sur
+   /an et /senat uniquement, jamais sur le Parlement europeen. */
+.tricolore { height: 3px; width: 100%; margin: 14px 0 18px; background: linear-gradient(90deg, #002395 0 33%, #FFFDF5 33% 66%, #ED2939 66% 100%); border-radius: 2px; opacity: .85; }
