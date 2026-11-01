@@ -943,3 +943,15 @@ html.dark a { transition: color .2s ease; }
    subtile : 3 px, arrets nets, opacite 0,85). Posee par LandingChambre sur
    /an et /senat uniquement, jamais sur le Parlement europeen. */
 .tricolore { height: 3px; width: 100%; margin: 14px 0 18px; background: linear-gradient(90deg, #002395 0 33%, #FFFDF5 33% 66%, #ED2939 66% 100%); border-radius: 2px; opacity: .85; }
+
+/* ═══ Bandeau d'accueil presse (/presse) : marine plein, chiffres clairs ═══
+   Couleurs fixes (marine #071A41, creme #FFFDF5) : le bandeau garde la
+   signature de la marque quel que soit le theme, clair ou sombre. Le jaune
+   de surlignage reste le seul accent, jamais en couleur de texte. */
+.presse-hero { background: #071A41; color: #FFFDF5; border-radius: var(--radius-card); padding: 30px 26px 22px; margin: 0 0 12px; }
+.presse-hero h1 { color: #FFFDF5; }
+.presse-hero .lead { color: rgba(255, 253, 245, .85); }
+.presse-hero .chiffres { margin: 20px 0 4px; }
+.presse-hero .chiffres div { background: color-mix(in srgb, #FFFDF5 8%, transparent); border-color: rgba(255, 253, 245, .18); box-shadow: none; }
+.presse-hero .chiffres strong { color: #FFFDF5; }
+.presse-hero .chiffres span { color: rgba(255, 253, 245, .75); }
