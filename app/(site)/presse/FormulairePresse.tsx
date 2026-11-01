@@ -32,7 +32,7 @@ export default function FormulairePresse() {
       <label htmlFor="p-email">Email professionnel</label>
       <input id="p-email" name="email" type="email" required maxLength={254} autoComplete="email" />
       <label htmlFor="p-demande">Votre demande <span className="meta">(facultatif)</span></label>
-      <textarea id="p-demande" name="demande" rows={4} maxLength={4000} placeholder="Données, chiffres, accès rédaction, interview…" />
+      <textarea id="p-demande" name="demande" rows={4} maxLength={4000} placeholder="Données, chiffres, accès rédaction, échange par écrit…" />
       <input type="text" name="site" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: "absolute", left: "-9999px" }} />
       {etat === "erreur" && <p className="erreur">{retour}</p>}
       <button disabled={etat === "envoi"}>{etat === "envoi" ? "Envoi…" : "Écrire à presse@dataparl.fr"}</button>

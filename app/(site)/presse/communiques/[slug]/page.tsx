@@ -25,10 +25,10 @@ export default async function Communique({ params }: Props) {
   if (!c) notFound();
   const url = `https://www.dataparl.fr/presse/communiques/${c.slug}`;
   return (
-    <article style={{ maxWidth: 720 }}>
-      <p className="meta"><a href="/presse/communiques">Communiqués de presse</a> · {dateTitre(c.publie_le.slice(0, 10))}</p>
+    <article className="etroit">
+      <p className="meta"><a href="/presse/communiques">Communiqués de presse</a>, {dateTitre(c.publie_le.slice(0, 10))}</p>
       <h1>{c.titre}</h1>
-      {c.chapo && <p className="lead" style={{ color: "var(--ink)", fontWeight: 600 }}>{c.chapo}</p>}
+      {c.chapo && <p className="communique-chapo">{c.chapo}</p>}
       <div dangerouslySetInnerHTML={{ __html: texteVersHtml(c.corps) }} />
       <Partage url={url} titre={c.titre} texte={c.titre} />
       <p className="meta">Contact presse : <a href="mailto:presse@dataparl.fr">presse@dataparl.fr</a>. Réutilisation libre avec la mention « DataParl&apos; (dataparl.fr) ».</p>

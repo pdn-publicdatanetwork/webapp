@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Marque from "@/app/_components/Marque";
 import { compteAffectations, dataQuery } from "@/lib/data";
+import { dateTitre } from "@/lib/daily";
+import { authAdmin } from "@/lib/supabaseAdmin";
 import FormulairePresse from "./FormulairePresse";
 
 export const metadata: Metadata = {
@@ -24,8 +26,17 @@ const n = (x: number) => x.toLocaleString("fr-FR");
 
 export default async function Presse() {
   const c = await chiffres();
+  // Dernier communiqué publié : teasing en page presse.
+  let dernier: { slug: string; titre: string; chapo: string; publie_le: string } | null = null;
+  try {
+    const { data } = await authAdmin().from("communiques").select("slug, titre, chapo, publie_le").eq("statut", "publie").order("publie_le", { ascending: false }).limit(1).maybeSingle();
+    dernier = data as { slug: string; titre: string; chapo: string; publie_le: string } | null;
+  } catch { /* pas de teaser sans communiqué */ }
+  const aujourdhui = new Date().toISOString().slice(0, 10);
   return (
     <>
+      {/* Bandeau d'accueil presse : marine plein, chiffres du jour poses dessus. */}
+      <section className="presse-hero">
       <h1>DataParl&apos; pour les <span className="surligne">rédactions</span></h1>
       <p className="lead">Savoir qui arrive, qui part et qui change d&apos;équipe, chaque matin, avant tout le monde.</p>
       <div className="chiffres">
@@ -34,6 +45,8 @@ export default async function Presse() {
         {c.mouvements > 0 && <div><strong>{n(c.mouvements)}</strong><span>arrivées, départs et transferts recensés</span></div>}
         <div><strong>Chaque matin</strong><span>mise à jour d&apos;après les listes officielles</span></div>
       </div>
+      <p className="presse-hero-meta">Chiffres au {dateTitre(aujourdhui)}, mise à jour chaque matin.</p>
+      </section>
 
       <h2>Ce que DataParl&apos; permet de raconter</h2>
       <div className="atouts colonnes-3">
@@ -41,6 +54,18 @@ export default async function Presse() {
         <div><strong>L&apos;enquête sur les équipes</strong><span>Qui a travaillé pour qui, et pendant combien de temps : le parcours d&apos;un collaborateur à travers l&apos;Assemblée, le Sénat et le Parlement européen depuis 2015.</span></div>
         <div><strong>Les départs en série</strong><span>Une équipe qui se vide en quelques semaines, un taux de renouvellement hors norme : VigiParl&apos; classe chaque élu, groupe par groupe.</span></div>
       </div>
+
+      {dernier && (
+        <section className="teaser-communique">
+          <h2>Dernier communiqué</h2>
+          <a className="teaser-carte" href={`/presse/communiques/${dernier.slug}`}>
+            <span className="meta">{dateTitre(dernier.publie_le.slice(0, 10))}</span>
+            <strong>{dernier.titre}</strong>
+            {dernier.chapo && <span className="teaser-chapo">{dernier.chapo}</span>}
+          </a>
+          <p className="meta"><a href="/presse/communiques">Tous les communiqués →</a></p>
+        </section>
+      )}
 
       <h2>Ce que vous pouvez vérifier en 2 minutes</h2>
       <ol className="verifs">
@@ -71,7 +96,7 @@ export default async function Presse() {
       <p className="meta">L&apos;offre se met en place au cas par cas : écrivez-nous en précisant votre média.</p>
 
       <h2 id="contact">Écrire à la presse</h2>
-      <p>Une demande de données, de précision ou d&apos;interview : <a href="mailto:presse@dataparl.fr">presse@dataparl.fr</a>. Réponse sous 48 heures ouvrées.</p>
+      <p>Pour une demande de données, une précision ou un échange par écrit : <a href="mailto:presse@dataparl.fr">presse@dataparl.fr</a>. Réponse sous 48 heures ouvrées.</p>
       <FormulairePresse />
 
       <h2>Citer DataParl&apos;</h2>
