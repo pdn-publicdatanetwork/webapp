@@ -53,11 +53,16 @@ export async function assistantsGroupement(sigle: string): Promise<AssistantGrou
 // Groupes politiques (Parlement européen) auxquels un collaborateur est
 // rattaché par une affectation « (groupement) » : sert aux fiches
 // individuelles /collab/<slug> pour nommer et lier le groupe employeur.
-export async function groupesDuCollab(collabId: string): Promise<string[]> {
+// Rapprochement par la clé de nom `collab_cle` (ex. « aude brastenhofer ») :
+// `affectations` n'a pas de colonne collab_id, et collab_cle n'est PAS
+// l'identifiant hexadécimal — l'ancien filtre or(collab_cle.like.<id>*,
+// collab_id.eq.<id>) renvoyait 400 sur chaque rendu de fiche (11 521 erreurs
+// en 24 h, cf. issue #107).
+export async function groupesDuCollab(collabCle: string): Promise<string[]> {
   const rows = await dataQueryTout<{ elu_groupe: string }>("affectations",
     new URLSearchParams({
       select: "elu_groupe",
-      or: `(collab_cle.like.${collabId}*,collab_id.eq.${collabId})`,
+      collab_cle: `eq.${collabCle}`,
       chambre: "eq.europarl",
       fonction: "ilike.*(groupement)*",
     }), 3600).catch((): { elu_groupe: string }[] => []);
