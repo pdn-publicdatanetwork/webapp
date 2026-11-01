@@ -955,3 +955,17 @@ html.dark a { transition: color .2s ease; }
 .presse-hero .chiffres div { background: color-mix(in srgb, #FFFDF5 8%, transparent); border-color: rgba(255, 253, 245, .18); box-shadow: none; }
 .presse-hero .chiffres strong { color: #FFFDF5; }
 .presse-hero .chiffres span { color: rgba(255, 253, 245, .75); }
+.presse-hero-meta { margin: 14px 4px 0; font-size: .85rem; color: rgba(255, 253, 245, .72); }
+
+/* Teaser du dernier communique en page presse : carte cliquable, elevation
+   au survol comme les autres cartes du site. */
+.teaser-communique { margin: 0 0 8px; }
+.teaser-carte { display: grid; gap: 6px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 18px 20px; text-decoration: none; box-shadow: var(--shadow-sm); transition: background-color .3s ease, border-color .3s ease, box-shadow .3s ease; }
+.teaser-carte:hover, .teaser-carte:focus-visible { background: var(--card-elevated); border-color: color-mix(in srgb, var(--ink) 20%, var(--line)); box-shadow: var(--shadow-md); }
+.teaser-carte .meta { margin: 0; }
+.teaser-carte strong { font-family: var(--font-spectral), "Spectral", serif; font-size: 1.15rem; line-height: 1.3; color: var(--ink); }
+.teaser-carte:hover strong { color: var(--bleu); }
+.teaser-chapo { color: var(--muted); font-size: .95rem; line-height: 1.5; }
+
+/* Detail communique : chapo ressorti, corps en colonne etroite (.etroit). */
+.communique-chapo { color: var(--ink); font-weight: 600; font-size: 1.05rem; max-width: 62ch; }
