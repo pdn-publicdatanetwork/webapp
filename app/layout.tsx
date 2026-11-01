@@ -39,8 +39,19 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
 
-    <html lang="fr" className={`${dmSans.variable} ${spectral.variable}`}>
+    <html lang="fr" className={`${dmSans.variable} ${spectral.variable}`} suppressHydrationWarning>
       <head>
+        {/* Thème clair / sombre : classe .dark ou .light posée avant la
+            première peinture, à partir du choix mémorisé, sinon du réglage
+            système. Cohérent avec la bascule (app/_components/BasculeTheme.tsx)
+            et les blocs html.dark / :root:not(.light) de globals.css.
+            suppressHydrationWarning sur <html> : la classe peut différer entre
+            serveur et client sans écart de rendu. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light'){document.documentElement.classList.add(t)}else if(matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.classList.add('dark')}}catch(e){}`,
+          }}
+        />
         {/* Consent Mode v2 (Google) : tout refusé par défaut, AVANT tout script
             publicitaire. Le bandeau du site actualise ensuite ces signaux selon
             le choix du visiteur (lib/consentement.ts). */}

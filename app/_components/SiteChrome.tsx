@@ -2,6 +2,7 @@ import LogoSite from "./LogoSite";
 import BarreRechercheHeader from "./BarreRechercheHeader";
 import MenuDeconnexion from "./MenuDeconnexion";
 import LiensVigiMixi from "./LiensVigiMixi";
+import BasculeTheme from "./BasculeTheme";
 
 export const API_URL = "https://api.dataparl.fr";
 
@@ -28,6 +29,8 @@ export function EnTeteSite({ maintenance = false }: { maintenance?: boolean }) {
         <LogoSite />
         {/* Recherche élus / collaborateurs, présente sur presque toutes les pages. */}
         <BarreRechercheHeader />
+        {/* Bascule clair / sombre : choix mémorisé, sinon réglage système. */}
+        <BasculeTheme />
         {/* Menu déroulant natif, sans JavaScript, à droite. */}
         {!maintenance && (
           <details className="menu-site">
