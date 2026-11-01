@@ -969,3 +969,10 @@ html.dark a { transition: color .2s ease; }
 
 /* Detail communique : chapo ressorti, corps en colonne etroite (.etroit). */
 .communique-chapo { color: var(--ink); font-weight: 600; font-size: 1.05rem; max-width: 62ch; }
+
+/* Etat vide des communiques : sobre, chemin clair vers la page presse et le
+   contact, aucune promesse de date. */
+.communiques-vide { max-width: 520px; margin: 48px auto 72px; text-align: center; }
+.communiques-vide-titre { font-family: var(--font-spectral), "Spectral", serif; font-size: 1.25rem; font-weight: 700; color: var(--ink); margin: 0 0 12px; }
+.communiques-vide-texte { color: var(--muted); line-height: 1.6; margin: 0 0 24px; }
+.communiques-vide .meta { margin: 16px 0 0; }
