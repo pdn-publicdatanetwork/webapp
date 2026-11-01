@@ -77,6 +77,7 @@ export default async function LandingChambre({ chambre }: { chambre: Chambre }) 
         <img className="logo-org" src={LOGO[chambre]} alt={CHAMBRE_LONG[chambre]} height={38} />
         <h1>{CHAMBRE_LONG[chambre]}</h1>
       </div>
+      {chambre !== "europarl" && <div className="tricolore" aria-hidden="true" />}
       <p className="lead">{SOUS_TITRE[chambre]}</p>
 
       <div className={"chiffres hero" + (chambre === "assemblee" ? " chambre-an" : chambre === "senat" ? " chambre-senat" : "")}>
