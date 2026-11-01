@@ -65,7 +65,8 @@ export default async function FicheCollab({ params }: Props) {
   // Groupes politiques auxquels cette personne est rattachée en tant
   // qu'assistant de groupement (Parlement européen) : pour nommer et lier
   // l'employeur collectif sur les périodes sans élu individuel.
-  const groupesGroupement = await groupesDuCollab(c.collab_id).catch(() => []);
+  // Rapprochement par la clé de nom (affectations n'a pas de collab_id).
+  const groupesGroupement = await groupesDuCollab(c.collab_cle).catch(() => []);
   const ministresGouv = new Map((await ministresParIds([...new Set(cabinets.map((p) => p.ministre_id))]).catch(() => [])).map((x) => [x.id, x]));
   const role = c.genre === "F" ? "Collaboratrice parlementaire" : c.genre === "H" ? "Collaborateur parlementaire" : "Collaborateur(rice) parlementaire";
 
@@ -87,10 +88,8 @@ export default async function FicheCollab({ params }: Props) {
       </div>
       <p className="lead">
         {c.actif ? "En poste aujourd'hui." : `Dernière présence connue : ${moisAnnee(c.derniere_date)}.`}{" "}
-        {c.n_elus > 1 ? `A travaillé pour ${c.n_elus} élus` :
- "A travaillé pour 1 élu"}
-        {c.premiere_date ?
- ` depuis ${c.premiere_date.slice(0, 4)}` : ""}.
+        {c.n_elus > 1 ? `A travaillé pour ${c.n_elus} élus` : "A travaillé pour 1 élu"}
+        {c.premiere_date ? ` depuis ${c.premiere_date.slice(0, 4)}` : ""}.
       </p>
 
       <Partager slug={c.slug} nom={nom} />
