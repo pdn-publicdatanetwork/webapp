@@ -16,26 +16,58 @@
   --muted: #4A5670;
   --line: #E6E3D8;
   --card: #FFFFFF;
+  --card-elevated: #FFFFFF;
   --sur-corail: #FFFFFF;
+  --shadow-sm: 0 1px 3px rgba(7, 26, 65, .05);
+  --shadow-md: 0 8px 24px rgba(7, 26, 65, .08);
   --radius-btn: 6px;
   --radius-card: 10px;
+  color-scheme: light;
 }
+/* Thème sombre : profondeur marine atmosphérique (inspiration markodenic.com).
+   Fond quasi noir bleuté, surfaces relevées sur deux niveaux, jaune plus doré.
+   Le réglage système reste la référence sans JavaScript ; la bascule manuelle
+   (app/_components/BasculeTheme.tsx) pose .dark ou .light sur <html>, et
+   :not(.light) garantit qu'un choix explicite du clair prime sur le système. */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #071A41;
+  :root:not(.light) {
+    --bg: #050D1F;
     --ink: #FFFDF5;
     --bleu: #6B8CFF;
     --corail: #FF7A80;
     --alerte: #FF6B7D;
-    --jaune: #FFE066;
+    --jaune: #FBBF24;
     --arrivee: #6FBF95;
     --depart: #E0788A;
     --transfert: #7FB2E0;
-    --muted: #B7C0D6;
-    --line: #1E3564;
-    --card: #0D2553;
-    --sur-corail: #071A41;
+    --muted: #A9B4CC;
+    --line: #22355F;
+    --card: #0C1B3F;
+    --card-elevated: #14295C;
+    --sur-corail: #050D1F;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, .35);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, .45);
+    color-scheme: dark;
   }
+}
+html.dark {
+  --bg: #050D1F;
+  --ink: #FFFDF5;
+  --bleu: #6B8CFF;
+  --corail: #FF7A80;
+  --alerte: #FF6B7D;
+  --jaune: #FBBF24;
+  --arrivee: #6FBF95;
+  --depart: #E0788A;
+  --transfert: #7FB2E0;
+  --muted: #A9B4CC;
+  --line: #22355F;
+  --card: #0C1B3F;
+  --card-elevated: #14295C;
+  --sur-corail: #050D1F;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, .35);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, .45);
+  color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
@@ -68,7 +100,7 @@ main { padding: 32px 0 64px; }
 /* Chiffres du jour : la donnée est la décoration */
 .chiffres { display: flex; gap: 16px; flex-wrap: wrap; margin: 24px 0 32px; }
 .chiffres div { border: 1px solid var(--line); border-radius: var(--radius-card); padding: 14px 18px; min-width: 160px; background: var(--card); }
-.chiffres strong { display: block; font-family: var(--font-spectral), "Spectral", serif; font-size: 1.8rem; color: var(--bleu); }
+.chiffres strong { display: block; font-family: var(--font-spectral), "Spectral", serif; font-size: 2.05rem; color: var(--bleu); font-variant-numeric: tabular-nums; }
 .chiffres span { color: var(--muted); font-size: .9rem; }
 
 /* Composant signature : liste de mouvements */
@@ -157,16 +189,19 @@ textarea { width: 100%; min-height: 140px; padding: 10px 12px; border: 1px solid
 
 /* Famille de marques : VigiParl' (rouge), MixiParl' (violet) */
 :root { --vigi: #E30613; --mixi: #7B3FE4; }
-@media (prefers-color-scheme: dark) { :root { --vigi: #FF6B7D; --mixi: #A78BFA; } }
+@media (prefers-color-scheme: dark) { :root:not(.light) { --vigi: #FF6B7D; --mixi: #A78BFA; } }
+html.dark { --vigi: #FF6B7D; --mixi: #A78BFA; }
 /* Blocs de marque : couleur profonde fixe (clair et sombre) pour que
    « Parl' » reste toujours blanc et lisible ; les variables --vigi/--mixi
    (éclaircies en mode sombre) servent uniquement aux textes et barres. */
 .surligne-vigi { background: #E30613; color: #fff; padding: 0 .12em; }
 .surligne-mixi { background: #7B3FE4; color: #fff; padding: 0 .12em; }
 @media (prefers-color-scheme: dark) {
-  .surligne-vigi { background: #FF4D5E; color: #071A41; }
-  .surligne-mixi { background: #9B7BF0; color: #071A41; }
+  :root:not(.light) .surligne-vigi { background: #FF4D5E; color: #071A41; }
+  :root:not(.light) .surligne-mixi { background: #9B7BF0; color: #071A41; }
 }
+html.dark .surligne-vigi { background: #FF4D5E; color: #071A41; }
+html.dark .surligne-mixi { background: #9B7BF0; color: #071A41; }
 .chiffres.vigi strong { color: var(--vigi); }
 .chiffres.mixi strong { color: var(--mixi); }
 .barre { height: 8px; border-radius: 4px; background: color-mix(in srgb, var(--line) 70%, transparent); overflow: hidden; min-width: 80px; }
@@ -469,8 +504,9 @@ h1.marque { font-size: clamp(1.8rem, 4vw, 2.6rem); }
 .badge .point { width: 7px; height: 7px; border-radius: 50%; background: var(--c); flex: none; }
 @media (prefers-color-scheme: dark) {
   /* les teintes sombres (RN, UDR…) restent lisibles sur fond nuit */
-  .badge { color: color-mix(in srgb, var(--c) 55%, #FFFDF5); background: color-mix(in srgb, var(--c) 26%, transparent); }
+  :root:not(.light) .badge { color: color-mix(in srgb, var(--c) 55%, #FFFDF5); background: color-mix(in srgb, var(--c) 26%, transparent); }
 }
+html.dark .badge { color: color-mix(in srgb, var(--c) 55%, #FFFDF5); background: color-mix(in srgb, var(--c) 26%, transparent); }
 .pastilles-groupes { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 20px; }
 a.pastille-groupe { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); font-size: .88rem; font-weight: 600; text-decoration: none; color: var(--ink); }
 a.pastille-groupe:hover, a.pastille-groupe:focus-visible { border-color: var(--c); background: color-mix(in srgb, var(--c) 10%, var(--card)); }
@@ -760,8 +796,9 @@ ul.explorer { list-style: none; padding: 0; margin: 0; display: grid; grid-templ
 .chiffres.hero img.logo-org { display: block; height: 32px; width: auto; max-width: 150px; object-fit: contain; margin-bottom: 12px; align-self: flex-start; }
 @media (prefers-color-scheme: dark) {
   /* Les logos officiels (bleus sur fond transparent) passent sur une pastille claire en mode nuit. */
-  .chiffres.hero img.logo-org { background: #FFFDF5; border-radius: 6px; padding: 4px 6px; }
+  :root:not(.light) .chiffres.hero img.logo-org { background: #FFFDF5; border-radius: 6px; padding: 4px 6px; }
 }
+html.dark .chiffres.hero img.logo-org { background: #FFFDF5; border-radius: 6px; padding: 4px 6px; }
 .marque-carte { display: flex; align-items: center; height: 32px; font-family: var(--font-spectral), "Spectral", serif; font-weight: 700; font-size: 1.25rem; line-height: 1.15; margin-bottom: 10px; white-space: nowrap; }
 
 /* Cartes de chiffres cliquables (pages chambre /an, /senat, /pe) */
@@ -772,8 +809,9 @@ ul.explorer { list-style: none; padding: 0; margin: 0; display: grid; grid-templ
 .chambre-entete { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
 .chambre-entete img.logo-org { display: block; height: 38px; width: auto; max-width: 150px; object-fit: contain; }
 @media (prefers-color-scheme: dark) {
-  .chambre-entete img.logo-org { background: #FFFDF5; border-radius: 6px; padding: 4px 6px; }
+  :root:not(.light) .chambre-entete img.logo-org { background: #FFFDF5; border-radius: 6px; padding: 4px 6px; }
 }
+html.dark .chambre-entete img.logo-org { background: #FFFDF5; border-radius: 6px; padding: 4px 6px; }
 
 
 /* ── Groupes (/groupe, /groupe/an...) et partis : v3 cartes, hémicycle ── */
@@ -826,3 +864,38 @@ ul.lignes-partis { list-style: none; padding: 0; margin: 0; border-top: 1px soli
 .ligne-parti-tete { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .ligne-parti-tete .point { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex: 0 0 auto; }
 @media (max-width: 560px) { .ligne-parti { grid-template-columns: 1fr; } .ligne-parti-chiffres { text-align: left; } }
+
+/* ═══ Profondeur et micro-interactions (thème sombre travaillé) ═══
+   Jetons pilotés : en clair --card-elevated vaut --card et les ombres
+   restent imperceptibles, donc ce bloc ne change presque rien au thème
+   clair. En sombre il donne la profondeur : surfaces relevées au
+   survol, bordure qui s'affirme, ombre douce, halo discret en haut de
+   page et transitions douces au changement de thème. */
+body { transition: background-color .35s ease, color .35s ease; }
+header.site { transition: background-color .35s ease, border-color .35s ease; }
+.chiffres div, .card, .carte-barre, .carte-elu, .carte-admin, .carte-fr,
+.atouts li, .atouts.colonnes-3 > div, .bandeau-suite, .formule, ul.reseaux a {
+  box-shadow: var(--shadow-sm);
+  transition: background-color .3s ease, border-color .3s ease, box-shadow .3s ease;
+}
+.chiffres div:hover, .card:hover, .carte-barre:hover, .carte-elu:hover,
+.carte-admin:hover, .carte-fr:hover, .atouts li:hover {
+  background: var(--card-elevated);
+  border-color: color-mix(in srgb, var(--ink) 20%, var(--line));
+  box-shadow: var(--shadow-md);
+}
+/* Halo atmosphérique discret au sommet de page, en-tête translucide, sombre uniquement. */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) body { background: radial-gradient(ellipse 90% 55% at 50% -8%, #0B1A3A 0%, var(--bg) 60%) var(--bg); background-attachment: fixed; }
+  :root:not(.light) header.site { background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+}
+html.dark body { background: radial-gradient(ellipse 90% 55% at 50% -8%, #0B1A3A 0%, var(--bg) 60%) var(--bg); background-attachment: fixed; }
+html.dark header.site { background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) a { transition: color .2s ease; }
+}
+html.dark a { transition: color .2s ease; }
+
+/* ═══ Bascule de thème clair / sombre (app/_components/BasculeTheme.tsx) ═══ */
+.bascule-theme { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; margin-top: 0; padding: 0; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; font-size: 1.05rem; line-height: 1; flex: 0 0 auto; transition: background-color .3s ease, border-color .3s ease, color .3s ease; }
+.bascule-theme:hover, .bascule-theme:focus-visible { border-color: var(--bleu); color: var(--bleu); background: var(--card-elevated); outline: none; }
