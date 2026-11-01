@@ -2,9 +2,11 @@
    Marine = encre et marque ; bleu = navigation et données ; corail = action ;
    jaune = seul accent décoratif (surlignage, jamais en couleur de texte) ;
    rouge = alertes uniquement. Couleurs arrivée / départ / transfert réservées
-   aux données. Pas de capitales forcées. */
+   aux données. Pas de capitales forcées.
+   Fond clair : neutre froid #F8FAFC (plus de crème chaud, la seule chaleur
+   de la page vient du jaune de surlignage et de la corail d'action). */
 :root {
-  --bg: #FFFDF5;
+  --bg: #F8FAFC;
   --ink: #071A41;
   --bleu: #164DFF;
   --corail: #F0444F;
@@ -14,7 +16,7 @@
   --depart: #9D2235;
   --transfert: #1E5C8E;
   --muted: #4A5670;
-  --line: #E6E3D8;
+  --line: #E2E8F0;
   --card: #FFFFFF;
   --card-elevated: #FFFFFF;
   --sur-corail: #FFFFFF;
@@ -363,7 +365,7 @@ h1.marque { font-size: clamp(1.8rem, 4vw, 2.6rem); }
 .apercus-mail figure { margin: 0; }
 .apercus-mail figcaption { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
 .apercus-mail figcaption span { color: var(--muted); font-size: .88rem; }
-.apercus-mail iframe { width: 100%; height: 620px; border: 1px solid var(--line); border-radius: var(--radius-card); background: #F6F4EC; }
+.apercus-mail iframe { width: 100%; height: 620px; border: 1px solid var(--line); border-radius: var(--radius-card); background: #F8FAFC; }
 
 /* Partage (liens directs, sans script tiers) */
 .partage { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 10px 0; }
@@ -547,7 +549,13 @@ header.site.entete-principale .logo, header.site.entete-principale .logo-marque 
 .menu-site summary::-webkit-details-marker { display: none; }
 .menu-site summary::after { content: ""; }
 .menu-site[open] summary { border-color: var(--bleu); color: var(--bleu); }
-.menu-site nav { position: absolute; right: 0; left: auto; top: calc(100% + 6px); display: grid; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 8px; min-width: 220px; z-index: 60; box-shadow: 0 10px 30px rgba(7, 26, 65, .15); }
+.menu-site summary:hover, .menu-site summary:focus-visible { border-color: var(--bleu); color: var(--bleu); }
+.menu-site nav { position: absolute; right: 0; left: auto; top: calc(100% + 8px); display: grid; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 6px; min-width: 220px; z-index: 60; box-shadow: var(--shadow-md); }
+.menu-site .menu-separateur { height: 1px; background: var(--line); margin: 6px 4px; }
+/* Ouverture : glissement + fondu courts, annules si mouvement reduit demande. */
+.menu-site[open] nav, .menu-mobile[open] nav { animation: menu-ouvre .18s cubic-bezier(.16, 1, .3, 1); }
+@keyframes menu-ouvre { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .menu-site[open] nav, .menu-mobile[open] nav { animation: none; } }
 .menu-site nav a { padding: 10px 12px; text-decoration: none; color: var(--ink); border-radius: 8px; }
 .menu-site nav a:hover { background: color-mix(in srgb, var(--bleu) 10%, transparent); color: var(--bleu); }
 /* « Se déconnecter » dans le menu : même rendu que les liens du panneau. */
