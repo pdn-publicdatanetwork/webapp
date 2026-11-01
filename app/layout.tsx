@@ -39,7 +39,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
 
-    <html lang="fr" className={`${dmSans.variable} ${spectral.variable}} suppressHydrationWarning>
+    <html lang="fr" className={`${dmSans.variable} ${spectral.variable}`} suppressHydrationWarning>
       <head>
         {/* Thème clair / sombre : classe .dark ou .light posée avant la
             première peinture, à partir du choix mémorisé, sinon du réglage
