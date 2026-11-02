@@ -1,7 +1,52 @@
 # DataParl' — CI GitLab
-# Le cron anti-abus tourne ici (pipeline planifiée), pas sur Vercel.
-# Variable CI à définir (masquée) : CRON_SECRET (même valeur que sur Vercel).
+#
+# Trois usages :
+# 1. build (toute branche) : compile l'app Next.js pour Cloudflare Workers (OpenNext).
+# 2. deploy (main uniquement) : publie le Worker sur Cloudflare.
+# 3. anti-abus (pipeline planifiée) : filet de secours si les Cron Triggers
+#    Cloudflare venaient à manquer un passage ; appelle la route en production.
+#
+# Variables CI à définir (Settings > CI/CD > Variables) :
+# - CLOUDFLARE_API_TOKEN (masquée) : token Cloudflare avec droits Workers
+# - CLOUDFLARE_ACCOUNT_ID (masquée) : identifiant du compte Cloudflare
+# - CRON_SECRET (masquée) : même valeur que sur Vercel
+# - NEXT_PUBLIC_* (voir docs/deploiement-gitlab-cloudflare.md) : à définir
+#   pour que le build embarque les valeurs publiques.
 
+stages: [build, deploy]
+
+build:
+  stage: build
+  image: node:22
+  script:
+    - npm ci
+    - npx opennextjs-cloudflare build
+  artifacts:
+    paths:
+      - .open-next
+    expire_in: 1 day
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - .npm/
+
+deploy:
+  stage: deploy
+  image: node:22
+  needs: [build]
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  script:
+    - npx wrangler deploy
+  environment:
+    name: production
+    url: https://www.dataparl.fr
+
+# Filet de secours anti-abus : les Cron Triggers Cloudflare appellent déjà la
+# route chaque heure (voir wrangler.jsonc). Cette pipeline planifiée redondante
+# garantit au moins un appel par période planifiée (schedule : horaire).
 anti-abus:
   stage: deploy
   image: alpine:3.20
