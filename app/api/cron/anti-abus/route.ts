@@ -7,10 +7,10 @@ import { authAdmin } from "@/lib/supabaseAdmin";
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
-// Anti-abus (cron quotidien, 08 h 15 UTC) : détecte les comptes dont l'adresse
-// ne passe pas le contrôle automatique (lib/antiAbus.ts, appliqué aussi à
-// l'inscription côté client), envoie le mail « Action requise » puis suspend
-// le compte après 7 jours sans régularisation (changement d'adresse).
+// Anti-abus (cron horaire, h15) : détecte les comptes dont l'adresse ne passe
+// pas le contrôle automatique (lib/antiAbus.ts, appliqué aussi à l'inscription),
+// envoie le mail « Action requise » puis suspend le compte après 48 h sans
+// régularisation (changement d'adresse ou ajout d'un compte Google/GitHub).
 // Suspension = bannissement GoTrue réversible côté admin. Table de suivi :
 // public.comptes_suspects (service_role uniquement, migration comptes_suspects).
 
@@ -23,47 +23,93 @@ function autorise(req: Request): boolean {
   return !!s && recu.length === attendu.length && timingSafeEqual(Buffer.from(recu), Buffer.from(attendu));
 }
 
-const dateFr = (d: string) =>
+// « le 04/11/2026 à 21 h 15, heure de Paris »
+const dateHeureFr = (d: string) =>
   new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false })
     .format(new Date(d))
-    .replace(",", " à");
+    .replace(",", " à")
+    .replace(/(\d\d):(\d\d)$/, "$1 h $2");
 
-async function envoyerAvertissement(email: string, motif: string, creeLe: string): Promise<boolean> {
-  const m: Message = {
-    from: "bienvenue@dataparl.fr",
-    nomExpediteur: "Système anti-abus DataParl'",
-    to: [email],
-    subject: OBJET,
-    titre: "Action requise : vérification de votre adresse email",
-    corpsHtml: `<p style="margin:0 0 16px">Bonjour,</p>
-<p style="margin:0 0 16px">Notre système anti-abus a détecté que le compte créé le ${esc(dateFr(creeLe))} est associé à une adresse email dont le format est classé comme non valide par nos contrôles automatiques.</p>
+// Raisons tournées, choisies de façon déterministe par adresse (stable d'un mail à l'autre).
+const RAISONS = [
+  "l'adresse contient un motif repéré comme non conforme",
+  "le format de l'adresse correspond à une adresse temporaire ou jetable",
+  "l'adresse ne remplit pas les critères de validation automatique",
+  "l'adresse présente un format couramment utilisé pour créer des comptes fictifs",
+  "le format de l'adresse est classé non valide par nos contrôles",
+];
+
+function raisonPour(email: string): string {
+  let h = 0;
+  for (const c of email.toLowerCase()) h = (h * 31 + c.charCodeAt(0)) % 1000000007;
+  return RAISONS[h % RAISONS.length];
+}
+
+// Prénom déclaré dans les métadonnées du compte ; repli sur le nom complet, sinon rien.
+function prenomDe(u: any): string {
+  const md = u?.user_metadata ?? {};
+  const p = (md.prenom ?? "").trim();
+  if (p) return p;
+  const n = (md.name ?? "").trim();
+  return n ? n.split(" ")[0] : "";
+}
+
+async function envoyerAvertissement(email: string, raison: string, prenom: string, creeLe: string, echeance: Date): Promise<boolean> {
+  const salut = prenom ? `Bonjour ${esc(prenom)},` : "Bonjour,";
+  const dateCrea = esc(dateHeureFr(creeLe));
+  const dateEch = esc(dateHeureFr(echeance.toISOString()));
+  const raisonAffichee = esc(raison);
+  const corpsHtml = `${salut}</p>
+<p style="margin:0 0 16px">Notre système anti-abus a détecté que le compte créé le ${dateCrea} est associé à une adresse email dont le format est classé comme non valide par nos contrôles automatiques.</p>
 <p style="margin:0 0 8px"><strong>Résultat du contrôle :</strong></p>
 <ul style="margin:0 0 16px;padding-left:22px">
 <li style="margin-bottom:6px">Compte : <strong>${esc(email)}</strong></li>
-<li style="margin-bottom:6px">Date de création : ${esc(dateFr(creeLe))}</li>
-<li style="margin-bottom:6px">Contrôle : <strong>Non conforme aux critères de validation automatique</strong> (${esc(motif)})</li>
+<li style="margin-bottom:6px">Date de création : ${dateCrea}</li>
+<li style="margin-bottom:6px">Contrôle : ❌ Non conforme aux critères de validation automatique — ${raisonAffichee}</li>
 </ul>
-<p style="margin:0 0 16px">Pour garantir la sécurité de la plateforme et la délivrabilité de nos alertes, les comptes dont l'adresse ne passe pas le contrôle automatique sont suspendus après 7 jours sans régularisation.</p>
+<p style="margin:0 0 16px">Pour garantir la sécurité de la plateforme et la délivrabilité de nos alertes, les comptes concernés sont suspendus après 2 jours sans régularisation. Sans changement de votre part, votre compte sera suspendu le ${dateEch}, heure de Paris.</p>
 <p style="margin:0 0 8px"><strong>Pour régulariser votre compte :</strong></p>
-<p style="margin:0 0 16px">Recréez votre compte avec une adresse email valide. Le contrôle est entièrement automatique à l'inscription : aucune intervention humaine n'est nécessaire.</p>
-<p style="margin:0 0 16px">Ce message a été généré automatiquement par notre système anti-abus. Inutile d'y répondre.</p>
-<p style="margin:0;color:#475569">— Système anti-abus DataParl'</p>`,
-    text: `Bonjour,
+<ul style="margin:0 0 16px;padding-left:22px">
+<li style="margin-bottom:6px">Connectez-vous et ajoutez un compte Google (ou GitHub) comme méthode de connexion depuis votre page <a href="https://www.dataparl.fr/mon-compte/securite" style="color:#164DFF">Sécurité et connexion</a> ;</li>
+<li style="margin-bottom:6px">Ou recréez votre compte avec une adresse email valide.</li>
+</ul>
+<p style="margin:0 0 16px">Le contrôle est entièrement automatique : aucune intervention humaine n'est nécessaire.</p>
+<p style="margin:0 0 16px">Ce message a été généré automatiquement par notre système anti-abus. Une question ? Répondez simplement à cet e-mail : nous le lirons.</p>
+<p style="margin:0;color:#475569">— L'équipe DataParl'`;
 
-Notre système anti-abus a détecté que le compte créé le ${dateFr(creeLe)} est associé à une adresse email dont le format est classé comme non valide par nos contrôles automatiques.
+  const salutT = prenom ? `Bonjour ${prenom},` : "Bonjour,";
+  const text = `${salutT}
+
+Notre système anti-abus a détecté que le compte créé le ${dateHeureFr(creeLe)} est associé à une adresse email dont le format est classé comme non valide par nos contrôles automatiques.
 
 Résultat du contrôle :
+
 - Compte : ${email}
-- Date de création : ${dateFr(creeLe)}
-- Contrôle : Non conforme aux critères de validation automatique (${motif})
+- Date de création : ${dateHeureFr(creeLe)}
+- Contrôle : Non conforme aux critères de validation automatique — ${raison}
 
-Pour garantir la sécurité de la plateforme et la délivrabilité de nos alertes, les comptes dont l'adresse ne passe pas le contrôle automatique sont suspendus après 7 jours sans régularisation.
+Pour garantir la sécurité de la plateforme et la délivrabilité de nos alertes, les comptes concernés sont suspendus après 2 jours sans régularisation. Sans changement de votre part, votre compte sera suspendu le ${dateHeureFr(echeance.toISOString())}, heure de Paris.
 
-Pour régulariser votre compte : recréez votre compte avec une adresse email valide. Le contrôle est entièrement automatique à l'inscription : aucune intervention humaine n'est nécessaire.
+Pour régulariser votre compte :
 
-Ce message a été généré automatiquement par notre système anti-abus. Inutile d'y répondre.
+- Connectez-vous et ajoutez un compte Google (ou GitHub) comme méthode de connexion depuis votre page Sécurité et connexion : https://www.dataparl.fr/mon-compte/securite
+- Ou recréez votre compte avec une adresse email valide.
 
-— Système anti-abus DataParl'`,
+Le contrôle est entièrement automatique : aucune intervention humaine n'est nécessaire.
+
+Ce message a été généré automatiquement par notre système anti-abus. Une question ? Répondez simplement à cet e-mail : nous le lirons.
+
+— L'équipe DataParl'
+https://www.dataparl.fr/`;
+
+  const m: Message = {
+    from: "abuse@dataparl.fr",
+    nomExpediteur: "L'équipe DataParl'",
+    to: [email],
+    subject: OBJET,
+    titre: "Action requise : vérification de votre adresse email",
+    corpsHtml,
+    text,
     type: "auto",
   };
   const r = await expedier(m);
@@ -79,15 +125,17 @@ export async function GET(req: Request) {
   if (errLecture) return NextResponse.json({ ok: false, error: errLecture.message }, { status: 500 });
   const parId = new Map((suspects ?? []).map((l: any) => [l.user_id, l]));
 
-  const users: Array<{ id: string; email: string; created_at: string; banned_until: string | null }> = [];
+  const users: any[] = [];
   for (let page = 1; page <= 10; page++) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
     if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
-    users.push(...((data?.users ?? []) as any[]));
+    users.push(...(data?.users ?? []));
     if (!data?.users || data.users.length < 200) break;
   }
 
-  const septJoursEcoules = (d: string) => Date.now() - new Date(d).getTime() >= 7 * 24 * 3600 * 1000;
+  // Régularisation : adresse changée OU méthode de connexion OAuth (Google, GitHub…) ajoutée.
+  const aOAuth = (u: any) => (u.identities ?? []).some((i: any) => i.provider !== "email" && i.provider !== "phone");
+  const delaEcoule = (d: string) => Date.now() - new Date(d).getTime() >= 48 * 3600 * 1000;
 
   for (const u of users) {
     if (!u.email || u.banned_until) continue;
@@ -103,6 +151,13 @@ export async function GET(req: Request) {
       continue;
     }
 
+    // Régularisation : un compte Google/GitHub a été lié depuis le marquage.
+    if (ligne && !ligne.regularise_le && aOAuth(u)) {
+      await admin.from("comptes_suspects").update({ regularise_le: new Date().toISOString() }).eq("user_id", u.id);
+      bilan.regularises++;
+      continue;
+    }
+
     if (!ligne) {
       const { error: errInsert } = await admin.from("comptes_suspects").insert({ user_id: u.id, email: u.email, motif: ctrl.motif });
       if (errInsert) {
@@ -110,11 +165,13 @@ export async function GET(req: Request) {
         continue;
       }
       bilan.marques++;
-      if (await envoyerAvertissement(u.email, ctrl.motif!, u.created_at)) {
+      // Échéance annoncée = marquage + 48 h, à l'heure exacte.
+      const echeance = new Date(Date.now() + 48 * 3600 * 1000);
+      if (await envoyerAvertissement(u.email, raisonPour(u.email), prenomDe(u), u.created_at, echeance)) {
         await admin.from("comptes_suspects").update({ notifie_le: new Date().toISOString() }).eq("user_id", u.id);
         bilan.avertis++;
       }
-    } else if (!ligne.suspendu_le && !ligne.regularise_le && u.email === ligne.email && septJoursEcoules(ligne.marque_le)) {
+    } else if (!ligne.suspendu_le && !ligne.regularise_le && u.email === ligne.email && delaEcoule(ligne.marque_le)) {
       const { error } = await admin.auth.admin.updateUserById(u.id, { ban_duration: "876000h" });
       if (error) {
         bilan.erreurs.push(`suspension ${u.email} : ${error.message}`);
