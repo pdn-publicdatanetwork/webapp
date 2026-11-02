@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import PubGoogle from "@/app/_components/PubGoogle";
 import BarresAnnuelles from "@/app/_components/BarresAnnuelles";
 import CartesBarres, { type CarteBarre } from "@/app/_components/CartesBarres";
 import Partage from "@/app/_components/Partage";
@@ -141,6 +142,8 @@ export default async function MixiParl() {
         Parlement européen : suivi en pause.{" "}
         <a href="/mixiparl/methode">La méthode complète, avec des exemples →</a>
       </p>
+      {/* Annonce display AdSense : emplacement unique de la page, en fin de contenu (charte publicitaire). */}
+      <PubGoogle />
     </>
   );
 }

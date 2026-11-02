@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import PubGoogle from "@/app/_components/PubGoogle";
 import { notFound, redirect } from "next/navigation";
 import { CourbeMensuelle } from "@/app/_components/CourbesMensuelles";
 import { eluDepuisId, statsElu } from "@/lib/elus";
@@ -92,6 +93,8 @@ export default async function Page({ params }: Props) {
         </>
       )}
       {stat && stat.indetermines > 0 && <p className="meta">{stat.indetermines} collaborateur(s) de genre indéterminé ne sont pas comptés dans la mixité.</p>}
+      {/* Annonce display AdSense : emplacement unique de la page, en fin de contenu (charte publicitaire). */}
+      <PubGoogle />
     </>
   );
 }

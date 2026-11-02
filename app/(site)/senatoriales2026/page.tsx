@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import PubGoogle from "@/app/_components/PubGoogle";
 import Carte, { type DonneesDep } from "./Carte";
 import { OUTRE_MER, SCRUTIN_2026, slugDepartement, senatoriales2026, type Senatoriales2026 as Donnees } from "@/lib/senatoriales";
 import { libelleElection } from "@/lib/senatorialesClassement";
@@ -100,6 +101,8 @@ export default async function Senatoriales2026() {
         Voir aussi : <a href="https://www.resultats-elections.interieur.gouv.fr/Senatoriales2026/nouvelle_assemblee/index.html" target="_blank" rel="noopener noreferrer">les résultats officiels du ministère de l&apos;Intérieur</a>, <a href="/parlementaires">tous les parlementaires</a>, <a href="/mouvements/senat">les mouvements
         au Sénat</a>, <a href="/vigiparl/senat/parlementaires">VigiParl&apos; au Sénat</a>
       </p>
+      {/* Annonce display AdSense : emplacement unique de la page, en fin de contenu (charte publicitaire). */}
+      <PubGoogle />
     </>
   );
 }

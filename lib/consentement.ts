@@ -55,15 +55,24 @@ export function appliquer(c: Choix) {
 }
 
 // Charte publicitaire : le script AdSense ne se charge que sur les pages de
-// fiches (collaborateur, élu). Toutes les autres pages (accueil, contact,
+// fiches (collaborateur, élu) et les sections éditoriales (sénatoriales,
+// VigiParl’, MixiParl’, groupes). Toutes les autres pages (accueil, contact,
 // mon-compte, informations légales, à propos, sitemap, alertes, jobs, media,
-// espace API, recherche, sénatoriales, connexion…) ne chargent jamais le
+// espace API, recherche, connexion…) ne chargent jamais le
 // script : aucune annonce, même automatique, ne peut s'y afficher. Les
 // espaces internes (admin, webmail) sont déjà exclus par espaceInterne().
 export function pagePubAutorisee(): boolean {
   if (typeof window === "undefined") return false;
   const p = window.location.pathname;
-  return p.startsWith("/collab/") || p.startsWith("/parlementaires/");
+  // Sections éditoriales autorisées : sénatoriales, VigiParl’, MixiParl’, groupes.
+  return (
+    p.startsWith("/collab/") ||
+    p.startsWith("/parlementaires/") ||
+    p.startsWith("/senatoriales2026") ||
+    p.startsWith("/vigiparl") ||
+    p.startsWith("/mixiparl") ||
+    p.startsWith("/groupe")
+  );
 }
 
 // Charge le script Google AdSense (une seule fois), uniquement après un

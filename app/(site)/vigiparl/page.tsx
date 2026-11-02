@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import PubGoogle from "@/app/_components/PubGoogle";
 import BarresAnnuelles from "@/app/_components/BarresAnnuelles";
 import CartesBarres, { type CarteBarre } from "@/app/_components/CartesBarres";
 import Partage from "@/app/_components/Partage";
@@ -132,6 +133,8 @@ export default async function VigiParl() {
         Dates de publication officielles, archives depuis 2015. {CHAMBRE.europarl} : suivi repris le 8 octobre 2026, indicateurs dès 12 mois de recul.{" "}
         <a href="/vigiparl/methode">La méthode complète, avec un exemple chiffré →</a>
       </p>
+      {/* Annonce display AdSense : emplacement unique de la page, en fin de contenu (charte publicitaire). */}
+      <PubGoogle />
     </>
   );
 }
