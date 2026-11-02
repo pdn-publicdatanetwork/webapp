@@ -10,6 +10,16 @@ import Turnstile, { reinitialiserTurnstile } from "./Turnstile";
 // équipe (admin.dataparl.fr) ; Google, GitHub et X pour les comptes du site
 // (www et media).
 
+// Toutes les adresses @dataparl.fr (theo, no-reply, hello, contact…) sont des
+// boîtes de l'équipe et désignent le même compte unique : on les ramène à
+// l'adresse de ce compte avant tout appel à GoTrue, aussi bien pour l'envoi
+// du code que pour sa vérification (verifyOtp doit voir le même e-mail).
+const EMAIL_EQUIPE = "theo@dataparl.fr";
+function emailConnexion(saisi: string): string {
+  const e = saisi.trim().toLowerCase();
+  return e.endsWith("@dataparl.fr") ? EMAIL_EQUIPE : e;
+}
+
 const CGU_OK = "dp_cgu_acceptees";
 const IDENTITE = "dp_identite"; // prénom et nom saisis à la création, enregistrés une fois connecté
 let redirige = false;
@@ -207,8 +217,10 @@ export default function Connexion() {
     if (captchaRequis && !jetonCaptcha) return setMessage("Valide d'abord la vérification de sécurité ci-dessous.");
     setEnCours(true);
     setMessage("");
+    const emailFinal = emailConnexion(email);
+    setEmail(emailFinal); // l'étape « code » affiche et vérifie cette adresse
     const { error } = await authBrowser().auth.signInWithOtp({
-      email,
+      email: emailFinal,
       options: { shouldCreateUser: creation, captchaToken: jetonCaptcha ?? undefined },
     });
     setEnCours(false);
@@ -261,8 +273,10 @@ export default function Connexion() {
     if (captchaRequis && !jetonCaptcha) return setMessage("Valide d'abord la vérification de sécurité ci-dessous.");
     setEnCours(true);
     setMessage("");
+    const emailFinal = emailConnexion(email);
+    setEmail(emailFinal);
     const { error } = await authBrowser().auth.signInWithPassword({
-      email,
+      email: emailFinal,
       password: mdp,
       options: { captchaToken: jetonCaptcha ?? undefined },
     });
