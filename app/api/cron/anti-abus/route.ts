@@ -30,8 +30,8 @@ const dateFr = (d: string) =>
 
 async function envoyerAvertissement(email: string, motif: string, creeLe: string): Promise<boolean> {
   const m: Message = {
-    from: "bienvenue@dataparl.fr",
-    nomExpediteur: "Système anti-abus DataParl'",
+    from: "abuse@dataparl.fr",
+    nomExpediteur: "L'équipe DataParl'",
     to: [email],
     subject: OBJET,
     titre: "Action requise : vérification de votre adresse email",
@@ -47,7 +47,7 @@ async function envoyerAvertissement(email: string, motif: string, creeLe: string
 <p style="margin:0 0 8px"><strong>Pour régulariser votre compte :</strong></p>
 <p style="margin:0 0 16px">Recréez votre compte avec une adresse email valide. Le contrôle est entièrement automatique à l'inscription : aucune intervention humaine n'est nécessaire.</p>
 <p style="margin:0 0 16px">Ce message a été généré automatiquement par notre système anti-abus. Inutile d'y répondre.</p>
-<p style="margin:0;color:#475569">— Système anti-abus DataParl'</p>`,
+<p style="margin:0;color:#475569">— L'équipe DataParl'</p>`,
     text: `Bonjour,
 
 Notre système anti-abus a détecté que le compte créé le ${dateFr(creeLe)} est associé à une adresse email dont le format est classé comme non valide par nos contrôles automatiques.
@@ -63,7 +63,7 @@ Pour régulariser votre compte : recréez votre compte avec une adresse email va
 
 Ce message a été généré automatiquement par notre système anti-abus. Inutile d'y répondre.
 
-— Système anti-abus DataParl'`,
+— L'équipe DataParl'`,
     type: "auto",
   };
   const r = await expedier(m);
