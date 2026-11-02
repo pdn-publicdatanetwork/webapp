@@ -176,12 +176,15 @@ export default function Connexion() {
     } catch {}
   }
 
-  async function oauth(provider: "github" | "google" | "slack_oidc" | "twitter") {
+  async function oauth(provider: "github" | "google" | "google2" | "slack_oidc" | "twitter") {
     if (bloque) return setMessage(motif);
     memoriserCgu();
     const suite = encodeURIComponent(destination());
     await authBrowser().auth.signInWithOAuth({
-      provider,
+      // google2 est un fournisseur OAuth custom : absent de l'union Provider
+      // de supabase-js (limitation de typage uniquement), le cast retombe sur
+      // la surcharge OAuth. La chaîne est transmise telle quelle à l'exécution.
+      provider: provider as "google",
       options: { redirectTo: `${window.location.origin}/connexion?suite=${suite}` },
     });
   }
@@ -333,6 +336,12 @@ export default function Connexion() {
               <>
                 <button className="fournisseur" onClick={() => oauth("google")} disabled={bloque}>
                   <IconeGoogle /> Continuer avec Google
+                </button>
+                {/* google2 : fournisseur OAuth custom (2ᵉ compte Google), le
+                    typage de supabase-js ne le connaît pas : cast comme dans
+                    la page Sécurité et connexion. */}
+                <button className="fournisseur" onClick={() => oauth("google2")} disabled={bloque}>
+                  <IconeGoogle /> Continuer avec un autre compte Google
                 </button>
                 <button className="fournisseur github" onClick={() => oauth("github")} disabled={bloque}>
                   <IconeGitHub /> Continuer avec GitHub
