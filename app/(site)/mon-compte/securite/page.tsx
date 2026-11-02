@@ -8,12 +8,11 @@ import StyleCompte from "../style-compte";
 const NOMS: Record<string, string> = { email: "Code par email", google: "Google", google2: "Google (2ᵉ compte)", github: "GitHub", twitter: "X", slack_oidc: "Slack" };
 const PROC: Array<"google" | "google2" | "github" | "twitter"> = ["google", "google2", "github", "twitter"];
 
-// Sécurité et connexion : méthodes de connexion, adresses email, mot de passe,
+// Sécurité et connexion : méthodes de connexion, adresse email, mot de passe,
 // validation en deux étapes (TOTP), clés d'accès (à venir) et mon activité.
 // Chaque action réussie ici signale l'événement à /api/compte/securite/evenement :
 // le serveur relit l'état réel du compte puis envoie l'e-mail de notification.
 type Facteur = { id: string; nom: string };
-type Secondaire = { id: string; email: string; confirme_le: string | null; envoi_le: string | null };
 
 export default function Securite() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
@@ -21,9 +20,6 @@ export default function Securite() {
   const [identites, setIdentites] = useState<UserIdentity[]>([]);
   const [emailPrincipal, setEmailPrincipal] = useState("");
   const [nouvelEmail, setNouvelEmail] = useState("");
-  const [secondaires, setSecondaires] = useState<Secondaire[]>([]);
-  const [nouvelleSecondaire, setNouvelleSecondaire] = useState("");
-  const [codeSecondaire, setCodeSecondaire] = useState("");
   const [mdp, setMdp] = useState("");
   const [mdp2, setMdp2] = useState("");
   const [facteurs, setFacteurs] = useState<Facteur[]>([]);
@@ -65,13 +61,6 @@ export default function Securite() {
     setIdentites(data?.identities ?? []);
   }
 
-  async function chargerSecondaires() {
-    const r = await appel("/api/compte/emails-secondaires");
-    if (!r.ok) return;
-    const b = (await r.json()) as { adresses: Secondaire[] };
-    setSecondaires(b.adresses ?? []);
-  }
-
   useEffect(() => {
     sessionActuelle().then(setSession);
   }, []);
@@ -87,7 +76,6 @@ export default function Securite() {
     });
     chargerFacteurs();
     chargerIdentites();
-    chargerSecondaires();
     appel("/api/compte/passkeys").then(async (r) => {
       if (!r.ok) return;
       const b = (await r.json()) as { cles: typeof cles; disponible: boolean };
@@ -151,40 +139,6 @@ export default function Securite() {
       setEmailPrincipal(demande);
       setMessage({ ok: true, texte: "Adresse principale changée. Tes alertes et ta newsletter suivent." });
     }
-  }
-
-  async function ajouterSecondaire() {
-    if (!nouvelleSecondaire.trim()) return;
-    setEnCours(true);
-    setMessage(null);
-    const r = await appel("/api/compte/emails-secondaires", { method: "POST", body: JSON.stringify({ email: nouvelleSecondaire }) });
-    setEnCours(false);
-    const b = (await r.json().catch(() => ({}))) as { error?: string };
-    if (!r.ok) return setMessage({ ok: false, texte: b.error ?? "Ajout impossible, réessaie." });
-    setNouvelleSecondaire("");
-    await chargerSecondaires();
-    setMessage({ ok: true, texte: "Un code à 6 chiffres vient d'être envoyé à cette adresse. Saisis-le à côté de l'adresse pour la confirmer." });
-  }
-
-  async function confirmerSecondaire(id: string) {
-    if (!/^[0-9]{6}$/.test(codeSecondaire)) return setMessage({ ok: false, texte: "Saisis le code à 6 chiffres reçu par e-mail." });
-    setEnCours(true);
-    setMessage(null);
-    const r = await appel("/api/compte/emails-secondaires", { method: "PUT", body: JSON.stringify({ id, code: codeSecondaire }) });
-    setEnCours(false);
-    const b = (await r.json().catch(() => ({}))) as { error?: string };
-    if (!r.ok) return setMessage({ ok: false, texte: b.error ?? "Confirmation impossible, réessaie." });
-    setCodeSecondaire("");
-    await chargerSecondaires();
-    setMessage({ ok: true, texte: "Adresse confirmée." });
-  }
-
-  async function retirerSecondaire(id: string, email: string) {
-    if (!window.confirm(`Retirer l'adresse ${email} ?`)) return;
-    setEnCours(true);
-    await appel("/api/compte/emails-secondaires?id=" + encodeURIComponent(id), { method: "DELETE" });
-    setEnCours(false);
-    await chargerSecondaires();
   }
 
   async function demarrer2fa() {
@@ -319,34 +273,6 @@ export default function Securite() {
           <p><button className="btn secondaire" type="submit" disabled={enCours}>Changer mon adresse principale</button></p>
         </form>
         <p className="meta">Selon la configuration, un e-mail de confirmation t'attendra à la nouvelle adresse. Tes alertes et ta newsletter suivent le changement.</p>
-      </section>
-
-      <section className="section-compte">
-        <h2>Adresses secondaires</h2>
-        <p>Des adresses supplémentaires associées à ton compte, confirmées par un code envoyé sur place. Elles ne permettent pas de se connecter : seule l'adresse principale le fait.</p>
-        {secondaires.length > 0 && (
-          <ul style={{ paddingLeft: 18, margin: "8px 0" }}>
-            {secondaires.map((s) => (
-              <li key={s.id} style={{ margin: "8px 0", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-                <span>{s.email} <span className="meta">({s.confirme_le ? "confirmée" : "code envoyé, à confirmer"})</span></span>
-                {s.confirme_le ? (
-                  <button className="lien" onClick={() => retirerSecondaire(s.id, s.email)} disabled={enCours}>Retirer</button>
-                ) : (
-                  <>
-                    <input type="text" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} placeholder="Code" value={codeSecondaire} onChange={(e) => setCodeSecondaire(e.target.value)} style={{ maxWidth: 110 }} />
-                    <button className="secondaire" style={{ marginTop: 0, padding: "6px 12px", fontSize: "0.9rem" }} onClick={() => confirmerSecondaire(s.id)} disabled={enCours}>Confirmer</button>
-                    <button className="lien" onClick={() => retirerSecondaire(s.id, s.email)} disabled={enCours}>Annuler</button>
-                  </>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-          <input type="email" placeholder="autre.adresse@exemple.fr" maxLength={320} value={nouvelleSecondaire} onChange={(e) => setNouvelleSecondaire(e.target.value)} style={{ maxWidth: 260 }} />
-          <button className="btn secondaire" onClick={ajouterSecondaire} disabled={enCours}>Ajouter</button>
-        </div>
-        <p className="meta">Jusqu'à 5 adresses secondaires. Un code à 6 chiffres, valable 15 minutes, est envoyé à l'adresse pour la confirmer.</p>
       </section>
 
       <section className="section-compte">
