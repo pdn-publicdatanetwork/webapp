@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { CODE, destinationValide, genererCode } from "@/lib/liens";
 import { authAdmin } from "@/lib/supabaseAdmin";
 import { canaux, creerPost, type ModePost } from "@/lib/buffer";
 import { compterDossiers, envoyerDepuisSlack, lister, lire, supprimer } from "@/lib/slackMail";
-import { modalBoite, modalEnvoi, modalPost, modalRechercheCompte, ouvrirModal, publierHome, TAILLE_PAGE_MAIL, vueMessage } from "@/lib/slackHome";
+import { majModal, modalBoite, modalEnvoi, modalPost, modalRechercheCompte, ouvrirModal, publierHome, TAILLE_PAGE_MAIL, vueMessage } from "@/lib/slackHome";
 import { basculeMaintenance } from "@/lib/maintenanceAdmin";
 import { blocsStats, collecterStats } from "@/lib/slackStats";
 import { abonnes, cles, comptes, enquete, fiche, inviterEnquete, telechargements } from "@/lib/slackData";
@@ -106,7 +106,7 @@ export async function POST(req: Request) {
   const corps = new URLSearchParams(await req.text());
   const charge = JSON.parse(corps.get("payload") ?? "{}") as {
     type?: string;
-    view?: { callback_id?: string; private_metadata?: string; state?: { values?: Record<string, Record<string, unknown>> } };
+    view?: { id?: string; callback_id?: string; private_metadata?: string; state?: { values?: Record<string, Record<string, unknown>> } };
     response_url?: string; trigger_id?: string;
     user?: { name?: string; id?: string };
     actions?: { action_id?: string; value?: string }[];
@@ -183,16 +183,22 @@ export async function POST(req: Request) {
       return NextResponse.json({});
     }
     if (act.action_id === "mail_lire" || act.action_id === "mail_notif_lire") {
-      const r = await lire(act.value ?? "");
-      if (!r.ok) {
-        const echec = vueResultat("⚠️ " + r.erreur);
-        if (charge.view) return NextResponse.json({ response_action: "update", view: echec });
-        await ouvrirModal(echec, trigger);
-        return NextResponse.json({});
-      }
-      const vue = vueMessage(r.message);
-      if (charge.view) return NextResponse.json({ response_action: "update", view: vue });
-      await ouvrirModal(vue, trigger);
+      // Accuser réception immédiatement : Slack n'attend que 3 s la réponse
+      // à un clic dans un modal, et la lecture (Supabase, complément Resend)
+      // pouvait dépasser cette fenêtre. Le clic semblait ne rien faire.
+      // Le modal est remplacé ensuite par views.update, une fois prêt.
+      const vueId = charge.view?.id ?? "";
+      after(async () => {
+        let vue: Record<string, unknown>;
+        try {
+          const r = await lire(act.value ?? "");
+          vue = r.ok ? vueMessage(r.message) : vueResultat("⚠️ " + r.erreur);
+        } catch (e) {
+          vue = vueResultat("⚠️ Erreur de lecture : " + (e instanceof Error ? e.message : String(e)));
+        }
+        if (vueId) await majModal(vueId, vue);
+        else await ouvrirModal(vue, trigger);
+      });
       return NextResponse.json({});
     }
     if (act.action_id === "mail_repondre" || act.action_id === "mail_transferer") {

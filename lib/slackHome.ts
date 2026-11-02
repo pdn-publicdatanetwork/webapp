@@ -241,3 +241,22 @@ export async function ouvrirModal(view: Record<string, unknown>, triggerId: stri
     return j.ok;
   } catch { return false; }
 }
+
+// Met à jour un modal déjà ouvert (views.update), après un accusé de
+// réception immédiat : la fenêtre de 3 s de Slack est déjà respectée, le
+// contenu peut prendre le temps qu'il lui faut.
+export async function majModal(viewId: string, view: Record<string, unknown>): Promise<boolean> {
+  const bot = process.env.SLACK_BOT_TOKEN ?? "";
+  if (!bot || !viewId) return false;
+  try {
+    const r = await fetch("https://slack.com/api/views.update", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + bot, "Content-Type": "application/json" },
+      body: JSON.stringify({ view_id: viewId, view }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+    });
+    const j = (await r.json()) as { ok: boolean };
+    return j.ok;
+  } catch { return false; }
+}
