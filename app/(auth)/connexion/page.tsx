@@ -373,9 +373,9 @@ export default function Connexion() {
 
         {etape === "code" && (
           <form onSubmit={verifier}>
-            <p>Un code à 6 chiffres vient d&apos;être envoyé à <strong>{email}</strong>.</p>
+            <p>Un code à 6 ou 8 chiffres vient d&apos;être envoyé à <strong>{email}</strong>.</p>
             <label htmlFor="code">Code</label>
-            <input id="code" type="text" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} required value={code}
+            <input id="code" type="text" inputMode="numeric" pattern="[0-9]{6,8}" maxLength={8} required value={code}
               onChange={(e) => setCode(e.target.value)} autoComplete="one-time-code" autoFocus />
             <button type="submit" disabled={enCours} style={{ width: "100%" }}>Valider</button>
             <p className="meta" style={{ marginTop: 12 }}>
