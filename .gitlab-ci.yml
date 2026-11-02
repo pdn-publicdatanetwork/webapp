@@ -1,0 +1,19 @@
+# DataParl' — CI GitLab
+# Le cron anti-abus tourne ici (pipeline planifiée), pas sur Vercel.
+# Variable CI à définir (masquée) : CRON_SECRET (même valeur que sur Vercel).
+
+anti-abus:
+  stage: deploy
+  image: alpine:3.20
+  needs: []
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  before_script:
+    - apk add --no-cache curl > /dev/null
+  script:
+    - |
+      echo "anti-abus $(date -u +%FT%TZ) : appel de https://www.dataparl.fr/api/cron/anti-abus"
+      curl --fail --silent --show-error --max-time 110         -H "Authorization: Bearer $CRON_SECRET"         https://www.dataparl.fr/api/cron/anti-abus
+  retry:
+    max: 1
+    when: script_failure
