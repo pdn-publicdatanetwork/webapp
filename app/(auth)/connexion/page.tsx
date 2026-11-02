@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { startAuthentication } from "@simplewebauthn/browser";
 import { authBrowser, sessionActuelle } from "@/lib/supabaseBrowser";
 import Turnstile, { reinitialiserTurnstile } from "./Turnstile";
+import { controleEmail } from "@/lib/antiAbus";
 
 // DataParl' Auth : connexion ou création de compte. Servie sur www., api. et
 // admin. pour que le flux OAuth (PKCE) reste sur l'origine qui l'a lancé.
@@ -222,6 +223,12 @@ export default function Connexion() {
     setMessage("");
     const emailFinal = emailConnexion(email);
     setEmail(emailFinal); // l'étape « code » affiche et vérifie cette adresse
+    // Contrôle anti-abus : les adresses non conformes (motifs suspects,
+    // domaines jetables) ne peuvent pas créer de compte.
+    if (creation && controleEmail(emailFinal).suspect) {
+      setEnCours(false);
+      return setMessage("Cette adresse ne passe pas le contrôle automatique : utilise une adresse email valide pour créer ton compte.");
+    }
     const { error } = await authBrowser().auth.signInWithOtp({
       email: emailFinal,
       options: { shouldCreateUser: creation, captchaToken: jetonCaptcha ?? undefined },
