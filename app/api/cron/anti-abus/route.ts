@@ -59,7 +59,7 @@ async function envoyerAvertissement(email: string, raison: string, prenom: strin
   const dateCrea = esc(dateHeureFr(creeLe));
   const dateEch = esc(dateHeureFr(echeance.toISOString()));
   const raisonAffichee = esc(raison);
-  const corpsHtml = `${salut}</p>
+  const corpsHtml = `<p style="margin:0 0 16px">${salut}</p>
 <p style="margin:0 0 16px">Notre système anti-abus a détecté que le compte créé le ${dateCrea} est associé à une adresse email dont le format est classé comme non valide par nos contrôles automatiques.</p>
 <p style="margin:0 0 8px"><strong>Résultat du contrôle :</strong></p>
 <ul style="margin:0 0 16px;padding-left:22px">
