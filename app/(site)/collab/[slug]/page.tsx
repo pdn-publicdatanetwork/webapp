@@ -189,6 +189,11 @@ export default async function FicheCollab({ params }: Props) {
         );
       })()}
 
+      {/* Annonce display AdSense : entre le parcours certifié et le profil
+          CV déclaré, seul emplacement publicitaire de la fiche. Aucun espace
+          réservé tant que NEXT_PUBLIC_ADSENSE_SLOT n'est pas défini. */}
+      <PubGoogle />
+
       {/* Profil CV déclaré par l'intéressé : rubrique séparée, réservée aux
           comptes, jamais mélangée aux parcours sourcés AN/Sénat. */}
       <ProfilCV slug={c.slug} />
@@ -212,10 +217,6 @@ export default async function FicheCollab({ params }: Props) {
           </ul>
         </>
       )}
-
-      {/* Annonce display AdSense : après le contenu, avant les fiches liées.
-          Aucun espace réservé tant que NEXT_PUBLIC_ADSENSE_SLOT n'est pas défini. */}
-      <PubGoogle />
 
       {/* Rétention : après une lecture de fiche, proposer les alertes email
           (l'inscription aux alertes inclut la newsletter). */}

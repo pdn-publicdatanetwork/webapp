@@ -54,12 +54,25 @@ export function appliquer(c: Choix) {
   });
 }
 
+// Charte publicitaire : le script AdSense ne se charge que sur les pages de
+// fiches (collaborateur, élu). Toutes les autres pages (accueil, contact,
+// mon-compte, informations légales, à propos, sitemap, alertes, jobs, media,
+// espace API, recherche, sénatoriales, connexion…) ne chargent jamais le
+// script : aucune annonce, même automatique, ne peut s'y afficher. Les
+// espaces internes (admin, webmail) sont déjà exclus par espaceInterne().
+export function pagePubAutorisee(): boolean {
+  if (typeof window === "undefined") return false;
+  const p = window.location.pathname;
+  return p.startsWith("/collab/") || p.startsWith("/parlementaires/");
+}
+
 // Charge le script Google AdSense (une seule fois), uniquement après un
 // consentement publicitaire. Sans accord, le script n'est jamais injecté :
 // c'est la promesse du bandeau (« rien n'est activé sans ton accord »),
 // et ~220 Ko de scripts publicitaires en moins au chargement.
 export function chargerPub() {
   if (typeof document === "undefined") return;
+  if (!pagePubAutorisee()) return;
   if (document.getElementById("adsense-dataparl")) return;
   const s = document.createElement("script");
   s.id = "adsense-dataparl";
