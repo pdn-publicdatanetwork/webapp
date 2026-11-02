@@ -1,6 +1,6 @@
-import type { OpenNextConfig } from "open-next/types/config";
-
-const config: OpenNextConfig = {
+// Config OpenNext (Cloudflare). Pas d'import de types : le paquet open-next
+// est installé par la CI à la volée, tsc ne doit pas dépendre de lui.
+const config = {
   default: {},
 };
 

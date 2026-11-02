@@ -20,6 +20,9 @@ build:
   image: node:22
   script:
     - npm ci
+    # Outils Workers installés à la volée : package.json reste synchronisé
+    # avec package-lock.json (Vercel construit aussi ce dépôt, npm ci requis).
+    - npm install --no-save @opennextjs/cloudflare wrangler
     - npx opennextjs-cloudflare build
   artifacts:
     paths:
@@ -39,6 +42,7 @@ deploy:
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
   script:
+    - npm install --no-save @opennextjs/cloudflare wrangler
     - npx wrangler deploy
   environment:
     name: production
