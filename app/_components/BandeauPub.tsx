@@ -10,11 +10,22 @@ import { chargerPub, espaceInterne, lire } from "@/lib/consentement";
 // d'apparaître juste après un accord donné au bandeau de cookies, sans
 // rechargement. Une fois le palier « sans pub » livré, le compte abonné
 // court-circuitera ce bandeau côté serveur.
+//
+// Ligne blanche (retour utilisateur) : AdSense ne remplit pas toujours
+// l'emplacement. Avant, le bandeau blanc et la place réservée de 108 px
+// s'affichaient même à vide : ligne blanche en bas d'écran (très visible
+// en thème sombre) et marge sous le pied de page. Désormais, l'attribut
+// data-ad-status de la balise <ins>, posé par le script AdSense à
+// « filled » ou « unfilled », est observé : le fond blanc, la bordure,
+// le bouton de fermeture et la place réservée n'apparaissent que si une
+// annonce est réellement servie.
 
 const CLE_FERMETURE = "dp_pub_bandeau_ferme";
 
 export default function BandeauPub() {
   const [visible, setVisible] = useState(false);
+  // Annonce réellement servie par AdSense (data-ad-status="filled").
+  const [rempli, setRempli] = useState(false);
   const pousse = useRef(false);
 
   useEffect(() => {
@@ -39,15 +50,30 @@ export default function BandeauPub() {
     } catch { /* le script peut charger après : AdSense repousse seul */ }
   }, [visible]);
 
+  // Observe data-ad-status sur la balise <ins> : AdSense le pose à
+  // « filled » (annonce servie) ou « unfilled » (emplacement vide).
+  // Le bandeau ne devient visible que sur « filled ».
+  useEffect(() => {
+    if (!visible) return;
+    const ins = document.querySelector("ins.adsbygoogle");
+    if (!ins) return;
+    const maj = () => setRempli(ins.getAttribute("data-ad-status") === "filled");
+    maj();
+    const obs = new MutationObserver(maj);
+    obs.observe(ins, { attributes: true, attributeFilter: ["data-ad-status"] });
+    return () => obs.disconnect();
+  }, [visible]);
+
   if (!visible || !ADSENSE_SLOT) return null;
   return (
     <>
-      {/* Place réservée sous le contenu : le pied de page reste lisible. */}
-      <div style={{ height: 108 }} aria-hidden="true" />
+      {/* Place réservée sous le contenu : uniquement si une annonce est servie. */}
+      {rempli && <div style={{ height: 108 }} aria-hidden="true" />}
       <div
         style={{
           position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 40,
-          background: "#fff", borderTop: "1px solid #e6e6e6",
+          background: rempli ? "#fff" : "transparent",
+          borderTop: rempli ? "1px solid #e6e6e6" : "none",
           padding: "8px 44px 8px 8px",
         }}
       >
@@ -61,22 +87,24 @@ export default function BandeauPub() {
             data-full-width-responsive="true"
           />
         </div>
-        <button
-          aria-label="Fermer la publicité"
-          onClick={() => {
-            try { sessionStorage.setItem(CLE_FERMETURE, "1"); } catch { /* tant pis pour cette session */ }
-            setVisible(false);
-          }}
-          style={{
-            position: "absolute", right: 4, top: "50%",
-            transform: "translateY(-50%)",
-            width: 32, height: 32, lineHeight: 1,
-            border: "none", borderRadius: 6, background: "transparent",
-            fontSize: 20, color: "#666", cursor: "pointer",
-          }}
-        >
-          ×
-        </button>
+        {rempli && (
+          <button
+            aria-label="Fermer la publicité"
+            onClick={() => {
+              try { sessionStorage.setItem(CLE_FERMETURE, "1"); } catch { /* tant pis pour cette session */ }
+              setVisible(false);
+            }}
+            style={{
+              position: "absolute", right: 4, top: "50%",
+              transform: "translateY(-50%)",
+              width: 32, height: 32, lineHeight: 1,
+              border: "none", borderRadius: 6, background: "transparent",
+              fontSize: 20, color: "#666", cursor: "pointer",
+            }}
+          >
+            ×
+          </button>
+        )}
       </div>
     </>
   );
