@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import PubGoogle from "@/app/_components/PubGoogle";
 import { notFound } from "next/navigation";
 import { BarresMensuelles, CourbeMensuelle } from "@/app/_components/CourbesMensuelles";
 import ClassementTop from "@/app/_components/ClassementTop";
@@ -103,6 +104,8 @@ async function PageTurnover({ seg, chambre }: { seg: string; chambre: "assemblee
           }),
         }}
       />
+      {/* Annonce display AdSense : emplacement unique de la page, en fin de contenu (charte publicitaire). */}
+      <PubGoogle />
     </>
   );
 }
@@ -176,6 +179,8 @@ export default async function Page({ params }: Props) {
           {new Date(stat.premier_depart).toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}.
         </p>
       )}
+      {/* Annonce display AdSense : emplacement unique de la page, en fin de contenu (charte publicitaire). */}
+      <PubGoogle />
     </>
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import PubGoogle from "@/app/_components/PubGoogle";
 import Link from "next/link";
 import { groupesAvecComptes, type GroupeCompte } from "@/lib/collectifsData";
 import { mandaturesExistantes, type MandatureExistante } from "@/lib/mandaturesData";
@@ -51,6 +52,8 @@ export default async function IndexGroupes() {
           avecTitre
         />
       ))}
+      {/* Annonce display AdSense : emplacement unique de la page, en fin de contenu (charte publicitaire). */}
+      <PubGoogle />
     </>
   );
 }
