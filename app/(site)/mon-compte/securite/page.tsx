@@ -36,6 +36,9 @@ export default function Securite() {
   const [cles, setCles] = useState<{ id: string; nom: string; cree_le: string; utilisee_le: string | null }[]>([]);
   const [disponible, setDisponible] = useState(true);
   const [nomCle, setNomCle] = useState("");
+  // « Google (2ᵉ compte) » reste masqué tant qu'il n'est pas relié ; le
+  // bouton « Ajouter un autre compte Google » le révèle (avec Associer).
+  const [autresMethodes, setAutresMethodes] = useState(false);
 
   const appel = useCallback(async (url: string, init: RequestInit = {}) => {
     return fetch(url, { ...init, headers: { "Content-Type": "application/json", ...(init.headers ?? {}), Authorization: `Bearer ${(await sessionActuelle())?.access_token}` } });
@@ -353,9 +356,13 @@ export default function Securite() {
         )}
         {PROC.map((p) => {
           const identite = identites.find((i) => i.provider === p);
+          // « Google (2ᵉ compte) » n'apparaît que s'il est déjà relié, ou
+          // après un clic sur « Ajouter un autre compte Google » ci-dessous.
+          if (p === "google2" && !identite && !autresMethodes) return null;
+          const adresse = identite ? String(identite.identity_data?.email ?? "") : "";
           return (
             <p key={p} style={{ margin: "12px 0", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-              <span>{NOMS[p]} <span className="meta">({identite ? "connecté" : "non associé"})</span></span>
+              <span>{NOMS[p]} <span className="meta">({identite ? `connecté : ${adresse || "compte OAuth"}` : "non associé"})</span></span>
               {identite ? (
                 <button className="lien" onClick={() => retirer(identite)} disabled={enCours}>Retirer</button>
               ) : (
@@ -364,6 +371,9 @@ export default function Securite() {
             </p>
           );
         })}
+        {!identites.some((i) => i.provider === "google2") && !autresMethodes && (
+          <button className="lien" onClick={() => setAutresMethodes(true)}>Ajouter un autre compte Google</button>
+        )}
         <p className="meta">Garde toujours au moins une méthode de connexion active.</p>
       </section>
 
