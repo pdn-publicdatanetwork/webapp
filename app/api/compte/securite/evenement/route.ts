@@ -16,7 +16,7 @@ const Corps = z.discriminatedUnion("type", [
   z.object({ type: z.literal("2fa") }),
   z.object({
     type: z.literal("methode"),
-    fournisseur: z.enum(["google", "github", "twitter"]),
+    fournisseur: z.enum(["google", "google2", "github", "twitter"]),
     ajoute: z.boolean(),
   }),
 ]);

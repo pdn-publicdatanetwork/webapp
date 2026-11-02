@@ -112,7 +112,7 @@ export async function mail2FA(userId: string, active: boolean): Promise<void> {
 }
 
 // Méthode de connexion OAuth ajoutée ou retirée (Google, GitHub, X).
-const NOMS_FOURNISSEURS: Record<string, string> = { google: "Google", github: "GitHub", twitter: "X" };
+const NOMS_FOURNISSEURS: Record<string, string> = { google: "Google", google2: "Google (2ᵉ compte)", github: "GitHub", twitter: "X" };
 export async function mailMethodeConnexion(userId: string, fournisseur: string, ajoute: boolean): Promise<void> {
   const nom = NOMS_FOURNISSEURS[fournisseur] ?? fournisseur;
   const quand = heureParis();
@@ -174,4 +174,74 @@ export async function mailCleApi(userId: string, cle: { nom: string; prefixe: st
           "<p style=\"margin:0\">Si tu n'es pas à l'origine de cette révocation, vérifie tes réglages puis écris-nous via le formulaire de contact.</p>",
         text: `Ta clé API vient d'être révoquée : les requêtes qui l'utilisent seront désormais refusées.\n\nNom : ${cle.nom}\nPréfixe : ${cle.prefixe}…\nQuand : ${quand}\n\nSi tu n'es pas à l'origine de cette révocation, vérifie tes réglages (${SITE_URL}/mon-compte) puis écris-nous via le formulaire de contact.`,
       });
+}
+
+// Changement de l'adresse email principale (depuis « Mon compte »). Envoyé à
+// l'adresse encore active au moment de la demande : si la configuration exige
+// une confirmation, Supabase envoie par ailleurs le lien à la nouvelle adresse.
+export async function mailEmailPrincipalModifie(userId: string, ancien: string, nouveau: string, ip: string | null): Promise<void> {
+  const quand = heureParis();
+  await notifierSecurite(userId, {
+    sujet: "Changement d'adresse email demandé sur ton compte DataParl'",
+    titre: "Changement d'adresse email",
+    corpsHtml:
+      "<p style=\"margin:0 0 16px\">Un changement d'adresse email vient d'être demandé sur ton compte DataParl'.</p>" +
+      blocLignes([["Adresse actuelle", ancien], ["Nouvelle adresse", nouveau], ["Quand", quand], ["Depuis", tronquerIp(ip)]]) +
+      "<p style=\"margin:0 0 16px\">Si la configuration du compte l'exige, un e-mail de confirmation t'attend à la nouvelle adresse : c'est là qu'il faut agir pour finaliser le changement.</p>" +
+      "<p style=\"margin:0\">Si tu n'es pas à l'origine de cette demande, sécurise ton compte sans attendre : change ton mot de passe puis écris-nous via le formulaire de contact.</p>",
+    text:
+      "Un changement d'adresse email vient d'être demandé sur ton compte DataParl'.\n\n" +
+      "Adresse actuelle : " + ancien + "\nNouvelle adresse : " + nouveau + "\nQuand : " + quand + "\nDepuis : " + tronquerIp(ip) +
+      "\n\nSi tu n'es pas à l'origine de cette demande, sécurise ton compte (" + SITE_URL + "/mon-compte/securite) puis écris-nous via le formulaire de contact.",
+  });
+}
+
+// Code de confirmation d'une adresse secondaire : envoyé directement à
+// l'adresse à confirmer (elle n'appartient pas encore pleinement au compte).
+// Aucun lien : le code se saisit dans la page « Sécurité et connexion ».
+export async function mailCodeEmailSecondaire(email: string, prenom: string, code: string): Promise<void> {
+  const p = prenom ? prenom.charAt(0).toUpperCase() + prenom.slice(1) : "";
+  const bonjourHtml = p ? `<p style="margin:0 0 16px">Bonjour ${esc(p)},</p>` : '<p style="margin:0 0 16px">Bonjour,</p>';
+  const bonjourText = p ? `Bonjour ${p},` : "Bonjour,";
+  await expedier({
+    to: [email],
+    from: FROM_SECURITE,
+    nomExpediteur: "DataParl'",
+    subject: "Code de confirmation de ton adresse DataParl'",
+    titre: "Confirme ton adresse email",
+    corpsHtml:
+      bonjourHtml +
+      '<p style="margin:0 0 16px">Cette adresse vient d\'être ajoutée comme adresse secondaire d\'un compte DataParl\'. Saisis ce code dans la page « Sécurité et connexion » pour la confirmer :</p>' +
+      `<p style="margin:0 0 16px;font-size:28px;font-weight:700;letter-spacing:6px">${esc(code)}</p>` +
+      '<p style="margin:0 0 16px">Le code expire dans 15 minutes.</p>' +
+      '<p style="margin:0">Si tu n\'as rien demandé, ignore ce message : l\'adresse ne sera pas confirmée.</p>',
+    text:
+      bonjourText + "\n\n" +
+      "Cette adresse vient d'être ajoutée comme adresse secondaire d'un compte DataParl'. Saisis ce code dans la page « Sécurité et connexion » pour la confirmer :\n\n" +
+      code + "\n\nLe code expire dans 15 minutes.\n\nSi tu n'as rien demandé, ignore ce message : l'adresse ne sera pas confirmée.",
+    pied: "Message envoyé automatiquement par DataParl'. Si tu n'as rien demandé, ignore-le.",
+    type: "transactionnel",
+  });
+}
+
+// Adresse secondaire confirmée ou retirée : information au compte (adresse
+// principale). Ne part que pour les adresses confirmées, jamais en attente.
+export async function mailEmailSecondaireModifie(userId: string, email: string, ajoute: boolean): Promise<void> {
+  const quand = heureParis();
+  await notifierSecurite(userId, {
+    sujet: ajoute ? "Une adresse secondaire a été ajoutée à ton compte" : "Une adresse secondaire a été retirée de ton compte",
+    titre: ajoute ? "Adresse secondaire ajoutée" : "Adresse secondaire retirée",
+    corpsHtml:
+      `<p style="margin:0 0 16px">${ajoute
+        ? `L'adresse <strong>${esc(email)}</strong> est maintenant une adresse secondaire de ton compte.`
+        : `L'adresse <strong>${esc(email)}</strong> n'est plus une adresse secondaire de ton compte.`}</p>` +
+      blocLignes([["Quand", quand]]) +
+      "<p style=\"margin:0\">Si tu n'es pas à l'origine de ce changement, vérifie tes réglages puis écris-nous via le formulaire de contact.</p>",
+    text:
+      (ajoute
+        ? "L'adresse " + email + " est maintenant une adresse secondaire de ton compte."
+        : "L'adresse " + email + " n'est plus une adresse secondaire de ton compte.") +
+      "\n\nQuand : " + quand +
+      "\n\nSi tu n'es pas à l'origine de ce changement, vérifie tes réglages (" + SITE_URL + "/mon-compte/securite) puis écris-nous via le formulaire de contact.",
+  });
 }
