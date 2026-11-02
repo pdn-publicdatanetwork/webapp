@@ -140,11 +140,12 @@ export default function Securite() {
     setEnCours(false);
     const b = (await r.json().catch(() => ({}))) as { error?: string; confirmation?: string };
     if (!r.ok) return setMessage({ ok: false, texte: b.error ?? "Changement impossible, réessaie." });
+    const demande = nouvelEmail;
     setNouvelEmail("");
     if (b.confirmation === "nouvelle-adresse") {
       setMessage({ ok: true, texte: "Demande enregistrée. Un e-mail de confirmation t'attend à la nouvelle adresse : suis son lien pour activer le changement." });
     } else {
-      setEmailPrincipal(nouvelEmail);
+      setEmailPrincipal(demande);
       setMessage({ ok: true, texte: "Adresse principale changée. Tes alertes et ta newsletter suivent." });
     }
   }
@@ -264,8 +265,11 @@ export default function Securite() {
   }
 
   async function associer(provider: "google" | "google2" | "github" | "twitter") {
+    // google2 est un fournisseur OAuth custom : absent de l'union Provider de
+    // supabase-js (limitation de typage uniquement), le cast retombe sur la
+    // surcharge OAuth. À l'exécution, la chaîne est transmise telle quelle.
     const { error } = await authBrowser().auth.linkIdentity({
-      provider,
+      provider: provider as "google",
       // Retour sur cette page avec ?lie= : le signalement part au retour,
       // quand la méthode est réellement reliée côté serveur.
       options: { redirectTo: `${window.location.origin}/mon-compte/securite?lie=${provider}` },
