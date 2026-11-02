@@ -26,9 +26,12 @@ const EXPIRATION_H = 48;
 const ECHECS_MAX = 3;
 const GEL_JOURS = 30;
 
-// Domaine attendu selon la chambre de la fiche.
+// Domaine attendu selon la chambre de la fiche. Les clés sont les valeurs
+// réelles de la colonne « chambres » du référentiel (assemblee, senat,
+// europarl) ; « an » reste accepté comme alias historique.
 const DOMAINES: Record<string, string[]> = {
-  an: ["clb-an.fr"], senat: ["clb.senat.fr"], europarl: ["europarl.europa.eu"],
+  assemblee: ["clb-an.fr"], an: ["clb-an.fr"],
+  senat: ["clb.senat.fr"], europarl: ["europarl.europa.eu"],
 };
 
 // Fiches de test (slug contenant « test___ », hors référentiel officiel) :
