@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { DM_Sans, Spectral } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import BandeauCookies from "./_components/BandeauCookies";
 import TagsGoogle from "./_components/TagsGoogle";
 import PageTrace from "./_components/PageTrace";
@@ -83,11 +81,6 @@ gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personali
         <BandeauCookies />
         {/* Google Tag Manager : espaces publics uniquement (voir TagsGoogle). */}
         <TagsGoogle />
-        {/* Vercel Analytics : pages vues sans cookie ni identificateur
-            cross-site, cohérent avec la promesse « sans pistage ». */}
-        <Analytics />
-        {/* Vercel Speed Insights : mesure des performances web (Core Web Vitals). */}
-        <SpeedInsights />
         {/* Parcours des comptes connectés (route seule, 90 jours, admin
             uniquement) : voir app/_components/PageTrace.tsx. */}
         <PageTrace />
