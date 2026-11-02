@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import PubGoogle from "@/app/_components/PubGoogle";
 import { notFound } from "next/navigation";
 import Tableur from "@/app/_components/Tableur";
 import ClassementTop from "@/app/_components/ClassementTop";
@@ -89,6 +90,8 @@ export default async function Page({ params }: Props) {
           lectureSeule
         />
       )}
+      {/* Annonce display AdSense : emplacement unique de la page, en fin de contenu (charte publicitaire). */}
+      <PubGoogle />
     </>
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import PubGoogle from "@/app/_components/PubGoogle";
 import { notFound } from "next/navigation";
 import Photo from "@/app/_components/Photo";
 import { prenomNom } from "@/lib/format";
@@ -144,6 +145,8 @@ export default async function DepartementSenatoriales({ params }: Props) {
         <a href="/senatoriales2026">Tous les départements</a>,{" "}
         <a href="https://www.resultats-elections.interieur.gouv.fr/Senatoriales2026/nouvelle_assemblee/index.html" target="_blank" rel="noopener noreferrer">Résultats officiels (ministère de l&apos;Intérieur)</a>
       </p>
+      {/* Annonce display AdSense : emplacement unique de la page, en fin de contenu (charte publicitaire). */}
+      <PubGoogle />
     </>
   );
 }

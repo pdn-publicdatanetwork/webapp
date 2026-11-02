@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import PubGoogle from "@/app/_components/PubGoogle";
 import Link from "next/link";
 import ListeElus, { CHAMBRE_LONG } from "@/app/_components/ListeElus";
 import IndicateursGroupe from "./IndicateursGroupe";
@@ -148,6 +149,8 @@ export default async function FicheGroupe({ params }: Props) {
 
       <h2>Les élus du groupe</h2>
       <ListeElus elus={elus} afficher="groupe" />
+      {/* Annonce display AdSense : emplacement unique de la page, en fin de contenu (charte publicitaire). */}
+      <PubGoogle />
     </>
   );
 }
