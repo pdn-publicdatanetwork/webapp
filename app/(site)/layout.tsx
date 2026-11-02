@@ -4,7 +4,6 @@ import RetourHaut from "../_components/RetourHaut";
 import CrayonPage from "../_components/CrayonPage";
 import EnqueteInvite from "../_components/EnqueteInvite";
 import ChatWidget from "../_components/ChatWidget";
-import BandeauPub from "../_components/BandeauPub";
 
 // Layout 100 % statique : il ne doit plus lire headers(). Cet appel optait
 // toutes les pages du site public hors du rendu statique (l'export const
@@ -22,8 +21,6 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       <CrayonPage />
       <EnqueteInvite />
       <ChatWidget />
-      {/* Bandeau publicitaire bas d'écran (consenti, refermable) : espaces publics uniquement. */}
-      <BandeauPub />
     </div>
   );
 }

@@ -10,7 +10,6 @@ import { assainirHtml, estHtml } from "@/lib/htmlBio";
 import { editionsManuelles } from "@/lib/editionsManuelles";
 import { pubActive } from "@/lib/deblocage";
 import BioComplete from "./BioComplete";
-import PubGoogle from "@/app/_components/PubGoogle";
 import CrayonEdition from "@/app/_components/CrayonEdition";
 import BlocRetenir from "@/app/_components/BlocRetenir";
 
@@ -267,7 +266,6 @@ export default async function Bio({ params }: Props) {
         <a className="btn" href={ficheUrl}>Voir l&apos;équipe de {nom}</a>{" "}
         <a className="btn secondaire" href={`${ficheUrl}/historique`}>Historique des collaborateurs</a>
       </p>
-      <PubGoogle />
       {/* Rétention : proposer les alertes email après une lecture de bio
           (l'inscription aux alertes inclut la newsletter). */}
       <BlocRetenir />
