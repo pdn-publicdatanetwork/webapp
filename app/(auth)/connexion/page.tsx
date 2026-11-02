@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { startAuthentication } from "@simplewebauthn/browser";
 import { authBrowser, sessionActuelle } from "@/lib/supabaseBrowser";
+import Turnstile, { reinitialiserTurnstile } from "./Turnstile";
 
 // DataParl' Auth : connexion ou création de compte. Servie sur www., api. et
 // admin. pour que le flux OAuth (PKCE) reste sur l'origine qui l'a lancé.
@@ -62,6 +63,10 @@ export default function Connexion() {
   const [message, setMessage] = useState("");
   const [enCours, setEnCours] = useState(false);
   const [surAdmin, setSurAdmin] = useState(false);
+  const [jetonCaptcha, setJetonCaptcha] = useState<string | null>(null);
+  // Turnstile (Cloudflare) : sitekey publique du widget ; vide = captcha
+  // désactivé (aucun jeton envoyé — utile en dev tant que Supabase ne l'exige pas).
+  const captchaRequis = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITEKEY);
 
   useEffect(() => {
     setSurAdmin(window.location.hostname.startsWith("admin."));
@@ -199,10 +204,17 @@ export default function Connexion() {
   async function envoyerCode(e: React.FormEvent) {
     e.preventDefault();
     if (bloque) return setMessage(motif);
+    if (captchaRequis && !jetonCaptcha) return setMessage("Valide d'abord la vérification de sécurité ci-dessous.");
     setEnCours(true);
     setMessage("");
-    const { error } = await authBrowser().auth.signInWithOtp({ email, options: { shouldCreateUser: creation } });
+    const { error } = await authBrowser().auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: creation, captchaToken: jetonCaptcha ?? undefined },
+    });
     setEnCours(false);
+    // Le jeton Turnstile est à usage unique : on repart d'un widget vierge.
+    setJetonCaptcha(null);
+    reinitialiserTurnstile();
     if (error) {
       return setMessage(
         creation
@@ -246,10 +258,17 @@ export default function Connexion() {
   async function connexionMotDePasse(e: React.FormEvent) {
     e.preventDefault();
     if (bloque) return setMessage(motif);
+    if (captchaRequis && !jetonCaptcha) return setMessage("Valide d'abord la vérification de sécurité ci-dessous.");
     setEnCours(true);
     setMessage("");
-    const { error } = await authBrowser().auth.signInWithPassword({ email, password: mdp });
+    const { error } = await authBrowser().auth.signInWithPassword({
+      email,
+      password: mdp,
+      options: { captchaToken: jetonCaptcha ?? undefined },
+    });
     setEnCours(false);
+    setJetonCaptcha(null);
+    reinitialiserTurnstile();
     if (error) setMessage("Adresse ou mot de passe incorrect. Si tu n'as pas encore de mot de passe, demande un code par email.");
   }
 
@@ -333,7 +352,8 @@ export default function Connexion() {
           <form onSubmit={envoyerCode}>
             <label htmlFor="email">Adresse email</label>
             <input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" autoFocus />
-            <button type="submit" disabled={enCours || bloque} style={{ width: "100%" }}>Recevoir un code</button>
+            <Turnstile jetonRecu={setJetonCaptcha} />
+            <button type="submit" disabled={enCours || bloque || (captchaRequis && !jetonCaptcha)} style={{ width: "100%" }}>Recevoir un code</button>
           </form>
         )}
 
@@ -366,7 +386,8 @@ export default function Connexion() {
             <input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" autoFocus />
             <label htmlFor="mdp">Mot de passe</label>
             <input id="mdp" type="password" required value={mdp} onChange={(e) => setMdp(e.target.value)} autoComplete="current-password" />
-            <button type="submit" disabled={enCours || bloque} style={{ width: "100%" }}>Se connecter</button>
+            <Turnstile jetonRecu={setJetonCaptcha} />
+            <button type="submit" disabled={enCours || bloque || (captchaRequis && !jetonCaptcha)} style={{ width: "100%" }}>Se connecter</button>
             <p className="meta" style={{ marginTop: 12 }}>
               <button type="button" className="lien" onClick={() => { setEtape("email"); setMdp(""); }}>Recevoir un code plutôt</button>
             </p>
