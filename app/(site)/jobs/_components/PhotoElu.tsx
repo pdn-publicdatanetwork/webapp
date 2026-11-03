@@ -2,18 +2,17 @@
 
 import { useState } from "react";
 
-// Photo de l'élu depuis la médiathèque DataParl' (media.dataparl.fr), avec
-// repli sur les initiales si l'image n'existe pas ou si le slug manque.
+// Photo de l'élu, lue depuis sa fiche DataParl' (champ photo_url de la base
+// parlementaires : photos officielles AN / Sénat). Repli sur les initiales si
+// l'image est indisponible. L'URL est résolue côté serveur par la page détail.
 
 export default function PhotoElu({
-  chambre,
-  slug,
+  src,
   prenom,
   nom,
   taille = 84,
 }: {
-  chambre: string | null;
-  slug: string | null;
+  src: string | null;
   prenom: string | null;
   nom: string | null;
   taille?: number;
@@ -21,12 +20,24 @@ export default function PhotoElu({
   const [echec, setEchec] = useState(false);
   const initiales = ((prenom ?? "")[0] ?? "") + ((nom ?? "")[0] ?? "");
 
-  if (!slug || echec || !["an", "senat", "pe"].includes(chambre ?? "")) {
+  if (!src || echec) {
     return (
       <div
-        className="photo-vide"
-        style={{ width: taille, height: taille, fontSize: taille / 3, borderRadius: 16 }}
         aria-hidden
+        style={{
+          width: taille,
+          height: taille,
+          fontSize: taille / 3,
+          borderRadius: 16,
+          background: "var(--bg)",
+          border: "1px solid var(--line)",
+          color: "var(--muted)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontWeight: 800,
+          flexShrink: 0,
+        }}
       >
         {initiales.toUpperCase() || "?"}
       </div>
@@ -34,13 +45,13 @@ export default function PhotoElu({
   }
   return (
     <img
-      className="photo"
-      src={`https://media.dataparl.fr/${chambre}/${slug}.png`}
-      alt={`Photo de ${[prenom, nom].filter(Boolean).join(" ")}`}
+      src={src}
+      alt={"Photo de " + [prenom, nom].filter(Boolean).join(" ")}
       width={taille}
       height={taille}
+      loading="lazy"
       onError={() => setEchec(true)}
-      style={{ width: taille, height: taille }}
+      style={{ width: taille, height: taille, borderRadius: 16, objectFit: "cover", flexShrink: 0, border: "1px solid var(--line)" }}
     />
   );
 }
