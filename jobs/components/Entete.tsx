@@ -1,6 +1,8 @@
 "use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { auth } from "@/lib/authSupabase";
 
 // En-tête du portail : marque + navigation entre les trois espaces.
 
@@ -12,6 +14,12 @@ const ONGLETS = [
 
 export default function Entete() {
   const chemin = usePathname() ?? "/";
+  const [connecte, setConnecte] = useState(false);
+  useEffect(() => {
+    auth.auth.getSession().then(({ data }) => setConnecte(Boolean(data.session)));
+    const { data: sub } = auth.auth.onAuthStateChange((_e, s) => setConnecte(Boolean(s)));
+    return () => sub.unsubscribe();
+  }, []);
   return (
     <header className="sticky top-0 z-30 bg-[#ECF1FC]/90 backdrop-blur-md border-b border-slate-200/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
@@ -44,12 +52,20 @@ export default function Entete() {
             })}
           </nav>
         </div>
-        <Link
-          href="/proposer"
-          className="bg-[#4E2E53] hover:bg-[#3b223f] text-white px-4 py-2.5 rounded-xl font-medium text-xs shadow-sm transition-all flex items-center gap-2 shrink-0"
-        >
-          <span>Publier une offre</span>
-        </Link>
+        <div className="flex items-center gap-2 shrink-0">
+          <Link
+            href={connecte ? "/mon-compte" : "/connexion?suite=/"}
+            className="hidden sm:block text-slate-600 hover:text-[#4E2E53] px-2.5 py-2 rounded-xl font-medium text-xs transition-colors"
+          >
+            {connecte ? "👤 Mon compte" : "Se connecter"}
+          </Link>
+          <Link
+            href="/proposer"
+            className="bg-[#4E2E53] hover:bg-[#3b223f] text-white px-4 py-2.5 rounded-xl font-medium text-xs shadow-sm transition-all flex items-center gap-2"
+          >
+            <span>Publier une offre</span>
+          </Link>
+        </div>
       </div>
     </header>
   );
