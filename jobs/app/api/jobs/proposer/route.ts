@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 const texte = (x: unknown, max = 5000) => (typeof x === "string" ? x.trim().slice(0, max) : "");
 const liste = (x: unknown) =>
-  Array.isArray(x) ? x.filter((l): l is string => typeof l === "string" && l.trim()).map((l) => l.trim()).slice(0, 12) : [];
+  Array.isArray(x) ? x.filter((l): l is string => typeof l === "string" && l.trim().length > 0).map((l) => l.trim()).slice(0, 12) : [];
 
 export async function POST(req: Request) {
   const c = (await req.json().catch(() => null)) ?? {};
