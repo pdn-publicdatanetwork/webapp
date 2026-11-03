@@ -261,6 +261,12 @@ export default function ListeOffres({ offres }: { offres: OffreListe[] }) {
               <Link key={o.id} href={"/jobs/" + slugOffre(o)} className="carte-offre">
                 <div className="carte-offres-badges">
                   <PastilleProvenance connector={o.source_connector} avecLibelle />
+                  {o.chambre && (
+                    <span className="pastille-chambre">
+                      <i style={{ background: couleurChambre(o.chambre) }} />
+                      {SIGLE[o.chambre as Chambre] ?? o.chambre}
+                    </span>
+                  )}
                   <span className="badge-jobs">{o.type_poste ?? "Contrat à préciser"}</span>
                   {o.publie_le && <span className="badge-jobs">{dateCourte(o.publie_le)}</span>}
                 </div>
