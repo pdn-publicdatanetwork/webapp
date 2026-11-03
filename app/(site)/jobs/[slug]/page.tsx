@@ -45,6 +45,37 @@ type Offre = {
   expire_le: string | null;
 };
 
+async function chargée(id: string): Promise<Offre | null> {
+  return (await offreVisible(id)) as unknown as Offre | null;
+}
+
+// Photo officielle de l'élu : champ photo_url de la fiche DataParl'
+// (base parlementaires : photos AN et Sénat), en cache 24 h.
+async function photoParlementaire(slug: string | null): Promise<string | null> {
+  if (!slug) return null;
+  try {
+    const url = DATA_SUPABASE_URL + "/rest/v1/parlementaires?select=photo_url&slug=eq." + encodeURIComponent(slug) + "&limit=1";
+    const r = await fetch(url, {
+      headers: { apikey: DATA_SUPABASE_KEY, Authorization: "Bearer " + DATA_SUPABASE_KEY },
+      next: { revalidate: 86400 },
+    });
+    if (!r.ok) return null;
+    const rows = (await r.json()) as { photo_url: string | null }[];
+    return rows?.[0]?.photo_url ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const id = idDepuisSlug(slug);
+  const o = id ? await chargée(id) : null;
+  return o
+    ? { title: titreStandard(o) + " | DataParl' Jobs", alternates: { canonical: "https://jobs.dataparl.fr/" + slugOffre(o) } }
+    : { title: "Offre introuvable | DataParl' Jobs", robots: { index: false, follow: true } };
+}
+
 // ── Petits composants de rendu ──────────────────────────────────────────────
 
 function Liste({ items }: { items: string[] }) {
