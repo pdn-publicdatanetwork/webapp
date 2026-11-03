@@ -54,6 +54,7 @@ export async function GET() {
         ...exclus,
         "",
         `Sitemap: https://${host}/sitemap.xml`,
+        `Sitemap: https://${host}/sitemap-news.xml`,
       ].join("\n")
     : "User-agent: *\nDisallow: /";
   return new Response(corps + "\n", { headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=3600" } });
