@@ -2,11 +2,11 @@ import { createHash } from "crypto";
 import { z } from "zod";
 import { utilisateur } from "@/lib/userAuth";
 import { domaineAutorise } from "@/lib/jobs";
-import { authAdmin } from "@/lib/supabaseAdmin";
+import { deposerOffre } from "@/lib/jobsFirestore";
 
 export const dynamic = "force-dynamic";
 
-// Dépôt public d'une offre depuis /jobs/proposer — pour les comptes connectés
+// Dépôt public d'une offre depuis /jobs/proposer, pour les comptes connectés
 // dont l'email appartient à un domaine parlementaire (voir lib/jobs.ts).
 // L'offre arrive en file de revue (pending) : rien n'est publié sans
 // validation humaine dans l'admin.
@@ -42,28 +42,31 @@ export async function POST(req: Request) {
   const empreinte = createHash("sha256")
     .update(d.titre.toLowerCase().replace(/\s+/g, " ").trim() + "|" + d.source_url)
     .digest("hex");
-  const { error } = await authAdmin().from("job_offers").insert({
-    fingerprint: empreinte,
-    titre: d.titre,
-    description: d.description,
-    source_url: d.source_url,
-    type_poste: v(d.type_poste),
-    localisation: v(d.localisation),
-    groupe_politique: v(d.groupe_politique),
-    chambre: d.chambre ?? null,
-    departement: v(d.departement),
-    elu_prenom: v(d.elu_prenom),
-    elu_nom: v(d.elu_nom),
-    publie_le: v(d.publie_le),
-    expire_le: v(d.expire_le),
-    statut: "active",
-    review_status: "pending",
-    source_connector: "proposition",
-    review_note: "Proposée depuis le formulaire par " + user.email,
-  });
-  if (error) {
-    if (error.code === "23505") return Response.json({ erreur: "offre déjà enregistrée (doublon)" }, { status: 409 });
+  try {
+    const resultat = await deposerOffre(
+      {
+        titre: d.titre,
+        description: d.description,
+        source_url: d.source_url,
+        type_poste: v(d.type_poste),
+        localisation: v(d.localisation),
+        groupe_politique: v(d.groupe_politique),
+        chambre: d.chambre ?? null,
+        departement: v(d.departement),
+        elu_prenom: v(d.elu_prenom),
+        elu_nom: v(d.elu_nom),
+        publie_le: v(d.publie_le),
+        expire_le: v(d.expire_le),
+        statut: "active",
+        review_status: "pending",
+        source_connector: "proposition",
+        review_note: "Proposée depuis le formulaire par " + user.email,
+      },
+      empreinte,
+    );
+    if (resultat === "doublon") return Response.json({ erreur: "offre déjà enregistrée (doublon)" }, { status: 409 });
+    return Response.json({ ok: true });
+  } catch {
     return Response.json({ erreur: "erreur d'enregistrement" }, { status: 500 });
   }
-  return Response.json({ ok: true });
 }

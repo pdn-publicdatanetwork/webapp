@@ -62,8 +62,11 @@ export function slugOffre(o: OffreBase): string {
     .join("_");
 }
 
-// L'id uuid est le premier segment du slug.
+// L'id est le premier segment du slug : uuid historique ou empreinte
+// (fingerprint, 64 caractères hexadécimaux, collecte Firestore).
 export function idDepuisSlug(slug: string): string | null {
-  const m = slug.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+  const seg = slug.split("_")[0] ?? "";
+  if (/^[0-9a-f]{64}$/i.test(seg)) return seg;
+  const m = seg.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
   return m ? m[0] : null;
 }

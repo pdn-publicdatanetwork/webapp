@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { authAdmin } from "@/lib/supabaseAdmin";
+import { offreVisible } from "@/lib/jobsFirestore";
 import { SIGLE, idDepuisSlug, slugOffre, titreStandard, type Chambre } from "@/lib/jobs";
 import { PastilleProvenance } from "../_components/ListeOffres";
 
@@ -31,27 +31,14 @@ type Offre = {
 const dateFr = (iso: string | null) =>
   iso ? new Date(iso + "T12:00:00Z").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : null;
 
-async function offreVisible(id: string): Promise<Offre | null> {
-  const { data, error } = await authAdmin()
-    .from("job_offers")
-    .select(
-      "id,titre,description,chambre,departement,elu_prenom,elu_nom,groupe_politique,type_poste,localisation,parlementaire_slug,source_connector,publie_le,expire_le"
-    )
-    .eq("id", id)
-    .eq("review_status", "approved")
-    .eq("statut", "active")
-    .maybeSingle();
-  if (error || !data) return null;
-  const o = data as Offre;
-  const aujourdhui = new Date().toISOString().slice(0, 10);
-  if (o.expire_le && o.expire_le < aujourdhui) return null;
-  return o;
+async function chargée(id: string): Promise<Offre | null> {
+  return (await offreVisible(id)) as unknown as Offre | null;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const id = idDepuisSlug(slug);
-  const o = id ? await offreVisible(id) : null;
+  const o = id ? await chargée(id) : null;
   return o
     ? { title: titreStandard(o) + " | DataParl' Jobs", alternates: { canonical: "https://jobs.dataparl.fr/" + slugOffre(o) } }
     : { title: "Offre introuvable | DataParl'", robots: { index: false, follow: true } };
@@ -60,7 +47,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function OffrePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const id = idDepuisSlug(slug);
-  const o = id ? await offreVisible(id) : null;
+  const o = id ? await chargée(id) : null;
 
   if (!o) {
     return (

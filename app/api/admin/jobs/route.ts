@@ -2,24 +2,16 @@ import { createHash } from "crypto";
 import { z } from "zod";
 import { audit } from "@/lib/adminAuth";
 import { avecAdmin, EDITION, corps, erreur } from "@/lib/adminRoute";
-import { authAdmin } from "@/lib/supabaseAdmin";
+import { deposerOffre, fileRevue, offresActivesAdmin, offresArchiveesAdmin } from "@/lib/jobsFirestore";
 
 export const dynamic = "force-dynamic";
-
-const COLONNES =
-  "id,titre,description,type_poste,localisation,groupe_politique,parlementaire_slug,chambre,departement,elu_prenom,elu_nom,source_url,source_connector,source_raw,publie_le,expire_le,statut,review_status,review_note,match_confidence,created_at,updated_at";
 
 export async function GET(req: Request) {
   return avecAdmin(req, async () => {
     const vue = new URL(req.url).searchParams.get("vue") ?? "revue";
-    let q = authAdmin().from("job_offers").select(COLONNES);
-    if (vue === "actives")
-      q = q.eq("review_status", "approved").eq("statut", "active").order("publie_le", { ascending: false, nullsFirst: false }).limit(200);
-    else if (vue === "archivees") q = q.in("statut", ["expiree", "pourvue", "rejetee"]).order("updated_at", { ascending: false }).limit(100);
-    else q = q.eq("review_status", "pending").order("created_at", { ascending: true }).limit(200);
-    const { data, error } = await q;
-    if (error) throw error;
-    return { offres: data ?? [] };
+    const offres =
+      vue === "actives" ? await offresActivesAdmin() : vue === "archivees" ? await offresArchiveesAdmin() : await fileRevue();
+    return { offres };
   }, EDITION);
 }
 
@@ -52,28 +44,29 @@ export async function POST(req: Request) {
     if (!p.success) return erreur(400, "requête invalide");
     const d = p.data;
     const empreinte = createHash("sha256").update(d.titre.toLowerCase().replace(/\s+/g, " ").trim() + "|" + d.source_url).digest("hex");
-    const { error } = await authAdmin().from("job_offers").insert({
-      fingerprint: empreinte,
-      titre: d.titre,
-      description: d.description,
-      source_url: d.source_url,
-      type_poste: v(d.type_poste),
-      localisation: v(d.localisation),
-      groupe_politique: v(d.groupe_politique),
-      parlementaire_slug: v(d.parlementaire_slug),
-      chambre: d.chambre ?? null,
-      departement: v(d.departement),
-      elu_prenom: v(d.elu_prenom),
-      elu_nom: v(d.elu_nom),
-      publie_le: v(d.publie_le),
-      expire_le: v(d.expire_le),
-      source_connector: d.source_connector,
-      source_raw: v(d.source_raw),
-    });
-    if (error) {
-      if (error.code === "23505") return erreur(409, "offre déjà enregistrée (doublon)");
-      throw error;
-    }
+    const resultat = await deposerOffre(
+      {
+        titre: d.titre,
+        description: d.description,
+        source_url: d.source_url,
+        type_poste: v(d.type_poste),
+        localisation: v(d.localisation),
+        groupe_politique: v(d.groupe_politique),
+        parlementaire_slug: v(d.parlementaire_slug),
+        chambre: d.chambre ?? null,
+        departement: v(d.departement),
+        elu_prenom: v(d.elu_prenom),
+        elu_nom: v(d.elu_nom),
+        publie_le: v(d.publie_le),
+        expire_le: v(d.expire_le),
+        statut: "active",
+        review_status: "pending",
+        source_connector: d.source_connector,
+        source_raw: v(d.source_raw),
+      },
+      empreinte,
+    );
+    if (resultat === "doublon") return erreur(409, "offre déjà enregistrée (doublon)");
     await audit(a, "jobs.soumission", undefined, { titre: d.titre, source: d.source_connector });
     return { ok: true };
   }, EDITION);
