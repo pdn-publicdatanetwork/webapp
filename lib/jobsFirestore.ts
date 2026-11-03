@@ -23,7 +23,7 @@ function db(): Firestore {
     initializeApp({ credential: cert(JSON.parse(json)), projectId: "dataparl-jobs" }, "jobs");
   // REST plutôt que gRPC : compatible avec un déploiement Cloudflare Workers.
   try {
-    base = initializeFirestore(app, { preferREST: true });
+    base = initializeFirestore(app, { preferRest: true });
   } catch {
     base = getFirestore(app);
   }
