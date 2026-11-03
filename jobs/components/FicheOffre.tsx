@@ -134,6 +134,15 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
   const duree = parTitre(/^Dur[ée]e$/i);
   const candidater = parTitre(/^Pour candidater$/i);
   const infos = parTitre(/^Informations pratiques$/i);
+  const infosMap = new Map(
+    (infos?.lignes ?? [])
+      .filter(Boolean)
+      .map((l) => {
+        const i = l.indexOf(":");
+        return i > 0 ? ([l.slice(0, i).trim(), l.slice(i + 1).trim()] as [string, string]) : null;
+      })
+      .filter((x): x is [string, string] => x !== null)
+  );
 
   const contrat = typeContrat(offre);
   const travail = tempsTravail(description);
@@ -243,14 +252,12 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
             <div className="text-sm text-slate-700 divide-y divide-slate-100">
               <p className="py-2.5 grid grid-cols-[140px_1fr] gap-3">
                 <span className="text-[#6C84B0] font-semibold text-xs pt-0.5">Contrat</span>
-                <span className="font-medium">{contrat}{travail ? ", " + travail : ""}</span>
+                <span className="font-medium">{contrat}</span>
               </p>
-              {duree && duree.lignes.filter(Boolean).length > 0 && (
-                <p className="py-2.5 grid grid-cols-[140px_1fr] gap-3">
-                  <span className="text-[#6C84B0] font-semibold text-xs pt-0.5">Durée</span>
-                  <span className="font-medium">{duree.lignes.filter(Boolean).join(" ")}</span>
-                </p>
-              )}
+              <p className="py-2.5 grid grid-cols-[140px_1fr] gap-3">
+                <span className="text-[#6C84B0] font-semibold text-xs pt-0.5">Temps de travail</span>
+                <span className="font-medium">{travail ?? infosMap.get("Temps de travail") ?? "Non précisé"}</span>
+              </p>
               {adresse && (
                 <p className="py-2.5 grid grid-cols-[140px_1fr] gap-3">
                   <span className="text-[#6C84B0] font-semibold text-xs pt-0.5">Lieu</span>
@@ -267,31 +274,29 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
               {rem && (
                 <p className="py-2.5 grid grid-cols-[140px_1fr] gap-3">
                   <span className="text-[#6C84B0] font-semibold text-xs pt-0.5">Rémunération</span>
-                  <span className="font-medium">
-                    {rem.type}{rem.montant ? " : " + rem.montant : ""}
-                    {rem.avantages.length > 0 ? ". Avantages : " + rem.avantages.join(", ") : ""}
-                  </span>
+                  <span className="font-medium">{rem.type}{rem.montant ? " : " + rem.montant : ""}</span>
                 </p>
               )}
-              {infos &&
-                infos.lignes.filter(Boolean).map((l, i) => {
-                  const [k, ...v] = l.split(":");
-                  return (
-                    <p key={i} className="py-2.5 grid grid-cols-[140px_1fr] gap-3">
-                      <span className="text-[#6C84B0] font-semibold text-xs pt-0.5">{k.trim()}</span>
-                      <span className="font-medium">{v.join(":").trim()}</span>
-                    </p>
-                  );
-                })}
+              {rem && rem.avantages.length > 0 && (
+                <p className="py-2.5 grid grid-cols-[140px_1fr] gap-3">
+                  <span className="text-[#6C84B0] font-semibold text-xs pt-0.5">Avantages</span>
+                  <span className="font-medium">{rem.avantages.join(", ")}</span>
+                </p>
+              )}
+              {infosMap.get("Date de début") && (
+                <p className="py-2.5 grid grid-cols-[140px_1fr] gap-3">
+                  <span className="text-[#6C84B0] font-semibold text-xs pt-0.5">Début</span>
+                  <span className="font-medium">{dateFr(infosMap.get("Date de début")!)}</span>
+                </p>
+              )}
               {offre.expire_le && (
                 <p className="py-2.5 grid grid-cols-[140px_1fr] gap-3">
-                  <span className="text-[#6C84B0] font-semibold text-xs pt-0.5">Date limite</span>
+                  <span className="text-[#6C84B0] font-semibold text-xs pt-0.5">Postuler avant le</span>
                   <span className="font-medium">{dateFr(offre.expire_le)}</span>
                 </p>
               )}
             </div>
           </div>
-
           <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2">
             <h2 className="text-sm font-serif-title font-bold text-[#4E2E53]">L&apos;équipe parlementaire</h2>
             <p className="text-sm text-slate-600 leading-relaxed">
@@ -300,9 +305,26 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
               {offre.chambre ? ", " + (CHAMBRE_NOM[offre.chambre] ?? offre.chambre) : ""}.
             </p>
             {lienFiche && (
-              <a href={lienFiche} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-[#6C84B0] hover:text-[#4E2E53] font-semibold underline pt-1">
-                Voir la fiche de l&apos;élu sur DataParl&apos; →
+              <a
+                href={lienFiche}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 bg-[#ECF1FC] hover:bg-[#E4BDE9]/40 border border-[#6C84B0]/20 px-2.5 py-1.5 rounded-full transition-colors"
+              >
+                {photo ? (
+                  <img src={photo} alt="" className="w-6 h-6 rounded-full object-cover" />
+                ) : (
+                  <span className="w-6 h-6 rounded-full bg-[#6C84B0] text-white text-[10px] font-bold flex items-center justify-center">
+                    {(elu || "?").slice(0, 1).toUpperCase()}
+                  </span>
+                )}
+                <span className="text-xs font-semibold text-[#4E2E53]">Fiche de {elu || "l'élu"} sur DataParl&apos;</span>
               </a>
+            )}
+            {offre.parlementaire_slug && (
+              <Link href={"/parlementaires/" + offre.parlementaire_slug} className="text-xs font-semibold text-[#6C84B0] hover:text-[#4E2E53] underline">
+                Toutes ses offres →
+              </Link>
             )}
             {equipe.length > 0 && (
               <div className="pt-3 mt-3 border-t border-slate-100">
