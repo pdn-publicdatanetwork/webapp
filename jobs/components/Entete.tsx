@@ -18,7 +18,7 @@ export default function Entete() {
   useEffect(() => {
     auth.auth.getSession().then(({ data }) => setConnecte(Boolean(data.session)));
     const { data: sub } = auth.auth.onAuthStateChange((_e, s) => setConnecte(Boolean(s)));
-    return () => sub.unsubscribe();
+    return () => sub.subscription.unsubscribe();
   }, []);
   return (
     <header className="sticky top-0 z-30 bg-[#ECF1FC]/90 backdrop-blur-md border-b border-slate-200/80">

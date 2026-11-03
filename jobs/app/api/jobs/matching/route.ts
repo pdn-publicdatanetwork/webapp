@@ -10,18 +10,27 @@ export async function POST(req: Request) {
   const cle = (process.env.MISTRAL_API_KEY || "").trim();
   if (!cle) return Response.json({ erreur: "analyse IA non configurée" }, { status: 503 });
 
+  type OffreEntrante = { id: string; titre: string; extrait: string };
+
+function lireOffres(x: unknown): OffreEntrante[] {
+  if (!Array.isArray(x)) return [];
+  const sortie: OffreEntrante[] = [];
+  for (const o of x) {
+    if (typeof o !== "object" || o === null) continue;
+    const f = o as Record<string, unknown>;
+    if (typeof f.id !== "string" || typeof f.titre !== "string") continue;
+    sortie.push({ id: f.id, titre: texte(f.titre, 120), extrait: texte(f.extrait, 800) });
+    if (sortie.length >= 20) break;
+  }
+  return sortie;
+}
+
   const c = (await req.json().catch(() => null)) ?? {};
   const cv = texte(c.cv, 6000);
-  const offresBrutes = Array.isArray(c.offres)
-    ? c.offres
-        .filter((o: unknown): o is Record<string, unknown> => Boolean(o) && typeof (o as Record<string, unknown>)?.id === "string" && typeof (o as Record<string, unknown>)?.titre === "string")
-        .slice(0, 20)
-    : [];
-  if (cv.length < 40 || offresBrutes.length === 0) {
+  const offres = lireOffres(c.offres);
+  if (cv.length < 40 || offres.length === 0) {
     return Response.json({ erreur: "requête invalide" }, { status: 400 });
   }
-
-  const offres = offresBrutes.map((o) => ({ id: String(o.id), titre: texte(o.titre, 120), extrait: texte(o.extrait, 800) }));
 
   const prompt =
     "Tu es un assistant de recrutement pour des postes de collaborateur parlementaire en France (Assemblée nationale, Sénat, Parlement européen).\n\n" +
