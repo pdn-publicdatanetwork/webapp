@@ -320,7 +320,7 @@ export default async function OffrePage({ params }: { params: Promise<{ slug: st
               <LigneCondition libelle="Durée">{duree.lignes.filter(Boolean).join(" ")}</LigneCondition>
             )}
             {debut && <LigneCondition libelle="Date de début">{debut}</LigneCondition>}
-            {o.expire_le && <LigneCondition libelle="Candidatures jusqu&apos;au">{dateFr(o.expire_le)}</LigneCondition>}
+            {o.expire_le && <LigneCondition libelle={"Candidatures jusqu'au"}>{dateFr(o.expire_le)}</LigneCondition>}
             {adresse && (
               <LigneCondition libelle="Lieu">
                 {adresse}
@@ -361,7 +361,7 @@ export default async function OffrePage({ params }: { params: Promise<{ slug: st
       <div style={{ marginTop: 26, display: "grid", gap: 8 }}>
         {lienFiche && (
           <p style={{ margin: 0 }}>
-            <a href={lienFiche}>Voir l&apos;équipe de {nomElu || "l&apos;élu"} sur DataParl&apos; →</a>
+            <a href={lienFiche}>Voir l&apos;équipe de {nomElu || "l'élu"} sur DataParl&apos; →</a>
           </p>
         )}
         <p className="meta" style={{ margin: 0 }}>
