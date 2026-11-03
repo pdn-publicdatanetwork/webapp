@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { audit } from "@/lib/adminAuth";
 import { avecAdmin, EDITION, corps, erreur } from "@/lib/adminRoute";
-import { authAdmin } from "@/lib/supabaseAdmin";
+import { majOffre, supprimerOffre } from "@/lib/jobsFirestore";
 
 export const dynamic = "force-dynamic";
 
@@ -44,9 +44,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (d.decision === "valider") { champs.review_status = "approved"; champs.statut = "active"; }
     if (d.decision === "rejeter") { champs.review_status = "rejected"; champs.statut = "rejetee"; }
     if (Object.keys(champs).length === 0) return erreur(400, "rien à modifier");
-    champs.updated_at = new Date().toISOString();
-    const { error } = await authAdmin().from("job_offers").update(champs).eq("id", id);
-    if (error) throw error;
+    const trouve = await majOffre(id, champs);
+    if (!trouve) return erreur(404, "offre introuvable");
     await audit(a, "jobs.maj", id, { decision: d.decision, statut: champs.statut ?? null });
     return { ok: true };
   }, EDITION);
@@ -54,17 +53,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
 // Suppression définitive d'une offre (revue, publiée ou archivée).
 // Irréversible : le fingerprint est libéré, donc une annonce supprimée peut
-// être recollectée plus tard (c'est voulu — supprimer ≠ rejeter : rejeter
-// empêche la republication, supprimer efface la trace).
+// être recollectée plus tard (c'est voulu ; supprimer n'est pas rejeter :
+// rejeter empêche la republication, supprimer efface la trace).
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   return avecAdmin(req, async (a) => {
     const { id } = await params;
-    const { data, error } = await authAdmin().from("job_offers").select("titre").eq("id", id).maybeSingle();
-    if (error) throw error;
-    if (!data) return erreur(404, "offre introuvable");
-    const del = await authAdmin().from("job_offers").delete().eq("id", id);
-    if (del.error) throw del.error;
-    await audit(a, "jobs.suppression", id, { titre: data.titre });
+    const titre = await supprimerOffre(id);
+    if (titre === null) return erreur(404, "offre introuvable");
+    await audit(a, "jobs.suppression", id, { titre });
     return { ok: true };
   }, EDITION);
 }
