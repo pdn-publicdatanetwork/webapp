@@ -3,14 +3,14 @@
 import { useEffect } from "react";
 
 // En-tête de DataParl' Jobs : interface propre au module, distincte du site
-// www. Pose la classe .js sur <html> : elle active la charte violet / lavande
+// www. Pose la classe .jobs sur <html> : elle active la charte violet / lavande
 // du module (bloc :root.jobs de globals.css). Navigation resserrée sur le
 // recrutement, bouton d'action « Publier une offre » en violet (CTA principal).
 
 export default function EnTeteJobs() {
   useEffect(() => {
-    document.documentElement.classList.add("js");
-    return () => document.documentElement.classList.remove("js");
+    document.documentElement.classList.add("jobs");
+    return () => document.documentElement.classList.remove("jobs");
   }, []);
 
   const liens = [
