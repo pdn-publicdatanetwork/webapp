@@ -121,7 +121,7 @@ export async function GET(req: Request) {
   const admin = authAdmin();
   const bilan = { marques: 0, avertis: 0, suspendus: 0, regularises: 0, erreurs: [] as string[] };
 
-  const { data: suspects, error: errLecture } = await admin.from("comptes_suspects").select("user_id,email,marque_le,suspendu_le,regularise_le");
+  const { data: suspects, error: errLecture } = await admin.from("comptes_suspects").select("user_id,email,marque_le,suspendu_le,regularise_le,fournisseurs");
   if (errLecture) return NextResponse.json({ ok: false, error: errLecture.message }, { status: 500 });
   const parId = new Map((suspects ?? []).map((l: any) => [l.user_id, l]));
 
@@ -142,9 +142,11 @@ export async function GET(req: Request) {
     if (!data || data.length < 200) break;
   }
 
-  // Régularisation : adresse changée OU méthode de connexion OAuth (Google, GitHub…) ajoutée.
-  // Fournisseurs listés par GoTrue dans app_metadata.providers.
-  const aOAuth = (u: any) => ((u.app_metadata?.providers ?? []) as string[]).some((p) => p !== "email" && p !== "phone");
+  // Fournisseurs de connexion OAuth (Google, GitHub…) listés par GoTrue dans
+  // app_metadata.providers. La régularisation ne compte que si un fournisseur
+  // a été AJOUTÉ après le marquage : un compte créé via Google dès le départ
+  // n'est pas régularisé pour autant.
+  const oauthDe = (u: any) => ((u.app_metadata?.providers ?? []) as string[]).filter((p) => p !== "email" && p !== "phone");
   const delaEcoule = (d: string) => Date.now() - new Date(d).getTime() >= 48 * 3600 * 1000;
 
   for (const u of users) {
@@ -161,15 +163,20 @@ export async function GET(req: Request) {
       continue;
     }
 
-    // Régularisation : un compte Google/GitHub a été lié depuis le marquage.
-    if (ligne && !ligne.regularise_le && aOAuth(u)) {
-      await admin.from("comptes_suspects").update({ regularise_le: new Date().toISOString() }).eq("user_id", u.id);
-      bilan.regularises++;
-      continue;
+    // Régularisation : un compte Google/GitHub a été LIÉ depuis le marquage
+    // (fournisseur absent de la liste enregistrée au marquage).
+    if (ligne && !ligne.regularise_le && !ligne.suspendu_le) {
+      const connus = ((ligne.fournisseurs ?? []) as string[]);
+      const nouveaux = oauthDe(u).filter((p) => !connus.includes(p));
+      if (nouveaux.length > 0) {
+        await admin.from("comptes_suspects").update({ regularise_le: new Date().toISOString(), fournisseurs: oauthDe(u) }).eq("user_id", u.id);
+        bilan.regularises++;
+        continue;
+      }
     }
 
     if (!ligne) {
-      const { error: errInsert } = await admin.from("comptes_suspects").insert({ user_id: u.id, email: u.email, motif: ctrl.motif });
+      const { error: errInsert } = await admin.from("comptes_suspects").insert({ user_id: u.id, email: u.email, motif: ctrl.motif, fournisseurs: oauthDe(u) });
       if (errInsert) {
         bilan.erreurs.push(`marquage ${u.email} : ${errInsert.message}`);
         continue;
