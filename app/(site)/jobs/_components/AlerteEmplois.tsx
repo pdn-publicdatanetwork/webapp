@@ -40,21 +40,20 @@ export default function AlerteEmplois() {
       id="alerte"
       onSubmit={inscrire}
       style={{
-        margin: "18px 0 0",
-        background: "#fff",
+        margin: "20px 0 0",
+        background: "var(--bg)",
         border: "1px solid var(--line)",
         borderRadius: 16,
-        padding: "16px 18px",
+        padding: "14px 16px",
         display: "flex",
         flexWrap: "wrap",
-        gap: 10,
+        gap: 12,
         alignItems: "center",
         justifyContent: "space-between",
-        boxShadow: "0 2px 10px rgba(7,26,65,0.06)",
       }}
     >
       <p style={{ margin: 0, flex: "1 1 260px" }}>
-        <strong>🔔 Alertes e-mail</strong>
+        <strong>🔔 Alertes e-mail personnalisées</strong>
         <br />
         <span className="meta">Recevez les nouvelles offres dès leur publication, désinscription en un clic.</span>
       </p>

@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { offresPubliques } from "@/lib/jobsFirestore";
 import AlerteEmplois from "./_components/AlerteEmplois";
-import ListeOffres, { type OffreListe } from "./_components/ListeOffres";
+import ListeOffres from "./_components/ListeOffres";
+import BarreRecherche from "./_components/BarreRecherche";
+import { type OffreListe } from "./_components/communJobs";
 
-// Accueil de DataParl' Jobs (jobs.dataparl.fr) : interface à la Google
-// Careers, propre au module, distincte du site www. Recherche centrale,
-// pastilles rapides, sidebar de filtres avec compteurs. Données Firestore.
+// Accueil de DataParl' Jobs (jobs.dataparl.fr) : hero en carte à la Google
+// Careers avec recherche centrale et pastilles rapides, KPI, alertes e-mail,
+// puis liste avec sidebar de filtres à compteurs et modales de détail.
 
 export const revalidate = 3600;
 export const dynamic = "force-dynamic";
@@ -20,21 +22,19 @@ export const metadata: Metadata = {
 
 // Pastille rapide : filtre en un clic, pilotée par l'URL.
 const PILLES: { libelle: string; href: string }[] = [
-  { libelle: "Assemblée nationale", href: "/jobs?chambre=an" },
-  { libelle: "Sénat", href: "/jobs?chambre=senat" },
-  { libelle: "Parlement européen", href: "/jobs?chambre=pe" },
-  { libelle: "Stage", href: "/jobs?type=Stage" },
-  { libelle: "CDI", href: "/jobs?type=CDI" },
-  { libelle: "CDD", href: "/jobs?type=CDD" },
+  { libelle: "🏛️ Sénat", href: "/jobs?chambre=senat" },
+  { libelle: "🇫🇷 Assemblée nationale", href: "/jobs?chambre=an" },
+  { libelle: "🇪🇺 Parlement européen", href: "/jobs?chambre=pe" },
+  { libelle: "🎓 Stage", href: "/jobs?type=Stage" },
+  { libelle: "💼 CDI", href: "/jobs?type=CDI" },
+  { libelle: "📄 CDD", href: "/jobs?type=CDD" },
 ];
 
 function Chiffre({ nombre, libelle }: { nombre: number; libelle: string }) {
   return (
-    <div style={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 12, padding: "14px 18px" }}>
-      <p style={{ margin: 0, fontSize: "1.6rem", fontWeight: 800, color: "var(--ink)", fontFamily: "var(--font-spectral), Georgia, serif" }}>
-        {nombre}
-      </p>
-      <p style={{ margin: 0, fontSize: ".85rem", color: "var(--muted)" }}>{libelle}</p>
+    <div className="jobs-kpi">
+      <p className="nombre">{nombre}</p>
+      <p className="libelle">{libelle}</p>
     </div>
   );
 }
@@ -55,55 +55,51 @@ export default async function Jobs() {
 
   return (
     <>
-      <h1 style={{ marginBottom: ".4rem" }}>
-        Travailler au <span className="surligne">Parlement</span>
-      </h1>
-      <p className="lead">
-        Toutes les offres de collaborateur parlementaire : Assemblée nationale, Sénat, Parlement
-        européen. Collectées sur les sources officielles ou déposées directement par les élus,
-        et relues une à une avant publication. Gratuit, sans publicité.
-      </p>
-
-      {/* Recherche centrale : pilote la liste via l'URL (?q=…) */}
-      <form action="/jobs" method="get" className="jobs-recherche" role="search">
-        <input
-          type="search"
-          name="q"
-          placeholder="Communication, juridique, Paris, stage…"
-          aria-label="Rechercher une offre"
-        />
-        <button className="btn" type="submit" style={{ marginTop: 0 }}>Rechercher</button>
-      </form>
-
-      {/* Pastilles rapides : filtrage en un clic */}
-      <div className="jobs-pilles" aria-label="Filtres rapides">
-        {PILLES.map((p) => (
-          <a key={p.href} href={p.href} className="jobs-pille">{p.libelle}</a>
-        ))}
-      </div>
-
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 20 }}>
-        <a className="btn" href="/jobs/proposer" style={{ marginTop: 0 }}>Publier une offre</a>
-        <a className="btn secondaire" href="/jobs/old-jobs" style={{ marginTop: 0 }}>Voir les anciennes offres</a>
-      </div>
-
-      {peu ? (
-        <p className="meta" style={{ marginTop: 22 }}>
-          {offres.length} offre{offres.length > 1 ? "s" : ""} active{offres.length > 1 ? "s" : ""} en
-          ce moment. Le recrutement parlementaire est cyclique : les vagues de postes reviennent
-          surtout à la rentrée et après les élections. Revenez régulièrement ou laissez votre
-          e-mail juste en dessous.
+      {/* Hero : une seule carte pour le titre, la recherche et les alertes */}
+      <section className="jobs-hero">
+        <h1 style={{ marginBottom: ".4rem" }}>
+          Travailler au <span className="surligne">Parlement</span>
+        </h1>
+        <p className="lead" style={{ marginBottom: 0 }}>
+          Toutes les offres de collaborateur parlementaire : Assemblée nationale, Sénat, Parlement
+          européen. Collectées sur les sources officielles ou déposées directement par les élus,
+          et relues une à une avant publication. Gratuit, sans publicité.
         </p>
-      ) : offres.length > 0 ? (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginTop: 26 }}>
-          <Chiffre nombre={offres.length} libelle="Offres actives" />
-          <Chiffre nombre={elus.size} libelle="Élus concernés" />
-          <Chiffre nombre={departements.size} libelle="Départements" />
-          {nouvelles > 0 && <Chiffre nombre={nouvelles} libelle="Nouvelles cette semaine" />}
-        </div>
-      ) : null}
 
-      <AlerteEmplois />
+        <Suspense fallback={null}>
+          <BarreRecherche />
+        </Suspense>
+
+        <div className="jobs-pilles" aria-label="Filtres rapides">
+          <span className="meta">Suggestions :</span>
+          {PILLES.map((p) => (
+            <a key={p.href} href={p.href} className="jobs-pille">{p.libelle}</a>
+          ))}
+        </div>
+
+        <div className="jobs-hero-actions">
+          <a className="btn" href="/jobs/proposer" style={{ marginTop: 0 }}>Publier une offre</a>
+          <a className="btn secondaire" href="/jobs/old-jobs" style={{ marginTop: 0 }}>Voir les anciennes offres</a>
+        </div>
+
+        {peu ? (
+          <p className="meta" style={{ marginTop: 8 }}>
+            {offres.length} offre{offres.length > 1 ? "s" : ""} active{offres.length > 1 ? "s" : ""} en
+            ce moment. Le recrutement parlementaire est cyclique : les vagues de postes reviennent
+            surtout à la rentrée et après les élections. Revenez régulièrement ou laissez votre
+            e-mail juste en dessous.
+          </p>
+        ) : offres.length > 0 ? (
+          <div className="jobs-kpis">
+            <Chiffre nombre={offres.length} libelle="Offres actives" />
+            <Chiffre nombre={elus.size} libelle="Élus concernés" />
+            <Chiffre nombre={departements.size} libelle="Départements" />
+            {nouvelles > 0 && <Chiffre nombre={nouvelles} libelle="Nouvelles cette semaine" />}
+          </div>
+        ) : null}
+
+        <AlerteEmplois />
+      </section>
 
       {offres.length === 0 ? (
         <div style={{ marginTop: 30 }}>
