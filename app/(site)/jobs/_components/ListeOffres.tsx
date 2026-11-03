@@ -4,77 +4,26 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CHAMBRES, SIGLE, slugOffre, type Chambre } from "@/lib/jobs";
 import { couleurChambre } from "@/lib/couleurs";
-
-export type OffreListe = {
-  id: string;
-  titre: string;
-  description: string;
-  chambre: string | null;
-  departement: string | null;
-  elu_prenom: string | null;
-  elu_nom: string | null;
-  groupe_politique: string | null;
-  type_poste: string | null;
-  localisation: string | null;
-  publie_le: string | null;
-  expire_le: string | null;
-  source_connector: string;
-};
+import {
+  CONTRATS,
+  CHAMBRE_NOM,
+  extrait,
+  ilYA,
+  nomElu,
+  tempsTravail,
+  titreCourt,
+  typeContrat,
+} from "@/lib/jobsTexte";
+import { PastilleProvenance, type OffreListe } from "./communJobs";
+import ModalOffre from "./ModalOffre";
 
 const uniques = (xs: (string | null | undefined)[]) =>
   [...new Set(xs.filter((x): x is string => !!x))].sort((a, b) => a.localeCompare(b, "fr"));
 
-// Type de contrat normalisé (Stage / CDD / CDI / Alternance / Autre).
-const CONTRATS = ["Stage", "CDD", "CDI", "Alternance"];
-const typeContrat = (o: OffreListe) => {
-  const src = ((o.type_poste ?? "") + " " + o.description).toLowerCase();
-  for (const c of CONTRATS) if (src.includes(c.toLowerCase())) return c;
-  return "Autre";
-};
-
-const tempsTravail = (desc: string) =>
-  /temps\s+plein/i.test(desc) ? "Temps plein" : /temps\s+partiel/i.test(desc) ? "Temps partiel" : null;
-
-// Date relative : « publié il y a 2 jours ».
-const ilYA = (iso: string | null) => {
-  if (!iso) return null;
-  const j = Math.floor((Date.now() - new Date(iso + "T12:00:00Z").getTime()) / 86400000);
-  if (j <= 0) return "aujourd'hui";
-  if (j === 1) return "hier";
-  if (j < 30) return "il y a " + j + " jours";
-  if (j < 45) return "il y a 1 mois";
-  return "il y a " + Math.floor(j / 30) + " mois";
-};
-
-// Pastille de provenance, avec le niveau de confiance en info-bulle.
-export function PastilleProvenance({ connector, avecLibelle }: { connector: string; avecLibelle?: boolean }) {
-  const parElu = connector === "proposition";
-  if (!parElu && !avecLibelle) return null;
-  return (
-    <span
-      className={parElu ? "pastille-source deposee" : "pastille-source collectee"}
-      title={parElu ? "Publiée directement par l'équipe de l'élu" : "Collectée automatiquement et relue"}
-    >
-      {parElu ? "★ Offre déposée par l'élu" : "Collectée"}
-    </span>
-  );
-}
-
-const nomElu = (o: OffreListe) => [o.elu_prenom, o.elu_nom].filter(Boolean).join(" ");
-const titreCourt = (t: string) => (t.length > 80 ? t.slice(0, 78) + "…" : t);
-
-// Extrait : le chapeau de l'annonce, jusqu'à la première section.
-const extrait = (desc: string) => {
-  if (!desc) return "";
-  const coupe = desc.split(/\n(?=Vos missions|Profil recherché|Lieu|Rémunération|Pour candidater)/i)[0]
-    .replace(/\s+/g, " ")
-    .trim();
-  const texte = coupe || desc.replace(/\s+/g, " ").trim();
-  return texte.length > 190 ? texte.slice(0, 188) + "…" : texte;
-};
-
 // Liste des offres : initialisation depuis l'URL (?q=, ?chambre=, ?type=),
-// sidebar avec cases à cocher et compteurs, cartes denses et scannables.
+// sidebar avec cases à cocher et compteurs, cartes à la Google Careers.
+// Un clic sur une carte ouvre la modal de détail ; le lien reste navigable
+// (clic milieu, maj, ctrl) pour la page indexable /jobs/<slug>.
 export default function ListeOffres({ offres }: { offres: OffreListe[] }) {
   const params = useSearchParams();
   const [source, setSource] = useState<"" | "collectee" | "deposee">("");
@@ -85,6 +34,7 @@ export default function ListeOffres({ offres }: { offres: OffreListe[] }) {
   const [elu, setElu] = useState("");
   const [q, setQ] = useState("");
   const [tri, setTri] = useState<"recente" | "ancienne" | "limite">("recente");
+  const [ouverte, setOuverte] = useState<OffreListe | null>(null);
 
   // La recherche du hero et les pastilles rapides pilotent l'URL.
   useEffect(() => {
@@ -130,6 +80,13 @@ export default function ListeOffres({ offres }: { offres: OffreListe[] }) {
   const unFiltre = !!(source || chambres.length || types.length || departement || groupe || elu || q || tri !== "recente");
   const nbFiltres = [source, chambres.length && "x", types.length && "x", departement, groupe, elu, q].filter(Boolean).length;
 
+  // Clic simple : modal. Clic milieu / modificateurs : navigation normale.
+  const clicCarte = (e: React.MouseEvent, o: OffreListe) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
+    setOuverte(o);
+  };
+
   return (
     <div className="liste-jobs">
       <style jsx>{`
@@ -153,28 +110,30 @@ export default function ListeOffres({ offres }: { offres: OffreListe[] }) {
         .resultats .compteur { margin: 0 0 14px; }
         .grille-offres { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
         .carte-offre { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line);
-          border-radius: 12px; padding: 16px 18px; text-decoration: none; color: var(--ink);
+          border-radius: 16px; padding: 18px 20px; text-decoration: none; color: var(--ink); cursor: pointer;
           box-shadow: 0 1px 3px rgba(7,26,65,.05); transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease; }
-        .carte-offre:hover, .carte-offre:focus-visible { transform: translateY(-2px);
-          border-color: color-mix(in srgb, var(--bleu) 30%, var(--line)); box-shadow: 0 6px 18px rgba(7,26,65,.1); }
+        .carte-offre:hover, .carte-offre:focus-visible { transform: translateY(-3px);
+          border-color: color-mix(in srgb, var(--bleu) 30%, var(--line)); box-shadow: 0 8px 22px rgba(7,26,65,.1); }
         .carte-offre:hover h2, .carte-offre:focus-visible h2 { color: var(--bleu); }
-        .carte-tete { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+        .carte-tete { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
         .pastille-chambre { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px;
           border-radius: 999px; font-size: .76rem; font-weight: 600; border: 1px solid var(--line); background: var(--bg); }
         .pastille-chambre i { width: 8px; height: 8px; border-radius: 999px; display: inline-block; }
         .pastille-source { display: inline-block; border-radius: 999px; padding: 3px 10px; font-size: .76rem; font-weight: 700; }
         .pastille-source.deposee { background: var(--jaune); color: var(--ink); }
         .pastille-source.collectee { border: 1px solid var(--line); color: var(--muted); background: var(--bg); }
-        .carte-offre h2 { margin: 0 0 4px; font-size: 1.06rem; line-height: 1.35;
-          font-family: var(--font-dm-sans), system-ui, sans-serif; }
-        .carte-offre .elu { margin: 0 0 2px; font-weight: 600; font-size: .92rem; }
-        .carte-offre .elu span { color: var(--muted); font-weight: 400; }
-        .carte-offre p.extrait { margin: 8px 0 12px; color: var(--muted); font-size: .9rem; line-height: 1.55;
-          display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
-        .carte-tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
         .badge-jobs { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .76rem;
           font-weight: 600; border: 1px solid var(--line); color: var(--muted); background: var(--bg); }
-        .carte-offre .voir { font-size: .92rem; font-weight: 700; color: var(--bleu); }
+        .badge-jobs.violet { background: color-mix(in srgb, var(--jaune) 40%, #fff); color: var(--ink); border-color: transparent; }
+        .carte-date { margin-left: auto; color: var(--muted); font-size: .76rem; }
+        .carte-offre h2 { margin: 0 0 4px; font-size: 1.08rem; line-height: 1.3; }
+        .carte-offre .elu { margin: 0 0 8px; font-size: .88rem; font-weight: 600; color: var(--muted); }
+        .carte-offre .elu .sep { color: var(--line); margin: 0 4px; }
+        .carte-offre p.extrait { margin: 0 0 14px; color: var(--muted); font-size: .9rem; line-height: 1.55;
+          display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
+        .carte-pied { display: flex; align-items: center; justify-content: space-between; gap: 8px;
+          padding-top: 12px; border-top: 1px solid var(--line); font-size: .85rem; color: var(--muted); }
+        .carte-offre .voir { font-weight: 700; color: var(--bleu); white-space: nowrap; }
         .aucun { background: var(--card); border: 1px dashed var(--line); border-radius: 12px; padding: 28px;
           text-align: center; color: var(--muted); }
         .aucun .btn { margin-top: 12px; }
@@ -311,8 +270,14 @@ export default function ListeOffres({ offres }: { offres: OffreListe[] }) {
             {visibles.map((o) => {
               const contrat = typeContrat(o);
               const travail = tempsTravail(o.description ?? "");
+              const ex = extrait(o.description);
               return (
-                <Link key={o.id} href={"/jobs/" + slugOffre(o)} className="carte-offre">
+                <Link
+                  key={o.id}
+                  href={"/jobs/" + slugOffre(o as Parameters<typeof slugOffre>[0])}
+                  className="carte-offre"
+                  onClick={(e) => clicCarte(e, o)}
+                >
                   <div className="carte-tete">
                     {o.chambre && (
                       <span className="pastille-chambre">
@@ -321,28 +286,29 @@ export default function ListeOffres({ offres }: { offres: OffreListe[] }) {
                       </span>
                     )}
                     <PastilleProvenance connector={o.source_connector} avecLibelle />
+                    <span className="badge-jobs violet">{contrat}</span>
+                    {travail && <span className="badge-jobs">{travail}</span>}
+                    {o.publie_le && <span className="carte-date">{ilYA(o.publie_le)}</span>}
                   </div>
                   <h2>{titreCourt(o.titre)}</h2>
                   <p className="elu">
                     {nomElu(o) || "Équipe parlementaire"}
-                    {o.groupe_politique && <span>, {o.groupe_politique}</span>}
+                    {o.groupe_politique && (<><span className="sep">•</span>{o.groupe_politique}</>)}
+                    {o.chambre && (<><span className="sep">•</span>{CHAMBRE_NOM[o.chambre] ?? o.chambre}</>)}
                   </p>
-                  {extrait(o.description) && <p className="extrait">{extrait(o.description)}</p>}
-                  <div className="carte-tags">
-                    <span className="badge-jobs">{contrat}</span>
-                    {travail && <span className="badge-jobs">{travail}</span>}
-                    {(o.localisation || o.departement) && (
-                      <span className="badge-jobs">{o.localisation ?? o.departement}</span>
-                    )}
-                    {o.publie_le && <span className="badge-jobs">{ilYA(o.publie_le)}</span>}
+                  {ex && <p className="extrait">{ex}</p>}
+                  <div className="carte-pied">
+                    <span>{o.localisation ?? o.departement ?? ""}</span>
+                    <span className="voir">Voir l&apos;offre →</span>
                   </div>
-                  <span className="voir">Voir l&apos;offre →</span>
                 </Link>
               );
             })}
           </div>
         )}
       </div>
+
+      {ouverte && <ModalOffre offre={ouverte} onClose={() => setOuverte(null)} />}
     </div>
   );
 }

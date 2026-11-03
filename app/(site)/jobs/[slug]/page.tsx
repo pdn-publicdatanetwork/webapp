@@ -3,7 +3,18 @@ import Link from "next/link";
 import { offreVisible } from "@/lib/jobsFirestore";
 import { idDepuisSlug, slugOffre, titreStandard } from "@/lib/jobs";
 import { DATA_SUPABASE_KEY, DATA_SUPABASE_URL } from "@/lib/env";
-import { PastilleProvenance } from "../_components/ListeOffres";
+import { PastilleProvenance } from "../_components/communJobs";
+import {
+  CHAMBRE_NOM,
+  EMAIL_RE,
+  dateFr,
+  decouper,
+  enPuces,
+  lieuNormalise,
+  remuneration,
+  tempsTravail,
+  typeContrat,
+} from "@/lib/jobsTexte";
 import PhotoElu from "../_components/PhotoElu";
 
 // Détail d'une offre, structure normalisée en deux colonnes : le candidat
@@ -33,117 +44,6 @@ type Offre = {
   publie_le: string | null;
   expire_le: string | null;
 };
-
-const CHAMBRE_NOM: Record<string, string> = {
-  an: "Assemblée nationale",
-  senat: "Sénat",
-  pe: "Parlement européen",
-};
-
-const EMAIL_RE = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-
-const dateFr = (iso: string | null) =>
-  iso ? new Date(iso + "T12:00:00Z").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : null;
-
-async function chargée(id: string): Promise<Offre | null> {
-  return (await offreVisible(id)) as unknown as Offre | null;
-}
-
-// Photo officielle de l'élu : champ photo_url de la fiche DataParl'
-// (base parlementaires : photos AN et Sénat), en cache 24 h.
-async function photoParlementaire(slug: string | null): Promise<string | null> {
-  if (!slug) return null;
-  try {
-    const url = DATA_SUPABASE_URL + "/rest/v1/parlementaires?select=photo_url&slug=eq." + encodeURIComponent(slug) + "&limit=1";
-    const r = await fetch(url, {
-      headers: { apikey: DATA_SUPABASE_KEY, Authorization: "Bearer " + DATA_SUPABASE_KEY },
-      next: { revalidate: 86400 },
-    });
-    if (!r.ok) return null;
-    const rows = (await r.json()) as { photo_url: string | null }[];
-    return rows?.[0]?.photo_url ?? null;
-  } catch {
-    return null;
-  }
-}
-
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params;
-  const id = idDepuisSlug(slug);
-  const o = id ? await chargée(id) : null;
-  return o
-    ? { title: titreStandard(o) + " | DataParl' Jobs", alternates: { canonical: "https://jobs.dataparl.fr/" + slugOffre(o) } }
-    : { title: "Offre introuvable | DataParl' Jobs", robots: { index: false, follow: true } };
-}
-
-// ── Découpage de la description ─────────────────────────────────────────────
-
-type Bloc = { titre: string; lignes: string[] };
-const TITRES_SECTION =
-  /^(Vos missions|Profil recherché|Lieu|Rémunération|Durée|Pour candidater|Process(?:us)? de recrutement|Informations pratiques)\s*:\s*(.*)$/i;
-const MARQUEURS_INLINE =
-  /\s+(?=(?:Vos missions|Profil recherché|Lieu|Rémunération|Durée|Pour candidater|Process(?:us)? de recrutement|Informations pratiques)\s*:)/gi;
-
-function decouper(desc: string): { chapeau: string[]; blocs: Bloc[] } {
-  const chapeau: string[] = [];
-  const blocs: Bloc[] = [];
-  for (const ligne of desc.replace(MARQUEURS_INLINE, "\n").split(/\r?\n/)) {
-    const m = ligne.trim().match(TITRES_SECTION);
-    if (m) blocs.push({ titre: m[1], lignes: m[2] ? [m[2].trim()] : [] });
-    else if (blocs.length) blocs[blocs.length - 1].lignes.push(ligne.trim());
-    else if (ligne.trim()) chapeau.push(ligne.trim());
-  }
-  return { chapeau, blocs };
-}
-
-const enPuces = (texte: string) =>
-  texte
-    .replace(/\s+/g, " ")
-    .split(/(?<=[.);])\s+/)
-    .map((s) => s.replace(/^[,;\s]+|[,;\s]+$/g, "").trim())
-    .filter(Boolean);
-
-// ── Normalisation des conditions ────────────────────────────────────────────
-
-const CONTRATS = ["Stage", "CDD", "CDI", "Alternance"];
-function typeContrat(o: Offre): string {
-  const src = ((o.type_poste ?? "") + " " + o.description).toLowerCase();
-  for (const c of CONTRATS) if (src.includes(c.toLowerCase())) return c;
-  return "Autre";
-}
-
-function tempsTravail(desc: string): string | null {
-  if (/temps\s+plein/i.test(desc)) return "Temps plein";
-  if (/temps\s+partiel/i.test(desc)) return "Temps partiel";
-  return null;
-}
-
-// Adresses institutionnelles normalisées.
-const ADRESSES: [RegExp, string][] = [
-  [/vaugirard/i, "15 rue de Vaugirard, 75006 Paris"],
-  [/rue de l'universit[ée]|palais[- ]bourbon|assembl[ée]e nationale/i, "126 rue de l'Université, 75007 Paris"],
-];
-function lieuNormalise(texte: string): string {
-  const propre = texte.replace(/\s+/g, " ").replace(/^bureau\s+/i, "").replace(/[.,;\s]+$/, "").trim();
-  for (const [motif, adresse] of ADRESSES) if (motif.test(propre)) return adresse;
-  return propre;
-}
-
-function remuneration(texte: string): { type: string; montant: string | null; avantages: string[] } {
-  const t = texte.replace(/\s+/g, " ").trim();
-  const type = /gratification/i.test(t) ? "Gratification" : /salaire/i.test(t) ? "Salaire" : "Non précisé";
-  const m = t.match(/(\d[\d\s]*(?:[.,]\d+)?)\s*(?:euros?|€)\s*(nets?|bruts?)?/i);
-  const periode = /par\s+an|annuel/i.test(t) ? " / an" : " / mois";
-  const montant = m
-    ? m[1].replace(/[\s\u00a0]/g, " ").trim() + " €" + (m[2] ? " " + m[2].toLowerCase() : "") + periode
-    : null;
-  const avantages = t
-    .split(/,\s*plus\b|\.\s*plus\b|,\s*avec\b|,\s*ainsi que\b/i)
-    .slice(1)
-    .map((a) => a.replace(/[\s.,;]+$/, "").trim())
-    .filter(Boolean);
-  return { type, montant, avantages };
-}
 
 // ── Petits composants de rendu ──────────────────────────────────────────────
 

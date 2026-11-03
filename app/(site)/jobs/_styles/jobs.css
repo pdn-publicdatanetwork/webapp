@@ -1,0 +1,37 @@
+/* DataParl' Jobs : styles du module (hero en carte, recherche centrale,
+   pastilles rapides, KPI, page détail 2 colonnes). Importé par le layout
+   du module pour ne pas alourdir globals.css. */
+
+.jobs-hero { background: var(--card); border: 1px solid var(--line); border-radius: 24px;
+  padding: 28px; margin-top: 26px; box-shadow: 0 1px 3px rgba(7,26,65,.05); }
+.jobs-recherche { display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  margin-top: 20px; max-width: 720px; background: var(--bg); border: 1px solid var(--line);
+  border-radius: 999px; padding: 5px 6px 5px 16px; }
+.jobs-recherche .loupe { font-size: 1rem; opacity: .55; }
+.jobs-recherche input[type="search"] { flex: 1; min-width: 0; border: none; background: none;
+  outline: none; font: inherit; font-size: .98rem; padding: 11px 0; color: var(--ink); }
+.jobs-recherche .effacer { border: 0; background: var(--card); border-radius: 8px;
+  padding: 6px 10px; font: inherit; font-size: .82rem; font-weight: 600; color: var(--muted);
+  cursor: pointer; }
+.jobs-recherche .effacer:hover { color: var(--ink); }
+.jobs-pilles { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 14px; }
+.jobs-pille { border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px;
+  background: var(--card); color: var(--ink); text-decoration: none; font-size: .88rem;
+  font-weight: 600; }
+.jobs-pille:hover { background: color-mix(in srgb, var(--jaune) 40%, #fff);
+  border-color: transparent; color: var(--ink); }
+.jobs-hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
+.jobs-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+.jobs-kpi { background: var(--bg); border-radius: 12px; padding: 12px 16px; }
+.jobs-kpi .nombre { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--ink);
+  font-family: var(--font-spectral), Georgia, serif; }
+.jobs-kpi .libelle { margin: 0; font-size: .82rem; color: var(--muted); }
+.detail-grid { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 32px;
+  align-items: start; margin-top: 22px; }
+.detail-aside { position: sticky; top: 84px; display: grid; gap: 14px; }
+@media (max-width: 900px) {
+  .detail-grid { grid-template-columns: 1fr; gap: 18px; }
+  .detail-aside { position: static; order: -1; }
+  .jobs-hero { padding: 18px; border-radius: 18px; }
+}
