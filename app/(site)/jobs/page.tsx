@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
-import { authAdmin } from "@/lib/supabaseAdmin";
+import { offresPubliques } from "@/lib/jobsFirestore";
+import AlerteEmplois from "./_components/AlerteEmplois";
 import ListeOffres, { type OffreListe } from "./_components/ListeOffres";
 
 // Offres d'emploi des équipes parlementaires : page publique.
 // Le module vit sur jobs.dataparl.fr (voir proxy.ts) : cette route /jobs
 // sert de fondation interne, redirigée depuis dataparl.fr et réécrite depuis
-// la racine du sous-domaine.
+// la racine du sous-domaine. Les données sont lues dans Firestore
+// (projet Firebase « dataparl-jobs »), alimenté par la collecte GitLab.
 
 export const revalidate = 3600;
 export const dynamic = "force-dynamic";
@@ -63,18 +65,7 @@ function Etape({ numero, titre, texte }: { numero: string; titre: string; texte:
 export default async function Jobs() {
   let offres: OffreListe[] = [];
   try {
-    const { data, error } = await authAdmin()
-      .from("job_offers")
-      .select(
-        "id,titre,description,chambre,departement,elu_prenom,elu_nom,groupe_politique,type_poste,localisation,publie_le,expire_le,source_connector"
-      )
-      .eq("review_status", "approved")
-      .eq("statut", "active")
-      .order("publie_le", { ascending: false, nullsFirst: false })
-      .limit(200);
-    if (error) throw error;
-    const aujourdhui = new Date().toISOString().slice(0, 10);
-    offres = (data ?? []).filter((o) => !o.expire_le || o.expire_le >= aujourdhui) as OffreListe[];
+    offres = (await offresPubliques()) as unknown as OffreListe[];
   } catch {
     offres = [];
   }
@@ -117,6 +108,9 @@ export default async function Jobs() {
         </p>
         <a className="btn" href="/jobs/proposer">Proposer une offre</a>
       </div>
+
+      {/* Inscription aux alertes e-mail */}
+      <AlerteEmplois />
 
       {offres.length === 0 ? (
         /* État vide : comment fonctionne DataParl' Jobs */

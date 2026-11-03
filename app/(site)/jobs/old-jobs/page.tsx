@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { authAdmin } from "@/lib/supabaseAdmin";
+import { anciennesOffres } from "@/lib/jobsFirestore";
 import { SIGLE, titreStandard, type Chambre } from "@/lib/jobs";
 
 // Anciennes offres : offres validées mais pourvues ou expirées.
@@ -39,17 +39,7 @@ const LIBELLE: Record<string, string> = { expiree: "Expirée", pourvue: "Pourvue
 export default async function OldJobs() {
   let offres: Offre[] = [];
   try {
-    const { data, error } = await authAdmin()
-      .from("job_offers")
-      .select(
-        "id,titre,chambre,departement,elu_prenom,elu_nom,groupe_politique,type_poste,localisation,statut,publie_le,expire_le"
-      )
-      .eq("review_status", "approved")
-      .in("statut", ["expiree", "pourvue"])
-      .order("publie_le", { ascending: false, nullsFirst: false })
-      .limit(200);
-    if (error) throw error;
-    offres = (data ?? []) as Offre[];
+    offres = (await anciennesOffres()) as unknown as Offre[];
   } catch {
     offres = [];
   }
