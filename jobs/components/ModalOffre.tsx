@@ -5,6 +5,10 @@ import FicheOffre from "@/components/FicheOffre";
 import type { OffreListe } from "@/lib/types";
 
 // Overlay plein écran pour consulter une offre depuis la liste.
+// L’overlay EST le conteneur qui scrolle : pas de centrage flex
+// (un contenu plus haut que la fenêtre devient sinon inaccessible),
+// pas de bloc de scroll interne sans hauteur bornée, et le panneau
+// Postuler n’est pas sticky ici (il ne doit pas flotter au-dessus du texte).
 // La page canonique /offre/<slug> sert de variante SEO partageable.
 
 export default function ModalOffre({ offre, onFermer }: { offre: OffreListe; onFermer: () => void }) {
@@ -36,7 +40,7 @@ export default function ModalOffre({ offre, onFermer }: { offre: OffreListe; onF
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-start sm:items-center justify-center p-0 sm:p-4 overflow-y-auto custom-scrollbar"
+      className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm overflow-y-auto custom-scrollbar"
       onClick={(e) => {
         if (e.target === e.currentTarget) onFermer();
       }}
@@ -44,9 +48,9 @@ export default function ModalOffre({ offre, onFermer }: { offre: OffreListe; onF
       aria-modal="true"
       aria-label={offre.titre}
     >
-      <div className="bg-[#ECF1FC] w-full max-w-5xl sm:rounded-3xl shadow-2xl overflow-hidden my-0 sm:my-8 flex flex-col border border-slate-200 min-h-screen sm:min-h-0">
-        {/* Barre sticky */}
-        <div className="bg-white px-5 py-3 border-b border-slate-200 flex items-center justify-between gap-3 shrink-0 sticky top-0 z-10">
+      <div className="mx-auto w-full max-w-5xl bg-[#ECF1FC] sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden sm:my-6">
+        {/* Barre sticky : reste visible en haut de la fenêtre pendant le scroll */}
+        <div className="bg-white px-5 py-3 border-b border-slate-200 flex items-center justify-between gap-3 sticky top-0 z-10">
           <button onClick={onFermer} className="text-xs font-bold text-slate-500 hover:text-[#4E2E53] transition-colors">
             ← Toutes les offres
           </button>
@@ -66,8 +70,8 @@ export default function ModalOffre({ offre, onFermer }: { offre: OffreListe; onF
             </button>
           </div>
         </div>
-        <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar">
-          <FicheOffre offre={offre} onFermer={onFermer} />
+        <div className="p-4 sm:p-6">
+          <FicheOffre offre={offre} onFermer={onFermer} dansModal />
         </div>
       </div>
     </div>

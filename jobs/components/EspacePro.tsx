@@ -146,6 +146,13 @@ export default function EspacePro() {
             <div>
               <label className={label}>E-mail parlementaire de contact</label>
               <input type="email" required value={f.email} onChange={(e) => maj({ email: e.target.value })} placeholder="prenom.nom@assemblee-nationale.fr" className={champ} />
+              {f.email.trim().includes("@") && (
+                <p className={"text-[11px] mt-1 font-medium " + (regles.emailParlementaire ? "text-emerald-600" : "text-amber-600")}>
+                  {regles.emailParlementaire
+                    ? "✅ Domaine parlementaire reconnu : " + (f.email.trim().split("@")[1] ?? "")
+                    : "⚠️ Domaine non parlementaire. Attendus : assemblee-nationale.fr, clb-an.fr, senat.fr, clb-senat.fr, europarl.europa.eu."}
+                </p>
+              )}
             </div>
           </div>
 

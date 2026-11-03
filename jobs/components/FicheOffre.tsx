@@ -34,7 +34,7 @@ function PastilleSource({ connector }: { connector: string }) {
   );
 }
 
-export default function FicheOffre({ offre, onFermer }: { offre: OffreListe; onFermer?: () => void }) {
+export default function FicheOffre({ offre, onFermer, dansModal }: { offre: OffreListe; onFermer?: () => void; dansModal?: boolean }) {
   const [photo, setPhoto] = useState<string | null>(null);
   const [contact, setContact] = useState<"ferme" | "verif" | "revele">("ferme");
   const [copie, setCopie] = useState(false);
@@ -239,7 +239,10 @@ export default function FicheOffre({ offre, onFermer }: { offre: OffreListe; onF
         </div>
 
         {/* Panneau Postuler */}
-        <aside className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-md space-y-5 lg:sticky lg:top-28" aria-label="Postuler">
+        <aside
+          className={"bg-white p-6 rounded-3xl border border-slate-200/80 shadow-md space-y-5" + (dansModal ? "" : " lg:sticky lg:top-28")}
+          aria-label="Postuler"
+        >
           <div className="space-y-1">
             <h2 className="text-lg font-serif-title font-bold text-[#4E2E53]">Postuler à cette offre</h2>
             <p className="text-xs text-slate-500 leading-relaxed">

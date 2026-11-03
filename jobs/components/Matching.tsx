@@ -35,10 +35,18 @@ function scorePour(offre: OffreListe, compDetectees: { nom: string; mots: string
   return Math.min(95, Math.max(20, base));
 }
 
+const CV_EXEMPLE = [
+  "Master 2 Droit public, Université Paris 1 Panthéon-Sorbonne (2025).",
+  "Stage de 12 mois au cabinet d'un député : rédaction d'amendements, notes de synthèse, suivi de la commission des Lois.",
+  "Chargé de communication d'un groupe d'élus locaux : réseaux sociaux, Canva, infolettre mensuelle.",
+  "Veille juridique et parlementaire, organisation de colloques à l'Assemblée nationale.",
+].join("\n");
+
 export default function Matching({ offres }: { offres: OffreListe[] }) {
   const [cv, setCv] = useState("");
   const [analyse, setAnalyse] = useState<{ competences: typeof COMPETENCES; mots: number } | null>(null);
   const [ouverte, setOuverte] = useState<OffreListe | null>(null);
+  const [noteFichier, setNoteFichier] = useState("");
 
   const scores = useMemo(() => {
     if (!analyse) return [];
@@ -49,19 +57,26 @@ export default function Matching({ offres }: { offres: OffreListe[] }) {
 
   const surFichier = async (f: File | null | undefined) => {
     if (!f) return;
-    if (!f.name.toLowerCase().endsWith(".txt")) {
-      alert("Pour l'instant, seul le texte collé est analysé. Ouvrez votre PDF, copiez le texte et collez-le ici.");
+    const nom = f.name.toLowerCase();
+    if (nom.endsWith(".pdf")) {
+      setNoteFichier("PDF détecté : ouvrez-le, sélectionnez tout le texte (Ctrl+A) et collez-le (Ctrl+C / Ctrl+V) dans la zone ci-dessous.");
       return;
     }
+    if (!nom.endsWith(".txt") && !nom.endsWith(".md")) {
+      setNoteFichier("Format non pris en charge : collez directement le texte de votre CV ci-dessous.");
+      return;
+    }
+    setNoteFichier("");
     setCv(await f.text());
   };
 
   const lancer = () => {
     const texte = cv.trim();
     if (texte.length < 40) {
-      alert("Collez au moins quelques lignes de votre CV pour lancer l'analyse.");
+      setNoteFichier("Collez au moins quelques lignes de votre CV (40 caractères minimum) pour lancer l'analyse.");
       return;
     }
+    setNoteFichier("");
     setAnalyse({ competences: detecter(texte), mots: texte.split(/\s+/).length });
   };
 
@@ -87,8 +102,18 @@ export default function Matching({ offres }: { offres: OffreListe[] }) {
           }}
           className="mt-2 border-2 border-dashed border-[#6C84B0]/40 rounded-2xl p-6 bg-slate-50 space-y-3"
         >
-          <p className="text-center text-sm font-semibold text-slate-700">Glissez un fichier .txt ou collez le texte de votre CV</p>
-          <input type="file" accept=".txt,text/plain" onChange={(e) => surFichier(e.target.files?.[0])} className="block mx-auto text-xs text-slate-500" />
+          <p className="text-center text-sm font-semibold text-slate-700">Glissez un fichier .txt, collez le texte de votre CV ou essayez avec un exemple</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <input type="file" accept=".txt,.md,text/plain,.pdf" onChange={(e) => surFichier(e.target.files?.[0])} className="text-xs text-slate-500" />
+            <button
+              type="button"
+              onClick={() => { setCv(CV_EXEMPLE); setNoteFichier(""); }}
+              className="text-xs font-semibold text-[#6C84B0] bg-[#ECF1FC] hover:bg-[#E4BDE9]/50 px-3.5 py-2 rounded-xl transition-colors"
+            >
+              ✨ Tester avec un CV exemple
+            </button>
+          </div>
+          {noteFichier && <p className="text-xs text-amber-600 font-medium text-center">{noteFichier}</p>}
           <textarea
             rows={8}
             value={cv}
