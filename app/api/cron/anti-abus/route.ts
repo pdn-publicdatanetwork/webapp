@@ -116,6 +116,38 @@ https://www.dataparl.fr/`;
   return r.ok;
 }
 
+// #veille-comptes : événements (marquage, suspension, déblocage) et récap
+// quotidien à 8 h UTC de tous les comptes en suspens. Best-effort : une panne
+// Slack ne fait jamais échouer le cron. Les lignes de comptes_suspects ne sont
+// jamais supprimées : l'adresse et le motif restent en mémoire, le compte est
+// suspendu (réversible), jamais effacé.
+async function notifierVeille(evenements: string[], enSuspens: { email: string; motif: string | null; suspendu_le: string | null; marque_le: string }[]): Promise<void> {
+  if (evenements.length === 0 && enSuspens.length === 0) return;
+  const bot = process.env.SLACK_BOT_TOKEN || process.env.SLACK_MAILAPP_BOT_TOKEN || "";
+  if (!bot) return;
+  const canal = process.env.SLACK_VEILLE_COMPTES ?? "C0CB4M6GSQM";
+  const dateFr = (d: string | null) =>
+    d ? new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit" }).format(new Date(d)) : "";
+  const lignes = enSuspens
+    .map((e) => `• ${e.email} (${e.motif ?? "motif inconnu"}), averti le ${dateFr(e.marque_le)}${e.suspendu_le ? ", suspendu le " + dateFr(e.suspendu_le) : ""}`)
+    .join("\n");
+  const texte = [
+    "*Anti-abus DataParl'*",
+    ...evenements,
+    "",
+    `*Comptes en suspens (${enSuspens.length})*\n${lignes || "aucun"}`,
+  ].join("\n");
+  try {
+    await fetch("https://slack.com/api/chat.postMessage", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + bot, "Content-Type": "application/json" },
+      body: JSON.stringify({ channel: canal, text: texte }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(6000),
+    });
+  } catch { /* Slack indisponible : rien n'est perdu, le cron reprend à l'heure suivante */ }
+}
+
 export async function GET(req: Request) {
   if (!autorise(req)) return NextResponse.json({ error: "non autorisé" }, { status: 401 });
   const admin = authAdmin();
@@ -150,13 +182,19 @@ export async function GET(req: Request) {
   const delaEcoule = (d: string) => Date.now() - new Date(d).getTime() >= 48 * 3600 * 1000;
 
   for (const u of users) {
-    if (!u.email || u.app_metadata?.banned_until) continue;
+    if (!u.email) continue;
     const ligne = parId.get(u.id) as any;
     const ctrl = controleEmail(u.email);
 
     if (!ctrl.suspect) {
-      // Régularisation : l'adresse a changé depuis le marquage.
+      // Régularisation : l'adresse a changé depuis le marquage. Déblocage
+      // uniquement si le compte avait été suspendu PAR CE CRON (ligne.suspendu_le) :
+      // un ban posé à la main n'est jamais levé automatiquement.
       if (ligne && !ligne.regularise_le && u.email !== ligne.email) {
+        if (ligne.suspendu_le) {
+          const { error: errDeb } = await admin.rpc("debloquer_compte", { uid: u.id });
+          if (errDeb) bilan.erreurs.push(`déblocage ${u.email} : ${errDeb.message}`);
+        }
         await admin.from("comptes_suspects").update({ regularise_le: new Date().toISOString(), email: u.email }).eq("user_id", u.id);
         bilan.regularises++;
       }
@@ -165,10 +203,14 @@ export async function GET(req: Request) {
 
     // Régularisation : un compte Google/GitHub a été LIÉ depuis le marquage
     // (fournisseur absent de la liste enregistrée au marquage).
-    if (ligne && !ligne.regularise_le && !ligne.suspendu_le) {
+    if (ligne && !ligne.regularise_le) {
       const connus = ((ligne.fournisseurs ?? []) as string[]);
       const nouveaux = oauthDe(u).filter((p) => !connus.includes(p));
       if (nouveaux.length > 0) {
+        if (ligne.suspendu_le) {
+          const { error: errDeb } = await admin.rpc("debloquer_compte", { uid: u.id });
+          if (errDeb) bilan.erreurs.push(`déblocage ${u.email} : ${errDeb.message}`);
+        }
         await admin.from("comptes_suspects").update({ regularise_le: new Date().toISOString(), fournisseurs: oauthDe(u) }).eq("user_id", u.id);
         bilan.regularises++;
         continue;
@@ -189,7 +231,10 @@ export async function GET(req: Request) {
         bilan.avertis++;
       }
     } else if (!ligne.suspendu_le && !ligne.regularise_le && u.email === ligne.email && delaEcoule(ligne.marque_le)) {
-      const { error } = await admin.auth.admin.updateUserById(u.id, { ban_duration: "876000h" });
+      // Suspension en base (fonction security definer, date finie) : l'API
+      // GoTrue updateUserById est sujette aux 500 sur ce projet, et une date
+      // finie évite le piège banned_until = 'infinity' (audit-comptes.md).
+      const { error } = await admin.rpc("suspendre_compte", { uid: u.id });
       if (error) {
         bilan.erreurs.push(`suspension ${u.email} : ${error.message}`);
         continue;
