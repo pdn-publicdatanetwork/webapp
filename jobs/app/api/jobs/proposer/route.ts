@@ -27,6 +27,10 @@ export async function POST(req: Request) {
   const candidater = texte(c.candidater);
   const chambre = typeof c.chambre === "string" && CHAMBRES.some((x) => x.valeur === c.chambre) ? c.chambre : null;
   const typePoste = typeof c.type_poste === "string" && CONTRATS.includes(c.type_poste) ? c.type_poste : "Autre";
+  const temps = texte(c.temps_travail, 30) === "Temps partiel" ? "Temps partiel" : "Temps plein";
+  const dateDebut = /^\d{4}-\d{2}-\d{2}$/.test(String(c.date_debut ?? "")) ? String(c.date_debut) : null;
+  const dateLimite = /^\d{4}-\d{2}-\d{2}$/.test(String(c.date_limite ?? "")) ? String(c.date_limite) : null;
+  const avantages = texte(c.avantages, 300);
 
   if (!titre || titre.length < 6) return Response.json({ erreur: "intitulé trop court" }, { status: 400 });
   if (!chambre) return Response.json({ erreur: "chambre invalide" }, { status: 400 });
@@ -52,6 +56,15 @@ export async function POST(req: Request) {
     lieu +
     "\n\nRémunération :\n" +
     salaire +
+    (avantages ? ". Avantages : " + avantages : "") +
+    "\n\nInformations pratiques :\n" +
+    [
+      "Temps de travail : " + temps,
+      dateDebut ? "Date de début : " + dateDebut : null,
+      dateLimite ? "Candidatures jusqu'au : " + dateLimite : null,
+    ]
+      .filter(Boolean)
+      .join("\n") +
     (candidater
       ? "\n\nPour candidater :\nEnvoyer votre candidature à " + email + ". " + candidater
       : "\n\nPour candidater :\nEnvoyer votre candidature à " + email + ".");
@@ -70,6 +83,9 @@ export async function POST(req: Request) {
         groupe_politique: texte(c.groupe, 100) || null,
         contact_email: email,
         salaire,
+        temps_travail: temps,
+        date_debut: dateDebut,
+        expire_le: dateLimite,
         source_connector: "proposition",
         statut: "active",
         review_status: "pending",

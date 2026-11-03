@@ -19,6 +19,10 @@ type Formulaire = {
   missions: string;
   profil: string;
   candidater: string;
+  temps_travail: string;
+  date_debut: string;
+  date_limite: string;
+  avantages: string;
 };
 
 const VIDE: Formulaire = {
@@ -34,6 +38,10 @@ const VIDE: Formulaire = {
   missions: "",
   profil: "",
   candidater: "",
+  temps_travail: "Temps plein",
+  date_debut: "",
+  date_limite: "",
+  avantages: "",
 };
 
 export default function EspacePro() {
@@ -79,6 +87,10 @@ export default function EspacePro() {
           missions: f.missions.split("\n").map((l) => l.trim()).filter(Boolean),
           profil: f.profil.split("\n").map((l) => l.trim()).filter(Boolean),
           candidater: f.candidater.trim(),
+          temps_travail: f.temps_travail,
+          date_debut: f.date_debut,
+          date_limite: f.date_limite,
+          avantages: f.avantages.trim(),
         }),
       });
       const json = await res.json().catch(() => ({}));
@@ -135,6 +147,31 @@ export default function EspacePro() {
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className={label}>Temps de travail</label>
+              <select value={f.temps_travail} onChange={(e) => maj({ temps_travail: e.target.value })} className={champ}>
+                <option>Temps plein</option>
+                <option>Temps partiel</option>
+              </select>
+            </div>
+            <div>
+              <label className={label}>Date de début (optionnel)</label>
+              <input type="date" value={f.date_debut} onChange={(e) => maj({ date_debut: e.target.value })} className={champ} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className={label}>Date limite de candidature (optionnel)</label>
+              <input type="date" value={f.date_limite} onChange={(e) => maj({ date_limite: e.target.value })} className={champ} />
+            </div>
+            <div>
+              <label className={label}>Avantages (optionnel)</label>
+              <input type="text" value={f.avantages} onChange={(e) => maj({ avantages: e.target.value })} placeholder="ex : tickets restaurant, 50 % transports" className={champ} />
             </div>
           </div>
 
