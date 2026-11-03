@@ -1,11 +1,18 @@
 "use client";
 
-// En-tête de jobs.dataparl.fr : interface propre au module Jobs, distincte du
-// site www. Logo DataParl' Jobs, navigation resserrée sur le recrutement et
-// bouton d'action rouge « Publier une offre ». Les liens vers le site www
-// restent absolus : ce sont d'autres sous-domaines.
+import { useEffect } from "react";
+
+// En-tête de DataParl' Jobs : interface propre au module, distincte du site
+// www. Pose la classe .js sur <html> : elle active la charte violet / lavande
+// du module (bloc :root.jobs de globals.css). Navigation resserrée sur le
+// recrutement, bouton d'action « Publier une offre » en violet (CTA principal).
 
 export default function EnTeteJobs() {
+  useEffect(() => {
+    document.documentElement.classList.add("js");
+    return () => document.documentElement.classList.remove("js");
+  }, []);
+
   const liens = [
     { href: "/", label: "Offres" },
     { href: "/old-jobs", label: "Anciennes offres" },
@@ -24,7 +31,7 @@ export default function EnTeteJobs() {
           ))}
         </nav>
         <a
-          className="btn btn-jobs-publier"
+          className="btn"
           href="/proposer"
           style={{ marginTop: 0, padding: "8px 16px", fontSize: ".92rem", whiteSpace: "nowrap" }}
         >
@@ -40,10 +47,6 @@ export default function EnTeteJobs() {
           </nav>
         </details>
       </div>
-      <style jsx>{`
-        .entete-jobs .btn-jobs-publier { background: #C8102E; border-color: #C8102E; }
-        .entete-jobs .btn-jobs-publier:hover { background: #A50D27; border-color: #A50D27; }
-      `}</style>
     </header>
   );
 }

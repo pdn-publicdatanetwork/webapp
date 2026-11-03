@@ -152,7 +152,7 @@ export default async function OffrePage({ params }: { params: Promise<{ slug: st
           </span>
         )}
         {o.type_poste && (
-          <span style={{ background: "var(--jaune)", color: "#071A41", borderRadius: 999, padding: "4px 12px", fontSize: ".82rem", fontWeight: 600 }}>
+          <span style={{ background: "var(--jaune)", color: "var(--ink)", borderRadius: 999, padding: "4px 12px", fontSize: ".82rem", fontWeight: 600 }}>
             {o.type_poste}
           </span>
         )}
@@ -177,7 +177,7 @@ export default async function OffrePage({ params }: { params: Promise<{ slug: st
       <div
         style={{
           margin: "22px 0",
-          background: "#EEF2FB",
+          background: "var(--bg)",
           border: "1px solid var(--line)",
           borderRadius: 14,
           padding: "18px 22px",
