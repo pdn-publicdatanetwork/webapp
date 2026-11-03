@@ -11,6 +11,8 @@ export const revalidate = 3600;
 // pour suivre la synchro Supabase du matin. À référencer dans la Search
 // Console à côté de sitemap-daily.xml ; l'inclusion dans l'onglet
 // Actualités reste automatique, ce plan est le signal le plus direct.
+// Le <news:title> reprend le H1 de la page (« Les mouvements du ... »),
+// la cohérence titre balise / titre visible étant exigée par Google News.
 export async function GET() {
   const base = "https://www.dataparl.fr";
   let jours: { date: string }[] = [];
@@ -27,7 +29,7 @@ export async function GET() {
       "<news:language>fr</news:language>",
       "</news:publication>",
       `<news:publication_date>${j.date}</news:publication_date>`,
-      `<news:title>Arrivées et départs du ${dateTitre(j.date)}</news:title>`,
+      `<news:title>Les mouvements du ${dateTitre(j.date)}</news:title>`,
       "</news:news>",
       "</url>",
     ].join("")),
