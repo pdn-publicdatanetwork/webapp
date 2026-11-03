@@ -1,5 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
+import { extractText, getDocumentProxy } from "unpdf";
 import ModalOffre from "@/components/ModalOffre";
 import { CHAMBRE_NOM, typeContrat } from "@/lib/jobsTexte";
 import type { OffreListe } from "@/lib/types";
@@ -59,7 +60,21 @@ export default function Matching({ offres }: { offres: OffreListe[] }) {
     if (!f) return;
     const nom = f.name.toLowerCase();
     if (nom.endsWith(".pdf")) {
-      setNoteFichier("PDF détecté : ouvrez-le, sélectionnez tout le texte (Ctrl+A) et collez-le (Ctrl+C / Ctrl+V) dans la zone ci-dessous.");
+      setNoteFichier("Extraction du texte du PDF en cours…");
+      try {
+        const octets = new Uint8Array(await f.arrayBuffer());
+        const pdf = await getDocumentProxy(octets);
+        const { text } = await extractText(pdf, { mergePages: true });
+        const propre = String(text ?? "").replace(/\n{3,}/g, "\n\n").trim();
+        if (propre.length < 40) {
+          setNoteFichier("Ce PDF ne contient pas de texte extractible (probablement un scan). Copiez-collez le texte du CV ci-dessous.");
+          return;
+        }
+        setCv(propre);
+        setNoteFichier("");
+      } catch {
+        setNoteFichier("Impossible de lire ce PDF. Copiez-collez le texte du CV ci-dessous.");
+      }
       return;
     }
     if (!nom.endsWith(".txt") && !nom.endsWith(".md")) {
@@ -102,7 +117,7 @@ export default function Matching({ offres }: { offres: OffreListe[] }) {
           }}
           className="mt-2 border-2 border-dashed border-[#6C84B0]/40 rounded-2xl p-6 bg-slate-50 space-y-3"
         >
-          <p className="text-center text-sm font-semibold text-slate-700">Glissez un fichier .txt, collez le texte de votre CV ou essayez avec un exemple</p>
+          <p className="text-center text-sm font-semibold text-slate-700">Glissez votre CV (PDF ou .txt) ou collez son texte, ou essayez avec un exemple</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <input type="file" accept=".txt,.md,text/plain,.pdf" onChange={(e) => surFichier(e.target.files?.[0])} className="text-xs text-slate-500" />
             <button

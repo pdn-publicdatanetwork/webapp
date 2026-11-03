@@ -1,9 +1,10 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ModalOffre from "@/components/ModalOffre";
 import { CHAMBRES, type Chambre } from "@/lib/jobs";
 import { CHAMBRE_NOM, CONTRATS, dateFr, extrait, ilYA, nomElu, titrePoste, typeContrat } from "@/lib/jobsTexte";
 import type { OffreListe } from "@/lib/types";
+import { DATA_SUPABASE_KEY, DATA_SUPABASE_URL } from "@/lib/env";
 
 // Exploration des offres : recherche centrale, filtres sidebar avec
 // compteurs, pills de raccourci, cartes maquette et modal de détail.
@@ -20,6 +21,7 @@ export default function Explorer({ offres }: { offres: OffreListe[] }) {
   const [contrats, setContrats] = useState<string[]>([]);
   const [tri, setTri] = useState<Tri>("recentes");
   const [ouverte, setOuverte] = useState<OffreListe | null>(null);
+  const [photos, setPhotos] = useState<Record<string, string | null>>({});
 
   const bascule = <T,>(liste: T[], valeur: T, set: (l: T[]) => void) =>
     set(liste.includes(valeur) ? liste.filter((v) => v !== valeur) : [...liste, valeur]);
@@ -61,6 +63,32 @@ export default function Explorer({ offres }: { offres: OffreListe[] }) {
     setContrats([]);
     setTri("recentes");
   };
+
+  // Photos des élus : une requête groupée par lots de slugs (publishable).
+  useEffect(() => {
+    let vivant = true;
+    const slugs = [...new Set(offres.map((o) => o.parlementaire_slug).filter(Boolean))] as string[];
+    if (slugs.length === 0) return;
+    (async () => {
+      const res: Record<string, string | null> = {};
+      for (let i = 0; i < slugs.length; i += 60) {
+        const lot = slugs.slice(i, i + 60);
+        try {
+          const r = await fetch(
+            DATA_SUPABASE_URL +
+              "/rest/v1/parlementaires?select=slug,photo_url&slug=in.(" + lot.join(",") + ")",
+            { headers: { apikey: DATA_SUPABASE_KEY, Authorization: "Bearer " + DATA_SUPABASE_KEY } }
+          );
+          if (!r.ok) continue;
+          for (const p of (await r.json()) ?? []) res[p.slug] = p.photo_url ?? null;
+        } catch {}
+      }
+      if (vivant) setPhotos(res);
+    })();
+    return () => {
+      vivant = false;
+    };
+  }, [offres]);
 
   const elusUniques = new Set(offres.map((o) => o.parlementaire_slug ?? nomElu(o) ?? o.id)).size;
   const deptsUniques = new Set(offres.map((o) => o.departement).filter(Boolean)).size;
@@ -246,15 +274,29 @@ export default function Explorer({ offres }: { offres: OffreListe[] }) {
                   <span className="text-xs text-slate-400 font-medium" title={offre.publie_le ? "Publiée le " + dateFr(offre.publie_le) : undefined}>{ilYA(offre.publie_le) ?? dateFr(offre.publie_le)}</span>
                 </div>
 
-                <h3 className="text-xl font-serif-title font-bold text-[#4E2E53] group-hover:text-[#6C84B0] transition-colors leading-snug">
-                  {titrePoste(offre.titre)}
-                </h3>
+                <div className="flex items-start gap-3">
+                  {photos[offre.parlementaire_slug ?? ""] ? (
+                    <img src={photos[offre.parlementaire_slug ?? ""] ?? ""} alt="" className="w-12 h-12 rounded-2xl object-cover border-2 border-[#E4BDE9] shrink-0" />
+                  ) : (
+                    <span
+                      className="w-12 h-12 rounded-2xl shrink-0 flex items-center justify-center text-white text-sm font-bold"
+                      style={{ background: offre.chambre ? "#4E2E53" : "#6C84B0" }}
+                    >
+                      {(nomElu(offre) || "P").slice(0, 1).toUpperCase()}
+                    </span>
+                  )}
+                  <div className="min-w-0">
+                    <h3 className="text-xl font-serif-title font-bold text-[#4E2E53] group-hover:text-[#6C84B0] transition-colors leading-snug">
+                      {titrePoste(offre.titre)}
+                    </h3>
+                    <p className="mt-1 text-sm font-medium text-slate-600 flex flex-wrap items-center gap-2">
+                      <span>{nomElu(offre) || "Équipe parlementaire"}</span>
+                      {offre.groupe_politique && (<><span className="text-slate-300">•</span><span>{offre.groupe_politique}</span></>)}
+                      {offre.chambre && (<><span className="text-slate-300">•</span><span className="text-[#6C84B0] font-semibold">{CHAMBRE_NOM[offre.chambre] ?? offre.chambre}</span></>)}
+                    </p>
+                  </div>
+                </div>
 
-                <p className="mt-1 text-sm font-medium text-slate-600 flex flex-wrap items-center gap-2">
-                  <span>{nomElu(offre) || "Équipe parlementaire"}</span>
-                  {offre.groupe_politique && (<><span className="text-slate-300">•</span><span>{offre.groupe_politique}</span></>)}
-                  {offre.chambre && (<><span className="text-slate-300">•</span><span className="text-[#6C84B0] font-semibold">{CHAMBRE_NOM[offre.chambre] ?? offre.chambre}</span></>)}
-                </p>
 
                 <p className="mt-3 text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed">
                   {extrait(offre.description)}
