@@ -90,7 +90,6 @@ export async function POST(req: Request) {
         statut: "active",
         review_status: "pending",
         publie_le: null,
-        expire_le: null,
       },
       empreinte
     );
