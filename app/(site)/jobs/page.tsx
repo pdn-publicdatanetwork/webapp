@@ -3,9 +3,8 @@ import { offresPubliques } from "@/lib/jobsFirestore";
 import AlerteEmplois from "./_components/AlerteEmplois";
 import ListeOffres, { type OffreListe } from "./_components/ListeOffres";
 
-// Accueil de DataParl' Jobs (jobs.dataparl.fr) : interface v2, propre au
-// module, distincte du site www. Les données sont lues dans Firestore
-// (projet Firebase « dataparl-jobs »), alimenté par la collecte GitLab.
+// Accueil de DataParl' Jobs (jobs.dataparl.fr) : interface v3 à la Google
+// Careers, propre au module, distincte du site www. Données Firestore.
 
 export const revalidate = 3600;
 export const dynamic = "force-dynamic";
@@ -17,7 +16,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://jobs.dataparl.fr/" },
 };
 
-// Carte statistique sobre, sans icône : le chiffre suffit.
 function Chiffre({ nombre, libelle }: { nombre: number; libelle: string }) {
   return (
     <div style={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 12, padding: "14px 18px" }}>
@@ -45,7 +43,6 @@ export default async function Jobs() {
 
   return (
     <>
-      {/* Hero : titre, promesse claire, appel à publier */}
       <h1 style={{ marginBottom: ".4rem" }}>
         Travailler au <span className="surligne">Parlement</span>
       </h1>
@@ -59,7 +56,6 @@ export default async function Jobs() {
         <a className="btn secondaire" href="/jobs/old-jobs" style={{ marginTop: 0 }}>Voir les anciennes offres</a>
       </div>
 
-      {/* Peu d'offres : chiffres adoucis en une phrase honnête */}
       {peu ? (
         <p className="meta" style={{ marginTop: 22 }}>
           {offres.length} offre{offres.length > 1 ? "s" : ""} active{offres.length > 1 ? "s" : ""} en
@@ -72,19 +68,17 @@ export default async function Jobs() {
           <Chiffre nombre={offres.length} libelle="Offres actives" />
           <Chiffre nombre={elus.size} libelle="Élus concernés" />
           <Chiffre nombre={departements.size} libelle="Départements" />
-          <Chiffre nombre={nouvelles} libelle="Nouvelles cette semaine" />
+          {nouvelles > 0 && <Chiffre nombre={nouvelles} libelle="Nouvelles cette semaine" />}
         </div>
       ) : null}
 
-      {/* Inscription aux alertes e-mail */}
       <AlerteEmplois />
 
       {offres.length === 0 ? (
-        /* État vide honnête : le marché est cyclique, on garde le lien */
         <div style={{ marginTop: 30 }}>
           <h2 style={{ fontSize: "1.2rem" }}>Aucune offre active en ce moment</h2>
           <p className="lead" style={{ fontSize: "1rem" }}>
-            C'est normal : le recrutement parlementaire est cyclique. Les annonces se
+            C&apos;est normal : le recrutement parlementaire est cyclique. Les annonces se
             concentrent à la rentrée, après les élections et lors des mouvements de groupes.
             Les nouvelles offres validées apparaissent ici en direct, et vous pouvez être
             prévenu par e-mail dès leur publication.
