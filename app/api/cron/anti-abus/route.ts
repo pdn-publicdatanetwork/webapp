@@ -125,20 +125,30 @@ export async function GET(req: Request) {
   if (errLecture) return NextResponse.json({ ok: false, error: errLecture.message }, { status: 500 });
   const parId = new Map((suspects ?? []).map((l: any) => [l.user_id, l]));
 
+  // Liste des comptes via la vue public.comptes_utilisateurs (PostgREST) :
+  // l'API GoTrue auth.admin.listUsers renvoie un 500 « Database error finding
+  // users » sur ce projet — même contournement que app/api/admin/users/route.ts.
+  // Bannissement et fournisseurs de connexion se lisent dans app_metadata
+  // (banned_until, providers), écrits par GoTrue.
   const users: any[] = [];
-  for (let page = 1; page <= 10; page++) {
-    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
-    if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
-    users.push(...(data?.users ?? []));
-    if (!data?.users || data.users.length < 200) break;
+  for (let page = 0; page < 50; page++) {
+    const { data, error } = await admin
+      .from("comptes_utilisateurs")
+      .select("id, email, created_at, user_metadata, app_metadata")
+      .order("created_at", { ascending: true })
+      .range(page * 200, page * 200 + 199);
+    if (error) return NextResponse.json({ ok: false, error: `vue comptes_utilisateurs : ${error.message}` }, { status: 500 });
+    users.push(...(data ?? []));
+    if (!data || data.length < 200) break;
   }
 
   // Régularisation : adresse changée OU méthode de connexion OAuth (Google, GitHub…) ajoutée.
-  const aOAuth = (u: any) => (u.identities ?? []).some((i: any) => i.provider !== "email" && i.provider !== "phone");
+  // Fournisseurs listés par GoTrue dans app_metadata.providers.
+  const aOAuth = (u: any) => ((u.app_metadata?.providers ?? []) as string[]).some((p) => p !== "email" && p !== "phone");
   const delaEcoule = (d: string) => Date.now() - new Date(d).getTime() >= 48 * 3600 * 1000;
 
   for (const u of users) {
-    if (!u.email || u.banned_until) continue;
+    if (!u.email || u.app_metadata?.banned_until) continue;
     const ligne = parId.get(u.id) as any;
     const ctrl = controleEmail(u.email);
 
