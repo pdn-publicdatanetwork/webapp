@@ -976,3 +976,33 @@ html.dark a { transition: color .2s ease; }
 .communiques-vide-titre { font-family: var(--font-spectral), "Spectral", serif; font-size: 1.25rem; font-weight: 700; color: var(--ink); margin: 0 0 12px; }
 .communiques-vide-texte { color: var(--muted); line-height: 1.6; margin: 0 0 24px; }
 .communiques-vide .meta { margin: 16px 0 0; }
+
+
+/* ── DataParl' Jobs : charte propre à jobs.dataparl.fr (violet / lavande) ─────
+   La classe .js est posée sur <html> par EnTeteJobs (client) quand le module
+   Jobs est affiché (hôte jobs.dataparl.fr ou pages /jobs du site www). Toute
+   la charte bascule sur la palette Jobs : violet foncé #4E2E53 en primaire
+   (texte, titres, CTA), lavande #E4BDE9 en surlignage et badges « Déposée »,
+   bleu très clair #ECF1FC en fond de page, bleu moyen #6C84B0 pour les liens
+   et le texte secondaire, bordures #D0D9EC. Le site www n'affiche jamais ces
+   pages avec la classe : il garde sa charte marine / jaune. Le lavande n'est
+   jamais utilisé en couleur de texte (trop clair), seulement en fond. */
+:root.jobs {
+  --bg: #ECF1FC;
+  --ink: #4E2E53;
+  --bleu: #6C84B0;
+  --corail: #4E2E53;
+  --alerte: #D46A6A;
+  --jaune: #E4BDE9;
+  --arrivee: #6B9F78;
+  --muted: #6C84B0;
+  --line: #D0D9EC;
+  color-scheme: light;
+}
+:root.jobs .surligne { color: #4E2E53; }
+:root.jobs .btn:hover:not(.secondaire),
+:root.jobs button:hover:enabled:not(.secondaire):not(.lien):not(.danger):not(.bascule-theme):not(.retour-haut) {
+  background: #6C84B0;
+  border-color: #6C84B0;
+  color: #fff;
+}

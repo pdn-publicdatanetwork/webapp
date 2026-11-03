@@ -131,7 +131,7 @@ export default function ListeOffres({ offres }: { offres: OffreListe[] }) {
         .badge-jobs { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .76rem;
           font-weight: 600; border: 1px solid var(--line); color: var(--muted); background: var(--bg); }
         .pastille-source { display: inline-block; border-radius: 999px; padding: 3px 10px; font-size: .76rem; font-weight: 700; }
-        .pastille-source.deposee { background: var(--jaune); color: #071A41; }
+        .pastille-source.deposee { background: var(--jaune); color: var(--ink); }
         .pastille-source.collectee { border: 1px solid var(--line); color: var(--muted); background: var(--bg); }
         .pastille-chambre { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px;
           border-radius: 999px; font-size: .76rem; font-weight: 600; border: 1px solid var(--line); background: var(--bg); }
