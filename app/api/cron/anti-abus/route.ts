@@ -121,8 +121,8 @@ https://www.dataparl.fr/`;
 // Slack ne fait jamais échouer le cron. Les lignes de comptes_suspects ne sont
 // jamais supprimées : l'adresse et le motif restent en mémoire, le compte est
 // suspendu (réversible), jamais effacé.
-async function notifierVeille(evenements: string[], enSuspens: { email: string; motif: string | null; suspendu_le: string | null; marque_le: string }[]): Promise<void> {
-  if (evenements.length === 0 && enSuspens.length === 0) return;
+async function notifierVeille(evenements: string[], enSuspens: { email: string; motif: string | null; suspendu_le: string | null; marque_le: string }[], recap: boolean): Promise<void> {
+  if (evenements.length === 0 && !(recap && enSuspens.length > 0)) return;
   const bot = process.env.SLACK_BOT_TOKEN || process.env.SLACK_MAILAPP_BOT_TOKEN || "";
   if (!bot) return;
   const canal = process.env.SLACK_VEILLE_COMPTES ?? "C0CB4M6GSQM";
@@ -152,6 +152,7 @@ export async function GET(req: Request) {
   if (!autorise(req)) return NextResponse.json({ error: "non autorisé" }, { status: 401 });
   const admin = authAdmin();
   const bilan = { marques: 0, avertis: 0, suspendus: 0, regularises: 0, erreurs: [] as string[] };
+  const evenements: string[] = [];
 
   const { data: suspects, error: errLecture } = await admin.from("comptes_suspects").select("user_id,email,marque_le,suspendu_le,regularise_le,fournisseurs");
   if (errLecture) return NextResponse.json({ ok: false, error: errLecture.message }, { status: 500 });
@@ -197,6 +198,7 @@ export async function GET(req: Request) {
         }
         await admin.from("comptes_suspects").update({ regularise_le: new Date().toISOString(), email: u.email }).eq("user_id", u.id);
         bilan.regularises++;
+        evenements.push(`:white_check_mark: ${u.email} régularisé (adresse changée${ligne.suspendu_le ? ") et débloqué" : ""})`);
       }
       continue;
     }
@@ -213,6 +215,7 @@ export async function GET(req: Request) {
         }
         await admin.from("comptes_suspects").update({ regularise_le: new Date().toISOString(), fournisseurs: oauthDe(u) }).eq("user_id", u.id);
         bilan.regularises++;
+        evenements.push(`:white_check_mark: ${u.email} régularisé (connexion ${nouveaux.join(" + ")} ajoutée${ligne.suspendu_le ? "), débloqué" : ""})`);
         continue;
       }
     }
@@ -230,6 +233,7 @@ export async function GET(req: Request) {
         await admin.from("comptes_suspects").update({ notifie_le: new Date().toISOString() }).eq("user_id", u.id);
         bilan.avertis++;
       }
+      evenements.push(`:triangular_flag_on_post: ${u.email} marqué et averti (motif : ${ctrl.motif})`);
     } else if (!ligne.suspendu_le && !ligne.regularise_le && u.email === ligne.email && delaEcoule(ligne.marque_le)) {
       // Suspension en base (fonction security definer, date finie) : l'API
       // GoTrue updateUserById est sujette aux 500 sur ce projet, et une date
@@ -241,7 +245,11 @@ export async function GET(req: Request) {
       }
       await admin.from("comptes_suspects").update({ suspendu_le: new Date().toISOString(), email: u.email }).eq("user_id", u.id);
       bilan.suspendus++;
+      evenements.push(`:no_entry: ${u.email} suspendu (48 h sans régularisation)`);
     }
   }
+  // Récap quotidien (8 h UTC) des comptes en suspens, en plus des événements.
+  const { data: enSuspens } = await admin.from("comptes_suspects").select("email,motif,suspendu_le,marque_le").is("regularise_le", null).order("marque_le");
+  await notifierVeille(evenements, (enSuspens ?? []) as any, new Date().getUTCHours() === 8);
   return NextResponse.json({ ok: true, ...bilan });
 }
