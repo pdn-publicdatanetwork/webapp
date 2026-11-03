@@ -5,9 +5,12 @@ import ModalOffre from "@/components/ModalOffre";
 import { CHAMBRE_NOM, typeContrat } from "@/lib/jobsTexte";
 import type { OffreListe } from "@/lib/types";
 
+type IaEntree = { score: number; points_forts: string[]; manques: string[]; conseil: string };
+
 // CV Matching : le candidat colle le texte de son CV, l'app détecte les
 // compétences par listes de mots-clés et calcule un score heuristique
-// de correspondance avec chaque offre. Honnête : aucune IA externe.
+// de correspondance avec chaque offre. Si MISTRAL_API_KEY est configurée,
+// une analyse IA affine ensuite les scores (repli silencieux en heuristique).
 
 const COMPETENCES: { nom: string; mots: string[] }[] = [
   { nom: "Droit public / légistique", mots: ["droit public", "droit constitutionnel", "droit parlementaire", "légistique", "amendement", "proposition de loi", "juridique"] },
@@ -48,6 +51,8 @@ export default function Matching({ offres }: { offres: OffreListe[] }) {
   const [analyse, setAnalyse] = useState<{ competences: typeof COMPETENCES; mots: number } | null>(null);
   const [ouverte, setOuverte] = useState<OffreListe | null>(null);
   const [noteFichier, setNoteFichier] = useState("");
+  const [ia, setIa] = useState<Record<string, IaEntree> | null>(null);
+  const [enCoursIA, setEnCoursIA] = useState(false);
 
   const scores = useMemo(() => {
     if (!analyse) return [];
@@ -93,6 +98,42 @@ export default function Matching({ offres }: { offres: OffreListe[] }) {
     }
     setNoteFichier("");
     setAnalyse({ competences: detecter(texte), mots: texte.split(/\s+/).length });
+    setIa(null);
+    chercherIA(texte);
+  };
+
+  const chercherIA = async (texte: string) => {
+    setEnCoursIA(true);
+    try {
+      const res = await fetch("/api/jobs/matching", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          cv: texte.slice(0, 6000),
+          offres: offres.slice(0, 20).map((o) => ({ id: o.id, titre: o.titre, extrait: o.description.slice(0, 800) })),
+        }),
+      });
+      if (res.ok) {
+        const j = await res.json();
+        if (j && typeof j === "object" && Array.isArray(j.correspondances)) {
+          const carte: Record<string, IaEntree> = {};
+          for (const x of j.correspondances) {
+            if (x && typeof x.id === "string") {
+              carte[x.id] = {
+                score: Math.max(0, Math.min(100, Math.round(Number(x.score) || 0))),
+                points_forts: Array.isArray(x.points_forts) ? x.points_forts.filter((p: unknown) => typeof p === "string").slice(0, 3) : [],
+                manques: Array.isArray(x.manques) ? x.manques.filter((p: unknown) => typeof p === "string").slice(0, 3) : [],
+                conseil: typeof x.conseil === "string" ? x.conseil.slice(0, 200) : "",
+              };
+            }
+          }
+          setIa(carte);
+        }
+      }
+    } catch {
+      // L'heuristique locale reste affichée si l'IA est indisponible.
+    }
+    setEnCoursIA(false);
   };
 
   return (
@@ -106,7 +147,7 @@ export default function Matching({ offres }: { offres: OffreListe[] }) {
         </h1>
         <p className="text-sm text-slate-600 max-w-2xl leading-relaxed">
           Collez le texte de votre CV ci-dessous : l&apos;application détecte vos compétences et les confronte
-          aux offres en ligne pour estimer votre taux de correspondance. Analyse locale, aucune donnée envoyée.
+          aux offres en ligne pour estimer votre taux de correspondance. Analyse locale, complétée par l&apos;IA quand elle est disponible.
         </p>
 
         <div
@@ -154,7 +195,7 @@ export default function Matching({ offres }: { offres: OffreListe[] }) {
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
                 <h2 className="font-serif-title font-bold text-lg text-[#4E2E53]">Votre profil détecté</h2>
-                <p className="text-xs text-slate-500">{analyse.mots} mots analysés, {analyse.competences.length} compétence(s) reconnue(s)</p>
+                <p className="text-xs text-slate-500">{analyse.mots + " mots analysés, " + analyse.competences.length + " compétence(s) reconnue(s)" + (enCoursIA ? " • analyse IA en cours…" : ia ? " • scores affinés par IA" : "")}</p>
               </div>
               <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">Profil analysé</span>
             </div>
@@ -187,7 +228,10 @@ export default function Matching({ offres }: { offres: OffreListe[] }) {
             <h2 className="font-serif-title font-bold text-[#4E2E53] text-lg">
               Offres classées selon votre profil
             </h2>
-            {scores.map(({ offre, score }) => (
+            {scores.map(({ offre, score: scoreHeuristique }) => {
+              const entree = ia?.[offre.id];
+              const score = entree?.score ?? scoreHeuristique;
+              return (
               <div key={offre.id} className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="space-y-1 min-w-0">
                   <span className="text-xs font-bold text-[#6C84B0]">
@@ -195,6 +239,7 @@ export default function Matching({ offres }: { offres: OffreListe[] }) {
                   </span>
                   <h3 className="font-bold text-slate-800 text-sm">{offre.titre}</h3>
                   <p className="text-xs text-slate-500 line-clamp-1">{offre.description.split("\n")[0]}</p>
+                  {entree?.conseil ? <p className="text-[11px] text-slate-400 line-clamp-1">{entree.conseil}</p> : null}
                 </div>
                 <div className="flex items-center gap-4 shrink-0 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-2 sm:pt-0">
                   <div className="text-right">
@@ -211,7 +256,8 @@ export default function Matching({ offres }: { offres: OffreListe[] }) {
                   </button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

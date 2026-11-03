@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Turnstile from "@/components/Turnstile";
 
 // Bannière d'inscription aux alertes e-mail (POST /api/jobs/alerte).
 
@@ -7,6 +8,8 @@ export default function Alertes() {
   const [email, setEmail] = useState("");
   const [etat, setEtat] = useState<"attente" | "envoi" | "ok" | "erreur">("attente");
   const [message, setMessage] = useState("");
+  const [jeton, setJeton] = useState("");
+  const [essai, setEssai] = useState(0);
 
   const inscrire = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,9 +19,11 @@ export default function Alertes() {
       const res = await fetch("/api/jobs/alerte", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, turnstile: jeton }),
       });
       const json = await res.json().catch(() => ({}));
+      setEssai(essai + 1);
+      setJeton("");
       if (res.ok) {
         setEtat("ok");
         setMessage(json.message ?? "Inscription confirmée. À très vite !");
@@ -47,7 +52,8 @@ export default function Alertes() {
           ✅ {message}
         </p>
       ) : (
-        <form onSubmit={inscrire} className="flex gap-2 w-full md:w-auto shrink-0">
+        <form onSubmit={inscrire} className="flex flex-col md:items-end gap-2 w-full md:w-auto shrink-0">
+          <div className="flex gap-2 w-full md:w-auto">
           <input
             type="email"
             required
@@ -63,6 +69,8 @@ export default function Alertes() {
           >
             {etat === "envoi" ? "…" : "S'inscrire"}
           </button>
+          </div>
+          <Turnstile key={essai} onToken={setJeton} />
         </form>
       )}
       {etat === "erreur" && <p className="text-xs text-red-600 w-full md:w-auto">{message}</p>}

@@ -2,6 +2,7 @@ import { createHash } from "crypto";
 import { deposerOffre } from "@/lib/firestore";
 import { CHAMBRES, domaineAutorise } from "@/lib/jobs";
 import { CONTRATS } from "@/lib/jobsTexte";
+import { verifierHumain } from "@/lib/turnstile";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,7 @@ export async function POST(req: Request) {
   if (intro.length < 40) return Response.json({ erreur: "présentation du poste trop courte" }, { status: 400 });
   if (missions.length === 0) return Response.json({ erreur: "au moins une mission" }, { status: 400 });
   if (profil.length === 0) return Response.json({ erreur: "au moins une attente de profil" }, { status: 400 });
+  if (!(await verifierHumain(c.turnstile))) return Response.json({ erreur: "confirmez la vérification anti-robot" }, { status: 400 });
 
   const [prenom, ...reste] = elu.split(/\s+/);
   const nom = reste.join(" ");

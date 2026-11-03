@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { CHAMBRES, domaineAutorise } from "@/lib/jobs";
 import { CONTRATS } from "@/lib/jobsTexte";
+import Turnstile from "@/components/Turnstile";
 
 // Espace de dépôt d'offre pour les élus et leurs cabinets. Auditeur de
 // conformité temps réel (charte DataParl') et envoi vers /api/jobs/proposer.
@@ -48,6 +49,8 @@ export default function EspacePro() {
   const [f, setF] = useState<Formulaire>(VIDE);
   const [etat, setEtat] = useState<"attente" | "envoi" | "ok" | "erreur">("attente");
   const [message, setMessage] = useState("");
+  const [jeton, setJeton] = useState("");
+  const [essai, setEssai] = useState(0);
   const maj = (p: Partial<Formulaire>) => setF({ ...f, ...p });
 
   const regles = {
@@ -91,9 +94,12 @@ export default function EspacePro() {
           date_debut: f.date_debut,
           date_limite: f.date_limite,
           avantages: f.avantages.trim(),
+          turnstile: jeton,
         }),
       });
       const json = await res.json().catch(() => ({}));
+      setEssai(essai + 1);
+      setJeton("");
       if (res.ok) {
         setEtat("ok");
         setMessage(json.message ?? "Votre offre est déposée. Elle sera relue puis publiée.");
@@ -228,6 +234,8 @@ export default function EspacePro() {
             <label className={label}>Consignes de candidature (optionnel)</label>
             <textarea rows={2} value={f.candidater} onChange={(e) => maj({ candidater: e.target.value })} placeholder="ex : CV et lettre de motivation avec l'objet STAGE-NOVEMBRE" className={champ} />
           </div>
+
+          <Turnstile key={essai} onToken={setJeton} />
 
           <button
             type="submit"
