@@ -1,6 +1,7 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { CHAMBRES, SIGLE, slugOffre, type Chambre } from "@/lib/jobs";
 import { couleurChambre } from "@/lib/couleurs";
 
@@ -23,8 +24,27 @@ export type OffreListe = {
 const uniques = (xs: (string | null | undefined)[]) =>
   [...new Set(xs.filter((x): x is string => !!x))].sort((a, b) => a.localeCompare(b, "fr"));
 
-const dateCourte = (iso: string | null) =>
-  iso ? new Date(iso + "T12:00:00Z").toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : null;
+// Type de contrat normalisé (Stage / CDD / CDI / Alternance / Autre).
+const CONTRATS = ["Stage", "CDD", "CDI", "Alternance"];
+const typeContrat = (o: OffreListe) => {
+  const src = ((o.type_poste ?? "") + " " + o.description).toLowerCase();
+  for (const c of CONTRATS) if (src.includes(c.toLowerCase())) return c;
+  return "Autre";
+};
+
+const tempsTravail = (desc: string) =>
+  /temps\s+plein/i.test(desc) ? "Temps plein" : /temps\s+partiel/i.test(desc) ? "Temps partiel" : null;
+
+// Date relative : « publié il y a 2 jours ».
+const ilYA = (iso: string | null) => {
+  if (!iso) return null;
+  const j = Math.floor((Date.now() - new Date(iso + "T12:00:00Z").getTime()) / 86400000);
+  if (j <= 0) return "aujourd'hui";
+  if (j === 1) return "hier";
+  if (j < 30) return "il y a " + j + " jours";
+  if (j < 45) return "il y a 1 mois";
+  return "il y a " + Math.floor(j / 30) + " mois";
+};
 
 // Pastille de provenance, avec le niveau de confiance en info-bulle.
 export function PastilleProvenance({ connector, avecLibelle }: { connector: string; avecLibelle?: boolean }) {
@@ -41,11 +61,9 @@ export function PastilleProvenance({ connector, avecLibelle }: { connector: stri
 }
 
 const nomElu = (o: OffreListe) => [o.elu_prenom, o.elu_nom].filter(Boolean).join(" ");
-
-// Titre court de la card : jamais le titre standard à rallonge.
 const titreCourt = (t: string) => (t.length > 80 ? t.slice(0, 78) + "…" : t);
 
-// Extrait de 2-3 lignes : le chapeau de l'annonce, jusqu'à la première section.
+// Extrait : le chapeau de l'annonce, jusqu'à la première section.
 const extrait = (desc: string) => {
   if (!desc) return "";
   const coupe = desc.split(/\n(?=Vos missions|Profil recherché|Lieu|Rémunération|Pour candidater)/i)[0]
@@ -55,29 +73,41 @@ const extrait = (desc: string) => {
   return texte.length > 190 ? texte.slice(0, 188) + "…" : texte;
 };
 
-// Liste publique des offres, interface v3 : sidebar de filtres (repliable en
-// mobile), cartes scannables sur 1 ou 2 colonnes à la Google Careers.
+// Liste des offres : initialisation depuis l'URL (?q=, ?chambre=, ?type=),
+// sidebar avec cases à cocher et compteurs, cartes denses et scannables.
 export default function ListeOffres({ offres }: { offres: OffreListe[] }) {
+  const params = useSearchParams();
   const [source, setSource] = useState<"" | "collectee" | "deposee">("");
-  const [chambre, setChambre] = useState("");
-  const [type, setType] = useState("");
+  const [chambres, setChambres] = useState<string[]>([]);
+  const [types, setTypes] = useState<string[]>([]);
   const [departement, setDepartement] = useState("");
   const [groupe, setGroupe] = useState("");
   const [elu, setElu] = useState("");
   const [q, setQ] = useState("");
   const [tri, setTri] = useState<"recente" | "ancienne" | "limite">("recente");
 
+  // La recherche du hero et les pastilles rapides pilotent l'URL.
+  useEffect(() => {
+    setQ(params.get("q") ?? "");
+    const c = params.get("chambre");
+    setChambres(c ? [c] : []);
+    const t = params.get("type");
+    setTypes(t ? [t] : []);
+  }, [params]);
+
   const elus = useMemo(() => uniques(offres.map(nomElu)), [offres]);
   const groupes = useMemo(() => uniques(offres.map((o) => o.groupe_politique)), [offres]);
   const departements = useMemo(() => uniques(offres.map((o) => o.departement)), [offres]);
-  const types = useMemo(() => uniques(offres.map((o) => o.type_poste)), [offres]);
+
+  const compteChambre = (v: string) => offres.filter((o) => o.chambre === v).length;
+  const compteType = (v: string) => offres.filter((o) => typeContrat(o) === v).length;
 
   const visibles = useMemo(() => {
     const out = offres.filter((o) => {
       if (source === "deposee" && o.source_connector !== "proposition") return false;
       if (source === "collectee" && o.source_connector === "proposition") return false;
-      if (chambre && (o.chambre ?? "") !== chambre) return false;
-      if (type && (o.type_poste ?? "") !== type) return false;
+      if (chambres.length && !chambres.includes(o.chambre ?? "")) return false;
+      if (types.length && !types.includes(typeContrat(o))) return false;
       if (departement && (o.departement ?? "") !== departement) return false;
       if (groupe && (o.groupe_politique ?? "") !== groupe) return false;
       if (elu && nomElu(o) !== elu) return false;
@@ -92,13 +122,13 @@ export default function ListeOffres({ offres }: { offres: OffreListe[] }) {
       out.sort((a, b) => String(a.expire_le ?? "9999").localeCompare(String(b.expire_le ?? "9999")));
     else out.sort((a, b) => String(b.publie_le ?? "").localeCompare(String(a.publie_le ?? "")));
     return out;
-  }, [offres, source, chambre, type, departement, groupe, elu, q, tri]);
+  }, [offres, source, chambres, types, departement, groupe, elu, q, tri]);
 
   const reset = () => {
-    setSource(""); setChambre(""); setType(""); setDepartement(""); setGroupe(""); setElu(""); setQ(""); setTri("recente");
+    setSource(""); setChambres([]); setTypes([]); setDepartement(""); setGroupe(""); setElu(""); setQ(""); setTri("recente");
   };
-  const unFiltre = !!(source || chambre || type || departement || groupe || elu || q || tri !== "recente");
-  const nbFiltres = [source, chambre, type, departement, groupe, elu, q].filter(Boolean).length;
+  const unFiltre = !!(source || chambres.length || types.length || departement || groupe || elu || q || tri !== "recente");
+  const nbFiltres = [source, chambres.length && "x", types.length && "x", departement, groupe, elu, q].filter(Boolean).length;
 
   return (
     <div className="liste-jobs">
@@ -114,34 +144,36 @@ export default function ListeOffres({ offres }: { offres: OffreListe[] }) {
         .filtres fieldset { border: 0; padding: 0; margin: 0; }
         .filtres legend { font-size: .78rem; font-weight: 700; color: var(--muted); text-transform: uppercase;
           letter-spacing: .04em; margin-bottom: 8px; }
-        .filtres label.radio { display: flex; align-items: center; gap: 8px; font-weight: 400; font-size: .92rem;
-          margin: 4px 0; cursor: pointer; }
+        .filtres label.radio, .filtres label.coche { display: flex; align-items: center; gap: 8px;
+          font-weight: 400; font-size: .92rem; margin: 4px 0; cursor: pointer; }
+        .filtres .compteur { color: var(--muted); font-size: .82rem; margin-left: auto; }
         .filtres select, .filtres input[type=text] { margin-top: 0; font-size: .92rem; padding: 8px 10px; }
         .filtres .raz { margin-top: 2px; }
         .resultats { min-width: 0; }
         .resultats .compteur { margin: 0 0 14px; }
         .grille-offres { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
         .carte-offre { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line);
-          border-radius: 12px; padding: 18px 20px; text-decoration: none; color: var(--ink);
+          border-radius: 12px; padding: 16px 18px; text-decoration: none; color: var(--ink);
           box-shadow: 0 1px 3px rgba(7,26,65,.05); transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease; }
         .carte-offre:hover, .carte-offre:focus-visible { transform: translateY(-2px);
           border-color: color-mix(in srgb, var(--bleu) 30%, var(--line)); box-shadow: 0 6px 18px rgba(7,26,65,.1); }
         .carte-offre:hover h2, .carte-offre:focus-visible h2 { color: var(--bleu); }
-        .carte-offres-badges { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
-        .badge-jobs { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .76rem;
-          font-weight: 600; border: 1px solid var(--line); color: var(--muted); background: var(--bg); }
-        .pastille-source { display: inline-block; border-radius: 999px; padding: 3px 10px; font-size: .76rem; font-weight: 700; }
-        .pastille-source.deposee { background: var(--jaune); color: var(--ink); }
-        .pastille-source.collectee { border: 1px solid var(--line); color: var(--muted); background: var(--bg); }
+        .carte-tete { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
         .pastille-chambre { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px;
           border-radius: 999px; font-size: .76rem; font-weight: 600; border: 1px solid var(--line); background: var(--bg); }
         .pastille-chambre i { width: 8px; height: 8px; border-radius: 999px; display: inline-block; }
-        .carte-offre h2 { margin: 0 0 6px; font-size: 1.06rem; line-height: 1.35;
+        .pastille-source { display: inline-block; border-radius: 999px; padding: 3px 10px; font-size: .76rem; font-weight: 700; }
+        .pastille-source.deposee { background: var(--jaune); color: var(--ink); }
+        .pastille-source.collectee { border: 1px solid var(--line); color: var(--muted); background: var(--bg); }
+        .carte-offre h2 { margin: 0 0 4px; font-size: 1.06rem; line-height: 1.35;
           font-family: var(--font-dm-sans), system-ui, sans-serif; }
         .carte-offre .elu { margin: 0 0 2px; font-weight: 600; font-size: .92rem; }
-        .carte-offre .elu span, .carte-offre .ou { color: var(--muted); font-weight: 400; }
-        .carte-offre p.extrait { margin: 10px 0 14px; color: var(--muted); font-size: .9rem; line-height: 1.55;
-          display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
+        .carte-offre .elu span { color: var(--muted); font-weight: 400; }
+        .carte-offre p.extrait { margin: 8px 0 12px; color: var(--muted); font-size: .9rem; line-height: 1.55;
+          display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
+        .carte-tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+        .badge-jobs { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .76rem;
+          font-weight: 600; border: 1px solid var(--line); color: var(--muted); background: var(--bg); }
         .carte-offre .voir { font-size: .92rem; font-weight: 700; color: var(--bleu); }
         .aucun { background: var(--card); border: 1px dashed var(--line); border-radius: 12px; padding: 28px;
           text-align: center; color: var(--muted); }
@@ -176,23 +208,39 @@ export default function ListeOffres({ offres }: { offres: OffreListe[] }) {
 
           <fieldset>
             <legend>Chambre</legend>
-            <select value={chambre} onChange={(e) => setChambre(e.target.value)} aria-label="Chambre">
-              <option value="">Toutes</option>
-              {CHAMBRES.map((c) => (
-                <option key={c.valeur} value={c.valeur}>{c.libelle}</option>
-              ))}
-            </select>
+            {CHAMBRES.map((c) => (
+              <label className="coche" key={c.valeur}>
+                <input
+                  type="checkbox"
+                  checked={chambres.includes(c.valeur)}
+                  onChange={(e) =>
+                    setChambres((prev) =>
+                      e.target.checked ? [...prev, c.valeur] : prev.filter((x) => x !== c.valeur)
+                    )
+                  }
+                />
+                {c.libelle}
+                <span className="compteur">({compteChambre(c.valeur)})</span>
+              </label>
+            ))}
           </fieldset>
 
-          {types.length > 0 && (
-            <fieldset>
-              <legend>Type de contrat</legend>
-              <select value={type} onChange={(e) => setType(e.target.value)} aria-label="Type de contrat">
-                <option value="">Tous</option>
-                {types.map((x) => (<option key={x} value={x}>{x}</option>))}
-              </select>
-            </fieldset>
-          )}
+          <fieldset>
+            <legend>Type de contrat</legend>
+            {CONTRATS.map((t) => (
+              <label className="coche" key={t}>
+                <input
+                  type="checkbox"
+                  checked={types.includes(t)}
+                  onChange={(e) =>
+                    setTypes((prev) => (e.target.checked ? [...prev, t] : prev.filter((x) => x !== t)))
+                  }
+                />
+                {t}
+                <span className="compteur">({compteType(t)})</span>
+              </label>
+            ))}
+          </fieldset>
 
           {departements.length > 0 && (
             <fieldset>
@@ -248,8 +296,11 @@ export default function ListeOffres({ offres }: { offres: OffreListe[] }) {
         {visibles.length === 0 ? (
           <div className="aucun">
             <p style={{ margin: 0 }}>
-              Aucune offre ne correspond à ces critères. Élargissez la recherche, ou laissez votre
-              e-mail sur la page d&apos;accueil pour être prévenu des prochaines publications.
+              Aucune offre ne correspond à vos critères actuels. Élargissez les filtres, ou créez une
+              alerte e-mail pour être prévenu des prochaines publications.
+            </p>
+            <p style={{ margin: "10px 0 0" }}>
+              <a href="/jobs#alerte">Créer une alerte pour cette recherche</a>
             </p>
             {unFiltre && (
               <button type="button" className="btn secondaire" onClick={reset}>Réinitialiser les filtres</button>
@@ -257,34 +308,38 @@ export default function ListeOffres({ offres }: { offres: OffreListe[] }) {
           </div>
         ) : (
           <div className="grille-offres">
-            {visibles.map((o) => (
-              <Link key={o.id} href={"/jobs/" + slugOffre(o)} className="carte-offre">
-                <div className="carte-offres-badges">
-                  <PastilleProvenance connector={o.source_connector} avecLibelle />
-                  {o.chambre && (
-                    <span className="pastille-chambre">
-                      <i style={{ background: couleurChambre(o.chambre) }} />
-                      {SIGLE[o.chambre as Chambre] ?? o.chambre}
-                    </span>
-                  )}
-                  <span className="badge-jobs">{o.type_poste ?? "Contrat à préciser"}</span>
-                  {o.publie_le && <span className="badge-jobs">{dateCourte(o.publie_le)}</span>}
-                </div>
-                <h2>{titreCourt(o.titre)}</h2>
-                <p className="elu">
-                  {nomElu(o) || "Équipe parlementaire"}
-                  {o.groupe_politique && <span>, {o.groupe_politique}</span>}
-                </p>
-                {(o.localisation || o.departement) && (
-                  <p className="ou" style={{ margin: 0, fontSize: ".88rem", color: "var(--muted)" }}>
-                    {o.localisation ?? o.departement}
-                    {o.departement && o.localisation && o.localisation !== o.departement ? ", " + o.departement : ""}
+            {visibles.map((o) => {
+              const contrat = typeContrat(o);
+              const travail = tempsTravail(o.description ?? "");
+              return (
+                <Link key={o.id} href={"/jobs/" + slugOffre(o)} className="carte-offre">
+                  <div className="carte-tete">
+                    {o.chambre && (
+                      <span className="pastille-chambre">
+                        <i style={{ background: couleurChambre(o.chambre) }} />
+                        {SIGLE[o.chambre as Chambre] ?? o.chambre}
+                      </span>
+                    )}
+                    <PastilleProvenance connector={o.source_connector} avecLibelle />
+                  </div>
+                  <h2>{titreCourt(o.titre)}</h2>
+                  <p className="elu">
+                    {nomElu(o) || "Équipe parlementaire"}
+                    {o.groupe_politique && <span>, {o.groupe_politique}</span>}
                   </p>
-                )}
-                {extrait(o.description) && <p className="extrait">{extrait(o.description)}</p>}
-                <span className="voir">Voir l&apos;offre →</span>
-              </Link>
-            ))}
+                  {extrait(o.description) && <p className="extrait">{extrait(o.description)}</p>}
+                  <div className="carte-tags">
+                    <span className="badge-jobs">{contrat}</span>
+                    {travail && <span className="badge-jobs">{travail}</span>}
+                    {(o.localisation || o.departement) && (
+                      <span className="badge-jobs">{o.localisation ?? o.departement}</span>
+                    )}
+                    {o.publie_le && <span className="badge-jobs">{ilYA(o.publie_le)}</span>}
+                  </div>
+                  <span className="voir">Voir l&apos;offre →</span>
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>

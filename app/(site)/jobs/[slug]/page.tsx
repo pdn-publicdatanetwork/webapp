@@ -6,12 +6,12 @@ import { DATA_SUPABASE_KEY, DATA_SUPABASE_URL } from "@/lib/env";
 import { PastilleProvenance } from "../_components/ListeOffres";
 import PhotoElu from "../_components/PhotoElu";
 
-// Détail d'une offre, structure normalisée : le candidat comprend en 5
-// secondes le poste, l'équipe, le lieu et la façon de postuler.
-// 1. En-tête (titre court, élu, photo) 2. Badges propres 3. Bloc Postuler
-// 4. Intro 5. Missions 6. Profil 7. Conditions 8. L'équipe 9. Pied.
-// L'adresse e-mail n'est jamais affichée en clair : uniquement le bouton
-// « Contacter l'équipe ». Le lien vers l'annonce d'origine n'est pas affiché.
+// Détail d'une offre, structure normalisée en deux colonnes : le candidat
+// comprend en 5 secondes le poste, l'équipe, le lieu et la façon de postuler.
+// Colonne principale : À propos, Missions, Profil, Conditions, L'équipe.
+// Colonne latérale (sticky) : bloc Postuler + métadonnées clés, toujours
+// visibles au défilement. L'adresse e-mail n'est jamais affichée en clair,
+// et le lien vers l'annonce d'origine n'est pas affiché.
 
 export const revalidate = 3600;
 export const dynamic = "force-dynamic";
@@ -170,6 +170,16 @@ function LigneCondition({ libelle, children }: { libelle: string; children: Reac
   );
 }
 
+// Ligne de métadonnée dans le panneau latéral.
+function LigneMeta({ libelle, children }: { libelle: string; children: React.ReactNode }) {
+  return (
+    <div style={{ display: "grid", gap: 2, paddingBottom: 8, borderBottom: "1px solid var(--line)" }}>
+      <span className="meta" style={{ fontSize: ".78rem", textTransform: "uppercase", letterSpacing: ".04em", padding: 0 }}>{libelle}</span>
+      <span style={{ fontSize: ".95rem" }}>{children}</span>
+    </div>
+  );
+}
+
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default async function OffrePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -237,133 +247,135 @@ export default async function OffrePage({ params }: { params: Promise<{ slug: st
         </div>
       </div>
 
-      {/* 2. Badges : source, type de contrat, temps de travail, date */}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", margin: "16px 0 0" }}>
-        <PastilleProvenance connector={o.source_connector} avecLibelle />
-        <span style={{ background: "var(--jaune)", color: "var(--ink)", borderRadius: 999, padding: "4px 12px", fontSize: ".82rem", fontWeight: 600 }}>
-          {contrat}
-        </span>
-        {travail && (
-          <span style={{ background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 999, padding: "4px 12px", fontSize: ".82rem" }}>
-            {travail}
-          </span>
-        )}
-        <span style={{ background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 999, padding: "4px 12px", fontSize: ".82rem" }}>
-          {o.publie_le ? "Publiée le " + dateFr(o.publie_le) : "Publication en cours"}
-        </span>
-      </div>
-
-      {/* 3. Bloc Postuler : action principale, e-mail jamais affiché */}
-      <div
-        style={{
-          margin: "22px 0",
-          background: "var(--bg)",
-          border: "1px solid var(--line)",
-          borderRadius: 14,
-          padding: "18px 22px",
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 14,
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <div style={{ minWidth: 220, flex: 1 }}>
-          <p style={{ margin: 0, fontWeight: 800, color: "var(--ink)" }}>Postuler</p>
-          <p className="meta" style={{ margin: "4px 0 0" }}>Envoyez votre CV et lettre de motivation.</p>
-          {consignesPuces.length > 0 && (
-            <div style={{ marginTop: 8 }}>
-              <p className="meta" style={{ margin: "0 0 2px", fontWeight: 700 }}>Consignes de candidature</p>
-              <Liste items={consignesPuces} />
-            </div>
+      {/* Corps en deux colonnes : contenu à gauche, panneau Postuler sticky à droite */}
+      <div className="detail-grid">
+        <div className="detail-principal" style={{ display: "grid", gap: 24, minWidth: 0 }}>
+          {/* À propos du poste : intro courte */}
+          {chapeau.length > 0 && (
+            <section>
+              <TitreSection>À propos du poste</TitreSection>
+              <p style={{ margin: 0, lineHeight: 1.7 }}>{chapeau.join(" ")}</p>
+            </section>
           )}
+
+          {/* Missions */}
+          {missions && missions.lignes.filter(Boolean).length > 0 && (
+            <section>
+              <TitreSection>Missions</TitreSection>
+              <Liste items={missions.lignes.map((l) => l.replace(/^\s*[-•*]\s*/, "")).filter(Boolean)} />
+            </section>
+          )}
+
+          {/* Profil recherché : toujours en puces */}
+          {profil && profil.lignes.filter(Boolean).length > 0 && (
+            <section>
+              <TitreSection>Profil recherché</TitreSection>
+              <Liste items={enPuces(profil.lignes.map((l) => l.replace(/^\s*[-•*]\s*/, "")).filter(Boolean).join(" "))} />
+            </section>
+          )}
+
+          {/* Conditions */}
+          <section>
+            <TitreSection>Conditions</TitreSection>
+            <div style={{ borderBottom: "none" }}>
+              <LigneCondition libelle="Type de contrat">{contrat}</LigneCondition>
+              {travail && <LigneCondition libelle="Temps de travail">{travail}</LigneCondition>}
+              {duree && duree.lignes.filter(Boolean).length > 0 && (
+                <LigneCondition libelle="Durée">{duree.lignes.filter(Boolean).join(" ")}</LigneCondition>
+              )}
+              {debut && <LigneCondition libelle="Date de début">{debut}</LigneCondition>}
+              {o.expire_le && <LigneCondition libelle={"Candidatures jusqu'au"}>{dateFr(o.expire_le)}</LigneCondition>}
+              {adresse && (
+                <LigneCondition libelle="Lieu">
+                  {adresse}
+                  {maps && (
+                    <>
+                      {" "}
+                      <a href={maps} target="_blank" rel="noopener noreferrer">Voir sur Google Maps</a>
+                    </>
+                  )}
+                </LigneCondition>
+              )}
+              {rem && (
+                <LigneCondition libelle="Rémunération">
+                  {rem.type}
+                  {rem.montant ? " : " + rem.montant : ""}
+                </LigneCondition>
+              )}
+              {rem && rem.avantages.length > 0 && (
+                <LigneCondition libelle="Avantages">
+                  <Liste items={rem.avantages} />
+                </LigneCondition>
+              )}
+            </div>
+          </section>
+
+          {/* L'équipe */}
+          <section>
+            <TitreSection>L&apos;équipe</TitreSection>
+            <p style={{ margin: 0, lineHeight: 1.7 }}>
+              Équipe de {nomElu || "l'élu"}
+              {o.groupe_politique ? " (" + o.groupe_politique + ")" : ""}
+              {o.chambre ? ", " + (CHAMBRE_NOM[o.chambre] ?? o.chambre) : ""}.
+            </p>
+          </section>
         </div>
-        {email ? (
-          <a className="btn" style={{ marginTop: 0 }} href={"mailto:" + email + "?subject=" + objet}>
-            Contacter l&apos;équipe
-          </a>
-        ) : null}
-      </div>
 
-      <div style={{ display: "grid", gap: 24 }}>
-        {/* 4. À propos du poste : intro courte */}
-        {chapeau.length > 0 && (
-          <section>
-            <TitreSection>À propos du poste</TitreSection>
-            <p style={{ margin: 0, lineHeight: 1.7 }}>{chapeau.join(" ")}</p>
-          </section>
-        )}
-
-        {/* 5. Missions */}
-        {missions && missions.lignes.filter(Boolean).length > 0 && (
-          <section>
-            <TitreSection>Missions</TitreSection>
-            <Liste items={missions.lignes.map((l) => l.replace(/^\s*[-•*]\s*/, "")).filter(Boolean)} />
-          </section>
-        )}
-
-        {/* 6. Profil recherché : toujours en puces */}
-        {profil && profil.lignes.filter(Boolean).length > 0 && (
-          <section>
-            <TitreSection>Profil recherché</TitreSection>
-            <Liste items={enPuces(profil.lignes.map((l) => l.replace(/^\s*[-•*]\s*/, "")).filter(Boolean).join(" "))} />
-          </section>
-        )}
-
-        {/* 7. Conditions */}
-        <section>
-          <TitreSection>Conditions</TitreSection>
-          <div style={{ borderBottom: "none" }}>
-            <LigneCondition libelle="Type de contrat">{contrat}</LigneCondition>
-            {travail && <LigneCondition libelle="Temps de travail">{travail}</LigneCondition>}
-            {duree && duree.lignes.filter(Boolean).length > 0 && (
-              <LigneCondition libelle="Durée">{duree.lignes.filter(Boolean).join(" ")}</LigneCondition>
+        {/* Panneau latéral sticky : Postuler + métadonnées clés */}
+        <aside className="detail-aside" aria-label="Postuler et informations clés">
+          <div
+            style={{
+              background: "var(--bg)",
+              border: "1px solid var(--line)",
+              borderRadius: 14,
+              padding: "18px 20px",
+              display: "grid",
+              gap: 12,
+            }}
+          >
+            <p style={{ margin: 0, fontWeight: 800, color: "var(--ink)" }}>Postuler</p>
+            <p className="meta" style={{ margin: 0 }}>Envoyez votre CV et lettre de motivation.</p>
+            {consignesPuces.length > 0 && (
+              <div>
+                <p className="meta" style={{ margin: "0 0 2px", fontWeight: 700 }}>Consignes de candidature</p>
+                <Liste items={consignesPuces} />
+              </div>
             )}
-            {debut && <LigneCondition libelle="Date de début">{debut}</LigneCondition>}
-            {o.expire_le && <LigneCondition libelle={"Candidatures jusqu'au"}>{dateFr(o.expire_le)}</LigneCondition>}
-            {adresse && (
-              <LigneCondition libelle="Lieu">
-                {adresse}
-                {maps && (
-                  <>
-                    {" "}
-                    <a href={maps} target="_blank" rel="noopener noreferrer">Voir sur Google Maps</a>
-                  </>
-                )}
-              </LigneCondition>
-            )}
-            {rem && (
-              <LigneCondition libelle="Rémunération">
-                {rem.type}
-                {rem.montant ? " : " + rem.montant : ""}
-              </LigneCondition>
-            )}
-            {rem && rem.avantages.length > 0 && (
-              <LigneCondition libelle="Avantages">
-                <Liste items={rem.avantages} />
-              </LigneCondition>
+            {email ? (
+              <a className="btn" style={{ marginTop: 0, textAlign: "center" }} href={"mailto:" + email + "?subject=" + objet}>
+                Contacter l&apos;équipe
+              </a>
+            ) : null}
+          </div>
+
+          <div
+            style={{
+              background: "var(--card)",
+              border: "1px solid var(--line)",
+              borderRadius: 14,
+              padding: "18px 20px",
+              display: "grid",
+              gap: 10,
+            }}
+          >
+            <PastilleProvenance connector={o.source_connector} avecLibelle />
+            <LigneMeta libelle="Type de contrat">{contrat}</LigneMeta>
+            {travail && <LigneMeta libelle="Temps de travail">{travail}</LigneMeta>}
+            <LigneMeta libelle="Publication">
+              {o.publie_le ? "Publiée le " + dateFr(o.publie_le) : "Publication en cours"}
+            </LigneMeta>
+            {o.expire_le && <LigneMeta libelle="Date limite">{dateFr(o.expire_le)}</LigneMeta>}
+            {lienFiche && (
+              <p style={{ margin: "4px 0 0", fontSize: ".95rem" }}>
+                <a href={lienFiche}>Voir l&apos;équipe de {nomElu || "l'élu"} sur DataParl&apos; →</a>
+              </p>
             )}
           </div>
-        </section>
-
-        {/* 8. L'équipe */}
-        <section>
-          <TitreSection>L&apos;équipe</TitreSection>
-          <p style={{ margin: 0, lineHeight: 1.7 }}>
-            Équipe de {nomElu || "l'élu"}
-            {o.groupe_politique ? " (" + o.groupe_politique + ")" : ""}
-            {o.chambre ? ", " + (CHAMBRE_NOM[o.chambre] ?? o.chambre) : ""}.
-          </p>
-        </section>
+        </aside>
       </div>
 
-      {/* 9. Pied de confiance */}
+      {/* Pied de confiance */}
       <div style={{ marginTop: 26, display: "grid", gap: 8 }}>
-        {lienFiche && (
-          <p style={{ margin: 0 }}>
-            <a href={lienFiche}>Voir l&apos;équipe de {nomElu || "l'élu"} sur DataParl&apos; →</a>
-          </p>
-        )}
         <p className="meta" style={{ margin: 0 }}>
           {parElu
             ? "Offre publiée directement par l'équipe de l'élu, depuis une adresse parlementaire vérifiée."

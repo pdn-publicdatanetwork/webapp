@@ -26,7 +26,7 @@ export default function AlerteEmplois() {
 
   if (etat === "ok")
     return (
-      <div className="card" style={{ margin: "18px 0 0", borderRadius: 16 }}>
+      <div id="alerte" className="card" style={{ margin: "18px 0 0", borderRadius: 16 }}>
         <p style={{ margin: 0 }}>
           <strong>C'est noté</strong>
           <br />
@@ -37,6 +37,7 @@ export default function AlerteEmplois() {
 
   return (
     <form
+      id="alerte"
       onSubmit={inscrire}
       style={{
         margin: "18px 0 0",
