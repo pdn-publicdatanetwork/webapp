@@ -382,10 +382,7 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
 
           {contact === "revele" && email && (
             <div className="border border-emerald-200 rounded-2xl p-4 space-y-3 bg-emerald-50/50">
-              <p className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">Adresse de candidature :</p>
-              <p className="font-mono text-sm font-semibold bg-white p-2.5 rounded-xl border border-emerald-300 text-center select-all">
-                {email}
-              </p>
+              <p className="text-xs font-bold text-emerald-800 leading-relaxed">Vérification réussie. Votre messagerie s'ouvre avec un e-mail prérempli vers l'équipe : l'objet mentionne le poste et l'élu, ajoutez votre CV et votre lettre.</p>
               <div className="grid gap-2">
                 <a href={"mailto:" + email + "?subject=" + objet} className="w-full bg-[#4E2E53] hover:bg-[#3b223f] text-white py-2.5 rounded-xl font-bold text-xs text-center transition-all">
                   Envoyer ma candidature
