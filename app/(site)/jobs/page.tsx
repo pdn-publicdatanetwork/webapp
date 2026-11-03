@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { offresPubliques } from "@/lib/jobsFirestore";
 import AlerteEmplois from "./_components/AlerteEmplois";
 import ListeOffres, { type OffreListe } from "./_components/ListeOffres";
 
-// Accueil de DataParl' Jobs (jobs.dataparl.fr) : interface v3 à la Google
-// Careers, propre au module, distincte du site www. Données Firestore.
+// Accueil de DataParl' Jobs (jobs.dataparl.fr) : interface à la Google
+// Careers, propre au module, distincte du site www. Recherche centrale,
+// pastilles rapides, sidebar de filtres avec compteurs. Données Firestore.
 
 export const revalidate = 3600;
 export const dynamic = "force-dynamic";
@@ -15,6 +17,16 @@ export const metadata: Metadata = {
     "Toutes les offres de collaborateur parlementaire : Assemblée nationale, Sénat, Parlement européen. Collectées sur les sources officielles ou déposées par les élus, toujours vérifiées.",
   alternates: { canonical: "https://jobs.dataparl.fr/" },
 };
+
+// Pastille rapide : filtre en un clic, pilotée par l'URL.
+const PILLES: { libelle: string; href: string }[] = [
+  { libelle: "Assemblée nationale", href: "/jobs?chambre=an" },
+  { libelle: "Sénat", href: "/jobs?chambre=senat" },
+  { libelle: "Parlement européen", href: "/jobs?chambre=pe" },
+  { libelle: "Stage", href: "/jobs?type=Stage" },
+  { libelle: "CDI", href: "/jobs?type=CDI" },
+  { libelle: "CDD", href: "/jobs?type=CDD" },
+];
 
 function Chiffre({ nombre, libelle }: { nombre: number; libelle: string }) {
   return (
@@ -51,6 +63,25 @@ export default async function Jobs() {
         européen. Collectées sur les sources officielles ou déposées directement par les élus,
         et relues une à une avant publication. Gratuit, sans publicité.
       </p>
+
+      {/* Recherche centrale : pilote la liste via l'URL (?q=…) */}
+      <form action="/jobs" method="get" className="jobs-recherche" role="search">
+        <input
+          type="search"
+          name="q"
+          placeholder="Communication, juridique, Paris, stage…"
+          aria-label="Rechercher une offre"
+        />
+        <button className="btn" type="submit" style={{ marginTop: 0 }}>Rechercher</button>
+      </form>
+
+      {/* Pastilles rapides : filtrage en un clic */}
+      <div className="jobs-pilles" aria-label="Filtres rapides">
+        {PILLES.map((p) => (
+          <a key={p.href} href={p.href} className="jobs-pille">{p.libelle}</a>
+        ))}
+      </div>
+
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 20 }}>
         <a className="btn" href="/jobs/proposer" style={{ marginTop: 0 }}>Publier une offre</a>
         <a className="btn secondaire" href="/jobs/old-jobs" style={{ marginTop: 0 }}>Voir les anciennes offres</a>
@@ -100,7 +131,9 @@ export default async function Jobs() {
         </div>
       ) : (
         <>
-          <ListeOffres offres={offres} />
+          <Suspense fallback={null}>
+            <ListeOffres offres={offres} />
+          </Suspense>
           <p className="meta" style={{ marginTop: 26 }}>
             Les offres pourvues ou expirées restent consultables dans les{" "}
             <a href="/jobs/old-jobs">anciennes offres</a>.
