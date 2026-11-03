@@ -25,6 +25,9 @@ const uniques = (xs: (string | null | undefined)[]) =>
 const dateFr = (iso: string | null) =>
   iso ? new Date(iso + "T12:00:00Z").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : null;
 
+const dateCourte = (iso: string | null) =>
+  iso ? new Date(iso + "T12:00:00Z").toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : null;
+
 // Pastille de provenance : une offre déposée directement par l'élu (via le
 // formulaire, adresse parlementaire vérifiée) se distingue d'une offre
 // collectée automatiquement sur une source publique.
@@ -32,124 +35,208 @@ export function PastilleProvenance({ connector, avecLibelle }: { connector: stri
   const parElu = connector === "proposition";
   if (!parElu && !avecLibelle) return null;
   return (
-    <span
-      style={parElu
-        ? { background: "var(--jaune)", color: "#071A41", borderRadius: 999, padding: "3px 10px", fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.02em" }
-        : { border: "1px solid var(--line)", color: "var(--muted)", borderRadius: 999, padding: "3px 10px", fontSize: "0.75rem" }}
-    >
+    <span className={parElu ? "pastille-source deposee" : "pastille-source collectee"}>
       {parElu ? "★ Offre déposée par l'élu" : "Collectée"}
     </span>
   );
 }
 
-// Liste publique des offres avec filtres : chambre, élu, groupe, département + recherche libre.
-export default function ListeOffres({ offres }: { offres: OffreListe[] }) {
-  const [chambre, setChambre] = useState("");
-  const [elu, setElu] = useState("");
-  const [groupe, setGroupe] = useState("");
-  const [departement, setDepartement] = useState("");
-  const [q, setQ] = useState("");
-  const [parLElu, setParLElu] = useState(false);
+const nomElu = (o: OffreListe) => [o.elu_prenom, o.elu_nom].filter(Boolean).join(" ");
 
-  const elus = useMemo(
-    () => uniques(offres.map((o) => [o.elu_prenom, o.elu_nom].filter(Boolean).join(" "))),
-    [offres]
-  );
+// Liste publique des offres, interface v2 : colonne de filtres à gauche
+// (source, chambre, contrat, localisation, groupe, tri) et cartes à droite,
+// dans l'esprit des pages carrières de Google.
+export default function ListeOffres({ offres }: { offres: OffreListe[] }) {
+  const [source, setSource] = useState<"" | "collectee" | "deposee">("");
+  const [chambre, setChambre] = useState("");
+  const [type, setType] = useState("");
+  const [departement, setDepartement] = useState("");
+  const [groupe, setGroupe] = useState("");
+  const [elu, setElu] = useState("");
+  const [q, setQ] = useState("");
+  const [tri, setTri] = useState<"recente" | "ancienne" | "limite">("recente");
+
+  const elus = useMemo(() => uniques(offres.map(nomElu)), [offres]);
   const groupes = useMemo(() => uniques(offres.map((o) => o.groupe_politique)), [offres]);
   const departements = useMemo(() => uniques(offres.map((o) => o.departement)), [offres]);
+  const types = useMemo(() => uniques(offres.map((o) => o.type_poste)), [offres]);
 
-  const nomElu = (o: OffreListe) => [o.elu_prenom, o.elu_nom].filter(Boolean).join(" ");
+  const visibles = useMemo(() => {
+    const out = offres.filter((o) => {
+      if (source === "deposee" && o.source_connector !== "proposition") return false;
+      if (source === "collectee" && o.source_connector === "proposition") return false;
+      if (chambre && (o.chambre ?? "") !== chambre) return false;
+      if (type && (o.type_poste ?? "") !== type) return false;
+      if (departement && (o.departement ?? "") !== departement) return false;
+      if (groupe && (o.groupe_politique ?? "") !== groupe) return false;
+      if (elu && nomElu(o) !== elu) return false;
+      if (q) {
+        const t = (titreStandard(o) + " " + o.description).toLowerCase();
+        if (!t.includes(q.toLowerCase())) return false;
+      }
+      return true;
+    });
+    if (tri === "ancienne") out.sort((a, b) => String(a.publie_le ?? "").localeCompare(String(b.publie_le ?? "")));
+    else if (tri === "limite")
+      out.sort((a, b) => String(a.expire_le ?? "9999").localeCompare(String(b.expire_le ?? "9999")));
+    else out.sort((a, b) => String(b.publie_le ?? "").localeCompare(String(a.publie_le ?? "")));
+    return out;
+  }, [offres, source, chambre, type, departement, groupe, elu, q, tri]);
 
-  const visibles = offres.filter((o) => {
-    if (chambre && (o.chambre ?? "") !== chambre) return false;
-    if (elu && nomElu(o) !== elu) return false;
-    if (groupe && (o.groupe_politique ?? "") !== groupe) return false;
-    if (departement && (o.departement ?? "") !== departement) return false;
-    if (parLElu && o.source_connector !== "proposition") return false;
-    if (q) {
-      const t = (titreStandard(o) + " " + o.description).toLowerCase();
-      if (!t.includes(q.toLowerCase())) return false;
-    }
-    return true;
-  });
-
-  const reset = () => { setChambre(""); setElu(""); setGroupe(""); setDepartement(""); setQ(""); setParLElu(false); };
-  const unFiltre = !!(chambre || elu || groupe || departement || q || parLElu);
+  const reset = () => {
+    setSource(""); setChambre(""); setType(""); setDepartement(""); setGroupe(""); setElu(""); setQ(""); setTri("recente");
+  };
+  const unFiltre = !!(source || chambre || type || departement || groupe || elu || q || tri !== "recente");
 
   return (
-    <>
-      {/* Filtres */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, margin: "24px 0 4px" }}>
-        <select value={chambre} onChange={(e) => setChambre(e.target.value)} aria-label="Chambre">
-          <option value="">Toutes les chambres</option>
-          {CHAMBRES.map((c) => (
-            <option key={c.valeur} value={c.valeur}>{c.libelle}</option>
-          ))}
-        </select>
-        <select value={elu} onChange={(e) => setElu(e.target.value)} aria-label="Élu">
-          <option value="">Tous les élus</option>
-          {elus.map((x) => (
-            <option key={x} value={x}>{x}</option>
-          ))}
-        </select>
-        <select value={groupe} onChange={(e) => setGroupe(e.target.value)} aria-label="Groupe">
-          <option value="">Tous les groupes</option>
-          {groupes.map((x) => (
-            <option key={x} value={x}>{x}</option>
-          ))}
-        </select>
-        <select value={departement} onChange={(e) => setDepartement(e.target.value)} aria-label="Département">
-          <option value="">Tous les départements</option>
-          {departements.map((x) => (
-            <option key={x} value={x}>{x}</option>
-          ))}
-        </select>
-        <input type="text" placeholder="Rechercher un poste…" value={q} onChange={(e) => setQ(e.target.value)} />
-      </div>
-      <p className="meta" style={{ margin: "0 0 24px" }}>
-        <label style={{ display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
-          <input type="checkbox" checked={parLElu} onChange={(e) => setParLElu(e.target.checked)} />
-          Uniquement les offres déposées par les élus
-        </label>
-        {", "}
-        {visibles.length} offre{visibles.length > 1 ? "s" : ""}
-        {visibles.length !== offres.length ? " (filtrée" + (visibles.length > 1 ? "s" : "") + " sur " + offres.length + ")" : ""}
-        {unFiltre && (
-          <>
-            {", "}
-            <button type="button" onClick={reset} style={{ background: "none", border: "none", padding: 0, color: "inherit", textDecoration: "underline", cursor: "pointer", font: "inherit" }}>
-              réinitialiser
-            </button>
-          </>
-        )}
-      </p>
+    <div className="liste-jobs">
+      <style jsx>{`
+        .liste-jobs { display: grid; grid-template-columns: 240px 1fr; gap: 28px; align-items: start; margin-top: 26px; }
+        .filtres { position: sticky; top: 84px; display: grid; gap: 18px; padding: 18px 16px; background: var(--card);
+          border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 1px 3px rgba(7,26,65,.05); }
+        .filtres fieldset { border: 0; padding: 0; margin: 0; }
+        .filtres legend { font-size: .8rem; font-weight: 700; color: var(--muted); text-transform: uppercase;
+          letter-spacing: .04em; margin-bottom: 8px; }
+        .filtres label.radio { display: flex; align-items: center; gap: 8px; font-weight: 400; font-size: .92rem;
+          margin: 4px 0; cursor: pointer; }
+        .filtres select, .filtres input[type=text] { margin-top: 0; font-size: .92rem; padding: 8px 10px; }
+        .filtres .raz { margin-top: 2px; }
+        .resultats { min-width: 0; }
+        .resultats .compteur { margin: 0 0 14px; }
+        .carte-offre { display: block; background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+          padding: 18px 20px; margin-bottom: 14px; text-decoration: none; color: var(--ink);
+          box-shadow: 0 1px 3px rgba(7,26,65,.05); transition: border-color .15s ease, box-shadow .15s ease; }
+        .carte-offre:hover, .carte-offre:focus-visible { border-color: color-mix(in srgb, var(--bleu) 30%, var(--line));
+          box-shadow: 0 6px 18px rgba(7,26,65,.08); }
+        .carte-offre h2 { margin: 6px 0 4px; font-size: 1.05rem; font-family: var(--font-dm-sans), system-ui, sans-serif; }
+        .carte-offre:hover h2 { color: var(--bleu); }
+        .carte-offre .elu { margin: 0 0 8px; font-weight: 600; font-size: .92rem; }
+        .carte-offre .elu span { color: var(--muted); font-weight: 400; }
+        .carte-offres-badges { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+        .badge-jobs { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .76rem;
+          font-weight: 600; border: 1px solid var(--line); color: var(--muted); background: var(--bg); }
+        .pastille-source { display: inline-block; border-radius: 999px; padding: 3px 10px; font-size: .76rem; font-weight: 700; }
+        .pastille-source.deposee { background: var(--jaune); color: #071A41; }
+        .pastille-source.collectee { border: 1px solid var(--line); color: var(--muted); background: var(--bg); }
+        .carte-offre p.extrait { margin: 10px 0 0; color: var(--muted); font-size: .92rem;
+          display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .carte-offre .quand { white-space: nowrap; font-weight: 400; border-color: transparent; background: none; padding-right: 0; }
+        @media (max-width: 880px) {
+          .liste-jobs { grid-template-columns: 1fr; }
+          .filtres { position: static; }
+        }
+      `}</style>
 
-      {/* Cartes */}
-      {visibles.length === 0 ? (
-        <p>Aucune offre ne correspond à ces critères.</p>
-      ) : (
-        <div style={{ display: "grid", gap: 16 }}>
-          {visibles.map((o) => (
-            <article key={o.id} className="card">
-              <p style={{ margin: "0 0 8px" }}>
+      <aside className="filtres" aria-label="Filtrer les offres">
+        <fieldset>
+          <legend>Recherche</legend>
+          <input type="text" placeholder="Intitulé, élu, mot-clé…" value={q} onChange={(e) => setQ(e.target.value)} />
+        </fieldset>
+
+        <fieldset>
+          <legend>Source</legend>
+          <label className="radio">
+            <input type="radio" name="source" checked={source === ""} onChange={() => setSource("")} /> Toutes
+          </label>
+          <label className="radio">
+            <input type="radio" name="source" checked={source === "collectee"} onChange={() => setSource("collectee")} /> Collectées
+          </label>
+          <label className="radio">
+            <input type="radio" name="source" checked={source === "deposee"} onChange={() => setSource("deposee")} /> Déposées par l'élu
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Chambre</legend>
+          <select value={chambre} onChange={(e) => setChambre(e.target.value)} aria-label="Chambre">
+            <option value="">Toutes</option>
+            {CHAMBRES.map((c) => (
+              <option key={c.valeur} value={c.valeur}>{c.libelle}</option>
+            ))}
+          </select>
+        </fieldset>
+
+        {types.length > 0 && (
+          <fieldset>
+            <legend>Type de contrat</legend>
+            <select value={type} onChange={(e) => setType(e.target.value)} aria-label="Type de contrat">
+              <option value="">Tous</option>
+              {types.map((x) => (<option key={x} value={x}>{x}</option>))}
+            </select>
+          </fieldset>
+        )}
+
+        {departements.length > 0 && (
+          <fieldset>
+            <legend>Localisation</legend>
+            <select value={departement} onChange={(e) => setDepartement(e.target.value)} aria-label="Département">
+              <option value="">Tous les départements</option>
+              {departements.map((x) => (<option key={x} value={x}>{x}</option>))}
+            </select>
+          </fieldset>
+        )}
+
+        {groupes.length > 0 && (
+          <fieldset>
+            <legend>Groupe politique</legend>
+            <select value={groupe} onChange={(e) => setGroupe(e.target.value)} aria-label="Groupe politique">
+              <option value="">Tous les groupes</option>
+              {groupes.map((x) => (<option key={x} value={x}>{x}</option>))}
+            </select>
+          </fieldset>
+        )}
+
+        {elus.length > 3 && (
+          <fieldset>
+            <legend>Élu</legend>
+            <select value={elu} onChange={(e) => setElu(e.target.value)} aria-label="Élu">
+              <option value="">Tous</option>
+              {elus.map((x) => (<option key={x} value={x}>{x}</option>))}
+            </select>
+          </fieldset>
+        )}
+
+        <fieldset>
+          <legend>Trier par</legend>
+          <select value={tri} onChange={(e) => setTri(e.target.value as "recente" | "ancienne" | "limite")} aria-label="Tri">
+            <option value="recente">Publication, plus récentes</option>
+            <option value="ancienne">Publication, plus anciennes</option>
+            <option value="limite">Date limite de candidature</option>
+          </select>
+        </fieldset>
+
+        {unFiltre && (
+          <button type="button" className="btn secondaire raz" onClick={reset}>Réinitialiser</button>
+        )}
+      </aside>
+
+      <div className="resultats">
+        <p className="meta compteur">
+          {visibles.length} offre{visibles.length > 1 ? "s" : ""}
+          {visibles.length !== offres.length ? " sur " + offres.length : ""}
+        </p>
+
+        {visibles.length === 0 ? (
+          <p>Aucune offre ne correspond à ces critères. Élargissez la recherche ou réinitialisez les filtres.</p>
+        ) : (
+          visibles.map((o) => (
+            <Link key={o.id} href={"/jobs/" + slugOffre(o)} className="carte-offre">
+              <div className="carte-offres-badges">
                 <PastilleProvenance connector={o.source_connector} avecLibelle />
+                <span className="badge-jobs">{o.type_poste ?? "Contrat à préciser"}</span>
+                {o.publie_le && <span className="badge-jobs quand">Publiée le {dateCourte(o.publie_le)}</span>}
+              </div>
+              <h2>{o.titre}</h2>
+              <p className="elu">
+                {nomElu(o) || "Équipe parlementaire"}
+                {o.groupe_politique && <span>, {o.groupe_politique}</span>}
+                {o.departement && <span>, {o.departement}</span>}
               </p>
-              <h2 style={{ margin: "0 0 8px", fontSize: "1.08rem" }}>
-                <Link href={"/jobs/" + slugOffre(o)}>{titreStandard(o)}</Link>
-              </h2>
-              <p className="meta" style={{ margin: "0 0 10px" }}>
-                {[o.type_poste, o.localisation].filter(Boolean).join(", ")}
-                {o.publie_le ? ", publiée le " + dateFr(o.publie_le) : ""}
-              </p>
-              {o.description && (
-                <p style={{ margin: 0 }}>
-                  {o.description.length > 220 ? o.description.slice(0, 220) + "…" : o.description}
-                </p>
-              )}
-            </article>
-          ))}
-        </div>
-      )}
-    </>
+              {o.description && <p className="extrait">{o.description}</p>}
+            </Link>
+          ))
+        )}
+      </div>
+    </div>
   );
 }
