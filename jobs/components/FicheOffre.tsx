@@ -13,6 +13,7 @@ import {
   nomElu,
   remuneration,
   tempsTravail,
+  titrePoste,
   typeContrat,
 } from "@/lib/jobsTexte";
 import type { OffreListe } from "@/lib/types";
@@ -28,8 +29,11 @@ function PastilleSource({ connector }: { connector: string }) {
       ✨ Déposée par l&apos;élu
     </span>
   ) : (
-    <span className="bg-slate-100 text-slate-600 text-[11px] px-2.5 py-1 rounded-full font-medium border border-slate-200">
-      Collectée sur les sources officielles
+    <span
+      className="bg-slate-100 text-slate-600 text-[11px] px-2.5 py-1 rounded-full font-medium border border-slate-200"
+      title="Collectée sur les sources officielles et relue avant publication"
+    >
+      Collectée
     </span>
   );
 }
@@ -38,6 +42,7 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
   const [photo, setPhoto] = useState<string | null>(null);
   const [contact, setContact] = useState<"ferme" | "verif" | "revele">("ferme");
   const [copie, setCopie] = useState(false);
+  const [equipe, setEquipe] = useState<{ nom: string; slug: string; photo: string | null }[]>([]);
 
   useEffect(() => {
     let vivant = true;
@@ -55,6 +60,70 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
     };
   }, [offre.parlementaire_slug]);
 
+  // Collaborateurs actuellement dans l'équipe de l'élu (fiches DataParl').
+  // Le référentiel (parlementaires -> periodes -> collaborateurs) est lu
+  // en REST avec la clé publishable, comme la photo de l'élu.
+  useEffect(() => {
+    let vivant = true;
+    setEquipe([]);
+    const slug = offre.parlementaire_slug;
+    if (!slug) return;
+    const tete = { apikey: DATA_SUPABASE_KEY, Authorization: "Bearer " + DATA_SUPABASE_KEY };
+    (async () => {
+      try {
+        const ficheRes = await fetch(
+          DATA_SUPABASE_URL +
+            "/rest/v1/parlementaires?" +
+            new URLSearchParams({ select: "chambre,elu_id,cle", slug: "eq." + slug, limit: "1" }),
+          { headers: tete }
+        );
+        if (!ficheRes.ok) return;
+        const f = ((await ficheRes.json()) ?? [])[0];
+        if (!vivant || !f?.elu_id) return;
+        const conditions = ["and(chambre.eq." + f.chambre + ",elu_id.eq." + f.elu_id + ")"];
+        if (f.chambre === "senat" && f.cle) conditions.push('and(chambre.eq.senat,elu_cle.eq."' + f.cle + '")');
+        const perRes = await fetch(
+          DATA_SUPABASE_URL +
+            "/rest/v1/periodes?" +
+            new URLSearchParams({
+              select: "collab_id",
+              en_cours: "eq.true",
+              or: "(" + conditions.join(",") + ")",
+              limit: "60",
+            }),
+          { headers: tete }
+        );
+        if (!perRes.ok) return;
+        const periodes = (await perRes.json()) ?? [];
+        const ids = [...new Set(periodes.map((p: { collab_id: string }) => p.collab_id))].slice(0, 30);
+        if (!vivant || ids.length === 0) return;
+        const colRes = await fetch(
+          DATA_SUPABASE_URL +
+            "/rest/v1/collaborateurs?" +
+            new URLSearchParams({
+              select: "slug,prenom,nom,photo_url",
+              collab_id: "in.(" + ids.join(",") + ")",
+              limit: "30",
+            }),
+          { headers: tete }
+        );
+        if (!colRes.ok) return;
+        const collabs = (await colRes.json()) ?? [];
+        if (vivant)
+          setEquipe(
+            collabs.map((c: { slug: string; prenom: string; nom: string; photo_url: string | null }) => ({
+              nom: [c.prenom, c.nom].filter(Boolean).join(" "),
+              slug: c.slug,
+              photo: c.photo_url ?? null,
+            }))
+          );
+      } catch {}
+    })();
+    return () => {
+      vivant = false;
+    };
+  }, [offre.parlementaire_slug]);
+
   const description = offre.description ?? "";
   const { chapeau, blocs } = decouper(description);
   const parTitre = (re: RegExp) => blocs.find((b) => re.test(b.titre));
@@ -64,6 +133,7 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
   const remun = parTitre(/^R[ée]mun[ée]ration$/i);
   const duree = parTitre(/^Dur[ée]e$/i);
   const candidater = parTitre(/^Pour candidater$/i);
+  const infos = parTitre(/^Informations pratiques$/i);
 
   const contrat = typeContrat(offre);
   const travail = tempsTravail(description);
@@ -71,8 +141,8 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
   const maps = adresse ? "https://maps.google.com/?q=" + encodeURIComponent(adresse) : null;
   const rem = remun ? remuneration(remun.lignes.filter(Boolean).join(" ")) : null;
   const email = description.match(EMAIL_RE)?.[0] ?? null;
-  const objet = encodeURIComponent("Candidature : " + offre.titre);
   const elu = nomElu(offre);
+  const objet = encodeURIComponent("Candidature : " + titrePoste(offre.titre) + (elu ? " – " + elu : ""));
   const lienFiche = offre.parlementaire_slug
     ? "https://www.dataparl.fr/parlementaires/" + offre.parlementaire_slug
     : null;
@@ -111,7 +181,7 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
           )}
           <div className="space-y-1 min-w-0">
             <h1 className="text-xl sm:text-2xl font-serif-title font-bold text-[#4E2E53] leading-snug">
-              {offre.titre}
+              {titrePoste(offre.titre)}
             </h1>
             <p className="text-sm font-semibold text-slate-600 flex flex-wrap items-center gap-1.5">
               <span>{elu || "Équipe parlementaire"}</span>
@@ -203,6 +273,16 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
                   </span>
                 </p>
               )}
+              {infos &&
+                infos.lignes.filter(Boolean).map((l, i) => {
+                  const [k, ...v] = l.split(":");
+                  return (
+                    <p key={i} className="py-2.5 grid grid-cols-[140px_1fr] gap-3">
+                      <span className="text-[#6C84B0] font-semibold text-xs pt-0.5">{k.trim()}</span>
+                      <span className="font-medium">{v.join(":").trim()}</span>
+                    </p>
+                  );
+                })}
               {offre.expire_le && (
                 <p className="py-2.5 grid grid-cols-[140px_1fr] gap-3">
                   <span className="text-[#6C84B0] font-semibold text-xs pt-0.5">Date limite</span>
@@ -224,18 +304,35 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
                 Voir la fiche de l&apos;élu sur DataParl&apos; →
               </a>
             )}
+            {equipe.length > 0 && (
+              <div className="pt-3 mt-3 border-t border-slate-100">
+                <p className="text-xs font-bold text-slate-500 mb-2">Collaborateurs actuellement dans l&apos;équipe :</p>
+                <div className="flex flex-wrap gap-2">
+                  {equipe.map((c) => (
+                    <a
+                      key={c.slug}
+                      href={"https://www.dataparl.fr/collab/" + c.slug}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={"Voir la fiche de " + c.nom + " sur DataParl'"}
+                      className="flex items-center gap-2 bg-[#ECF1FC] hover:bg-[#E4BDE9]/40 border border-[#6C84B0]/20 px-2.5 py-1.5 rounded-full transition-colors"
+                    >
+                      {c.photo ? (
+                        <img src={c.photo} alt="" className="w-6 h-6 rounded-full object-cover" />
+                      ) : (
+                        <span className="w-6 h-6 rounded-full bg-[#6C84B0] text-white text-[10px] font-bold flex items-center justify-center">
+                          {(c.nom || "?").slice(0, 1).toUpperCase()}
+                        </span>
+                      )}
+                      <span className="text-xs font-semibold text-[#4E2E53]">{c.nom}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="text-xs text-slate-500 space-y-1 bg-white border border-slate-200 rounded-2xl p-4">
-            <p>
-              {offre.source_connector === "proposition"
-                ? "Offre publiée directement par l'équipe de l'élu, depuis une adresse parlementaire vérifiée."
-                : "Offre collectée automatiquement sur les sources officielles et relue avant publication."}
-            </p>
-            <p>
-              Une anomalie ? Écrivez à <a href="mailto:bienvenue@dataparl.fr" className="underline">bienvenue@dataparl.fr</a>.
-            </p>
-          </div>
+
         </div>
 
         {/* Panneau Postuler */}

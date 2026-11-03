@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import ModalOffre from "@/components/ModalOffre";
 import { CHAMBRES, type Chambre } from "@/lib/jobs";
-import { CHAMBRE_NOM, CONTRATS, dateFr, extrait, ilYA, nomElu, typeContrat } from "@/lib/jobsTexte";
+import { CHAMBRE_NOM, CONTRATS, dateFr, extrait, ilYA, nomElu, titrePoste, typeContrat } from "@/lib/jobsTexte";
 import type { OffreListe } from "@/lib/types";
 
 // Exploration des offres : recherche centrale, filtres sidebar avec
@@ -243,11 +243,11 @@ export default function Explorer({ offres }: { offres: OffreListe[] }) {
                     )}
                     <span className="bg-[#E4BDE9]/40 text-[#4E2E53] text-xs font-semibold px-2.5 py-1 rounded-full">{typeContrat(offre)}</span>
                   </div>
-                  <span className="text-xs text-slate-400 font-medium">{ilYA(offre.publie_le) ?? dateFr(offre.publie_le)}</span>
+                  <span className="text-xs text-slate-400 font-medium" title={offre.publie_le ? "Publiée le " + dateFr(offre.publie_le) : undefined}>{ilYA(offre.publie_le) ?? dateFr(offre.publie_le)}</span>
                 </div>
 
                 <h3 className="text-xl font-serif-title font-bold text-[#4E2E53] group-hover:text-[#6C84B0] transition-colors leading-snug">
-                  {offre.titre}
+                  {titrePoste(offre.titre)}
                 </h3>
 
                 <p className="mt-1 text-sm font-medium text-slate-600 flex flex-wrap items-center gap-2">

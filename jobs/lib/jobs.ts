@@ -1,4 +1,5 @@
 // Helpers DataParl' Jobs : slug, chambres, domaines parlementaires.
+import { titrePoste } from "./jobsTexte";
 
 export type Chambre = "an" | "senat" | "pe";
 
@@ -58,10 +59,10 @@ const slugPart = (x: string) =>
 
 // Slug d'offre : <id>_<chambre>_<Prenom>_<NOMELU>_<nom-de-l-offre>
 export function slugOffre(o: OffreBase): string {
-  return [o.id, o.chambre ?? "an", o.elu_prenom ?? "", (o.elu_nom ?? "").toUpperCase(), o.titre]
-    .filter(Boolean)
-    .map(slugPart)
-    .join("_");
+  // Slug court : seul l'id sert au routage, on n'accroche qu'un libellé de
+  // poste tronqué. Les anciens slugs longs continuent de fonctionner
+  // (idDepuisSlug ne lit que le premier segment).
+  return [o.id, slugPart(titrePoste(o.titre)).slice(0, 48)].filter(Boolean).join("_");
 }
 
 export function idDepuisSlug(slug: string): string | null {

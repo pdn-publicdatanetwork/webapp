@@ -30,6 +30,13 @@ export const nomElu = (o: { elu_prenom: string | null; elu_nom: string | null })
 
 export const titreCourt = (t: string) => (t.length > 80 ? t.slice(0, 78) + "…" : t);
 
+// Libellé du poste : on retire la mention « dans l'équipe du/de la … » des titres collectés,
+// le titre affiché et le slug ne gardent que le poste.
+export const titrePoste = (t: string) => {
+  const nettoye = t.replace(/\s*dans\s+l['’]\s*équipes?\b.*/i, "").replace(/\s+/g, " ").trim();
+  return nettoye.length >= 3 ? nettoye : t;
+};
+
 // Extrait : le chapeau de l'annonce, jusqu'à la première section.
 export const extrait = (desc: string) => {
   if (!desc) return "";
