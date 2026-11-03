@@ -43,18 +43,40 @@ export default async function Daily({ params }: Props) {
   const libres = await mouvementsLibres(date, jour);
   const total = jour?.n ?? 0;
   const url = `https://www.dataparl.fr/daily/${date}`;
-  const jsonLd = total ? {
-    "@context": "https://schema.org", "@type": "ItemList",
+  // Signal Google Actualités : NewsArticle (titre, dates, éditeur) en plus de
+  // l'ItemList des mouvements. Pas d'auteur nommé (règle d'anonymat de
+  // l'éditeur) : la publication porte l'organisation DataParl'.
+  const titre = `Arrivées et départs du ${dateTitre(date)}`;
+  const description = `Les ${total.toLocaleString("fr-FR")} mouvement${total > 1 ? "s" : ""} de collaborateurs parlementaires du ${dateTitre(date)} : arrivées, départs et transferts à l'Assemblée nationale, au Sénat et au Parlement européen.`;
+  const newsArticle = total ? {
+    "@type": "NewsArticle",
+    headline: titre,
+    description,
+    datePublished: date,
+    dateModified: date,
+    inLanguage: "fr-FR",
+    isAccessibleForFree: true,
+    mainEntityOfPage: { "@type": "WebPage", "@id": url },
+    image: [`${url}/opengraph-image`],
+    publisher: {
+      "@type": "Organization",
+      name: "DataParl'",
+      logo: { "@type": "ImageObject", url: "https://www.dataparl.fr/icon.svg" },
+    },
+  } : null;
+  const itemList = total ? {
+    "@type": "ItemList",
     name: `Mouvements de collaborateurs parlementaires du ${dateTitre(date)}`, numberOfItems: total, url,
     itemListElement: libres.map((m, i) => ({
       "@type": "ListItem", position: i + 1,
       name: `${TYPE[m.type]} : ${prenomNom(m.collab_prenom, m.collab_nom)}, équipe de ${nomAffiche(m.elu_nom)} (${CHAMBRE_LONG[m.chambre]})`,
     })),
   } : null;
+  const jsonLd = newsArticle && itemList ? { "@context": "https://schema.org", "@graph": [newsArticle, itemList] } : null;
 
   return (
     <>
-      {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />}
+      {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\u003c") }} />}
       <p className="meta"><a href="/daily">Tous les jours</a></p>
       <h1>Les mouvements du <span className="surligne">{dateTitre(date)}</span></h1>
       {total ? (
