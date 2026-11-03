@@ -46,7 +46,9 @@ export default async function Daily({ params }: Props) {
   // Signal Google Actualités : NewsArticle (titre, dates, éditeur) en plus de
   // l'ItemList des mouvements. Pas d'auteur nommé (règle d'anonymat de
   // l'éditeur) : la publication porte l'organisation DataParl'.
-  const titre = `Arrivées et départs du ${dateTitre(date)}`;
+  // Le headline reprend le H1 visible (« Les mouvements du ... »), la
+  // cohérence titre balise / titre visible étant exigée par Google News.
+  const titre = `Les mouvements du ${dateTitre(date)}`;
   const description = `Les ${total.toLocaleString("fr-FR")} mouvement${total > 1 ? "s" : ""} de collaborateurs parlementaires du ${dateTitre(date)} : arrivées, départs et transferts à l'Assemblée nationale, au Sénat et au Parlement européen.`;
   const newsArticle = total ? {
     "@type": "NewsArticle",
@@ -87,7 +89,7 @@ export default async function Daily({ params }: Props) {
       ) : (
         <p className="lead">Aucun mouvement publié ce jour. Les listes officielles n&apos;ont pas changé, ou n&apos;ont pas été mises à jour.</p>
       )}
-      {total > 0 && <Partage url={url} titre={`Les mouvements du ${dateTitre(date)}`} texte={`${total} mouvements de collaborateurs parlementaires le ${dateTitre(date)}, sur DataParl'`} />}
+      {total > 0 && <Partage url={url} titre={titre} texte={`${total} mouvements de collaborateurs parlementaires le ${dateTitre(date)}, sur DataParl'`} />}
 
       {CHAMBRES.map((c) => {
         const ms = libres.filter((m) => m.chambre === c);
