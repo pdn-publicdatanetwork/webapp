@@ -50,7 +50,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 // Découpe de la description en sections titrées (« Vos missions : », etc.).
 type Bloc = { titre: string; lignes: string[] };
-const TITRES_SECTION = /^(Vos missions|Profil recherché|Lieu|Rémunération|Durée|Pour candidater|Process(?:us)? de recrutement|Informations pratiques)\s*:\s*$/i;
+const TITRES_SECTION = /^(Vos missions|Profil recherché|Lieu|Rémunération|Durée|Pour candidater|Process(?:us)? de recrutement|Informations pratiques)\s*:\s*(.*)$/i;
 
 // Marqueurs inline (« Lieu : … » au milieu d'une phrase) : on les ramène
 // chacun en début de ligne pour qu'ils deviennent des sections à part.
@@ -61,7 +61,7 @@ function decouper(desc: string): { chapeau: string[]; blocs: Bloc[] } {
   const blocs: Bloc[] = [];
   for (const ligne of desc.replace(MARQUEURS_INLINE, "\n").split(/\r?\n/)) {
     const m = ligne.trim().match(TITRES_SECTION);
-    if (m) blocs.push({ titre: m[1], lignes: [] });
+    if (m) blocs.push({ titre: m[1], lignes: m[2] ? [m[2].trim()] : [] });
     else if (blocs.length) blocs[blocs.length - 1].lignes.push(ligne.trim());
     else if (ligne.trim()) chapeau.push(ligne.trim());
   }
