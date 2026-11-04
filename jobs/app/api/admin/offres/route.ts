@@ -1,3 +1,4 @@
+
 import { fileRevue, offresActivesAdmin, offresArchiveesAdmin, deciderOffre, type Offre } from "@/lib/firestore";
 
 export const dynamic = "force-dynamic";
@@ -6,7 +7,14 @@ export const dynamic = "force-dynamic";
 // Limite connue (identique au reste du site) : le compte vient du client ;
 // la vérification serveur de la session Supabase reste à brancher.
 
-const EQUIPE = (compte: string) => compte.trim().toLowerCase().endsWith("@dataparl.fr");
+// Comptes autorisés : le compte admin de DataParl' (table staff, seul membre
+// theo@dataparl.fr). Variable optionnelle ADMIN_JOBS_EMAILS (séparée par des
+// virgules) pour ajouter d'autres comptes sans redéployer le code.
+const AUTORISES = (process.env.ADMIN_JOBS_EMAILS ?? "theo@dataparl.fr")
+  .split(",")
+  .map((c) => c.trim().toLowerCase())
+  .filter(Boolean);
+const EQUIPE = (compte: string) => AUTORISES.includes(compte.trim().toLowerCase());
 
 const reduire = (o: Offre) => ({
   fingerprint: String(o.fingerprint ?? ""),
@@ -26,7 +34,7 @@ const reduire = (o: Offre) => ({
 
 export async function GET(req: Request) {
   const compte = new URL(req.url).searchParams.get("compte") ?? "";
-  if (!EQUIPE(compte)) return Response.json({ erreur: "réservé à l'équipe DataParl'" }, { status: 401 });
+  if (!EQUIPE(compte)) return Response.json({ erreur: "réservé au compte admin DataParl'" }, { status: 401 });
   try {
     const [revue, actives, archives] = await Promise.all([fileRevue(), offresActivesAdmin(), offresArchiveesAdmin()]);
     return Response.json({
@@ -44,7 +52,7 @@ export async function POST(req: Request) {
   const compte = typeof c.compte === "string" ? c.compte : "";
   const empreinte = typeof c.empreinte === "string" ? c.empreinte : "";
   const action = c.action;
-  if (!EQUIPE(compte)) return Response.json({ erreur: "réservé à l'équipe DataParl'" }, { status: 401 });
+  if (!EQUIPE(compte)) return Response.json({ erreur: "réservé au compte admin DataParl'" }, { status: 401 });
   if (action !== "valider" && action !== "archiver" && action !== "rejeter") {
     return Response.json({ erreur: "action inconnue" }, { status: 400 });
   }

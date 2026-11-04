@@ -1,10 +1,13 @@
+
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { auth } from "@/lib/authSupabase";
 import { CHAMBRE_NOM } from "@/lib/jobsTexte";
 
-// Back-office DataParl' Jobs : relecture des offres (file de revue,
+// Back-office DataParl' Jobs : réservé au compte admin de DataParl'
+// (théo@dataparl.fr, table staff). Variable optionnelle côté serveur :
+// ADMIN_JOBS_EMAILS. Back-office DataParl' Jobs : relecture des offres (file de revue,
 // publiées, archives). Réservé à l'équipe (compte @dataparl.fr).
 // Notifications Slack si SLACK_WEBHOOK_URL est configuré côté Vercel.
 
@@ -82,8 +85,8 @@ export default function Page() {
 
   if (email === undefined) return <div className="max-w-xl mx-auto py-20 text-center text-sm text-slate-400">Chargement…</div>;
   if (!email) return <Mur titre="Back-office réservé à l&apos;équipe" texte="Connectez-vous avec votre compte DataParl&apos; pour relire les offres." />;
-  if (email.split("@")[1]?.toLowerCase() !== "dataparl.fr") {
-    return <Mur titre="Accès réservé à l&apos;équipe DataParl&apos;" texte="Le back-office est accessible uniquement avec une adresse @dataparl.fr." />;
+  if (email.toLowerCase() !== "theo@dataparl.fr") {
+    return <Mur titre="Accès réservé au compte admin" texte="Le back-office est accessible uniquement avec le compte admin DataParl&apos;." />;
   }
 
   const liste = donnees ? (onglet === "revue" ? donnees.revue : onglet === "actives" ? donnees.actives : donnees.archives) : [];
