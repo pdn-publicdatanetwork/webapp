@@ -8,8 +8,7 @@ import { auth } from "@/lib/authSupabase";
 
 const ONGLETS = [
   { href: "/", libelle: "🔎 Explorer les offres" },
-  { href: "/matching", libelle: "🤖 CV Matching", nouveau: true },
-  { href: "/espace-recruteur", libelle: "🏛️ Espace Recruteur" },
+  { href: "/matching", libelle: "🤖 CV Matching" },
 ];
 
 export default function Entete() {
@@ -42,11 +41,6 @@ export default function Entete() {
                   }`}
                 >
                   <span>{t.libelle}</span>
-                  {t.nouveau && (
-                    <span className="bg-[#E4BDE9] text-[#4E2E53] text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                      Nouveau
-                    </span>
-                  )}
                 </Link>
               );
             })}

@@ -8,9 +8,22 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
 
 export const metadata: Metadata = {
-  title: "DataParl' Jobs : travailler au Parlement",
+  metadataBase: new URL("https://jobs.dataparl.fr"),
+  title: {
+    default: "DataParl' Jobs : toutes les offres du Parlement",
+    template: "%s | DataParl' Jobs",
+  },
   description:
     "Toutes les offres de collaborateur parlementaire : Assemblée nationale, Sénat, Parlement européen. Collectées sur les sources officielles ou déposées par les élus. Gratuit, sans publicité.",
+  applicationName: "DataParl' Jobs",
+  alternates: { canonical: "/" },
+  openGraph: {
+    siteName: "DataParl' Jobs",
+    type: "website",
+    locale: "fr_FR",
+    url: "/",
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RacineLayout({ children }: { children: React.ReactNode }) {

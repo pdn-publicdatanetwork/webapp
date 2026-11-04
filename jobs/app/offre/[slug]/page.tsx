@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import FicheOffre from "@/components/FicheOffre";
 import { offreVisible } from "@/lib/firestore";
-import { idDepuisSlug, titreStandard } from "@/lib/jobs";
+import { idDepuisSlug, slugOffre, titreStandard } from "@/lib/jobs";
 import { normaliser, type OffreListe } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -17,9 +17,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const o = await offreVisible(id);
   if (!o) return { title: "Offre introuvable | DataParl' Jobs" };
   const offre = normaliser(o);
+  const resume = (offre.description ?? "").replace(/\s+/g, " ").slice(0, 180);
   return {
-    title: titreStandard(offre) + " | DataParl' Jobs",
-    description: (offre.description ?? "").replace(/\s+/g, " ").slice(0, 180),
+    title: titreStandard(offre),
+    description: resume,
+    alternates: { canonical: "/offre/" + slugOffre(offre) },
+    openGraph: {
+      title: titreStandard(offre),
+      description: resume,
+      type: "article",
+      locale: "fr_FR",
+    },
   };
 }
 
