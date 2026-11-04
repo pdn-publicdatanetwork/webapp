@@ -47,6 +47,7 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
   const [copie, setCopie] = useState(false);
   const [equipe, setEquipe] = useState<{ nom: string; slug: string; photo: string | null }[]>([]);
   const [compte, setCompte] = useState<string | null | undefined>(undefined);
+  const [compteur, setCompteur] = useState<number | null>(typeof nbCandidatures === "number" ? nbCandidatures : null);
 
   // Postuler nécessite un compte DataParl' : le détail reste public (SEO),
   // mais contacter l'équipe / révéler l'adresse e-mail exige la connexion.
@@ -55,6 +56,22 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
     const { data: sub } = auth.auth.onAuthStateChange((_e, s) => setCompte(s?.user?.email ?? null));
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  // Compteur de candidatures via DataParl' : fourni par la page canonique
+  // (prop nbCandidatures) ou chargé via l'API publique dans la modale.
+  useEffect(() => {
+    if (typeof nbCandidatures === "number" || compteur !== null) return;
+    let vivant = true;
+    fetch("/api/offres/candidatures?slug=" + encodeURIComponent(slugOffre(offre)))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (vivant && d && typeof d.candidatures === "number") setCompteur(d.candidatures);
+      })
+      .catch(() => {});
+    return () => {
+      vivant = false;
+    };
+  }, [offre, nbCandidatures, compteur]);
 
   useEffect(() => {
     let vivant = true;
@@ -417,11 +434,11 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
             </p>
           </div>
 
-          {typeof nbCandidatures === "number" && (
+          {compteur !== null && (
             <p className="text-[11px] text-slate-500 bg-[#ECF1FC] border border-[#6C84B0]/20 rounded-xl px-3 py-2">
-              {nbCandidatures === 0
+              {compteur === 0
                 ? "Première candidature possible via DataParl'"
-                : nbCandidatures + " candidature" + (nbCandidatures > 1 ? "s" : "") + " envoyée" + (nbCandidatures > 1 ? "s" : "") + " via DataParl' (30 derniers jours)"}
+                : compteur + " candidature" + (compteur > 1 ? "s" : "") + " envoyée" + (compteur > 1 ? "s" : "") + " via DataParl' (30 derniers jours)"}
             </p>
           )}
 
