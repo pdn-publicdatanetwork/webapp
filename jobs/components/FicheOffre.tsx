@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Turnstile from "@/components/Turnstile";
+import { auth } from "@/lib/authSupabase";
 import { COULEUR_CHAMBRE, slugOffre } from "@/lib/jobs";
 import { DATA_SUPABASE_KEY, DATA_SUPABASE_URL } from "@/lib/env";
 import {
@@ -45,6 +46,15 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
   const [contact, setContact] = useState<"ferme" | "verif" | "revele">("ferme");
   const [copie, setCopie] = useState(false);
   const [equipe, setEquipe] = useState<{ nom: string; slug: string; photo: string | null }[]>([]);
+  const [compte, setCompte] = useState<string | null | undefined>(undefined);
+
+  // Postuler nécessite un compte DataParl' : le détail reste public (SEO),
+  // mais contacter l'équipe / révéler l'adresse e-mail exige la connexion.
+  useEffect(() => {
+    auth.auth.getSession().then(({ data }) => setCompte(data.session?.user?.email ?? null));
+    const { data: sub } = auth.auth.onAuthStateChange((_e, s) => setCompte(s?.user?.email ?? null));
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     let vivant = true;
@@ -380,7 +390,23 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
             </div>
           )}
 
-          {contact === "ferme" && (
+          {contact === "ferme" && compte === null && (
+            <div className="border border-[#6C84B0]/20 rounded-2xl p-4 space-y-3 bg-[#ECF1FC] text-center">
+              <p className="text-xs font-semibold text-[#4E2E53]">La candidature nécessite un compte DataParl&apos;.</p>
+              <p className="text-[11px] text-slate-500">
+                Gratuit, sans publicité : votre adresse n&apos;est jamais partagée ni revendue.
+              </p>
+              <Link
+                href={"/connexion?suite=/offre/" + slugOffre(offre)}
+                data-stat="clic_connexion_postuler"
+                className="w-full inline-block bg-[#4E2E53] hover:bg-[#3b223f] text-white py-3 rounded-2xl font-bold text-sm transition-all shadow-md"
+              >
+                Se connecter pour postuler
+              </Link>
+            </div>
+          )}
+
+          {contact === "ferme" && Boolean(compte) && (
             <button
               type="button"
               data-stat="clic_contacter"
