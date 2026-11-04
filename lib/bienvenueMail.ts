@@ -30,9 +30,9 @@ function corps(prenom: string): { html: string; text: string } {
     "<p style=\"margin:0 0 8px\"><strong>Pour bien démarrer :</strong></p>",
     "<ul style=\"margin:0 0 16px;padding-left:22px\">",
     `<li style="margin-bottom:6px">Des alertes quotidiennes sur les mouvements qui t'intéressent : <a href="${LIENS.alertes}" style="color:#164DFF">dataparl.fr/alertes</a></li>`,
-    `<li style="margin-bottom:6px\">Le canal Telegram pour la revue de presse parlementaire : <a href="${LIENS.telegram}" style="color:#164DFF">t.me/dataparl_daily</a></li>`,
-    `<li style="margin-bottom:6px\">Les indices Vigiparl (<a href="${LIENS.vigiparl}" style="color:#164DFF">vigiparl.fr</a>) et Mixiparl (<a href="${LIENS.mixiparl}" style="color:#164DFF">mixiparl.fr</a>)</li>`,
-    `<li style="margin-bottom:6px\">Les Sénatoriales 2026 : <a href="${LIENS.senatoriales}" style="color:#164DFF">dataparl.fr/senatoriales2026</a></li>`,
+    `<li style="margin-bottom:6px">Le canal Telegram pour la revue de presse parlementaire : <a href="${LIENS.telegram}" style="color:#164DFF">t.me/dataparl_daily</a></li>`,
+    `<li style="margin-bottom:6px">Les indices Vigiparl (<a href="${LIENS.vigiparl}" style="color:#164DFF">vigiparl.fr</a>) et Mixiparl (<a href="${LIENS.mixiparl}" style="color:#164DFF">mixiparl.fr</a>)</li>`,
+    `<li style="margin-bottom:6px">Les Sénatoriales 2026 : <a href="${LIENS.senatoriales}" style="color:#164DFF">dataparl.fr/senatoriales2026</a></li>`,
     "</ul>",
     "<p style=\"margin:0 0 16px\">Pense aussi à faire le tour de tes réglages de sécurité : mot de passe, validation en deux étapes, méthodes de connexion, le tout depuis « Mon compte ».</p>",
     "<p style=\"margin:24px 0 0;color:#475569\">L'équipe DataParl' — Le Parlement, pièce par pièce.</p>",
@@ -58,29 +58,49 @@ function corps(prenom: string): { html: string; text: string } {
 }
 
 // Best-effort, jamais bloquant pour l'inscription. Anti-doublon absolu :
-// le mail de bienvenue n'est jamais renvoyé à la même adresse.
+// le mail de bienvenue n'est jamais renvoyé à la même adresse, même en cas
+// d'appels concurrents (retries après erreur 500 de l'API auth, incident du
+// 03/11/2026 : trois requêtes voyaient chacune « 0 mail » et partaient
+// trois fois).
 export async function envoyerBienvenue(userId: string): Promise<void> {
+  let db = authAdmin();
   try {
-    const { data } = await authAdmin().auth.admin.getUserById(userId);
+    const { data } = await db.auth.admin.getUserById(userId);
     const email = data?.user?.email;
     if (!email) return;
-    const db = authAdmin();
+    // Filet de sécurité pour les comptes créés avant le verrou : on ne
+    // renvoie jamais à une adresse qui a déjà reçu le mail.
     const { count } = await db.from("emails").select("id", { count: "exact", head: true })
       .eq("to_addr", email).eq("subject", "Bienvenue sur DataParl' 👋");
     if ((count ?? 0) > 0) return;
+    // Verrou atomique : la clé primaire sur user_id ne laisse gagner qu'un
+    // seul appel. Les perdants reçoivent une ligne vide et s'arrêtent là.
+    const { data: pris } = await db
+      .from("bienvenues_envoyees")
+      .upsert({ user_id: userId, email }, { onConflict: "user_id", ignoreDuplicates: true })
+      .select("user_id")
+      .maybeSingle();
+    if (!pris) return;
     const prenom = (((data?.user?.user_metadata ?? {}) as { prenom?: string }).prenom ?? "").trim();
     const c = corps(prenom ? prenom.charAt(0).toUpperCase() + prenom.slice(1) : "");
-    await expedier({
-      to: [email],
-      from: FROM_BIENVENUE,
-      nomExpediteur: "L'équipe DataParl'",
-      subject: "Bienvenue sur DataParl' 👋",
-      titre: "Bienvenue sur DataParl'",
-      corpsHtml: c.html,
-      text: c.text,
-      pied: `Tu reçois ce message parce qu'un compte vient d'être créé avec ton adresse. Une question ? <a href="${LIENS.contact}" style="color:#4A5670">Écris-nous</a>.`,
-      type: "transactionnel",
-    });
+    try {
+      await expedier({
+        to: [email],
+        from: FROM_BIENVENUE,
+        nomExpediteur: "L'équipe DataParl'",
+        subject: "Bienvenue sur DataParl' 👋",
+        titre: "Bienvenue sur DataParl'",
+        corpsHtml: c.html,
+        text: c.text,
+        pied: `Tu reçois ce message parce qu'un compte vient d'être créé avec ton adresse. Une question ? <a href="${LIENS.contact}" style="color:#4A5670">Écris-nous</a>.`,
+        type: "transactionnel",
+      });
+    } catch (e) {
+      // Échec d'envoi : on relâche le verrou pour permettre un renvoi
+      // lors d'une éventuelle nouvelle tentative.
+      await db.from("bienvenues_envoyees").delete().eq("user_id", userId);
+      throw e;
+    }
   } catch (e) {
     console.error("bienvenue", String(e).slice(0, 200));
   }
