@@ -1,4 +1,3 @@
-
 import { randomUUID } from "crypto";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore, initializeFirestore, type Firestore } from "firebase-admin/firestore";
@@ -43,6 +42,8 @@ const parDateAsc = (champ: string) => (a: Offre, b: Offre) =>
   String(a[champ] ?? "").localeCompare(String(b[champ] ?? ""));
 
 // Offres publiées (validées, actives, non expirées), plus récentes d'abord.
+// « publie_le » porte la date de publication ORIGINALE de l'annonce (extraite
+// de la source par la collecte), jamais le jour où on l'a scrapée.
 export async function offresPubliques(): Promise<Offre[]> {
   const snaps = await db().collection("job_offers").where("review_status", "==", "approved").limit(500).get();
   return snaps.docs
@@ -160,7 +161,12 @@ export async function deciderOffre(
   if (decision === "valider") {
     champs.review_status = "approved";
     champs.statut = "active";
-    champs.publie_le = aujourdhui;
+    // Date de publication ORIGINALE de l'annonce : on ne l'écrase JAMAIS par
+    // la date du jour si elle est connue (collecte/balayeur). La date du jour
+    // n'est qu'un repli quand aucune date d'origine n'a pu être extraite.
+    const snap = await db().collection("job_offers").doc(empreinte).get();
+    const existant = (snap.data() ?? {}) as Offre;
+    champs.publie_le = (existant.publie_le as string) || (existant.date_publication as string) || aujourdhui;
   } else if (decision === "archiver") {
     champs.review_status = "approved";
     champs.statut = "expiree";
