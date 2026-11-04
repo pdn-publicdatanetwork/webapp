@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import FicheOffre from "@/components/FicheOffre";
 import { compterCandidatures, offreVisible } from "@/lib/firestore";
 import { idDepuisSlug, slugOffre, titreStandard } from "@/lib/jobs";
+import { EMAIL_RE, nomElu, titrePoste, typeContrat } from "@/lib/jobsTexte";
 import { normaliser, type OffreListe } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -39,8 +40,37 @@ export default async function Page({ params }: Props) {
   if (!o) notFound();
   const offre: OffreListe = normaliser(o);
   const nbCandidatures = await compterCandidatures(slug);
+
+  // JSON-LD JobPosting : données structurées pour les moteurs et les LLM.
+  // Les adresses e-mail sont retirées de la description.
+  const elu = nomElu(offre);
+  const TYPES_EMPLOI: Record<string, string> = {
+    Stage: "INTERNSHIP",
+    Alternance: "APPRENTICESHIP",
+    CDD: "TEMPORARY_CONTRACT",
+    CDI: "FULL_TIME",
+  };
+  const jsonld: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    title: titrePoste(offre.titre),
+    description: (offre.description ?? "").replace(EMAIL_RE, "").replace(/\s+/g, " ").trim(),
+    employmentType: TYPES_EMPLOI[typeContrat(offre)] ?? "OTHER",
+    hiringOrganization: {
+      "@type": "Organization",
+      name: elu ? "Équipe parlementaire de " + elu : "Équipe parlementaire",
+    },
+    identifier: offre.id,
+    url: "https://jobs.dataparl.fr/offre/" + slug,
+  };
+  if (offre.publie_le) jsonld.datePosted = offre.publie_le;
+  if (offre.expire_le) jsonld.validThrough = offre.expire_le;
+  if (offre.localisation) {
+    jsonld.jobLocation = { "@type": "Place", address: { "@type": "PostalAddress", addressLocality: offre.localisation } };
+  }
   return (
     <div className="space-y-6">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonld) }} />
       <nav className="text-xs text-slate-500 flex items-center gap-1.5">
         <Link href="/" className="text-[#6C84B0] hover:text-[#4E2E53] underline">Offres</Link>
         <span>›</span>
