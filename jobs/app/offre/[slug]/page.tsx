@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import FicheOffre from "@/components/FicheOffre";
-import { offreVisible } from "@/lib/firestore";
+import { compterCandidatures, offreVisible } from "@/lib/firestore";
 import { idDepuisSlug, slugOffre, titreStandard } from "@/lib/jobs";
 import { normaliser, type OffreListe } from "@/lib/types";
 
@@ -38,6 +38,7 @@ export default async function Page({ params }: Props) {
   const o = await offreVisible(id);
   if (!o) notFound();
   const offre: OffreListe = normaliser(o);
+  const nbCandidatures = await compterCandidatures(slug);
   return (
     <div className="space-y-6">
       <nav className="text-xs text-slate-500 flex items-center gap-1.5">
@@ -45,7 +46,7 @@ export default async function Page({ params }: Props) {
         <span>›</span>
         <span className="text-slate-400 truncate max-w-[50vw]">{offre.titre}</span>
       </nav>
-      <FicheOffre offre={offre} />
+      <FicheOffre offre={offre} nbCandidatures={nbCandidatures} />
     </div>
   );
 }

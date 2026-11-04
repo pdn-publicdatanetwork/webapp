@@ -193,6 +193,23 @@ export async function noterEvenement(type: string, chemin: string, page = "") {
   });
 }
 
+// Candidatures envoyées via DataParl' sur une fiche : clics « Envoyer ma
+// candidature » enregistrés sur la page /offre/<slug> (30 derniers jours).
+// Requête mono-champ (jour) + filtrage en mémoire : pas d'index composite.
+export async function compterCandidatures(slug: string): Promise<number> {
+  const debut = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+  const snap = await db().collection("jobs_evenements").where("jour", ">=", debut).limit(5000).get();
+  const attendu = "/offre/" + slug;
+  return snap.docs.filter((d) => {
+    const v = d.data() as Record<string, unknown>;
+    return (
+      String(v.type ?? "") === "clic" &&
+      String(v.chemin ?? "") === "clic_envoi_candidature" &&
+      String(v.page ?? "") === attendu
+    );
+  }).length;
+}
+
 export async function lireEvenements(jours = 30): Promise<{ type: string; chemin: string; jour: string; page: string }[]> {
   const debut = new Date(Date.now() - jours * 24 * 3600 * 1000).toISOString().slice(0, 10);
   const snap = await db().collection("jobs_evenements").where("jour", ">=", debut).limit(5000).get();

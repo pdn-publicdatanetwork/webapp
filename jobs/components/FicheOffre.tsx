@@ -41,7 +41,7 @@ function PastilleSource({ connector }: { connector: string }) {
   );
 }
 
-export default function FicheOffre({ offre, onFermer, dansModal }: { offre: OffreListe; onFermer?: () => void; dansModal?: boolean }) {
+export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures }: { offre: OffreListe; onFermer?: () => void; dansModal?: boolean; nbCandidatures?: number }) {
   const [photo, setPhoto] = useState<string | null>(null);
   const [contact, setContact] = useState<"ferme" | "verif" | "revele">("ferme");
   const [copie, setCopie] = useState(false);
@@ -231,17 +231,31 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
             </div>
           )}
 
-          {Boolean(compte) && missions && missions.lignes.filter(Boolean).length > 0 && (
+          {missions && missions.lignes.filter(Boolean).length > 0 && (
             <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
               <h2 className="text-sm font-serif-title font-bold text-[#4E2E53]">Missions</h2>
               <ul className="space-y-2 text-sm text-slate-700">
-                {missions.lignes.map((l, i) => (
+                {(compte ? missions.lignes : missions.lignes.slice(0, 2)).map((l, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <span className="w-2 h-2 rounded-full bg-[#4E2E53] mt-2 shrink-0" />
                     <span className="leading-relaxed">{l.replace(/^\s*[-•*]\s*/, "")}</span>
                   </li>
                 ))}
               </ul>
+              {compte === null && (
+                <p className="text-xs text-slate-500 pt-3 mt-1 border-t border-slate-100">
+                  {missions.lignes.length > 2 ? "+" + (missions.lignes.length - 2) + " autres missions. " : ""}
+                  Le profil recherché, l&apos;équipe et la candidature sont réservés aux comptes :{" "}
+                  <Link
+                    href={"/connexion?suite=/offre/" + slugOffre(offre)}
+                    data-stat="clic_connexion_detail"
+                    className="text-[#6C84B0] hover:text-[#4E2E53] underline font-semibold"
+                  >
+                    connectez-vous
+                  </Link>
+                  .
+                </p>
+              )}
             </div>
           )}
 
@@ -259,8 +273,6 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
             </div>
           )}
 
-          {Boolean(compte) && (
-            <>
           <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
             <h2 className="text-sm font-serif-title font-bold text-[#4E2E53]">Conditions</h2>
             <div className="text-sm text-slate-700 divide-y divide-slate-100">
@@ -311,6 +323,9 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
               )}
             </div>
           </div>
+
+          {Boolean(compte) && (
+            <>
           <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2">
             <h2 className="text-sm font-serif-title font-bold text-[#4E2E53]">L&apos;équipe parlementaire</h2>
             <p className="text-sm text-slate-600 leading-relaxed">
@@ -375,8 +390,8 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
               <p className="text-3xl">🔒</p>
               <h2 className="text-sm font-serif-title font-bold text-[#4E2E53]">La suite est réservée aux comptes DataParl&apos;</h2>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Missions, profil recherché, conditions, équipe parlementaire et candidature : créez un
-                compte gratuit pour accéder à l&apos;ensemble de l&apos;offre.
+                Profil recherché, équipe parlementaire et candidature : créez un compte gratuit
+                pour accéder à l&apos;ensemble de l&apos;offre.
               </p>
               <Link
                 href={"/connexion?suite=/offre/" + slugOffre(offre)}
@@ -401,6 +416,14 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
               Transmettez votre candidature à l&apos;équipe parlementaire.
             </p>
           </div>
+
+          {typeof nbCandidatures === "number" && (
+            <p className="text-[11px] text-slate-500 bg-[#ECF1FC] border border-[#6C84B0]/20 rounded-xl px-3 py-2">
+              {nbCandidatures === 0
+                ? "Première candidature possible via DataParl'"
+                : nbCandidatures + " candidature" + (nbCandidatures > 1 ? "s" : "") + " envoyée" + (nbCandidatures > 1 ? "s" : "") + " via DataParl' (30 derniers jours)"}
+            </p>
+          )}
 
           {Boolean(compte) && consignesPuces.length > 0 && (
             <div className="bg-[#ECF1FC] border border-[#6C84B0]/20 rounded-2xl p-4 text-xs space-y-2">
