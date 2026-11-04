@@ -1,3 +1,4 @@
+
 import { randomUUID } from "crypto";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore, initializeFirestore, type Firestore } from "firebase-admin/firestore";
@@ -176,4 +177,26 @@ export async function deciderOffre(
   }
   await db().collection("job_offers").doc(empreinte).set(champs, { merge: true });
   return true;
+}
+
+// Statistiques d'audience (mesure minimale, sans IP ni profilage) :
+// chaque page vue et chaque clic marqué data-stat est noté dans
+// jobs_evenements. Aucune donnée personnelle n'est stockée.
+export async function noterEvenement(type: string, chemin: string) {
+  const jour = new Date().toISOString().slice(0, 10);
+  await db().collection("jobs_evenements").add({
+    type,
+    chemin: chemin.slice(0, 200),
+    jour,
+    created_at: new Date().toISOString(),
+  });
+}
+
+export async function lireEvenements(jours = 30): Promise<{ type: string; chemin: string; jour: string }[]> {
+  const debut = new Date(Date.now() - jours * 24 * 3600 * 1000).toISOString().slice(0, 10);
+  const snap = await db().collection("jobs_evenements").where("jour", ">=", debut).limit(5000).get();
+  return snap.docs.map((d) => {
+    const v = d.data() as Record<string, unknown>;
+    return { type: String(v.type ?? ""), chemin: String(v.chemin ?? ""), jour: String(v.jour ?? "") };
+  });
 }

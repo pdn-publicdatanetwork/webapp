@@ -1,8 +1,10 @@
+
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 import Entete from "@/components/Entete";
+import Suivi from "@/components/Suivi";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
@@ -31,6 +33,7 @@ export default function RacineLayout({ children }: { children: React.ReactNode }
     <html lang="fr" className={`${inter.variable} ${playfair.variable}`}>
       <body className="min-h-screen bg-[#ECF1FC] text-slate-800 font-sans flex flex-col antialiased">
         <Entete />
+        <Suivi />
         <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">{children}</main>
         <footer className="mt-16 bg-white border-t border-slate-200 py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
