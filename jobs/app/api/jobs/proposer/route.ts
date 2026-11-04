@@ -1,3 +1,4 @@
+
 import { createHash } from "crypto";
 import { deposerOffre } from "@/lib/firestore";
 import { CHAMBRES, domaineAutorise } from "@/lib/jobs";
@@ -97,6 +98,17 @@ export async function POST(req: Request) {
     );
     if (res === "doublon") {
       return Response.json({ erreur: "une offre identique a déjà été déposée avec cette adresse" }, { status: 409 });
+    }
+    // Notification Slack (optionnelle) : prévient l'équipe qu'une offre
+    // attend en relecture. Sans SLACK_WEBHOOK_URL, pas d'envoi silencieux.
+    if (process.env.SLACK_WEBHOOK_URL) {
+      fetch(process.env.SLACK_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          text: "Jobs : nouvelle offre en relecture — " + titre + " (" + elu + ", " + email + ")",
+        }),
+      }).catch(() => {});
     }
     return Response.json({
       ok: true,

@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/espace-recruteur", "/mon-compte", "/api/", "/auth/"],
+        disallow: ["/espace-recruteur", "/mon-compte", "/admin", "/demo", "/api/", "/auth/"],
       },
     ],
     sitemap: "https://jobs.dataparl.fr/sitemap.xml",

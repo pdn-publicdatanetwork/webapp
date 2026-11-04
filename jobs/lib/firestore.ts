@@ -1,3 +1,4 @@
+
 import { randomUUID } from "crypto";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore, initializeFirestore, type Firestore } from "firebase-admin/firestore";
@@ -142,4 +143,31 @@ export async function deposerCvInfos(champs: Record<string, unknown>): Promise<v
   await db()
     .collection("cv_deposits")
     .add({ ...champs, created_at: new Date().toISOString() });
+}
+
+// Back-office /admin : décision de relecture sur une offre (l'empreinte sha256
+// est l'identifiant du document). Valider publie l'offre, archiver la passe en
+// expirée, rejeter la retire sans publication.
+export async function deciderOffre(
+  empreinte: string,
+  decision: "valider" | "archiver" | "rejeter",
+  auteur: string
+): Promise<boolean> {
+  if (!/^[0-9a-f]{64}$/i.test(empreinte)) return false;
+  const aujourdhui = new Date().toISOString().slice(0, 10);
+  const note = "Décision " + decision + " via back-office par " + auteur + " le " + aujourdhui;
+  const champs: Record<string, unknown> = { updated_at: new Date().toISOString(), note_relecture: note };
+  if (decision === "valider") {
+    champs.review_status = "approved";
+    champs.statut = "active";
+    champs.publie_le = aujourdhui;
+  } else if (decision === "archiver") {
+    champs.review_status = "approved";
+    champs.statut = "expiree";
+  } else {
+    champs.review_status = "rejected";
+    champs.statut = "rejetee";
+  }
+  await db().collection("job_offers").doc(empreinte).set(champs, { merge: true });
+  return true;
 }
