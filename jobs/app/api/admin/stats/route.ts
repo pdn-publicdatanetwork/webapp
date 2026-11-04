@@ -79,6 +79,20 @@ export async function GET(req: Request) {
     }
     lignes.sort((a, b) => b.vues - a.vues || b.clics - a.clics);
 
+    // Comptes connectés ayant visité le site (30 j)
+    const parCompte = new Map<string, { visites: number; dernier: string }>();
+    for (const e of pages) {
+      if (!e.compte) continue;
+      const f = parCompte.get(e.compte) ?? { visites: 0, dernier: e.jour };
+      f.visites += 1;
+      if (e.jour > f.dernier) f.dernier = e.jour;
+      parCompte.set(e.compte, f);
+    }
+    const comptes = [...parCompte.entries()]
+      .map(([email, f]) => ({ email, visites: f.visites, dernier: f.dernier }))
+      .sort((a, b) => b.visites - a.visites || b.dernier.localeCompare(a.dernier))
+      .slice(0, 50);
+
     return Response.json({
       pages_30j: pages.length,
       clics_30j: clics.length,
@@ -86,6 +100,7 @@ export async function GET(req: Request) {
       top_clics: compter(clics),
       par_jour: Object.entries(parJour).sort((a, b) => a[0].localeCompare(b[0])).slice(-14),
       offres: lignes.slice(0, 30),
+      comptes,
     });
   } catch {
     return Response.json({ erreur: "lecture impossible" }, { status: 500 });

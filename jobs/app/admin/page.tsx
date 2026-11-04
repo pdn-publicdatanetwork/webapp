@@ -36,6 +36,7 @@ type Stats = {
   top_clics: [string, number][];
   par_jour: [string, number][];
   offres: { slug: string; titre: string; elu: string; vues: number; clics: number; taux: number }[];
+  comptes: { email: string; visites: number; dernier: string }[];
 };
 
 const LIBELLE_CLIC: Record<string, string> = {
@@ -284,6 +285,23 @@ export default function Page() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+            <h3 className="font-serif-title font-bold text-lg text-[#4E2E53]">👥 Comptes ayant visité (30 j)</h3>
+            <ul className="text-xs text-slate-700 space-y-1.5">
+              {(stats?.comptes ?? []).map((c) => (
+                <li key={c.email} className="flex items-center justify-between gap-3 border-b border-slate-100 pb-1.5">
+                  <span className="font-mono truncate">{c.email}</span>
+                  <span className="shrink-0 text-slate-500">
+                    <strong className="text-[#4E2E53]">{c.visites}</strong> vue{c.visites > 1 ? "s" : ""}, dernière le {c.dernier}
+                  </span>
+                </li>
+              ))}
+              {stats && (stats.comptes ?? []).length === 0 && (
+                <li className="text-slate-400">Aucun compte connecté identifié sur la période.</li>
+              )}
+            </ul>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

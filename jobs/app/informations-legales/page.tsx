@@ -56,7 +56,9 @@ export default function Page() {
             <li>
               <strong>Mesure d&apos;audience</strong> : le site utilise Google Tag Manager et Google
               Analytics (dépôt de cookies, adresse IP traitée par Google), comme sur www.dataparl.fr, ainsi
-              qu&apos;un comptage interne anonyme des pages vues et des clics, sans cookie ni identifiant.
+              qu&apos;un comptage interne des pages vues et des clics, sans cookie. Pour les visiteurs
+              connectés, l&apos;adresse e-mail du compte est associée aux visites (statistiques internes
+              uniquement, jamais partagée).
             </li>
             <li>
               <strong>CV Matching</strong> : le texte de votre CV est analysé pour la correspondance avec les

@@ -182,12 +182,13 @@ export async function deciderOffre(
 // Statistiques d'audience (mesure minimale, sans IP ni profilage) :
 // chaque page vue et chaque clic marqué data-stat est noté dans
 // jobs_evenements. Aucune donnée personnelle n'est stockée.
-export async function noterEvenement(type: string, chemin: string, page = "") {
+export async function noterEvenement(type: string, chemin: string, page = "", compte = "") {
   const jour = new Date().toISOString().slice(0, 10);
   await db().collection("jobs_evenements").add({
     type,
     chemin: chemin.slice(0, 200),
     page: page.slice(0, 200),
+    compte: compte.slice(0, 200),
     jour,
     created_at: new Date().toISOString(),
   });
@@ -210,11 +211,11 @@ export async function compterCandidatures(slug: string): Promise<number> {
   }).length;
 }
 
-export async function lireEvenements(jours = 30): Promise<{ type: string; chemin: string; jour: string; page: string }[]> {
+export async function lireEvenements(jours = 30): Promise<{ type: string; chemin: string; jour: string; page: string; compte: string }[]> {
   const debut = new Date(Date.now() - jours * 24 * 3600 * 1000).toISOString().slice(0, 10);
   const snap = await db().collection("jobs_evenements").where("jour", ">=", debut).limit(5000).get();
   return snap.docs.map((d) => {
     const v = d.data() as Record<string, unknown>;
-    return { type: String(v.type ?? ""), chemin: String(v.chemin ?? ""), jour: String(v.jour ?? ""), page: String(v.page ?? "") };
+    return { type: String(v.type ?? ""), chemin: String(v.chemin ?? ""), jour: String(v.jour ?? ""), page: String(v.page ?? ""), compte: String(v.compte ?? "") };
   });
 }
