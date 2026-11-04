@@ -1,3 +1,4 @@
+
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import ModalOffre from "@/components/ModalOffre";
@@ -259,6 +260,7 @@ export default function Explorer({ offres }: { offres: OffreListe[] }) {
             filtrees.map((offre) => (
               <article
                 key={offre.id}
+                data-stat="clic_carte_offre"
                 onClick={() => setOuverte(offre)}
                 className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:shadow-md hover:border-[#4E2E53]/30 transition-all cursor-pointer group"
               >

@@ -1,3 +1,4 @@
+
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -382,6 +383,7 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
           {contact === "ferme" && (
             <button
               type="button"
+              data-stat="clic_contacter"
               onClick={() => setContact("verif")}
               className="w-full bg-[#4E2E53] hover:bg-[#3b223f] text-white py-3.5 rounded-2xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2"
             >
@@ -403,10 +405,10 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
             <div className="border border-emerald-200 rounded-2xl p-4 space-y-3 bg-emerald-50/50">
               <p className="text-xs font-bold text-emerald-800 leading-relaxed">Vérification réussie. Votre messagerie s'ouvre avec un e-mail prérempli vers l'équipe : l'objet mentionne le poste et l'élu, ajoutez votre CV et votre lettre.</p>
               <div className="grid gap-2">
-                <a href={"mailto:" + email + "?subject=" + objet} className="w-full bg-[#4E2E53] hover:bg-[#3b223f] text-white py-2.5 rounded-xl font-bold text-xs text-center transition-all">
+                <a href={"mailto:" + email + "?subject=" + objet} data-stat="clic_envoi_candidature" className="w-full bg-[#4E2E53] hover:bg-[#3b223f] text-white py-2.5 rounded-xl font-bold text-xs text-center transition-all">
                   Envoyer ma candidature
                 </a>
-                <button type="button" onClick={copierEmail} className="w-full border border-slate-300 bg-white py-2.5 rounded-xl font-semibold text-xs hover:bg-slate-50 transition-colors">
+                <button type="button" data-stat="clic_copie_email" onClick={copierEmail} className="w-full border border-slate-300 bg-white py-2.5 rounded-xl font-semibold text-xs hover:bg-slate-50 transition-colors">
                   {copie ? "Adresse copiée ✓" : "Copier l'adresse e-mail"}
                 </button>
               </div>

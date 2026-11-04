@@ -1,3 +1,4 @@
+
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -49,6 +50,7 @@ export default function Entete() {
         <div className="flex items-center gap-2 shrink-0">
           <Link
             href={connecte ? "/mon-compte" : "/connexion?suite=/"}
+            data-stat={connecte ? "clic_mon_compte" : "clic_connexion"}
             className="hidden sm:block text-slate-600 hover:text-[#4E2E53] px-2.5 py-2 rounded-xl font-medium text-xs transition-colors"
           >
             {connecte ? "👤 Mon compte" : "Se connecter"}
