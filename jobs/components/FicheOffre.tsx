@@ -435,11 +435,13 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
           </div>
 
           {compteur !== null && (
-            <p className="text-[11px] text-slate-500 bg-[#ECF1FC] border border-[#6C84B0]/20 rounded-xl px-3 py-2">
-              {compteur === 0
-                ? "Première candidature possible via DataParl'"
-                : compteur + " candidature" + (compteur > 1 ? "s" : "") + " envoyée" + (compteur > 1 ? "s" : "") + " via DataParl' (30 derniers jours)"}
-            </p>
+            <div className="bg-[#ECF1FC] border border-[#6C84B0]/20 rounded-2xl px-3 py-3 text-center">
+              <div className="text-3xl font-bold text-[#4E2E53] leading-none">{compteur}</div>
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider pt-1.5">
+                candidature{compteur > 1 ? "s" : ""} envoyée{compteur > 1 ? "s" : ""} via DataParl&apos;
+              </div>
+              <div className="text-[10px] text-slate-400 pt-0.5">(30 derniers jours)</div>
+            </div>
           )}
 
           {Boolean(compte) && consignesPuces.length > 0 && (
@@ -449,6 +451,12 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
                 {consignesPuces.map((p, i) => (<li key={i}>{p}</li>))}
               </ul>
             </div>
+          )}
+
+          {compteur !== null && compteur > 0 && (
+            <p className="bg-[#E4BDE9]/40 border border-[#4E2E53]/20 rounded-2xl px-3 py-2.5 text-xs font-bold text-[#4E2E53] text-center">
+              ⏳ {compteur} candidature{compteur > 1 ? "s" : ""} déjà envoyée{compteur > 1 ? "s" : ""} : ne tardez pas
+            </p>
           )}
 
           {contact === "ferme" && compte === null && (
