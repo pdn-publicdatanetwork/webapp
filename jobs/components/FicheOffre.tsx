@@ -231,7 +231,7 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
             </div>
           )}
 
-          {missions && missions.lignes.filter(Boolean).length > 0 && (
+          {Boolean(compte) && missions && missions.lignes.filter(Boolean).length > 0 && (
             <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
               <h2 className="text-sm font-serif-title font-bold text-[#4E2E53]">Missions</h2>
               <ul className="space-y-2 text-sm text-slate-700">
@@ -245,7 +245,7 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
             </div>
           )}
 
-          {profil && profil.lignes.filter(Boolean).length > 0 && (
+          {Boolean(compte) && profil && profil.lignes.filter(Boolean).length > 0 && (
             <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
               <h2 className="text-sm font-serif-title font-bold text-[#4E2E53]">Profil recherché</h2>
               <ul className="space-y-2 text-sm text-slate-700">
@@ -259,6 +259,8 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
             </div>
           )}
 
+          {Boolean(compte) && (
+            <>
           <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
             <h2 className="text-sm font-serif-title font-bold text-[#4E2E53]">Conditions</h2>
             <div className="text-sm text-slate-700 divide-y divide-slate-100">
@@ -365,8 +367,27 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
               </div>
             )}
           </div>
+            </>
+          )}
 
-
+          {compte === null && (
+            <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-4 text-center">
+              <p className="text-3xl">🔒</p>
+              <h2 className="text-sm font-serif-title font-bold text-[#4E2E53]">La suite est réservée aux comptes DataParl&apos;</h2>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Missions, profil recherché, conditions, équipe parlementaire et candidature : créez un
+                compte gratuit pour accéder à l&apos;ensemble de l&apos;offre.
+              </p>
+              <Link
+                href={"/connexion?suite=/offre/" + slugOffre(offre)}
+                data-stat="clic_connexion_detail"
+                className="inline-block bg-[#4E2E53] hover:bg-[#3b223f] text-white px-6 py-3 rounded-2xl font-bold text-sm transition-all shadow-md"
+              >
+                Se connecter pour tout voir
+              </Link>
+              <p className="text-[11px] text-slate-400">Gratuit, sans publicité. Votre adresse n&apos;est jamais partagée.</p>
+            </div>
+          )}
         </div>
 
         {/* Panneau Postuler */}
@@ -381,7 +402,7 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
             </p>
           </div>
 
-          {consignesPuces.length > 0 && (
+          {Boolean(compte) && consignesPuces.length > 0 && (
             <div className="bg-[#ECF1FC] border border-[#6C84B0]/20 rounded-2xl p-4 text-xs space-y-2">
               <p className="font-bold text-[#4E2E53]">Consignes de l&apos;équipe :</p>
               <ul className="list-disc pl-4 space-y-1 text-slate-600">

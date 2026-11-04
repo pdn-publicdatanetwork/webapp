@@ -51,7 +51,11 @@ export default function Entete() {
           <Link
             href={connecte ? "/mon-compte" : "/connexion?suite=/"}
             data-stat={connecte ? "clic_mon_compte" : "clic_connexion"}
-            className="hidden sm:block text-slate-600 hover:text-[#4E2E53] px-2.5 py-2 rounded-xl font-medium text-xs transition-colors"
+            className={`flex items-center gap-1.5 text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm ${
+              connecte
+                ? "bg-[#4E2E53] text-white hover:bg-[#3b223f]"
+                : "border border-[#4E2E53]/30 text-[#4E2E53] hover:bg-[#E4BDE9]/40"
+            }`}
           >
             {connecte ? "👤 Mon compte" : "Se connecter"}
           </Link>
