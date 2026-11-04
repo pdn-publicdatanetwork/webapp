@@ -2,8 +2,10 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { auth, suitePropre } from "@/lib/authSupabase";
+import Turnstile from "@/components/Turnstile";
 
-// Connexion par magic link, partagée avec le compte DataParl' (dataparl-auth).
+// Connexion : magic link (avec le captcha exigé par Supabase Auth) ou Google.
+// Le même compte que sur www.dataparl.fr (projet Supabase dataparl-auth).
 // ?suite=/chemin ramène l'utilisateur là où il était après vérification.
 
 function Formulaire() {
@@ -11,6 +13,8 @@ function Formulaire() {
   const router = useRouter();
   const suite = suitePropre(params.get("suite"));
   const [email, setEmail] = useState("");
+  const [jeton, setJeton] = useState("");
+  const [essai, setEssai] = useState(0);
   const [etat, setEtat] = useState<"attente" | "envoi" | "ok" | "erreur">("attente");
   const [message, setMessage] = useState("");
 
@@ -27,18 +31,35 @@ function Formulaire() {
       email: email.trim().toLowerCase(),
       options: {
         emailRedirectTo: window.location.origin + "/auth/callback?suite=" + encodeURIComponent(suite),
+        captchaToken: jeton || undefined,
       },
     });
     if (error) {
       setEtat("erreur");
       setMessage(error.message ?? "Envoi impossible, réessayez.");
+      setEssai(essai + 1);
+      setJeton("");
       return;
     }
     setEtat("ok");
   };
 
+  const google = async () => {
+    setEtat("envoi");
+    const { error } = await auth.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin + "/auth/callback?suite=" + encodeURIComponent(suite),
+      },
+    });
+    if (error) {
+      setEtat("erreur");
+      setMessage(error.message ?? "Connexion Google impossible.");
+    }
+  };
+
   return (
-    <div className="max-w-md mx-auto space-y-6">
+    <div className="max-w-md mx-auto">
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-3">
         <span className="bg-[#E4BDE9] text-[#4E2E53] text-xs font-bold px-2.5 py-1 rounded-full">Compte DataParl&apos;</span>
         <h1 className="text-2xl font-serif-title font-bold text-[#4E2E53]">Se connecter</h1>
@@ -47,23 +68,40 @@ function Formulaire() {
           nous vous envoyons un lien de connexion.
         </p>
         {etat !== "ok" ? (
-          <form onSubmit={envoyer} className="space-y-3 pt-2">
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="prenom.nom@email.fr"
-              className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#4E2E53] focus:bg-white text-sm"
-            />
+          <>
+            <form onSubmit={envoyer} className="space-y-3 pt-2">
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="prenom.nom@email.fr"
+                className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#4E2E53] focus:bg-white text-sm"
+              />
+              <button
+                type="submit"
+                disabled={etat === "envoi"}
+                className="w-full bg-[#4E2E53] hover:bg-[#3b223f] disabled:opacity-60 text-white py-3 rounded-xl font-bold text-sm transition-all"
+              >
+                {etat === "envoi" ? "Envoi en cours…" : "Recevoir mon lien de connexion"}
+              </button>
+            </form>
+            <Turnstile key={essai} onToken={setJeton} />
+            <div className="flex items-center gap-3 pt-2">
+              <span className="h-px bg-slate-200 flex-1" />
+              <span className="text-[11px] text-slate-400 font-semibold">ou</span>
+              <span className="h-px bg-slate-200 flex-1" />
+            </div>
             <button
-              type="submit"
+              type="button"
+              onClick={google}
               disabled={etat === "envoi"}
-              className="w-full bg-[#4E2E53] hover:bg-[#3b223f] disabled:opacity-60 text-white py-3 rounded-xl font-bold text-sm transition-all"
+              className="w-full bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
             >
-              {etat === "envoi" ? "Envoi en cours…" : "Recevoir mon lien de connexion"}
+              <span className="font-black text-[#4285F4]">G</span>
+              Continuer avec Google
             </button>
-          </form>
+          </>
         ) : (
           <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 space-y-1">
             <p className="text-sm font-bold text-emerald-800">Vérifiez votre messagerie 📬</p>

@@ -59,12 +59,6 @@ export default function Entete() {
           >
             {connecte ? "👤 Mon compte" : "Se connecter"}
           </Link>
-          <Link
-            href="/espace-recruteur"
-            className="bg-[#4E2E53] hover:bg-[#3b223f] text-white px-4 py-2.5 rounded-xl font-medium text-xs shadow-sm transition-all flex items-center gap-2"
-          >
-            <span>Publier une offre</span>
-          </Link>
         </div>
       </div>
     </header>

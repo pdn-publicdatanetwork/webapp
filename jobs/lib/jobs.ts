@@ -15,9 +15,9 @@ export const COULEUR_CHAMBRE: Record<string, string> = {
   pe: "#3B7EA1",
 };
 
-// Domaines de messagerie parlementaires : seuls ces domaines peuvent
-// déposer une offre depuis l'espace élu.
+// Domaines de messagerie autorisés : parlementaires + équipe DataParl'.
 export const DOMAINES_PARLEMENT = [
+  "dataparl.fr",
   "assemblee-nationale.fr",
   "clb-an.fr",
   "senat.fr",

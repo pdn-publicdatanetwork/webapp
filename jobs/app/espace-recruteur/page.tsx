@@ -41,7 +41,7 @@ export default function Page() {
     return (
       <Mur
         titre="Espace Recruteur réservé aux comptes"
-        texte="Connectez-vous avec votre compte DataParl&apos; (le même que sur www.dataparl.fr) pour déposer une offre."
+        texte="Connectez-vous pour déposer une offre."
       />
     );
   }
@@ -49,7 +49,7 @@ export default function Page() {
     return (
       <Mur
         titre="Adresse parlementaire requise"
-        texte="L&apos;espace recruteur est réservé aux adresses parlementaires (assemblee-nationale.fr, clb-an.fr, senat.fr, clb-senat.fr, europarl.europa.eu). Connectez-vous avec votre adresse professionnelle."
+        texte="L&apos;espace recruteur est réservé aux adresses autorisées (dataparl.fr, assemblee-nationale.fr, clb-an.fr, senat.fr, clb-senat.fr, europarl.europa.eu). Connectez-vous avec votre adresse professionnelle."
       />
     );
   }
