@@ -1,4 +1,5 @@
 
+
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
@@ -28,6 +29,23 @@ type OffreAdmin = {
 
 type Donnees = { revue: OffreAdmin[]; actives: OffreAdmin[]; archives: OffreAdmin[] };
 
+type Stats = {
+  pages_30j: number;
+  clics_30j: number;
+  top_pages: [string, number][];
+  top_clics: [string, number][];
+  par_jour: [string, number][];
+};
+
+const LIBELLE_CLIC: Record<string, string> = {
+  clic_carte_offre: "Clic sur une carte d'offre",
+  clic_contacter: "Clic « Contacter l'équipe »",
+  clic_envoi_candidature: "Clic « Envoyer ma candidature »",
+  clic_copie_email: "Clic « Copier l'adresse e-mail »",
+  clic_connexion: "Clic « Se connecter »",
+  clic_mon_compte: "Clic « Mon compte »",
+};
+
 function Mur({ titre, texte }: { titre: string; texte: string }) {
   return (
     <div className="max-w-xl mx-auto bg-white rounded-3xl p-8 border border-slate-200/80 shadow-sm text-center space-y-4">
@@ -44,7 +62,8 @@ function Mur({ titre, texte }: { titre: string; texte: string }) {
 export default function Page() {
   const [email, setEmail] = useState<string | null | undefined>(undefined);
   const [donnees, setDonnees] = useState<Donnees | null>(null);
-  const [onglet, setOnglet] = useState<"revue" | "actives" | "archives">("revue");
+  const [onglet, setOnglet] = useState<"revue" | "actives" | "archives" | "stats">("revue");
+  const [stats, setStats] = useState<Stats | null>(null);
   const [recherche, setRecherche] = useState("");
   const [enCours, setEnCours] = useState("");
   const [erreur, setErreur] = useState("");
@@ -69,6 +88,14 @@ export default function Page() {
   useEffect(() => {
     charger();
   }, [charger]);
+
+  useEffect(() => {
+    if (onglet !== "stats" || stats || !email) return;
+    fetch("/api/admin/stats?compte=" + encodeURIComponent(email))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((s) => setStats(s))
+      .catch(() => setStats(null));
+  }, [onglet, stats, email]);
 
   const decider = async (empreinte: string, action: "valider" | "archiver" | "rejeter") => {
     if (!email) return;
@@ -177,6 +204,7 @@ export default function Page() {
             ["revue", "⏳ File de revue"],
             ["actives", "✅ Publiées"],
             ["archives", "🗄️ Archives"],
+            ["stats", "📊 Statistiques"],
           ] as const).map(([cle, libelle]) => (
             <button
               key={cle}
@@ -197,6 +225,74 @@ export default function Page() {
       </div>
 
       {erreur && <p className="bg-red-50 border border-red-200 text-red-700 text-xs font-bold px-4 py-3 rounded-2xl">{erreur}</p>}
+
+      {onglet === "stats" && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1">
+              <div className="text-xs font-bold text-[#6C84B0] uppercase tracking-wider">Pages vues (30 j)</div>
+              <div className="text-3xl font-bold text-[#4E2E53]">{stats ? stats.pages_30j : "…"}</div>
+            </div>
+            <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1">
+              <div className="text-xs font-bold text-[#6C84B0] uppercase tracking-wider">Clics suivis (30 j)</div>
+              <div className="text-3xl font-bold text-emerald-700">{stats ? stats.clics_30j : "…"}</div>
+            </div>
+            <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1">
+              <div className="text-xs font-bold text-[#6C84B0] uppercase tracking-wider">Visites /connexion (30 j)</div>
+              <div className="text-3xl font-bold text-[#4E2E53]">
+                {stats ? (stats.top_pages.find(([p2]) => p2 === "/connexion")?.[1] ?? "0") : "…"}
+              </div>
+            </div>
+            <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1">
+              <div className="text-xs font-bold text-[#6C84B0] uppercase tracking-wider">Vues de fiches offre</div>
+              <div className="text-3xl font-bold text-purple-700">
+                {stats ? stats.top_pages.filter(([p2]) => p2.startsWith("/offre/")).reduce((n, [, v]) => n + v, 0) : "…"}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+              <h3 className="font-serif-title font-bold text-lg text-[#4E2E53]">Top pages (30 j)</h3>
+              <ul className="text-xs text-slate-700 space-y-1.5">
+                {(stats?.top_pages ?? []).map(([p2, n]) => (
+                  <li key={p2} className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                    <span className="font-mono truncate">{p2}</span>
+                    <span className="font-bold text-[#4E2E53] shrink-0 ml-3">{n}</span>
+                  </li>
+                ))}
+                {stats && stats.top_pages.length === 0 && <li className="text-slate-400">Pas encore de données.</li>}
+              </ul>
+            </div>
+            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+              <h3 className="font-serif-title font-bold text-lg text-[#4E2E53]">Clics suivis (30 j)</h3>
+              <ul className="text-xs text-slate-700 space-y-1.5">
+                {(stats?.top_clics ?? []).map(([c, n]) => (
+                  <li key={c} className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                    <span>{LIBELLE_CLIC[c] ?? c}</span>
+                    <span className="font-bold text-[#4E2E53] shrink-0 ml-3">{n}</span>
+                  </li>
+                ))}
+                {stats && stats.top_clics.length === 0 && <li className="text-slate-400">Pas encore de clics suivis.</li>}
+              </ul>
+              <h3 className="font-serif-title font-bold text-lg text-[#4E2E53] pt-2">Pages vues par jour (14 j)</h3>
+              <ul className="text-[11px] text-slate-500 space-y-1">
+                {(stats?.par_jour ?? []).map(([j, n]) => (
+                  <li key={j} className="flex items-center justify-between">
+                    <span>{j}</span>
+                    <span className="font-bold text-slate-700">{n}</span>
+                  </li>
+                ))}
+                {stats && stats.par_jour.length === 0 && <li className="text-slate-400">Pas encore de données.</li>}
+              </ul>
+            </div>
+          </div>
+          <p className="text-[11px] text-slate-400">
+            Mesure minimale : pages vues et clics, sans IP ni identifiant (conforme à la page Informations
+            légales). Les données commencent à s'accumuler depuis la mise en ligne du suivi.
+          </p>
+        </div>
+      )}
 
       <div className="space-y-4">
         {filtrees.length === 0 ? (
