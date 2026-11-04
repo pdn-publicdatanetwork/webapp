@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans, Spectral } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import BandeauCookies from "./_components/BandeauCookies";
 import TagsGoogle from "./_components/TagsGoogle";
 import PageTrace from "./_components/PageTrace";
@@ -87,6 +88,8 @@ gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personali
         {/* Journal des connexions des comptes (IP, appareil) + association
             Clarity : voir app/_components/JournalConnexion.tsx. */}
         <JournalConnexion />
+        {/* Vercel Web Analytics : mesure des pages vues et des performances. */}
+        <Analytics />
       </body>
     </html>
   );
