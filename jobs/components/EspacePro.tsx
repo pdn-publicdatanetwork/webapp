@@ -6,6 +6,8 @@ import Turnstile from "@/components/Turnstile";
 
 // Espace de dépôt d'offre pour les élus et leurs cabinets. Auditeur de
 // conformité temps réel (charte DataParl') et envoi vers /api/jobs/proposer.
+// Prop demo : mode démonstration publique (/demo/recruteur) avec fausses
+// données, sans Turnstile ni envoi réel.
 
 type Formulaire = {
   titre: string;
@@ -45,8 +47,27 @@ const VIDE: Formulaire = {
   avantages: "",
 };
 
-export default function EspacePro({ courriel }: { courriel?: string }) {
-  const [f, setF] = useState<Formulaire>(VIDE);
+const DEMO: Formulaire = {
+  titre: "Stagiaire communication et réseaux sociaux (démo)",
+  chambre: "an",
+  type_poste: "Stage",
+  salaire: "1 300 € nets / mois",
+  lieu: "126 rue de l'Université, 75007 Paris",
+  email: "cabinet.demo@senat.fr",
+  elu: "Camille Martin (démo)",
+  groupe: "Groupe démocrate (démo)",
+  intro: "Stage exemple pour la démonstration de l'espace recruteur. Aucune donnée réelle n'est déposée ni envoyée.",
+  missions: "Rédaction de contenus pour les réseaux sociaux du cabinet\nSuivi de l'actualité parlementaire\nMontage de vidéos courtes",
+  profil: "Étudiant en communication, maîtrise des réseaux sociaux\nSensibilité pour l'action publique\nAisance rédactionnelle",
+  candidater: "CV et lettre de motivation avec l'objet STAGE-DEMO",
+  temps_travail: "Temps plein",
+  date_debut: "2026-11-16",
+  date_limite: "2026-11-20",
+  avantages: "Tickets restaurant, 50 % transports",
+};
+
+export default function EspacePro({ courriel, demo }: { courriel?: string; demo?: boolean }) {
+  const [f, setF] = useState<Formulaire>(demo ? DEMO : VIDE);
   const [etat, setEtat] = useState<"attente" | "envoi" | "ok" | "erreur">("attente");
   const [message, setMessage] = useState("");
   const [jeton, setJeton] = useState("");
@@ -75,6 +96,11 @@ export default function EspacePro({ courriel }: { courriel?: string }) {
   const envoyer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!conforme) return;
+    if (demo) {
+      setEtat("ok");
+      setMessage("Mode démo : ceci est un aperçu, aucune offre n'est déposée et rien n'est envoyé.");
+      return;
+    }
     setEtat("envoi");
     setMessage("");
     try {
@@ -125,6 +151,11 @@ export default function EspacePro({ courriel }: { courriel?: string }) {
     <div className="max-w-6xl mx-auto space-y-8">
       <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-2">
         <span className="bg-[#E4BDE9] text-[#4E2E53] text-xs font-bold px-2.5 py-1 rounded-full">Espace Élu / Cabinet</span>
+        {demo && (
+          <p className="bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold px-3 py-2 rounded-xl">
+            🧪 Mode démonstration : fausses données, aucun envoi réel.
+          </p>
+        )}
         <h1 className="text-2xl sm:text-3xl font-serif-title font-bold text-[#4E2E53]">Déposer une offre</h1>
         <p className="text-sm text-slate-600 max-w-2xl leading-relaxed">
           Publiez votre offre de collaborateur parlementaire avec le badge « Déposée par l&apos;élu ».
@@ -240,7 +271,7 @@ export default function EspacePro({ courriel }: { courriel?: string }) {
             <textarea rows={2} value={f.candidater} onChange={(e) => maj({ candidater: e.target.value })} placeholder="ex : CV et lettre de motivation avec l'objet STAGE-NOVEMBRE" className={champ} />
           </div>
 
-          <Turnstile key={essai} onToken={setJeton} />
+          {!demo && <Turnstile key={essai} onToken={setJeton} />}
 
           <button
             type="submit"
@@ -251,7 +282,7 @@ export default function EspacePro({ courriel }: { courriel?: string }) {
                 : "bg-slate-200 text-slate-500 cursor-not-allowed"
             }`}
           >
-            {etat === "envoi" ? "Dépôt en cours…" : "Déposer l'offre pour relecture"}
+            {etat === "envoi" ? "Dépôt en cours…" : demo ? "Tester le dépôt (mode démo)" : "Déposer l'offre pour relecture"}
           </button>
 
           {etat === "ok" && (
