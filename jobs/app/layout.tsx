@@ -1,6 +1,6 @@
-
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import Link from "next/link";
 import Entete from "@/components/Entete";
@@ -32,6 +32,18 @@ export default function RacineLayout({ children }: { children: React.ReactNode }
   return (
     <html lang="fr" className={`${inter.variable} ${playfair.variable}`}>
       <body className="min-h-screen bg-[#ECF1FC] text-slate-800 font-sans flex flex-col antialiased">
+        <Script id="gtm-chargement" strategy="afterInteractive" src="https://www.googletagmanager.com/gtm.js?id=GTM-KPPBZ25Q" />
+        <Script id="gtm-datalayer" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());`}</Script>
+        <noscript>
+          <iframe
+            src="https://www.googletagmanager.com/ns.html?id=GTM-KPPBZ25Q"
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
+          />
+        </noscript>
         <Entete />
         <Suivi />
         <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">{children}</main>

@@ -54,6 +54,11 @@ export default function Page() {
           <h2 className="font-serif-title font-bold text-[#4E2E53] text-lg">Données personnelles</h2>
           <ul className="list-disc pl-5 space-y-1.5">
             <li>
+              <strong>Mesure d&apos;audience</strong> : le site utilise Google Tag Manager et Google
+              Analytics (dépôt de cookies, adresse IP traitée par Google), comme sur www.dataparl.fr, ainsi
+              qu&apos;un comptage interne anonyme des pages vues et des clics, sans cookie ni identifiant.
+            </li>
+            <li>
               <strong>CV Matching</strong> : le texte de votre CV est analysé pour la correspondance avec les
               offres, puis <strong>jamais conservé</strong>. Seules les coordonnées détectées (e-mail,
               téléphone) et les compétences extraites sont conservées 3 mois à des fins de recrutement, puis
