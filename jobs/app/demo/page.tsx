@@ -23,7 +23,7 @@ export default function Page() {
             Tableau de bord : suivi des candidatures, alertes e-mail et profil CV.
           </p>
         </Link>
-        <Link href="/demo/recruteur" className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-3 hover:border-[#4E2E53]/40 transition-all">
+        <Link href="/demo/espace-recruteur" className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-3 hover:border-[#4E2E53]/40 transition-all">
           <div className="w-11 h-11 rounded-2xl bg-[#E4BDE9] flex items-center justify-center text-xl">🏛️</div>
           <h2 className="font-serif-title font-bold text-lg text-[#4E2E53]">Espace recruteur</h2>
           <p className="text-xs text-slate-600 leading-relaxed">
