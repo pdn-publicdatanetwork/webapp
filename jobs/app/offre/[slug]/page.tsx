@@ -19,12 +19,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!o) return { title: "Offre introuvable | DataParl' Jobs" };
   const offre = normaliser(o);
   const resume = (offre.description ?? "").replace(/\s+/g, " ").slice(0, 180);
+  const eluSocial = nomElu(offre);
+  const titreSocial = titrePoste(offre.titre) + (eluSocial ? " - " + eluSocial : "");
   return {
     title: titreStandard(offre),
     description: resume,
     alternates: { canonical: "/offre/" + slugOffre(offre) },
     openGraph: {
-      title: titreStandard(offre),
+      // Titre lisible pour les partages (Telegram, X, Bluesky) : le
+      // <title> SEO garde le libellé complet titreStandard.
+      title: titreSocial,
       description: resume,
       type: "article",
       locale: "fr_FR",
