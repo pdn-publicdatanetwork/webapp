@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { extractText, getDocumentProxy } from "unpdf";
 import Link from "next/link";
 import ModalOffre from "@/components/ModalOffre";
