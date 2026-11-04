@@ -1,3 +1,4 @@
+
 "use client";
 import { useState } from "react";
 
@@ -24,7 +25,7 @@ const CANDIDATURES: Candidature[] = [
   {
     id: "d1",
     intitule: "Collaborateur parlementaire (Législation)",
-    elu: "Yan Chantrel (démo)",
+    elu: "Léa Bonnet (démo)",
     chambre: "Sénat",
     groupe: "Socialistes et apparentés",
     ats: true,
@@ -36,7 +37,7 @@ const CANDIDATURES: Candidature[] = [
   {
     id: "d2",
     intitule: "Stagiaire communication et réseaux sociaux",
-    elu: "Aurore Bergé (démo)",
+    elu: "Manon Fabre (démo)",
     chambre: "Assemblée nationale",
     groupe: "Renaissance",
     ats: true,
@@ -48,9 +49,9 @@ const CANDIDATURES: Candidature[] = [
   {
     id: "d3",
     intitule: "Assistant(e) de circonscription",
-    elu: "Jean-Philippe Tanguy (démo)",
+    elu: "John Doe (démo)",
     chambre: "Assemblée nationale",
-    groupe: "Rassemblement National",
+    groupe: "Non inscrit",
     ats: false,
     date: "24 oct. 2026",
     statut: "Envoyée par e-mail",
