@@ -1,7 +1,9 @@
 "use client";
 import { useMemo, useState } from "react";
 import { extractText, getDocumentProxy } from "unpdf";
+import Link from "next/link";
 import ModalOffre from "@/components/ModalOffre";
+import { auth } from "@/lib/authSupabase";
 import { CHAMBRE_NOM, typeContrat } from "@/lib/jobsTexte";
 import type { OffreListe } from "@/lib/types";
 
@@ -53,6 +55,13 @@ export default function Matching({ offres }: { offres: OffreListe[] }) {
   const [noteFichier, setNoteFichier] = useState("");
   const [ia, setIa] = useState<Record<string, IaEntree> | null>(null);
   const [enCoursIA, setEnCoursIA] = useState(false);
+  const [compte, setCompte] = useState<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    auth.auth.getSession().then(({ data }) => setCompte(data.session?.user?.email ?? null));
+    const { data: sub } = auth.auth.onAuthStateChange((_e, s) => setCompte(s?.user?.email ?? null));
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   const scores = useMemo(() => {
     if (!analyse) return [];
@@ -103,6 +112,7 @@ export default function Matching({ offres }: { offres: OffreListe[] }) {
   };
 
   const chercherIA = async (texte: string) => {
+    if (!compte) return;
     setEnCoursIA(true);
     try {
       const res = await fetch("/api/jobs/matching", {
@@ -110,6 +120,7 @@ export default function Matching({ offres }: { offres: OffreListe[] }) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           cv: texte.slice(0, 6000),
+          compte,
           offres: offres.slice(0, 20).map((o) => ({ id: o.id, titre: o.titre, extrait: o.description.slice(0, 800) })),
         }),
       });
@@ -135,6 +146,29 @@ export default function Matching({ offres }: { offres: OffreListe[] }) {
     }
     setEnCoursIA(false);
   };
+
+  if (compte === undefined) {
+    return <div className="max-w-xl mx-auto py-20 text-center text-sm text-slate-400">Chargement…</div>;
+  }
+
+  if (compte === null) {
+    return (
+      <div className="max-w-xl mx-auto bg-white rounded-3xl p-8 border border-slate-200/80 shadow-sm text-center space-y-4">
+        <div className="w-12 h-12 rounded-2xl bg-[#E4BDE9] flex items-center justify-center text-xl mx-auto">🤖</div>
+        <h1 className="text-xl font-serif-title font-bold text-[#4E2E53]">Le CV Matching est réservé aux comptes</h1>
+        <p className="text-sm text-slate-600 leading-relaxed">
+          Connectez-vous avec votre compte DataParl&apos; (le même que sur www.dataparl.fr) pour analyser votre CV
+          et voir vos correspondances avec les offres.
+        </p>
+        <Link
+          href="/connexion?suite=/matching"
+          className="inline-block bg-[#4E2E53] hover:bg-[#3b223f] text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all"
+        >
+          Se connecter
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">

@@ -1,5 +1,4 @@
 import { inscritAlerte } from "@/lib/firestore";
-import { verifierHumain } from "@/lib/turnstile";
 
 export const dynamic = "force-dynamic";
 
@@ -11,9 +10,6 @@ export async function POST(req: Request) {
   const email = typeof corps?.email === "string" ? corps.email.trim().toLowerCase() : "";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || email.length > 300) {
     return Response.json({ erreur: "adresse e-mail invalide" }, { status: 400 });
-  }
-  if (!(await verifierHumain(corps?.turnstile))) {
-    return Response.json({ erreur: "confirmez la vérification anti-robot" }, { status: 400 });
   }
   try {
     await inscritAlerte(email);

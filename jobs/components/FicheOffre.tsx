@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Turnstile from "@/components/Turnstile";
 import { COULEUR_CHAMBRE, slugOffre } from "@/lib/jobs";
 import { DATA_SUPABASE_KEY, DATA_SUPABASE_URL } from "@/lib/env";
 import {
@@ -391,14 +392,10 @@ export default function FicheOffre({ offre, onFermer, dansModal }: { offre: Offr
           {contact === "verif" && (
             <div className="border border-slate-200 rounded-2xl p-4 text-center space-y-3 bg-slate-50">
               <p className="text-xs font-semibold text-slate-700">Vérification anti-spam</p>
-              <p className="text-[11px] text-slate-500">L&apos;adresse e-mail est protégée. Confirmez que vous êtes un candidat.</p>
-              <button
-                type="button"
-                onClick={() => setContact("revele")}
-                className="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 font-medium py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors"
-              >
-                ✅ Je ne suis pas un robot
-              </button>
+              <p className="text-[11px] text-slate-500">L&apos;adresse e-mail est protégée : la vérification Cloudflare débloque le bouton d&apos;envoi.</p>
+              <div className="flex justify-center">
+                <Turnstile onToken={() => setContact("revele")} onIndisponible={() => setContact("revele")} />
+              </div>
             </div>
           )}
 

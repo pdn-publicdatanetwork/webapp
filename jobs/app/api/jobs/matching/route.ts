@@ -1,3 +1,5 @@
+import { deposerCvInfos } from "@/lib/firestore";
+
 export const dynamic = "force-dynamic";
 
 // Analyse IA du CV contre les offres (Mistral small, JSON strict).
@@ -26,11 +28,17 @@ function lireOffres(x: unknown): OffreEntrante[] {
 }
 
   const c = (await req.json().catch(() => null)) ?? {};
+  const compte = texte(c.compte, 300).toLowerCase();
   const cv = texte(c.cv, 6000);
   const offres = lireOffres(c.offres);
+  if (!compte) return Response.json({ erreur: "connexion requise" }, { status: 401 });
   if (cv.length < 40 || offres.length === 0) {
     return Response.json({ erreur: "requête invalide" }, { status: 400 });
   }
+  // Extraction des informations de contact pour l'équipe (le texte complet du
+  // CV n'est JAMAIS stocké ni logué : seulement ces champs-là).
+  const emailCv = cv.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i)?.[0] ?? null;
+  const telCv = cv.match(/(?:\+33|0)\s?[1-9](?:[\s.-]?\d{2}){4}/)?.[0] ?? null;
 
   const prompt =
     "Tu es un assistant de recrutement pour des postes de collaborateur parlementaire en France (Assemblée nationale, Sénat, Parlement européen).\n\n" +
@@ -71,6 +79,15 @@ function lireOffres(x: unknown): OffreEntrante[] {
           }))
       : [];
     if (correspondances.length === 0) return Response.json({ erreur: "réponse IA inexploitable" }, { status: 502 });
+    try {
+      await deposerCvInfos({
+        compte,
+        email_cv: emailCv,
+        telephone: telCv,
+        competences,
+        nb_offres: offres.length,
+      });
+    } catch {}
     return Response.json({ competences, correspondances });
   } catch {
     return Response.json({ erreur: "analyse IA indisponible" }, { status: 502 });

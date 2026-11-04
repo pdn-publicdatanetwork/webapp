@@ -9,7 +9,7 @@ import { auth } from "@/lib/authSupabase";
 const ONGLETS = [
   { href: "/", libelle: "🔎 Explorer les offres" },
   { href: "/matching", libelle: "🤖 CV Matching", nouveau: true },
-  { href: "/proposer", libelle: "🏛️ Espace Élu / Pro" },
+  { href: "/espace-recruteur", libelle: "🏛️ Espace Recruteur" },
 ];
 
 export default function Entete() {
@@ -60,7 +60,7 @@ export default function Entete() {
             {connecte ? "👤 Mon compte" : "Se connecter"}
           </Link>
           <Link
-            href="/proposer"
+            href="/espace-recruteur"
             className="bg-[#4E2E53] hover:bg-[#3b223f] text-white px-4 py-2.5 rounded-xl font-medium text-xs shadow-sm transition-all flex items-center gap-2"
           >
             <span>Publier une offre</span>

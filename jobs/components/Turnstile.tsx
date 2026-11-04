@@ -2,8 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 
 // Widget Turnstile (Cloudflare). La clé publique vient de /api/turnstile/cle :
-// si Turnstile n'est pas configuré, le widget ne s'affiche pas et le serveur
-// laisse passer (repli sans friction).
+// si Turnstile n'est pas configuré, le widget ne s'affiche pas et onIndisponible
+// est appelé pour que le formulaire reste utilisable (repli sans friction).
 
 type OptionsTurnstile = {
   sitekey: string;
@@ -18,15 +18,35 @@ declare global {
   }
 }
 
-export default function Turnstile({ onToken }: { onToken: (jeton: string) => void }) {
+export default function Turnstile({
+  onToken,
+  onIndisponible,
+}: {
+  onToken: (jeton: string) => void;
+  onIndisponible?: () => void;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const [cle, setCle] = useState<string | null>(null);
 
   useEffect(() => {
+    let vivant = true;
     fetch("/api/turnstile/cle")
       .then((r) => r.json())
-      .then((j) => setCle(typeof j?.cle === "string" && j.cle ? j.cle : ""))
-      .catch(() => setCle(""));
+      .then((j) => {
+        if (!vivant) return;
+        const c = typeof j?.cle === "string" && j.cle ? j.cle : "";
+        setCle(c);
+        if (!c) onIndisponible?.();
+      })
+      .catch(() => {
+        if (vivant) {
+          setCle("");
+          onIndisponible?.();
+        }
+      });
+    return () => {
+      vivant = false;
+    };
   }, []);
 
   useEffect(() => {

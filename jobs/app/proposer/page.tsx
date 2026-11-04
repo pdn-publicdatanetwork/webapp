@@ -1,10 +1,8 @@
-import EspacePro from "@/components/EspacePro";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: "Déposer une offre | DataParl' Jobs",
-  description: "Espace élu et cabinet : déposez votre offre de collaborateur parlementaire, relue puis publiée sur DataParl' Jobs.",
-};
+// L'ancien espace de dépôt vit désormais sur /espace-recruteur
+// (connexion obligatoire, adresse parlementaire vérifiée).
 
 export default function Page() {
-  return <EspacePro />;
+  redirect("/espace-recruteur");
 }

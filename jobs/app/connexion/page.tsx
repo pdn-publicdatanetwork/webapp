@@ -43,8 +43,8 @@ function Formulaire() {
         <span className="bg-[#E4BDE9] text-[#4E2E53] text-xs font-bold px-2.5 py-1 rounded-full">Compte DataParl&apos;</span>
         <h1 className="text-2xl font-serif-title font-bold text-[#4E2E53]">Se connecter</h1>
         <p className="text-sm text-slate-600 leading-relaxed">
-          Un compte unique pour DataParl&apos; et DataParl&apos; Jobs. Entrez votre e-mail :
-          nous vous envoyons un lien de connexion, sans mot de passe.
+          C&apos;est le même compte que sur www.dataparl.fr (Mon compte). Entrez votre e-mail :
+          nous vous envoyons un lien de connexion.
         </p>
         {etat !== "ok" ? (
           <form onSubmit={envoyer} className="space-y-3 pt-2">
@@ -75,10 +75,6 @@ function Formulaire() {
         )}
         {etat === "erreur" && <p className="text-xs text-red-600">{message}</p>}
       </div>
-      <p className="text-center text-[11px] text-slate-400">
-        Le compte est gratuit. Il sert aussi bien à consulter le détail des offres qu&apos;à votre espace DataParl&apos;
-        sur www.dataparl.fr.
-      </p>
     </div>
   );
 }

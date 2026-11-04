@@ -135,3 +135,11 @@ export async function desinscritAlerte(email: string): Promise<void> {
     .doc(email)
     .set({ actif: false, updated_at: new Date().toISOString() }, { merge: true });
 }
+
+// Dépôt CV Matching : on ne conserve PAS le texte du CV, seulement les
+// informations de contact extraites et les compétences détectées.
+export async function deposerCvInfos(champs: Record<string, unknown>): Promise<void> {
+  await db()
+    .collection("cv_deposits")
+    .add({ ...champs, created_at: new Date().toISOString() });
+}

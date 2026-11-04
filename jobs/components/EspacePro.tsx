@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CHAMBRES, domaineAutorise } from "@/lib/jobs";
 import { CONTRATS } from "@/lib/jobsTexte";
 import Turnstile from "@/components/Turnstile";
@@ -45,13 +45,17 @@ const VIDE: Formulaire = {
   avantages: "",
 };
 
-export default function EspacePro() {
+export default function EspacePro({ courriel }: { courriel?: string }) {
   const [f, setF] = useState<Formulaire>(VIDE);
   const [etat, setEtat] = useState<"attente" | "envoi" | "ok" | "erreur">("attente");
   const [message, setMessage] = useState("");
   const [jeton, setJeton] = useState("");
   const [essai, setEssai] = useState(0);
   const maj = (p: Partial<Formulaire>) => setF({ ...f, ...p });
+
+  useEffect(() => {
+    if (courriel) maj({ email: courriel });
+  }, [courriel]);
 
   const regles = {
     titreCourt: f.titre.trim().length >= 6 && f.titre.trim().length <= 70,
@@ -188,7 +192,8 @@ export default function EspacePro() {
             </div>
             <div>
               <label className={label}>E-mail parlementaire de contact</label>
-              <input type="email" required value={f.email} onChange={(e) => maj({ email: e.target.value })} placeholder="prenom.nom@assemblee-nationale.fr" className={champ} />
+              <input type="email" required value={f.email} onChange={(e) => maj({ email: e.target.value })} readOnly={Boolean(courriel)} placeholder="prenom.nom@assemblee-nationale.fr" className={champ} />
+              {courriel && <p className="text-[11px] mt-1 font-medium text-slate-400">Adresse vérifiée depuis votre compte parlementaire connecté.</p>}
               {f.email.trim().includes("@") && (
                 <p className={"text-[11px] mt-1 font-medium " + (regles.emailParlementaire ? "text-emerald-600" : "text-amber-600")}>
                   {regles.emailParlementaire

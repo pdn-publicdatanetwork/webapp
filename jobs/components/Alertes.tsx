@@ -1,29 +1,38 @@
 "use client";
-import { useState } from "react";
-import Turnstile from "@/components/Turnstile";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { auth } from "@/lib/authSupabase";
 
-// Bannière d'inscription aux alertes e-mail (POST /api/jobs/alerte).
+// Bannière d'alertes : la connexion est obligatoire, l'adresse utilisée est
+// celle du compte connecté (aucune saisie d'e-mail).
 
 export default function Alertes() {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState<string | null>(null);
+  const [chargement, setChargement] = useState(true);
   const [etat, setEtat] = useState<"attente" | "envoi" | "ok" | "erreur">("attente");
   const [message, setMessage] = useState("");
-  const [jeton, setJeton] = useState("");
-  const [essai, setEssai] = useState(0);
+
+  useEffect(() => {
+    auth.auth.getSession().then(({ data }) => {
+      setEmail(data.session?.user?.email ?? null);
+      setChargement(false);
+    });
+    const { data: sub } = auth.auth.onAuthStateChange((_e, s) => setEmail(s?.user?.email ?? null));
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   const inscrire = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email) return;
     setEtat("envoi");
     setMessage("");
     try {
       const res = await fetch("/api/jobs/alerte", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, turnstile: jeton }),
+        body: JSON.stringify({ email }),
       });
       const json = await res.json().catch(() => ({}));
-      setEssai(essai + 1);
-      setJeton("");
       if (res.ok) {
         setEtat("ok");
         setMessage(json.message ?? "Inscription confirmée. À très vite !");
@@ -47,33 +56,34 @@ export default function Alertes() {
         </div>
       </div>
 
-      {etat === "ok" ? (
-        <p className="text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-xl shrink-0">
-          ✅ {message}
-        </p>
-      ) : (
-        <form onSubmit={inscrire} className="flex flex-col md:items-end gap-2 w-full md:w-auto shrink-0">
-          <div className="flex gap-2 w-full md:w-auto">
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="prenom.nom@email.fr"
-            className="flex-1 md:w-64 px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E2E53] focus:bg-white"
-          />
-          <button
-            type="submit"
-            disabled={etat === "envoi"}
-            className="bg-[#4E2E53] hover:bg-[#3b223f] disabled:opacity-60 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all shrink-0"
+      <div className="w-full md:w-auto shrink-0">
+        {chargement ? (
+          <p className="text-xs text-slate-400 text-center md:text-right py-2.5">Chargement…</p>
+        ) : !email ? (
+          <Link
+            href="/connexion?suite=/"
+            className="block text-center bg-[#4E2E53] hover:bg-[#3b223f] text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all"
           >
-            {etat === "envoi" ? "…" : "S'inscrire"}
-          </button>
-          </div>
-          <Turnstile key={essai} onToken={setJeton} />
-        </form>
-      )}
-      {etat === "erreur" && <p className="text-xs text-red-600 w-full md:w-auto">{message}</p>}
+            Se connecter pour recevoir les alertes
+          </Link>
+        ) : etat === "ok" ? (
+          <p className="text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-xl text-center md:text-right">
+            ✅ {message}
+          </p>
+        ) : (
+          <form onSubmit={inscrire} className="flex flex-col sm:flex-row items-center justify-end gap-2">
+            <span className="text-xs text-slate-500 sm:max-w-[220px] truncate">{email}</span>
+            <button
+              type="submit"
+              disabled={etat === "envoi"}
+              className="bg-[#4E2E53] hover:bg-[#3b223f] disabled:opacity-60 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all"
+            >
+              {etat === "envoi" ? "…" : "M'inscrire"}
+            </button>
+          </form>
+        )}
+        {etat === "erreur" && <p className="text-xs text-red-600 mt-1 text-center md:text-right">{message}</p>}
+      </div>
     </div>
   );
 }
