@@ -27,7 +27,7 @@ export default function Suivi() {
       fetch("/api/stats", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ type: "clic", chemin: stat }),
+        body: JSON.stringify({ type: "clic", chemin: stat, page: window.location.pathname }),
       }).catch(() => {});
     };
     document.addEventListener("click", envoyer);

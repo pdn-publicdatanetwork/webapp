@@ -35,6 +35,7 @@ type Stats = {
   top_pages: [string, number][];
   top_clics: [string, number][];
   par_jour: [string, number][];
+  offres: { slug: string; titre: string; elu: string; vues: number; clics: number; taux: number }[];
 };
 
 const LIBELLE_CLIC: Record<string, string> = {
@@ -249,6 +250,40 @@ export default function Page() {
                 {stats ? stats.top_pages.filter(([p2]) => p2.startsWith("/offre/")).reduce((n, [, v]) => n + v, 0) : "…"}
               </div>
             </div>
+          </div>
+
+          <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+            <h3 className="font-serif-title font-bold text-lg text-[#4E2E53]">📈 Tendances par offre (30 j)</h3>
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-left text-slate-400 uppercase tracking-wider text-[10px]">
+                  <th className="pb-2">Offre</th>
+                  <th className="pb-2 text-right">Vues</th>
+                  <th className="pb-2 text-right">Clics « postuler »</th>
+                  <th className="pb-2 text-right">Taux</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(stats?.offres ?? []).map((o) => (
+                  <tr key={o.slug} className="border-t border-slate-100">
+                    <td className="py-2 pr-3">
+                      <Link href={"/offre/" + o.slug} className="font-bold text-slate-800 hover:text-[#4E2E53] underline">
+                        {o.titre}
+                      </Link>
+                      {o.elu ? <span className="block text-[10px] text-slate-400">{o.elu}</span> : null}
+                    </td>
+                    <td className="py-2 text-right font-bold text-[#4E2E53]">{o.vues}</td>
+                    <td className="py-2 text-right font-bold text-emerald-700">{o.clics}</td>
+                    <td className="py-2 text-right text-slate-500">{o.taux}%</td>
+                  </tr>
+                ))}
+                {stats && (stats.offres ?? []).length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="py-3 text-center text-slate-400">Pas encore de données par offre.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
