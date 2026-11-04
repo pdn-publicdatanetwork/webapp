@@ -1,26 +1,56 @@
 "use client";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { auth, suitePropre } from "@/lib/authSupabase";
 
-// Retour du magic link : échange du code PKCE contre une session, puis
-// redirection vers la suite mémorisée (?suite=).
+// Retour du magic link ou de OAuth (Google) : échange du code PKCE contre
+// une session, puis redirection vers la suite mémorisée (?suite=).
+// Garde anti double invocation : en React Strict Mode l'effet tourne deux
+// fois, le second échange échoue toujours (code déjà consommé) et l'écran
+// affichait à tort un lien invalide.
 
 function Echange() {
   const params = useSearchParams();
   const router = useRouter();
   const suite = suitePropre(params.get("suite"));
   const [erreur, setErreur] = useState("");
+  const lance = useRef(false);
 
   useEffect(() => {
+    if (lance.current) return;
+    lance.current = true;
+
+    const rediriger = () => router.replace(suite);
+
     auth.auth
-      .exchangeCodeForSession(window.location.href)
-      .then(({ data, error }) => {
-        if (error || !data.session) {
-          setErreur("Lien de connexion invalide ou expiré. Demandez-en un nouveau depuis la page Connexion.");
+      .getSession()
+      .then(async ({ data }) => {
+        if (data.session) {
+          rediriger();
           return;
         }
-        router.replace(suite);
+        try {
+          const res = await auth.auth.exchangeCodeForSession(window.location.href);
+          if (res.data.session) {
+            rediriger();
+            return;
+          }
+          // Le code a pu être consommé par une invocation concurrente :
+          // on revérifie la session avant de déclarer un échec.
+          const recheck = await auth.auth.getSession();
+          if (recheck.data.session) {
+            rediriger();
+            return;
+          }
+          setErreur("Lien de connexion invalide ou expiré. Demandez-en un nouveau depuis la page Connexion.");
+        } catch {
+          const recheck = await auth.auth.getSession();
+          if (recheck.data.session) {
+            rediriger();
+            return;
+          }
+          setErreur("Lien de connexion invalide ou expiré. Demandez-en un nouveau depuis la page Connexion.");
+        }
       });
   }, [params, router, suite]);
 

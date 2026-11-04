@@ -21,7 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       return {
         url: base + "/offre/" + slugOffre(offre),
         lastModified: offre.publie_le ? new Date(offre.publie_le) : undefined,
-        changeFrequency: "daily",
+        changeFrequency: "daily" as const,
         priority: 0.7,
       };
     }),
