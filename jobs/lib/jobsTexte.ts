@@ -101,6 +101,20 @@ export function lieuNormalise(texte: string): string {
   return propre;
 }
 
+// Ville principale d'une localisation d'offre : première partie avant virgule
+// ou parenthèse, avec repli sur la seconde quand la première est une
+// institution (Sénat, Assemblée nationale). Sert au SEO (titres, descriptions)
+// et au JSON-LD (addressLocality).
+export function villeDe(localisation: string | null): string | null {
+  if (!localisation) return null;
+  const segments = localisation.split(/[(,]/).map((x) => x.trim()).filter(Boolean);
+  let s = segments[0] ?? null;
+  if (s && /^(S[ée]nat|Assembl[ée]e nationale|Parlement europ[ée]en)$/i.test(s)) s = segments[1] ?? null;
+  if (!s) return null;
+  s = s.replace(/^Permanence (de |du |d')/i, "").replace(/^Bureau /i, "").trim();
+  return s ? s.slice(0, 40) : null;
+}
+
 export function remuneration(texte: string): { type: string; montant: string | null; avantages: string[] } {
   const t = texte.replace(/\s+/g, " ").trim();
   const type = /gratification/i.test(t) ? "Gratification" : /salaire/i.test(t) ? "Salaire" : "Non précisé";
