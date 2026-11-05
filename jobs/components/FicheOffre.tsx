@@ -256,27 +256,29 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
           {missions && missions.lignes.filter(Boolean).length > 0 && (
             <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
               <h2 className="text-sm font-serif-title font-bold text-[#4E2E53]">Missions</h2>
-              <ul className="space-y-2 text-sm text-slate-700">
-                {(compte ? missions.lignes : missions.lignes.slice(0, 2)).map((l, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <span className="w-2 h-2 rounded-full bg-[#4E2E53] mt-2 shrink-0" />
-                    <span className="leading-relaxed">{l.replace(/^\s*[-•*]\s*/, "")}</span>
-                  </li>
-                ))}
-              </ul>
-              {compte === null && (
-                <p className="text-xs text-slate-500 pt-3 mt-1 border-t border-slate-100">
-                  {missions.lignes.length > 2 ? "+" + (missions.lignes.length - 2) + " autres missions. " : ""}
-                  Le profil recherché, l&apos;équipe et la candidature sont réservés aux comptes :{" "}
-                  <Link
-                    href={"/connexion?suite=/offre/" + slugOffre(offre)}
-                    data-stat="clic_connexion_detail"
-                    className="text-[#6C84B0] hover:text-[#4E2E53] underline font-semibold"
-                  >
-                    connectez-vous
-                  </Link>
-                  .
-                </p>
+              {Boolean(compte) ? (
+                <ul className="space-y-2 text-sm text-slate-700">
+                  {missions.lignes.map((l, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <span className="w-2 h-2 rounded-full bg-[#4E2E53] mt-2 shrink-0" />
+                      <span className="leading-relaxed">{l.replace(/^\s*[-•*]\s*/, "")}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                compte === null && (
+                  <p className="text-xs text-slate-500 border-t border-slate-100 pt-3">
+                    🔒 Le détail des missions est réservé aux comptes DataParl&apos; :{" "}
+                    <Link
+                      href={"/connexion?suite=/offre/" + slugOffre(offre)}
+                      data-stat="clic_connexion_detail"
+                      className="text-[#6C84B0] hover:text-[#4E2E53] underline font-semibold"
+                    >
+                      connectez-vous
+                    </Link>
+                    .
+                  </p>
+                )
               )}
             </div>
           )}
@@ -297,6 +299,7 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
 
           <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
             <h2 className="text-sm font-serif-title font-bold text-[#4E2E53]">Conditions</h2>
+            {Boolean(compte) ? (
             <div className="text-sm text-slate-700 divide-y divide-slate-100">
               <p className="py-2.5 grid grid-cols-[140px_1fr] gap-3">
                 <span className="text-[#6C84B0] font-semibold text-xs pt-0.5">Contrat</span>
@@ -344,6 +347,22 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
                 </p>
               )}
             </div>
+            ) : (
+              compte === null && (
+                <p className="text-xs text-slate-500 border-t border-slate-100 pt-3">
+                  🔒 Le détail des conditions (lieu, rémunération, avantages) est réservé aux comptes
+                  DataParl&apos; :{" "}
+                  <Link
+                    href={"/connexion?suite=/offre/" + slugOffre(offre)}
+                    data-stat="clic_connexion_detail"
+                    className="text-[#6C84B0] hover:text-[#4E2E53] underline font-semibold"
+                  >
+                    connectez-vous
+                  </Link>
+                  .
+                </p>
+              )
+            )}
           </div>
 
           {Boolean(compte) && (
@@ -412,8 +431,8 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
               <p className="text-3xl">🔒</p>
               <h2 className="text-sm font-serif-title font-bold text-[#4E2E53]">La suite est réservée aux comptes DataParl&apos;</h2>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Profil recherché, équipe parlementaire et candidature : créez un compte gratuit
-                pour accéder à l&apos;ensemble de l&apos;offre.
+                Missions, profil recherché, conditions, équipe parlementaire et candidature : créez un
+                compte gratuit pour accéder à l&apos;ensemble de l&apos;offre.
               </p>
               <Link
                 href={"/connexion?suite=/offre/" + slugOffre(offre)}
@@ -519,15 +538,15 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
             🔒 E-mail protégé contre le spam
           </p>
 
-          <p className="text-center">
+          <div className="text-center">
             <Link
               href={"/contact?sujet=erreur&message=" + encodeURIComponent(signalement)}
               data-stat="clic_signaler"
-              className="text-[11px] text-slate-400 hover:text-red-600 underline"
+              className="inline-flex items-center justify-center gap-1.5 w-full border border-slate-200 hover:border-red-300 bg-slate-50 hover:bg-red-50 text-slate-500 hover:text-red-700 rounded-2xl px-3 py-2.5 text-[11px] font-bold transition-colors"
             >
-              Signaler cette annonce
+              🚩 Signaler cette annonce
             </Link>
-          </p>
+          </div>
 
           {onFermer ? (
             <p className="text-center text-xs">

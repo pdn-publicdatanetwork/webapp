@@ -14,7 +14,7 @@ const SOMMAIRE: [string, string][] = [
   ["Sécurité", "securite"],
   ["Données personnelles", "donnees"],
   ["Hébergement et sous-traitants", "hebergement"],
-  ["Vos droits", "droits"],
+  ["Droits des utilisateurs", "droits"],
 ];
 
 export default function Page() {
@@ -66,8 +66,8 @@ export default function Page() {
           responsable du traitement.
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
-          Nos messages proviennent uniquement du domaine dataparl.fr. Pour toute demande :{" "}
-          <a href="/contact" className={lien}>formulaire de contact</a>.
+          Les utilisateurs du service sont les personnes qui consultent les offres d&apos;emploi et y
+          candidatent, ainsi que les parlementaires et leurs équipes qui déposent une annonce.
         </p>
       </section>
 
@@ -76,15 +76,15 @@ export default function Page() {
         <p className="text-sm text-slate-700 leading-relaxed">
           La connexion utilise le compte DataParl&apos; partagé avec www.dataparl.fr : lien magique par e-mail
           ou connexion Google. Elle est gérée par notre prestataire d&apos;authentification (Supabase), auquel
-          sont transmis votre adresse e-mail et vos identifiants de session, conservés tant que le compte
-          existe.
+          sont transmis l&apos;adresse e-mail et les identifiants de session de l&apos;utilisateur, conservés
+          tant que le compte existe.
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
           La consultation des listes d&apos;offres est libre. La lecture complète des offres, le CV Matching,
-          les alertes et l&apos;espace recruteur nécessitent un compte. Vous pouvez supprimer votre compte et
-          vos données directement depuis votre espace{" "}
+          les alertes et l&apos;espace recruteur nécessitent un compte. L&apos;utilisateur peut supprimer son
+          compte et ses données directement depuis l&apos;espace{" "}
           <a href="/mon-compte" className={lien}>Mon compte</a>. La suppression est immédiate et
-          définitive : votre compte étant unique, elle vaut aussi pour www.dataparl.fr, et efface vos
+          définitive : le compte étant unique, elle vaut aussi pour www.dataparl.fr et efface les
           alertes ainsi que les données issues du CV Matching.
         </p>
       </section>
@@ -101,6 +101,12 @@ export default function Page() {
           Les offres collectées sont relues avant publication, mais seules l&apos;annonce d&apos;origine et
           l&apos;équipe parlementaire font foi : DataParl&apos; ne garantit pas l&apos;exactitude ni
           l&apos;exhaustivité des annonces et ne participe pas au recrutement.
+        </p>
+        <p className="text-sm text-slate-700 leading-relaxed">
+          <strong>Protection des candidats</strong> : DataParl&apos; Jobs met tout en oeuvre pour protéger
+          les candidats : l&apos;identité du parlementaire à l&apos;origine d&apos;une annonce est vérifiée avant sa
+          publication, par le contrôle de l&apos;adresse e-mail parlementaire pour les offres déposées et par
+          le rapprochement avec le référentiel des parlementaires pour les offres collectées.
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
           Les candidatures sont envoyées directement aux équipes parlementaires. Leur envoi n&apos;est
@@ -127,22 +133,20 @@ export default function Page() {
       <section id="securite" className={`${carte} space-y-3`}>
         <h2 className={h2}>Sécurité</h2>
         <p className="text-sm text-slate-700 leading-relaxed">
-          <strong>Mesures appliquées au service</strong> : comptes sans mot de passe (lien magique par
-          e-mail ou connexion Google, gérés par Supabase), échanges chiffrés en TLS 1.3, vérification
-          anti-robot (Cloudflare Turnstile) devant les formulaires et les adresses de contact, e-mails
-          authentifiés par SPF, DKIM et DMARC.
+          <strong>Comptes sans mot de passe</strong> : la connexion se fait par lien magique e-mail ou
+          via Google, gérée par Supabase.
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
-          <strong>Reconnaître nos messages</strong> : nos e-mails proviennent uniquement du domaine
-          dataparl.fr et leurs liens pointent toujours vers un site dataparl.fr. Nous ne vous demanderons
-          jamais un mot de passe, un code ou des informations bancaires, et nous n&apos;envoyons pas de
-          pièce jointe inattendue.
+          <strong>Reconnaître les messages de DataParl&apos;</strong> : les e-mails du service proviennent
+          uniquement du domaine dataparl.fr et leurs liens pointent toujours vers un site dataparl.fr.
+          Aucun mot de passe, code ou information bancaire n&apos;est jamais demandé, et aucune pièce
+          jointe inattendue n&apos;est envoyée.
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
-          <strong>En cas de doute</strong> : ne vous connectez jamais depuis un lien reçu par e-mail,
-          tapez vous-même l&apos;adresse du site. Si vous avez saisi vos identifiants sur une page suspecte,
-          changez immédiatement le mot de passe de votre messagerie ou de votre compte Google, puis
-          signalez-nous l&apos;e-mail via le{" "}
+          <strong>En cas de doute</strong> : ne jamais se connecter depuis un lien reçu par e-mail,
+          l&apos;adresse du site doit être saisie directement dans le navigateur. Si des identifiants ont été
+          saisis sur une page suspecte, changer immédiatement le mot de passe de la messagerie ou du
+          compte Google concerné, puis signaler l&apos;e-mail via le{" "}
           <a href="/contact" className={lien}>formulaire de contact</a> (sujet « Signaler un phishing »).
         </p>
       </section>
@@ -150,7 +154,7 @@ export default function Page() {
       <section id="donnees" className={`${carte} space-y-4`}>
         <h2 className={h2}>Données personnelles</h2>
         <p className="text-sm text-slate-700 leading-relaxed">
-          DataParl&apos; Jobs est responsable de traitement des données collectées sur ce site, à l&apos;exception
+          DataParl&apos; Jobs est responsable de traitement des données de ses utilisateurs, à l&apos;exception
           des offres déposées par les équipes parlementaires, pour lesquelles l&apos;équipe parlementaire est
           responsable de traitement et DataParl&apos; Jobs agit comme sous-traitant (article 28 du RGPD).
         </p>
@@ -162,6 +166,7 @@ export default function Page() {
                 <th scope="col" className="px-3 py-2 font-semibold">Traitement</th>
                 <th scope="col" className="px-3 py-2 font-semibold">Données</th>
                 <th scope="col" className="px-3 py-2 font-semibold">Durée</th>
+                <th scope="col" className="px-3 py-2 font-semibold">Prestataires</th>
                 <th scope="col" className="px-3 py-2 font-semibold">Finalité</th>
               </tr>
             </thead>
@@ -170,30 +175,35 @@ export default function Page() {
                 <td className="px-3 py-2 border-b border-slate-100">Comptes</td>
                 <td className="px-3 py-2 border-b border-slate-100">Adresse e-mail, identifiant de session</td>
                 <td className="px-3 py-2 border-b border-slate-100">Tant que le compte existe</td>
+                <td className="px-3 py-2 border-b border-slate-100">Supabase</td>
                 <td className="px-3 py-2 border-b border-slate-100">Connexion, espace recruteur</td>
               </tr>
               <tr>
                 <td className="px-3 py-2 border-b border-slate-100">Mesure d&apos;audience</td>
                 <td className="px-3 py-2 border-b border-slate-100">Pages vues, clics, cookies (Google Analytics via Google Tag Manager)</td>
                 <td className="px-3 py-2 border-b border-slate-100">30 jours (statistiques internes)</td>
+                <td className="px-3 py-2 border-b border-slate-100">Google (Analytics, Tag Manager)</td>
                 <td className="px-3 py-2 border-b border-slate-100">Mesure d&apos;audience</td>
               </tr>
               <tr>
                 <td className="px-3 py-2 border-b border-slate-100">CV Matching</td>
                 <td className="px-3 py-2 border-b border-slate-100">Texte du CV (jamais stocké), coordonnées détectées, compétences</td>
                 <td className="px-3 py-2 border-b border-slate-100">Coordonnées et compétences : 3 mois (espace Mon compte)</td>
+                <td className="px-3 py-2 border-b border-slate-100">Mistral AI (La Plateforme)</td>
                 <td className="px-3 py-2 border-b border-slate-100">Correspondance avec les offres</td>
               </tr>
               <tr>
                 <td className="px-3 py-2 border-b border-slate-100">Alertes</td>
                 <td className="px-3 py-2 border-b border-slate-100">Adresse e-mail</td>
                 <td className="px-3 py-2 border-b border-slate-100">Tant que l&apos;abonnement est actif</td>
+                <td className="px-3 py-2 border-b border-slate-100">Resend</td>
                 <td className="px-3 py-2 border-b border-slate-100">Envoi des nouvelles offres</td>
               </tr>
               <tr>
                 <td className="px-3 py-2">Offres</td>
                 <td className="px-3 py-2">Titre, équipe parlementaire, description</td>
                 <td className="px-3 py-2">2 ans après expiration</td>
+                <td className="px-3 py-2">Google Cloud (Firestore), Slack (relecture)</td>
                 <td className="px-3 py-2">Publication, recherche, API publique</td>
               </tr>
             </tbody>
@@ -201,35 +211,35 @@ export default function Page() {
         </div>
         <ul className="list-disc pl-5 space-y-1.5 text-sm text-slate-700 leading-relaxed">
           <li>
-            <strong>Mesure d&apos;audience</strong> : Google Analytics via Google Tag Manager dépose des
-            cookies et traite l&apos;adresse IP via Google, comme sur www.dataparl.fr ; un comptage interne
-            des pages vues et des clics, sans cookie, complète la mesure. Pour les visiteurs connectés,
-            l&apos;adresse e-mail du compte y est associée (statistiques internes, jamais partagées).
+            <strong>Mesure d&apos;audience</strong> : des cookies sont déposés et l&apos;adresse IP est traitée
+            via Google, comme sur www.dataparl.fr ; un comptage interne des pages vues et des clics,
+            sans cookie, complète la mesure. Pour les visiteurs connectés, l&apos;adresse e-mail du compte
+            est associée aux visites (statistiques internes, jamais partagées).
           </li>
           <li>
-            <strong>CV Matching</strong> : le texte du CV est analysé localement par mots-clés, puis transmis
-            à l&apos;API La Plateforme de Mistral AI SAS (société française, modèle Mistral Small) pour
-            affiner le résultat. Il n&apos;est jamais stocké dans nos bases ; Mistral le conserve au maximum
-            30 jours à des fins de détection d&apos;abus et ne l&apos;utilise pas pour entraîner ses modèles.
-            Le score obtenu est purement indicatif : aucune décision automatisée n&apos;est prise à votre égard.
-            Seules les coordonnées et les compétences extraites sont conservées 3 mois dans votre espace
-            Mon compte, à des fins de recrutement ; vous pouvez les supprimer à tout moment.
+            <strong>CV Matching</strong> : le texte du CV est analysé localement par mots-clés, puis
+            transmis à Mistral AI (société française, modèle Mistral Small) pour affiner le résultat. Il
+            n&apos;est jamais stocké dans les bases du service ; Mistral le conserve au maximum 30 jours à
+            des fins de détection d&apos;abus et ne l&apos;utilise pas pour entraîner ses modèles. Le score obtenu
+            est purement indicatif : aucune décision automatisée n&apos;est prise à l&apos;égard du candidat. Seules
+            les coordonnées et les compétences extraites sont conservées 3 mois dans l&apos;espace Mon
+            compte, à des fins de recrutement ; leur suppression est possible à tout moment.
           </li>
           <li>
             <strong>Aucun profilage politique</strong> : l&apos;analyse mesure uniquement la correspondance
-            entre votre profil et les offres.
+            entre le profil du candidat et les offres.
           </li>
           <li>
-            <strong>Alertes</strong> : adresse e-mail conservée tant que l&apos;abonnement est actif,
-            désinscription en un clic. Envoi par notre prestataire Resend.
+            <strong>Alertes</strong> : l&apos;adresse e-mail est conservée tant que l&apos;abonnement est actif,
+            désinscription en un clic.
           </li>
           <li>
-            <strong>Offres déposées</strong> : transmises à l&apos;équipe de relecture via une notification
-            interne (Slack) avant publication.
+            <strong>Offres déposées</strong> : le contenu est transmis à l&apos;équipe de relecture via une
+            notification interne avant publication.
           </li>
           <li>
-            <strong>Coordonnées des équipes parlementaires</strong> : jamais affichées en clair, protégées
-            par la vérification anti-robot.
+            <strong>Coordonnées des équipes parlementaires</strong> : jamais affichées en clair,
+            protégées par la vérification anti-robot.
           </li>
         </ul>
       </section>
@@ -252,14 +262,14 @@ export default function Page() {
       </section>
 
       <section id="droits" className={`${carte} space-y-3`}>
-        <h2 className={h2}>Vos droits</h2>
+        <h2 className={h2}>Droits des utilisateurs</h2>
         <p className="text-sm text-slate-700 leading-relaxed">
-          Vous disposez d&apos;un droit d&apos;accès, de rectification, de suppression, d&apos;opposition
-          et de portabilité sur vos données. Pour l&apos;exercer :{" "}
+          Chaque utilisateur dispose d&apos;un droit d&apos;accès, de rectification, de suppression,
+          d&apos;opposition et de portabilité sur ses données. Pour l&apos;exercer :{" "}
           <a href="/contact" className={lien}>formulaire de contact</a> (sujet RGPD). Réponse sous un mois.
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
-          En cas de désaccord, vous pouvez introduire une réclamation auprès de la CNIL :{" "}
+          En cas de désaccord, une réclamation peut être introduite auprès de la CNIL :{" "}
           <a href="https://www.cnil.fr" className={lien}>cnil.fr</a>.
         </p>
       </section>
