@@ -19,7 +19,7 @@ import {
   titrePoste,
   typeContrat,
 } from "@/lib/jobsTexte";
-import type { InsightsElu, InsightsQuestion, OffreListe } from "@/lib/types";
+import type { OffreListe } from "@/lib/types";
 
 // Fiche d'une offre : utilisée dans la modal (liste) et sur la page
 // canonique /offre/<slug>. Panneau Postuler avec e-mail protégé : il
@@ -38,141 +38,6 @@ function PastilleSource({ connector }: { connector: string }) {
     >
       Collectée
     </span>
-  );
-}
-
-// Insights factuels de l'élu recruteur (votes publics et questions), générés
-// par la pipeline GitLab depuis les sources primaires (open data AN, Sénat).
-// Section publique, visible sans compte : des faits bruts pour préparer sa
-// candidature, sans interprétation ni test de proximité idéologique.
-const COULEUR_POSITION: Record<string, string> = {
-  pour: "bg-emerald-100 text-emerald-800 border-emerald-200",
-  contre: "bg-red-100 text-red-800 border-red-200",
-  abstention: "bg-amber-100 text-amber-800 border-amber-200",
-  "non-votant": "bg-slate-100 text-slate-600 border-slate-200",
-};
-
-function BadgePosition({ position }: { position: string }) {
-  return (
-    <span
-      className={
-        "text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 " +
-        (COULEUR_POSITION[position] ?? "bg-slate-100 text-slate-600 border-slate-200")
-      }
-    >
-      {position.charAt(0).toUpperCase() + position.slice(1)}
-    </span>
-  );
-}
-
-function LigneQuestion({ q }: { q: InsightsQuestion }) {
-  const reponse = q.reponse_le
-    ? "réponse le " + dateFr(q.reponse_le)
-    : q.statut?.toLowerCase() ?? "en attente de réponse";
-  return (
-    <li className="text-sm text-slate-700 leading-relaxed">
-      {q.date && <span className="text-slate-500 text-xs">{dateFr(q.date)} : </span>}
-      {q.url ? (
-        <a
-          href={q.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[#6C84B0] hover:text-[#4E2E53] underline"
-        >
-          {q.intitule || "Question"}
-        </a>
-      ) : (
-        <span>{q.intitule || "Question"}</span>
-      )}
-      <span className="text-slate-500 text-xs"> ({reponse})</span>
-    </li>
-  );
-}
-
-function BlocInsights({ insights, elu }: { insights: InsightsElu; elu: string | null }) {
-  const votes = insights.votes;
-  const qg = insights.questions_gouvernement ?? [];
-  const qe = insights.questions_ecrites ?? [];
-  if (!votes && qg.length === 0 && qe.length === 0) return null;
-  const pct = (x: number | null | undefined) => (typeof x === "number" ? Math.round(x * 100) + " %" : null);
-  return (
-    <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
-      <div>
-        <h2 className="text-sm font-serif-title font-bold text-[#4E2E53]">Préparer sa candidature</h2>
-        <p className="text-xs text-slate-500 leading-relaxed pt-1">
-          Faits publics sur {elu || "l'élu"} (votes et questions au Parlement), utiles pour préparer un
-          entretien : données brutes de l&apos;open data parlementaire, sans interprétation.
-        </p>
-      </div>
-
-      {votes && (
-        <div className="space-y-2.5">
-          <p className="text-sm text-slate-700 leading-relaxed">
-            <strong>{votes.scrutins} scrutins publics</strong>
-            {votes.depuis ? " depuis le " + dateFr(votes.depuis) : ""}
-            {pct(votes.participation) ? " : participation " + pct(votes.participation) : ""}
-            {pct(votes.conformite) ? ", votes conformes à la ligne du groupe " + pct(votes.conformite) : ""}.
-          </p>
-          <ul className="space-y-1.5">
-            {(votes.derniers ?? []).map((s, i) => (
-              <li key={i} className="flex items-start gap-2">
-                <BadgePosition position={s.position} />
-                <span className="text-sm text-slate-700 leading-relaxed min-w-0">
-                  {s.date ? dateFr(s.date) : "Scrutin récent"}
-                  {s.numero ? " (scrutin n°" + s.numero + ")" : ""}
-                  {s.titre ? " : " + s.titre : ""}
-                  {s.url && (
-                    <>
-                      {" "}
-                      <a
-                        href={s.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-[#6C84B0] hover:text-[#4E2E53] underline"
-                      >
-                        Voir le scrutin
-                      </a>
-                    </>
-                  )}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {qe.length > 0 && (
-        <div className="space-y-1.5 border-t border-slate-100 pt-3">
-          <p className="text-xs font-bold text-slate-500">Dernières questions écrites :</p>
-          <ul className="space-y-1.5">
-            {qe.map((q, i) => (
-              <LigneQuestion key={i} q={q} />
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {qg.length > 0 && (
-        <div className="space-y-1.5 border-t border-slate-100 pt-3">
-          <p className="text-xs font-bold text-slate-500">Dernières questions au gouvernement :</p>
-          <ul className="space-y-1.5">
-            {qg.map((q, i) => (
-              <LigneQuestion key={i} q={q} />
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <p className="text-[10px] text-slate-400 border-t border-slate-100 pt-3 leading-relaxed">
-        {insights.source && (
-          <>
-            Source : {insights.source}
-            {insights.genere_le ? ", données au " + dateFr(insights.genere_le) : ""}.{" "}
-          </>
-        )}
-        Faits publics issus de l&apos;open data parlementaire, présentés sans interprétation.
-      </p>
-    </div>
   );
 }
 
@@ -388,9 +253,6 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
               <p className="text-sm text-slate-700 leading-relaxed">{chapeau.join(" ")}</p>
             </div>
           )}
-
-          {/* Insights de l'élu : faits publics, section ouverte (SEO) */}
-          {offre.insights && <BlocInsights insights={offre.insights} elu={elu} />}
 
           {missions && missions.lignes.filter(Boolean).length > 0 && (
             <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
