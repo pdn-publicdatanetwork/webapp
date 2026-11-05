@@ -61,13 +61,14 @@ export default async function LandingChambre({ chambre }: { chambre: Chambre }) 
     { href: "/mixiparl/" + seg + "/parlementaires", valeur: pct(part, 0), libelle: "de femmes dans les équipes" },
   ];
 
-  const explorer: { href: string; icone?: string; marque?: "vigi" | "mixi"; titre?: string; desc: string }[] = [
+  const explorer: { href: string; icone?: string; marque?: "vigi" | "mixi" | "jobs"; titre?: string; desc: string }[] = [
     { href: MOUVEMENTS[chambre], icone: IC_MOUVEMENTS, titre: "Mouvements", desc: "Les arrivées et départs en temps réel." },
     { href: "/collab/" + seg, icone: IC_UTILISATEURS, titre: "Collaborateurs", desc: "Les profils et parcours des collaborateurs." },
     { href: "/parlementaires", icone: IC_PARLEMENTAIRES, titre: "Parlementaires", desc: "Les équipes et collaborateurs des élu·es." },
     { href: "/groupe/" + seg + "/", icone: IC_GROUPES, titre: "Groupes", desc: "Les groupes politiques, mandature par mandature." },
     { href: "/vigiparl/" + seg + "/parlementaires", marque: "vigi", desc: "Le renouvellement des équipes, élu par élu." },
     { href: "/mixiparl/" + seg + "/parlementaires", marque: "mixi", desc: "La mixité et la parité des équipes." },
+    { href: "https://jobs.dataparl.fr", marque: "jobs", desc: "Les offres d'emploi des équipes parlementaires." },
     ...(chambre === "senat" ? [{ href: "/senatoriales2026", icone: IC_SENATORIALES, titre: "Sénatoriales 2026", desc: "Le renouvellement du Sénat, série par série." }] : []),
   ];
 
@@ -110,11 +111,13 @@ export default async function LandingChambre({ chambre }: { chambre: Chambre }) 
       <ul className="explorer">
         {explorer.map((e) => (
           <li key={e.href}>
-            <a href={e.href}>
+            <a href={e.href} className={e.marque === "jobs" ? "jobs-carte" : undefined}>
               {e.marque === "vigi" ? (
                 <span className="marque-carte">Vigi<span className="surligne-vigi">Parl&apos;</span></span>
               ) : e.marque === "mixi" ? (
                 <span className="marque-carte">Mixi<span className="surligne-mixi">Parl&apos;</span></span>
+              ) : e.marque === "jobs" ? (
+                <span className="marque-carte marque-jobs">Data<span className="surligne-jobs">Parl&apos;</span> Jobs</span>
               ) : (
                 <span className="icone-chiffre"><Ic d={e.icone ?? ""} /></span>
               )}

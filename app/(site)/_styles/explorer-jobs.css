@@ -1,0 +1,28 @@
+/* Carte DataParl' Jobs de la grille Explorer (accueil et pages chambres).
+   Palette propre au module jobs.dataparl.fr : violet #4E2E53 (primaire),
+   lavande #E4BDE9 (surlignage), fond #ECF1FC, bleu #6C84B0, bordures #D0D9EC.
+   Le site www garde sa charte marine et jaune partout ailleurs : seules ces
+   règles ciblent la carte Jobs. Fichier séparé de globals.css (règle du
+   projet : ne jamais modifier directement ce fichier trop gros). */
+
+/* Wordmark façon VigiParl' et MixiParl' : « Data » + bloc violet « Parl' » + « Jobs ». */
+.marque-carte.marque-jobs { font-size: 1.1rem; }
+.surligne-jobs { background: #4E2E53; color: #fff; padding: 0 .12em; }
+
+/* Carte teintée aux couleurs du module. */
+.explorer a.jobs-carte { background: #ECF1FC; border-color: #D0D9EC; color: #4E2E53; }
+.explorer a.jobs-carte > span:last-child { color: #6C84B0; }
+.explorer a.jobs-carte:hover, .explorer a.jobs-carte:focus-visible { border-color: #4E2E53; box-shadow: 0 4px 12px rgba(78, 46, 83, .1); }
+
+/* Mode sombre : carte standard, bloc lavande au texte marine, comme les
+   blocs rouge et violet éclaircis de VigiParl' et MixiParl'. */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) .surligne-jobs { background: #E4BDE9; color: #071A41; }
+  :root:not(.light) .explorer a.jobs-carte { background: var(--card); border-color: var(--line); color: var(--ink); }
+  :root:not(.light) .explorer a.jobs-carte > span:last-child { color: var(--muted); }
+  :root:not(.light) .explorer a.jobs-carte:hover, :root:not(.light) .explorer a.jobs-carte:focus-visible { border-color: color-mix(in srgb, var(--ink) 20%, var(--line)); }
+}
+html.dark .surligne-jobs { background: #E4BDE9; color: #071A41; }
+html.dark .explorer a.jobs-carte { background: var(--card); border-color: var(--line); color: var(--ink); }
+html.dark .explorer a.jobs-carte > span:last-child { color: var(--muted); }
+html.dark .explorer a.jobs-carte:hover, html.dark .explorer a.jobs-carte:focus-visible { border-color: color-mix(in srgb, var(--ink) 20%, var(--line)); }

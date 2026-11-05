@@ -5,6 +5,10 @@ import CrayonPage from "../_components/CrayonPage";
 import EnqueteInvite from "../_components/EnqueteInvite";
 import ChatWidget from "../_components/ChatWidget";
 
+// Carte DataParl' Jobs de la grille Explorer : palette du module (violet et lavande),
+// dans un fichier séparé (globals.css ne doit plus être modifié directement).
+import "./_styles/explorer-jobs.css";
+
 // Layout 100 % statique : il ne doit plus lire headers(). Cet appel optait
 // toutes les pages du site public hors du rendu statique (l'export const
 // revalidate de chaque page était ignoré : chaque requête relançait le rendu

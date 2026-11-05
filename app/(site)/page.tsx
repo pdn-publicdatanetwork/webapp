@@ -64,13 +64,14 @@ export default async function Accueil() {
   ];
 
   // Descriptions courtes et de longueur homogène (une ligne chacune).
-  const explorer: { href: string; icone?: string; marque?: "vigi" | "mixi"; titre?: string; desc: string }[] = [
+  const explorer: { href: string; icone?: string; marque?: "vigi" | "mixi" | "jobs"; titre?: string; desc: string }[] = [
     { href: "/mouvements/parlement", icone: IC_MOUVEMENTS, titre: "Mouvements", desc: "Les arrivées et départs en temps réel." },
     { href: "/collab", icone: IC_UTILISATEURS, titre: "Collaborateurs", desc: "Les profils et parcours des collaborateurs." },
     { href: "/parlementaires", icone: IC_PARLEMENTAIRES, titre: "Parlementaires", desc: "Les équipes et collaborateurs des élu(e)s." },
     { href: "/gouv", icone: IC_GOUVERNEMENT, titre: "Gouvernement", desc: "Les cabinets ministériels et leurs collaborateurs." },
     { href: "/vigiparl", marque: "vigi", desc: "Le renouvellement des équipes, élu par élu." },
     { href: "/mixiparl", marque: "mixi", desc: "La mixité et la parité des équipes." },
+    { href: "https://jobs.dataparl.fr", marque: "jobs", desc: "Les offres d'emploi des équipes parlementaires." },
     { href: "/senatoriales2026", icone: IC_SENATORIALES, titre: "Sénatoriales 2026", desc: "Suivez le renouvellement du Sénat 2026." },
     { href: "/alertes", icone: IC_ALERTES, titre: "Alertes", desc: "Vos alertes email et notifications." },
   ];
@@ -134,11 +135,13 @@ export default async function Accueil() {
       <ul className="explorer">
         {explorer.map((e) => (
           <li key={e.href}>
-            <a href={e.href}>
+            <a href={e.href} className={e.marque === "jobs" ? "jobs-carte" : undefined}>
               {e.marque === "vigi" ? (
                 <span className="marque-carte">Vigi<span className="surligne-vigi">Parl&apos;</span></span>
               ) : e.marque === "mixi" ? (
                 <span className="marque-carte">Mixi<span className="surligne-mixi">Parl&apos;</span></span>
+              ) : e.marque === "jobs" ? (
+                <span className="marque-carte marque-jobs">Data<span className="surligne-jobs">Parl&apos;</span> Jobs</span>
               ) : (
                 <span className="icone-chiffre"><Ic d={e.icone ?? ""} /></span>
               )}
