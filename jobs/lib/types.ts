@@ -3,6 +3,41 @@ import type { Offre } from "./firestore";
 // Offre typée côté client : les documents Firestore sont des records
 // libres, cette forme fixe le contrat passé aux composants.
 
+// Insights factuels de l'élu recruteur, générés une fois par la pipeline
+// GitLab (open data de l'Assemblée nationale et du Sénat) puis rafraîchis.
+// Des faits publics bruts pour préparer sa candidature : aucune interprétation,
+// aucun rapprochement idéologique.
+export type InsightsVote = {
+  date: string | null;
+  numero?: string | null;
+  titre?: string | null;
+  position: string;
+  url?: string | null;
+};
+
+export type InsightsQuestion = {
+  date: string | null;
+  intitule: string | null;
+  reponse_le?: string | null;
+  statut?: string | null;
+  url?: string | null;
+};
+
+export type InsightsElu = {
+  chambre: string;
+  genere_le: string | null;
+  source: string | null;
+  votes: {
+    scrutins: number;
+    participation: number | null;
+    conformite: number | null;
+    depuis: string | null;
+    derniers: InsightsVote[];
+  } | null;
+  questions_gouvernement: InsightsQuestion[];
+  questions_ecrites: InsightsQuestion[];
+};
+
 export type OffreListe = {
   id: string;
   titre: string;
@@ -18,6 +53,7 @@ export type OffreListe = {
   publie_le: string | null;
   expire_le: string | null;
   source_connector: string;
+  insights: InsightsElu | null;
 };
 
 export function normaliser(o: Offre): OffreListe {
@@ -36,5 +72,6 @@ export function normaliser(o: Offre): OffreListe {
     publie_le: (o.publie_le as string) ?? null,
     expire_le: (o.expire_le as string) ?? null,
     source_connector: String(o.source_connector ?? "collecte"),
+    insights: (o.insights as InsightsElu) ?? null,
   };
 }
