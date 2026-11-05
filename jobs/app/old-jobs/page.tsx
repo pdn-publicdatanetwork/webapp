@@ -10,7 +10,7 @@ export const revalidate = 300;
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Anciennes offres | DataParl' Jobs",
+  title: "Anciennes offres",
   description:
     "Les offres de collaborateur parlementaire pourvues ou expirées, archivées pour consultation.",
   alternates: { canonical: "https://jobs.dataparl.fr/old-jobs" },
