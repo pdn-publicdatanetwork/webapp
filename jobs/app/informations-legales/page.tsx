@@ -49,8 +49,7 @@ export default function Page() {
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
           Les offres publiées sont collectées automatiquement sur des sites publics d&apos;annonces d&apos;emplois
-          parlementaires, ou déposées directement par les élus et leurs cabinets. Toutes sont relues avant
-          publication. Pour les offres déposées, DataParl&apos; agit comme sous-traitant (article 28 du RGPD)
+          parlementaires, ou déposées directement par les élus et leurs cabinets. Les annonces collectées sont vérifiées, corrigées et enrichies par un traitement assisté par intelligence artificielle (modèle Mistral Small, mistral-small-latest, édité par Mistral AI SAS, société française), sous le contrôle de l&apos;équipe éditoriale, qui peut corriger ou retirer une offre à tout moment. Les offres déposées sont, elles, relues par un humain avant publication ; pour celles-ci, DataParl&apos; agit comme sous-traitant (article 28 du RGPD)
           de l&apos;équipe parlementaire responsable du traitement.
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
@@ -90,10 +89,30 @@ export default function Page() {
           Les candidatures sont envoyées directement aux équipes parlementaires. Leur envoi n&apos;est
           comptabilisé que de façon anonyme (compteur global sur 30 jours, visible sur chaque offre).
         </p>
+        <p className="text-sm text-slate-700 leading-relaxed">
+          <strong>Usages interdits</strong> : il est interdit de créer un compte sous une fausse identité, de
+          déposer une annonce trompeuse (l&apos;espace recruteur est réservé aux adresses parlementaires et à
+          l&apos;équipe DataParl&apos;), de contourner les protections anti-robot ou d&apos;extraire massivement le
+          site en dehors de l&apos;API publique documentée.
+        </p>
+        <p className="text-sm text-slate-700 leading-relaxed">
+          <strong>Modération et signalement</strong> : une annonce inexacte ou illicite peut être signalée via
+          le{" "}<a href="/contact" className={lien}>formulaire de contact</a>. L&apos;équipe éditoriale peut
+          corriger, refuser ou retirer une annonce à tout moment.
+        </p>
+        <p className="text-sm text-slate-700 leading-relaxed">
+          <strong>Évolution du service</strong> : DataParl&apos; peut faire évoluer le service et les présentes
+          conditions ; la date de la dernière mise à jour figure en bas de page.
+        </p>
       </section>
 
       <section id="donnees" className={`${carte} space-y-4`}>
         <h2 className={h2}>Données personnelles</h2>
+        <p className="text-sm text-slate-700 leading-relaxed">
+          DataParl&apos; est responsable de traitement des données collectées sur ce site, à l&apos;exception
+          des offres déposées par les équipes parlementaires, pour lesquelles l&apos;équipe parlementaire est
+          responsable de traitement et DataParl&apos; agit comme sous-traitant (article 28 du RGPD).
+        </p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs sm:text-sm text-left border-collapse">
             <caption className="sr-only">Récapitulatif des traitements de données personnelles</caption>
@@ -149,9 +168,7 @@ export default function Page() {
           </li>
           <li>
             <strong>CV Matching</strong> : le texte de votre CV est d&apos;abord analysé localement (mise en
-            correspondance par mots-clés), puis, pour affiner le résultat, transmis à Mistral AI (éditeur
-            français, traitement dans l&apos;Union européenne), qui ne le conserve pas. Le texte du CV n&apos;est
-            jamais stocké dans nos bases. Seules les coordonnées détectées (e-mail, téléphone) et les
+            correspondance par mots-clés), puis, pour affiner le résultat, transmis à l&apos;API La Plateforme de Mistral AI SAS (société française, Paris, hébergement par défaut dans l&apos;Union européenne), qui utilise le modèle Mistral Small (mistral-small-latest). Le texte du CV n&apos;est jamais stocké dans nos bases ; Mistral le conserve au maximum 30 jours à des fins de détection d&apos;abus et ne l&apos;utilise jamais pour entraîner ses modèles. Le score et le conseil obtenus sont purement indicatifs : aucune décision automatisée n&apos;est prise à votre égard, vous restez seul juge de vos candidatures. Seules les coordonnées détectées (e-mail, téléphone) et les
             compétences extraites sont conservées 3 mois à des fins de recrutement, puis effacées. Vous
             pouvez demander leur suppression à tout moment via le formulaire de contact.
           </li>
@@ -184,8 +201,7 @@ export default function Page() {
           servies depuis l&apos;Union européenne (région Paris).
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
-          L&apos;authentification est gérée par Supabase, les offres et les données opérationnelles sont
-          stockées chez Google (Firestore). La protection anti-robot et le masquage des adresses de contact
+          L&apos;authentification est gérée par Supabase, les données du service (offres, alertes, statistiques internes) sont stockées par Google Cloud (Firestore). La protection anti-robot et le masquage des adresses de contact
           sont assurés par Cloudflare (Turnstile). L&apos;analyse IA des CV est réalisée par Mistral AI
           (France). Les e-mails transactionnels sont envoyés par Resend.
         </p>
