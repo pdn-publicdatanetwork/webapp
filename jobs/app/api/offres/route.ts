@@ -1,6 +1,6 @@
 import { offresPubliques } from "@/lib/firestore";
 import { slugOffre } from "@/lib/jobs";
-import { EMAIL_RE } from "@/lib/jobsTexte";
+import { sansEmail } from "@/lib/jobsTexte";
 import { normaliser } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -30,10 +30,7 @@ export async function GET() {
         publie_le: n.publie_le,
         expire_le: n.expire_le,
         source: n.source_connector,
-        description: String(o.description ?? "")
-          .replace(EMAIL_RE, "")
-          .replace(/\s+/g, " ")
-          .trim(),
+        description: sansEmail(String(o.description ?? "")),
       };
     }),
   });

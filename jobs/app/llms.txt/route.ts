@@ -1,6 +1,6 @@
 import { offresPubliques } from "@/lib/firestore";
 import { slugOffre } from "@/lib/jobs";
-import { CHAMBRE_NOM, EMAIL_RE, extrait, tempsTravail, titrePoste, typeContrat } from "@/lib/jobsTexte";
+import { CHAMBRE_NOM, extrait, sansEmail, tempsTravail, titrePoste, typeContrat } from "@/lib/jobsTexte";
 import { normaliser } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -55,7 +55,7 @@ export async function GET() {
       n.publie_le ? "publiée le " + n.publie_le : null,
     ].filter(Boolean).join(" ; ");
     lignes.push("- [" + titrePoste(n.titre) + "](https://jobs.dataparl.fr/offre/" + slugOffre(n) + ")" + (infos ? " : " + infos : "") + ".");
-    const chapeau = extrait(n.description ?? "").replace(EMAIL_RE, "").trim();
+    const chapeau = sansEmail(extrait(n.description ?? ""));
     if (chapeau) lignes.push("  " + chapeau);
   }
   return new Response(lignes.join("\n") + "\n", {

@@ -5,7 +5,7 @@ import FicheOffre from "@/components/FicheOffre";
 import { compterCandidatures, offreVisible } from "@/lib/firestore";
 import { DATA_SUPABASE_KEY, DATA_SUPABASE_URL } from "@/lib/env";
 import { descriptionSeo, idDepuisSlug, slugOffre, titreSeo } from "@/lib/jobs";
-import { EMAIL_RE, nomElu, tempsTravail, titrePoste, typeContrat, villeDe } from "@/lib/jobsTexte";
+import { nomElu, sansEmail, tempsTravail, titrePoste, typeContrat, villeDe } from "@/lib/jobsTexte";
 import { normaliser, type OffreListe } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -86,7 +86,7 @@ export default async function Page({ params }: Props) {
     "@context": "https://schema.org",
     "@type": "JobPosting",
     title: titrePoste(offre.titre),
-    description: (offre.description ?? "").replace(EMAIL_RE, "").replace(/\s+/g, " ").trim(),
+    description: sansEmail(offre.description ?? ""),
     employmentType: emploi,
     hiringOrganization: {
       "@type": "Organization",

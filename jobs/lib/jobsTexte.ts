@@ -5,6 +5,17 @@
 
 export const EMAIL_RE = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 
+// Description d'annonce sans l'adresse e-mail de candidature, avec
+// nettoyage de la ponctuation orpheline laissée par le retrait.
+export const sansEmail = (t: string) =>
+  t
+    .replace(EMAIL_RE, "")
+    .replace(/\s+à\s*[,;.]/g, ",")
+    .replace(/\s*,\s*,/g, ",")
+    .replace(/\s*:\s*[,;.]/g, ".")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
 export const CHAMBRE_NOM: Record<string, string> = {
   an: "Assemblée nationale",
   senat: "Sénat",

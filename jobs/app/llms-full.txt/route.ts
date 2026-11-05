@@ -1,6 +1,6 @@
 import { offresPubliques } from "@/lib/firestore";
 import { slugOffre } from "@/lib/jobs";
-import { CHAMBRE_NOM, EMAIL_RE, nomElu, titrePoste, typeContrat } from "@/lib/jobsTexte";
+import { CHAMBRE_NOM, nomElu, sansEmail, titrePoste, typeContrat } from "@/lib/jobsTexte";
 import { normaliser } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +25,7 @@ export async function GET() {
     const n = normaliser(o);
     const elu = nomElu(n);
     const chambre = n.chambre ? CHAMBRE_NOM[n.chambre] ?? n.chambre : null;
-    const description = (n.description ?? "").replace(EMAIL_RE, "").trim();
+    const description = sansEmail(n.description ?? "");
     const infos = [
       elu ? "élu : " + elu : null,
       n.groupe_politique ? "groupe : " + n.groupe_politique : null,
