@@ -105,7 +105,10 @@ export default async function Page({ params }: Props) {
   if (ville || offre.departement) {
     const adresse: Record<string, unknown> = { "@type": "PostalAddress", addressCountry: "FR" };
     if (ville) adresse.addressLocality = ville;
-    if (offre.departement) adresse.addressRegion = offre.departement;
+    // Les séries sénatoriales type « Français établis hors de France » ne
+    // sont pas des régions valides pour Google Emplois : on ne garde que
+    // les départements plausibles (libellés courts).
+    if (offre.departement && offre.departement.length <= 30) adresse.addressRegion = offre.departement;
     jsonld.jobLocation = { "@type": "Place", address: adresse };
   }
   return (
