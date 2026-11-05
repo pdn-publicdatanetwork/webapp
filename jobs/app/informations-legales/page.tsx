@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Informations légales",
   description:
-    "Informations légales de DataParl' Jobs : éditeur, comptes et connexion, conditions d'utilisation, sécurité, données personnelles (CV Matching), hébergement et sous-traitants, droits RGPD.",
+    "Informations légales de DataParl' Jobs : éditeur, comptes et connexion, conditions d'utilisation, sécurité, données personnelles (CV Matching), hébergement, droits RGPD.",
   alternates: { canonical: "/informations-legales" },
 };
 
@@ -13,7 +13,7 @@ const SOMMAIRE: [string, string][] = [
   ["Conditions d'utilisation", "conditions"],
   ["Sécurité", "securite"],
   ["Données personnelles", "donnees"],
-  ["Hébergement et sous-traitants", "hebergement"],
+  ["Hébergement", "hebergement"],
   ["Droits des utilisateurs", "droits"],
 ];
 
@@ -203,7 +203,7 @@ export default function Page() {
                 <td className="px-3 py-2">Offres</td>
                 <td className="px-3 py-2">Titre, équipe parlementaire, description</td>
                 <td className="px-3 py-2">2 ans après expiration</td>
-                <td className="px-3 py-2">Google Cloud (Firestore), Slack (relecture)</td>
+                <td className="px-3 py-2">Google Cloud (Firestore)</td>
                 <td className="px-3 py-2">Publication, recherche, API publique</td>
               </tr>
             </tbody>
@@ -245,19 +245,11 @@ export default function Page() {
       </section>
 
       <section id="hebergement" className={`${carte} space-y-3`}>
-        <h2 className={h2}>Hébergement et sous-traitants</h2>
+        <h2 className={h2}>Hébergement</h2>
         <p className="text-sm text-slate-700 leading-relaxed">
           Hébergeur : Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis ({" "}
           <a href="https://vercel.com" className={lien}>vercel.com</a>). Les applications et les pages sont
           servies depuis l&apos;Union européenne (région Paris).
-        </p>
-        <p className="text-sm text-slate-700 leading-relaxed">
-          L&apos;authentification est gérée par Supabase, les données du service (offres, alertes, statistiques internes) sont stockées par Google Cloud (Firestore). La protection anti-robot et le masquage des adresses de contact
-          sont assurés par Cloudflare (Turnstile). L&apos;analyse IA des CV est réalisée par Mistral AI
-          (France). Les e-mails transactionnels sont envoyés par Resend.
-        </p>
-        <p className="text-sm text-slate-700 leading-relaxed">
-          Les échanges sont chiffrés en TLS 1.3.
         </p>
       </section>
 
