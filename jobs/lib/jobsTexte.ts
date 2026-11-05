@@ -96,6 +96,7 @@ export function typeContrat(o: { type_poste?: string | null; description: string
 export { CONTRATS };
 
 export function tempsTravail(desc: string): string | null {
+  if (/temps\s+plein\s+(?:ou|et)\s+temps\s+partiel/i.test(desc)) return "Temps plein ou temps partiel";
   if (/temps\s+plein/i.test(desc)) return "Temps plein";
   if (/temps\s+partiel/i.test(desc)) return "Temps partiel";
   return null;
@@ -130,7 +131,7 @@ export function remuneration(texte: string): { type: string; montant: string | n
   const t = texte.replace(/\s+/g, " ").trim();
   const type = /gratification/i.test(t) ? "Gratification" : /salaire/i.test(t) ? "Salaire" : "Non précisé";
   const m = t.match(/(\d[\d\s]*(?:[.,]\d+)?)\s*(?:euros?|€)\s*(nets?|bruts?)?/i);
-  const periode = /par\s+an|annuel/i.test(t) ? " / an" : " / mois";
+  const periode = /par\s+an|annuel/i.test(t) ? " / an" : /par\s+heure/i.test(t) ? " / heure" : " / mois";
   const montant = m
     ? m[1].replace(/[\s\u00a0]/g, " ").trim() + " €" + (m[2] ? " " + m[2].toLowerCase() : "") + periode
     : null;

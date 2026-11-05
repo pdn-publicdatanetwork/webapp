@@ -35,7 +35,7 @@ export async function GET() {
       n.publie_le ? "publiée le : " + n.publie_le : null,
     ].filter(Boolean).join(" ; ");
     parties.push(
-      "## " + titrePoste(n.titre) + (elu ? " - " + elu : ""),
+      "## " + titrePoste(n.titre) + (elu ? " - " + elu : (n.groupe_politique ? " - Groupe " + n.groupe_politique : "")),
       "",
       "URL : https://jobs.dataparl.fr/offre/" + slugOffre(n),
       infos,

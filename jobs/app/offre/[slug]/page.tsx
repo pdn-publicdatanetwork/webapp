@@ -90,7 +90,7 @@ export default async function Page({ params }: Props) {
     employmentType: emploi,
     hiringOrganization: {
       "@type": "Organization",
-      name: elu ? "Équipe parlementaire de " + elu : "Équipe parlementaire",
+      name: elu ? "Équipe parlementaire de " + elu : (offre.groupe_politique ? "Groupe " + offre.groupe_politique : "Équipe parlementaire"),
       sameAs: offre.parlementaire_slug
         ? "https://www.dataparl.fr/parlementaires/" + offre.parlementaire_slug
         : "https://jobs.dataparl.fr",

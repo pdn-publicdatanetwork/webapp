@@ -292,7 +292,7 @@ export default function Explorer({ offres }: { offres: OffreListe[] }) {
                       {titrePoste(offre.titre)}
                     </h3>
                     <p className="mt-1 text-sm font-medium text-slate-600 flex flex-wrap items-center gap-2">
-                      <span>{nomElu(offre) || "Équipe parlementaire"}</span>
+                      <span>{nomElu(offre) || (offre.groupe_politique ? "Groupe parlementaire" : "Équipe parlementaire")}</span>
                       {offre.groupe_politique && (<><span className="text-slate-300">•</span><span>{offre.groupe_politique}</span></>)}
                       {offre.chambre && (<><span className="text-slate-300">•</span><span className="text-[#6C84B0] font-semibold">{CHAMBRE_NOM[offre.chambre] ?? offre.chambre}</span></>)}
                     </p>

@@ -56,12 +56,24 @@ export type OffreListe = {
   insights: InsightsElu | null;
 };
 
+// Chambres : les sources collectées peuvent écrire « Sénat » ou « europarl » ;
+// on force les valeurs canoniques attendues par les filtres et libellés du site.
+const CHAMBRES_CANONIQUES: Record<string, string> = {
+  "Sénat": "senat",
+  senat: "senat",
+  "Assemblée nationale": "an",
+  an: "an",
+  europarl: "pe",
+  "Parlement européen": "pe",
+  pe: "pe",
+};
+
 export function normaliser(o: Offre): OffreListe {
   return {
     id: String(o.id ?? ""),
     titre: String(o.titre ?? ""),
     description: String(o.description ?? ""),
-    chambre: (o.chambre as string) ?? null,
+    chambre: CHAMBRES_CANONIQUES[String(o.chambre ?? "")] ?? ((o.chambre as string) ?? null),
     departement: (o.departement as string) ?? null,
     elu_prenom: (o.elu_prenom as string) ?? null,
     elu_nom: (o.elu_nom as string) ?? null,

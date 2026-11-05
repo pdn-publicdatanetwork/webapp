@@ -86,6 +86,8 @@ export function descriptionSeo(o: OffreSeo): string {
   if (elu) {
     const detail = [o.groupe_politique, o.departement].filter(Boolean).join(", ");
     phrases.push("Équipe parlementaire de " + elu + (detail ? " (" + detail + ")" : "") + ".");
+  } else if (o.groupe_politique) {
+    phrases.push("Groupe " + o.groupe_politique + ".");
   }
   if (o.publie_le) {
     const d = dateFr(o.publie_le);

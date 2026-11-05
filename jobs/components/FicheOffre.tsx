@@ -363,7 +363,7 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
               {titrePoste(offre.titre)}
             </h1>
             <p className="text-sm font-semibold text-slate-600 flex flex-wrap items-center gap-1.5">
-              <span>{elu || "Équipe parlementaire"}</span>
+              <span>{elu || (offre.groupe_politique ? "Groupe parlementaire" : "Équipe parlementaire")}</span>
               {offre.groupe_politique && (<><span className="text-slate-300">•</span><span className="text-[#6C84B0]">{offre.groupe_politique}</span></>)}
               {offre.chambre && (<><span className="text-slate-300">•</span><span className="bg-[#ECF1FC] text-[#4E2E53] px-2.5 py-0.5 rounded-lg text-xs font-bold">{CHAMBRE_NOM[offre.chambre] ?? offre.chambre}</span></>)}
             </p>
@@ -444,6 +444,12 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
                 <span className="text-[#6C84B0] font-semibold text-xs pt-0.5">Contrat</span>
                 <span className="font-medium">{contrat}</span>
               </p>
+              {duree && duree.lignes.filter(Boolean).length > 0 && (
+                <p className="py-2.5 grid grid-cols-[140px_1fr] gap-3">
+                  <span className="text-[#6C84B0] font-semibold text-xs pt-0.5">Durée</span>
+                  <span className="font-medium">{duree.lignes.filter(Boolean).join(" ")}</span>
+                </p>
+              )}
               <p className="py-2.5 grid grid-cols-[140px_1fr] gap-3">
                 <span className="text-[#6C84B0] font-semibold text-xs pt-0.5">Temps de travail</span>
                 <span className="font-medium">{travail ?? infosMap.get("Temps de travail") ?? "Non précisé"}</span>
@@ -507,12 +513,22 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
           {Boolean(compte) && (
             <>
           <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2">
-            <h2 className="text-sm font-serif-title font-bold text-[#4E2E53]">L&apos;équipe parlementaire</h2>
-            <p className="text-sm text-slate-600 leading-relaxed">
-              Équipe de <strong>{elu || "l'élu"}</strong>
-              {offre.groupe_politique ? " (" + offre.groupe_politique + ")" : ""}
-              {offre.chambre ? ", " + (CHAMBRE_NOM[offre.chambre] ?? offre.chambre) : ""}.
-            </p>
+            {/* Offre de groupe : les groupes politiques n'ont pas d'élu identifié et
+                leurs équipes ne sont pas référencées dans l'annuaire DataParl'. */}
+            <h2 className="text-sm font-serif-title font-bold text-[#4E2E53]">{elu ? "L&apos;équipe parlementaire" : "L&apos;équipe"}</h2>
+            {elu ? (
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Équipe de <strong>{elu}</strong>
+                {offre.groupe_politique ? " (" + offre.groupe_politique + ")" : ""}
+                {offre.chambre ? ", " + (CHAMBRE_NOM[offre.chambre] ?? offre.chambre) : ""}.
+              </p>
+            ) : (
+              <p className="text-sm text-slate-600 leading-relaxed">
+                {offre.groupe_politique ? "Équipe du groupe " + offre.groupe_politique : "Équipe parlementaire"}
+                {offre.chambre ? ", " + (CHAMBRE_NOM[offre.chambre] ?? offre.chambre) : ""}.
+                {offre.groupe_politique ? " Les équipes des groupes politiques ne sont pas référencées dans l&apos;annuaire DataParl&apos;." : ""}
+              </p>
+            )}
             {lienFiche && (
               <a
                 href={lienFiche}
