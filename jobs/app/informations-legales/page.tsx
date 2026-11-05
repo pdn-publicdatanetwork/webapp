@@ -49,6 +49,11 @@ export default function Page() {
           identité. Directeur de la publication : l&apos;équipe éditoriale DataParl&apos;.
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
+          Pour toute question relative à l&apos;édition du site, l&apos;équipe peut être contactée via le{" "}
+          <a href="/contact" className={lien}>formulaire de contact</a> ; une réponse est apportée
+          sous 15 jours ouvrés.
+        </p>
+        <p className="text-sm text-slate-700 leading-relaxed">
           DataParl&apos; Jobs exerce deux activités distinctes.
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
@@ -98,9 +103,11 @@ export default function Page() {
           publication et la valorisation de leurs annonces.
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
-          Les offres collectées sont relues avant publication, mais seules l&apos;annonce d&apos;origine et
-          l&apos;équipe parlementaire font foi : DataParl&apos; ne garantit pas l&apos;exactitude ni
-          l&apos;exhaustivité des annonces et ne participe pas au recrutement.
+          Les offres collectées sont relues et enrichies avant publication ; toutefois, seule
+          l&apos;annonce d&apos;origine publiée par l&apos;équipe parlementaire fait foi. DataParl&apos; Jobs ne
+          garantit ni l&apos;exactitude, ni l&apos;exhaustivité, ni l&apos;actualité des informations et ne peut
+          être tenu responsable des erreurs ou omissions qui subsisteraient après relecture ; il ne
+          participe pas au recrutement.
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
           <strong>Protection des candidats</strong> : DataParl&apos; Jobs met tout en oeuvre pour protéger
@@ -126,7 +133,9 @@ export default function Page() {
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
           <strong>Évolution du service</strong> : DataParl&apos; peut faire évoluer le service et les présentes
-          conditions ; la date de la dernière mise à jour figure en bas de page.
+          conditions ; la date de la dernière mise à jour figure en bas de page. En cas de
+          modification substantielle des conditions, les utilisateurs disposant d&apos;un compte sont
+          informés par e-mail au moins 15 jours avant l&apos;entrée en vigueur.
         </p>
       </section>
 
@@ -134,7 +143,8 @@ export default function Page() {
         <h2 className={h2}>Sécurité</h2>
         <p className="text-sm text-slate-700 leading-relaxed">
           <strong>Comptes sans mot de passe</strong> : la connexion se fait par lien magique e-mail ou
-          via Google, gérée par Supabase.
+          via Google, gérée par Supabase. Les liens magiques de connexion ont une durée de validité
+          limitée (une heure) et ne peuvent être utilisés qu&apos;une seule fois.
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
           <strong>Reconnaître les messages de DataParl&apos;</strong> : les e-mails du service proviennent
@@ -158,6 +168,12 @@ export default function Page() {
           des offres déposées par les équipes parlementaires, pour lesquelles l&apos;équipe parlementaire est
           responsable de traitement et DataParl&apos; Jobs agit comme sous-traitant (article 28 du RGPD).
         </p>
+        <p className="text-sm text-slate-700 leading-relaxed">
+          Les traitements par intelligence artificielle sont limités à l&apos;enrichissement des offres
+          collectées et au CV Matching : aucune décision automatisée ayant un effet juridique ou
+          significatif n&apos;est prise à l&apos;égard des candidats, et les scores obtenus sont purement
+          indicatifs.
+        </p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs sm:text-sm text-left border-collapse">
             <caption className="sr-only">Récapitulatif des traitements de données personnelles</caption>
@@ -166,6 +182,7 @@ export default function Page() {
                 <th scope="col" className="px-3 py-2 font-semibold">Traitement</th>
                 <th scope="col" className="px-3 py-2 font-semibold">Données</th>
                 <th scope="col" className="px-3 py-2 font-semibold">Durée</th>
+                <th scope="col" className="px-3 py-2 font-semibold">Base légale</th>
                 <th scope="col" className="px-3 py-2 font-semibold">Prestataires</th>
                 <th scope="col" className="px-3 py-2 font-semibold">Finalité</th>
               </tr>
@@ -175,6 +192,7 @@ export default function Page() {
                 <td className="px-3 py-2 border-b border-slate-100">Comptes</td>
                 <td className="px-3 py-2 border-b border-slate-100">Adresse e-mail, identifiant de session</td>
                 <td className="px-3 py-2 border-b border-slate-100">Tant que le compte existe</td>
+                <td className="px-3 py-2 border-b border-slate-100">Exécution du contrat</td>
                 <td className="px-3 py-2 border-b border-slate-100">Supabase</td>
                 <td className="px-3 py-2 border-b border-slate-100">Connexion, espace recruteur</td>
               </tr>
@@ -182,6 +200,7 @@ export default function Page() {
                 <td className="px-3 py-2 border-b border-slate-100">Mesure d&apos;audience</td>
                 <td className="px-3 py-2 border-b border-slate-100">Pages vues, clics, cookies (Google Analytics via Google Tag Manager)</td>
                 <td className="px-3 py-2 border-b border-slate-100">30 jours (statistiques internes)</td>
+                <td className="px-3 py-2 border-b border-slate-100">Intérêt légitime</td>
                 <td className="px-3 py-2 border-b border-slate-100">Google (Analytics, Tag Manager)</td>
                 <td className="px-3 py-2 border-b border-slate-100">Mesure d&apos;audience</td>
               </tr>
@@ -189,6 +208,7 @@ export default function Page() {
                 <td className="px-3 py-2 border-b border-slate-100">CV Matching</td>
                 <td className="px-3 py-2 border-b border-slate-100">Texte du CV (jamais stocké), coordonnées détectées, compétences</td>
                 <td className="px-3 py-2 border-b border-slate-100">Coordonnées et compétences : 3 mois (espace Mon compte)</td>
+                <td className="px-3 py-2 border-b border-slate-100">Exécution du contrat</td>
                 <td className="px-3 py-2 border-b border-slate-100">Mistral AI (La Plateforme)</td>
                 <td className="px-3 py-2 border-b border-slate-100">Correspondance avec les offres</td>
               </tr>
@@ -196,6 +216,7 @@ export default function Page() {
                 <td className="px-3 py-2 border-b border-slate-100">Alertes</td>
                 <td className="px-3 py-2 border-b border-slate-100">Adresse e-mail</td>
                 <td className="px-3 py-2 border-b border-slate-100">Tant que l&apos;abonnement est actif</td>
+                <td className="px-3 py-2 border-b border-slate-100">Exécution du contrat</td>
                 <td className="px-3 py-2 border-b border-slate-100">Resend</td>
                 <td className="px-3 py-2 border-b border-slate-100">Envoi des nouvelles offres</td>
               </tr>
@@ -203,6 +224,7 @@ export default function Page() {
                 <td className="px-3 py-2">Offres</td>
                 <td className="px-3 py-2">Titre, équipe parlementaire, description</td>
                 <td className="px-3 py-2">2 ans après expiration</td>
+                <td className="px-3 py-2">Intérêt légitime</td>
                 <td className="px-3 py-2">Google Cloud (Firestore)</td>
                 <td className="px-3 py-2">Publication, recherche, API publique</td>
               </tr>
@@ -218,8 +240,8 @@ export default function Page() {
           </li>
           <li>
             <strong>CV Matching</strong> : le texte du CV est analysé localement par mots-clés, puis
-            transmis à Mistral AI (société française, modèle Mistral Small) pour affiner le résultat. Il
-            n&apos;est jamais stocké dans les bases du service ; Mistral le conserve au maximum 30 jours à
+            transmis à Mistral AI (société française, modèle Mistral Small) pour affiner le résultat. Le
+            texte intégral du CV n&apos;est jamais stocké dans les bases de DataParl&apos; ; Mistral le conserve au maximum 30 jours à
             des fins de détection d&apos;abus et ne l&apos;utilise pas pour entraîner ses modèles. Le score obtenu
             est purement indicatif : aucune décision automatisée n&apos;est prise à l&apos;égard du candidat. Seules
             les coordonnées et les compétences extraites sont conservées 3 mois dans l&apos;espace Mon
@@ -258,7 +280,7 @@ export default function Page() {
         <p className="text-sm text-slate-700 leading-relaxed">
           Chaque utilisateur dispose d&apos;un droit d&apos;accès, de rectification, de suppression,
           d&apos;opposition et de portabilité sur ses données. Pour l&apos;exercer :{" "}
-          <a href="/contact" className={lien}>formulaire de contact</a> (sujet RGPD). Réponse sous un mois.
+          <a href="/contact" className={lien}>formulaire de contact</a> (sujet RGPD). Réponse sous un mois, conformément au RGPD.
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
           En cas de désaccord, une réclamation peut être introduite auprès de la CNIL :{" "}
@@ -266,7 +288,7 @@ export default function Page() {
         </p>
       </section>
 
-      <p className="text-xs text-slate-400">Dernière mise à jour : novembre 2026.</p>
+      <p className="text-xs text-slate-400">Dernière mise à jour : 5 novembre 2026.</p>
     </div>
   );
 }
