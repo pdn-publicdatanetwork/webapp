@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Turnstile from "@/components/Turnstile";
 
 // Formulaire de contact DataParl' Jobs : les messages partent vers la même
@@ -22,6 +22,20 @@ export default function Page() {
   const [etat, setEtat] = useState<"attente" | "envoi" | "ok" | "erreur">("attente");
   const [message, setMessage] = useState("");
   const maj = (p: Partial<typeof f>) => setF({ ...f, ...p });
+
+  // Préremplissage depuis un lien (ex : signalement d'une annonce depuis sa
+  // fiche, ?sujet=erreur&message=...). window.location.search évite
+  // useSearchParams et ses exigences de Suspense.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sujet = params.get("sujet");
+    const message = params.get("message");
+    setF((avant) => ({
+      ...avant,
+      sujet: SUJETS.some((s) => s.v === sujet) ? (sujet as string) : avant.sujet,
+      message: message ? message.slice(0, 5000) : avant.message,
+    }));
+  }, []);
 
   const envoyer = async (e: React.FormEvent) => {
     e.preventDefault();

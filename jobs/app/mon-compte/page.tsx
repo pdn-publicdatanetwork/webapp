@@ -90,6 +90,8 @@ export default function Page() {
   const [note, setNote] = useState("");
   const [modalAlerte, setModalAlerte] = useState(false);
   const [formAlerte, setFormAlerte] = useState({ titre: "", chambre: "Toutes les chambres", contrat: "CDI", mots: "", frequence: "Hebdomadaire" });
+  const [modalSuppression, setModalSuppression] = useState(false);
+  const [suppressionEnCours, setSuppressionEnCours] = useState(false);
 
   useEffect(() => {
     auth.auth.getSession().then(({ data }) => {
@@ -105,6 +107,37 @@ export default function Page() {
   const deconnexion = async () => {
     await auth.auth.signOut();
     router.replace("/");
+  };
+
+  // Suppression directe du compte (RGPD) : l'API vérifie la session serveur,
+  // efface les données du service (alertes, CV Matching) puis le compte auth
+  // Supabase. Le compte étant unique, il vaut aussi pour www.dataparl.fr.
+  const supprimerCompte = async () => {
+    setSuppressionEnCours(true);
+    try {
+      const { data } = await auth.auth.getSession();
+      const jeton = data.session?.access_token ?? "";
+      const res = await fetch("/api/compte/supprimer", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ jeton }),
+      });
+      if (res.ok) {
+        await auth.auth.signOut();
+        router.replace("/");
+        return;
+      }
+      const j = await res.json().catch(() => ({}));
+      setNote(
+        typeof j?.erreur === "string"
+          ? j.erreur
+          : "Suppression impossible pour le moment : passez par le formulaire de contact (sujet RGPD)."
+      );
+    } catch {
+      setNote("Suppression impossible pour le moment : passez par le formulaire de contact (sujet RGPD).");
+    }
+    setModalSuppression(false);
+    setSuppressionEnCours(false);
   };
 
   const demo = () => setNote("Aperçu de démonstration : le suivi réel des candidatures arrive prochainement.");
@@ -284,6 +317,13 @@ export default function Page() {
                 <button onClick={deconnexion} className="w-full py-2.5 border border-slate-300 rounded-2xl text-xs font-bold text-slate-700 hover:bg-slate-50">
                   Se déconnecter de DataParl&apos;
                 </button>
+                <button
+                  onClick={() => setModalSuppression(true)}
+                  data-stat="clic_supprimer_compte"
+                  className="w-full py-2.5 border border-red-200 text-red-700 rounded-2xl text-xs font-bold hover:bg-red-50"
+                >
+                  Supprimer mon compte
+                </button>
               </div>
             </div>
           </div>
@@ -454,6 +494,39 @@ export default function Page() {
                 Activer cette alerte e-mail
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {modalSuppression && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative border border-slate-200 space-y-4">
+            <button onClick={() => setModalSuppression(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold">✕</button>
+            <div className="space-y-1">
+              <span className="bg-red-100 text-red-800 font-bold px-2.5 py-0.5 rounded-full text-[10px]">Action irréversible</span>
+              <h3 className="text-xl font-serif-title font-bold text-[#4E2E53]">Supprimer mon compte</h3>
+            </div>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Votre compte est unique : le supprimer efface aussi votre accès à www.dataparl.fr, vos alertes
+              e-mail et les données issues du CV Matching. Cette action est définitive ; vous pourrez
+              toutefois recréer un compte avec la même adresse.
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setModalSuppression(false)}
+                className="py-2.5 border border-slate-300 rounded-2xl text-xs font-bold text-slate-700 hover:bg-slate-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={supprimerCompte}
+                disabled={suppressionEnCours}
+                data-stat="clic_confirmer_suppression"
+                className="py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white rounded-2xl text-xs font-bold"
+              >
+                {suppressionEnCours ? "Suppression…" : "Supprimer définitivement"}
+              </button>
+            </div>
           </div>
         </div>
       )}

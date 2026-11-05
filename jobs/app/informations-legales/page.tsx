@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Informations légales",
   description:
-    "Informations légales de DataParl' Jobs : éditeur, comptes et connexion, conditions d'utilisation, données personnelles (CV Matching), hébergement et sous-traitants, droits RGPD.",
+    "Informations légales de DataParl' Jobs : éditeur, comptes et connexion, conditions d'utilisation, sécurité, données personnelles (CV Matching), hébergement et sous-traitants, droits RGPD.",
   alternates: { canonical: "/informations-legales" },
 };
 
@@ -11,6 +11,7 @@ const SOMMAIRE: [string, string][] = [
   ["Éditeur", "editeur"],
   ["Comptes et connexion", "comptes"],
   ["Conditions d'utilisation", "conditions"],
+  ["Sécurité", "securite"],
   ["Données personnelles", "donnees"],
   ["Hébergement et sous-traitants", "hebergement"],
   ["Vos droits", "droits"],
@@ -28,8 +29,8 @@ export default function Page() {
           Informations légales
         </h1>
         <p className="text-sm text-slate-600 leading-relaxed">
-          DataParl&apos; Jobs (jobs.dataparl.fr) est un service de DataParl&apos;, projet civique de suivi de
-          l&apos;écosystème parlementaire français. Les textes légaux généraux sont publiés sur{" "}
+          DataParl&apos; Jobs (jobs.dataparl.fr) est la plateforme d&apos;emploi de DataParl&apos;, Civic Tech et
+          RegTech. Les textes légaux généraux sont publiés sur{" "}
           <a href="https://www.dataparl.fr/informations-legales" className={lien}>www.dataparl.fr</a>.
         </p>
         <nav aria-label="Sommaire" className="flex flex-wrap gap-2">
@@ -48,13 +49,24 @@ export default function Page() {
           identité. Directeur de la publication : l&apos;équipe éditoriale DataParl&apos;.
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
-          Les offres publiées sont collectées automatiquement sur des sites publics d&apos;annonces d&apos;emplois
-          parlementaires, ou déposées directement par les élus et leurs cabinets. Les annonces collectées sont vérifiées, corrigées et enrichies par un traitement assisté par intelligence artificielle (modèle Mistral Small, mistral-small-latest, édité par Mistral AI SAS, société française), sous le contrôle de l&apos;équipe éditoriale, qui peut corriger ou retirer une offre à tout moment. Les offres déposées sont, elles, relues par un humain avant publication ; pour celles-ci, DataParl&apos; agit comme sous-traitant (article 28 du RGPD)
-          de l&apos;équipe parlementaire responsable du traitement.
+          DataParl&apos; Jobs exerce deux activités distinctes.
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
-          Nos messages proviennent uniquement d&apos;adresses en @dataparl.fr : bienvenue@ pour la connexion et
-          le compte, alerte-job@ pour les alertes emplois. Pour toute demande :{" "}
+          <strong>Agrégateur d&apos;emploi (moteur de recherche)</strong> : les offres sont collectées
+          automatiquement sur des sites publics d&apos;annonces d&apos;emplois parlementaires, puis vérifiées,
+          corrigées et enrichies par un traitement assisté par intelligence artificielle (modèle Mistral
+          Small, mistral-small-latest, édité par Mistral AI SAS, société française), sous le contrôle de
+          l&apos;équipe éditoriale, qui peut corriger ou retirer une offre à tout moment. DataParl&apos; Jobs
+          n&apos;est pas l&apos;auteur de ces annonces.
+        </p>
+        <p className="text-sm text-slate-700 leading-relaxed">
+          <strong>Site de gestion d&apos;annonces (job board)</strong> : les offres déposées par les
+          parlementaires sont relues par l&apos;équipe éditoriale avant publication ; pour celles-ci,
+          DataParl&apos; Jobs agit comme sous-traitant (article 28 du RGPD) de l&apos;équipe parlementaire
+          responsable du traitement.
+        </p>
+        <p className="text-sm text-slate-700 leading-relaxed">
+          Nos messages proviennent uniquement du domaine dataparl.fr. Pour toute demande :{" "}
           <a href="/contact" className={lien}>formulaire de contact</a>.
         </p>
       </section>
@@ -69,16 +81,21 @@ export default function Page() {
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
           La consultation des listes d&apos;offres est libre. La lecture complète des offres, le CV Matching,
-          les alertes et l&apos;espace recruteur nécessitent un compte. Vous pouvez demander la suppression de
-          votre compte et de vos données via le{" "}
-          <a href="/contact" className={lien}>formulaire de contact</a>.
+          les alertes et l&apos;espace recruteur nécessitent un compte. Vous pouvez supprimer votre compte et
+          vos données directement depuis votre espace{" "}
+          <a href="/mon-compte" className={lien}>Mon compte</a>. La suppression est immédiate et
+          définitive : votre compte étant unique, elle vaut aussi pour www.dataparl.fr, et efface vos
+          alertes ainsi que les données issues du CV Matching.
         </p>
       </section>
 
       <section id="conditions" className={`${carte} space-y-3`}>
-        <h2 className={h2}>Conditions d'utilisation</h2>
+        <h2 className={h2}>Conditions d&apos;utilisation</h2>
         <p className="text-sm text-slate-700 leading-relaxed">
-          DataParl&apos; Jobs est un service d&apos;information gratuit, sans publicité.
+          DataParl&apos; Jobs est gratuit pour les postulants : consulter les offres, candidater, recevoir
+          des alertes et utiliser le CV Matching ne coûte rien. Le service est financé par des espaces
+          publicitaires et par des solutions payantes proposées aux équipes parlementaires pour la
+          publication et la valorisation de leurs annonces.
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
           Les offres collectées sont relues avant publication, mais seules l&apos;annonce d&apos;origine et
@@ -96,8 +113,9 @@ export default function Page() {
           site en dehors de l&apos;API publique documentée.
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
-          <strong>Modération et signalement</strong> : une annonce inexacte ou illicite peut être signalée via
-          le{" "}<a href="/contact" className={lien}>formulaire de contact</a>. L&apos;équipe éditoriale peut
+          <strong>Modération et signalement</strong> : une annonce inexacte ou illicite peut être signalée
+          directement depuis sa page ou via le{" "}
+          <a href="/contact" className={lien}>formulaire de contact</a>. L&apos;équipe éditoriale peut
           corriger, refuser ou retirer une annonce à tout moment.
         </p>
         <p className="text-sm text-slate-700 leading-relaxed">
@@ -106,12 +124,35 @@ export default function Page() {
         </p>
       </section>
 
+      <section id="securite" className={`${carte} space-y-3`}>
+        <h2 className={h2}>Sécurité</h2>
+        <p className="text-sm text-slate-700 leading-relaxed">
+          <strong>Mesures appliquées au service</strong> : comptes sans mot de passe (lien magique par
+          e-mail ou connexion Google, gérés par Supabase), échanges chiffrés en TLS 1.3, vérification
+          anti-robot (Cloudflare Turnstile) devant les formulaires et les adresses de contact, e-mails
+          authentifiés par SPF, DKIM et DMARC.
+        </p>
+        <p className="text-sm text-slate-700 leading-relaxed">
+          <strong>Reconnaître nos messages</strong> : nos e-mails proviennent uniquement du domaine
+          dataparl.fr et leurs liens pointent toujours vers un site dataparl.fr. Nous ne vous demanderons
+          jamais un mot de passe, un code ou des informations bancaires, et nous n&apos;envoyons pas de
+          pièce jointe inattendue.
+        </p>
+        <p className="text-sm text-slate-700 leading-relaxed">
+          <strong>En cas de doute</strong> : ne vous connectez jamais depuis un lien reçu par e-mail,
+          tapez vous-même l&apos;adresse du site. Si vous avez saisi vos identifiants sur une page suspecte,
+          changez immédiatement le mot de passe de votre messagerie ou de votre compte Google, puis
+          signalez-nous l&apos;e-mail via le{" "}
+          <a href="/contact" className={lien}>formulaire de contact</a> (sujet « Signaler un phishing »).
+        </p>
+      </section>
+
       <section id="donnees" className={`${carte} space-y-4`}>
         <h2 className={h2}>Données personnelles</h2>
         <p className="text-sm text-slate-700 leading-relaxed">
-          DataParl&apos; est responsable de traitement des données collectées sur ce site, à l&apos;exception
+          DataParl&apos; Jobs est responsable de traitement des données collectées sur ce site, à l&apos;exception
           des offres déposées par les équipes parlementaires, pour lesquelles l&apos;équipe parlementaire est
-          responsable de traitement et DataParl&apos; agit comme sous-traitant (article 28 du RGPD).
+          responsable de traitement et DataParl&apos; Jobs agit comme sous-traitant (article 28 du RGPD).
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs sm:text-sm text-left border-collapse">
@@ -140,7 +181,7 @@ export default function Page() {
               <tr>
                 <td className="px-3 py-2 border-b border-slate-100">CV Matching</td>
                 <td className="px-3 py-2 border-b border-slate-100">Texte du CV (jamais stocké), coordonnées détectées, compétences</td>
-                <td className="px-3 py-2 border-b border-slate-100">Coordonnées et compétences : 3 mois</td>
+                <td className="px-3 py-2 border-b border-slate-100">Coordonnées et compétences : 3 mois (espace Mon compte)</td>
                 <td className="px-3 py-2 border-b border-slate-100">Correspondance avec les offres</td>
               </tr>
               <tr>
@@ -160,35 +201,35 @@ export default function Page() {
         </div>
         <ul className="list-disc pl-5 space-y-1.5 text-sm text-slate-700 leading-relaxed">
           <li>
-            <strong>Mesure d&apos;audience</strong> : Google Tag Manager et Google Analytics déposent des
-            cookies et traitent l&apos;adresse IP via Google, comme sur www.dataparl.fr. S&apos;y ajoute un
-            comptage interne des pages vues et des clics, sans cookie : pour les visiteurs connectés,
-            l&apos;adresse e-mail du compte est associée aux visites (statistiques internes uniquement, jamais
-            partagées).
+            <strong>Mesure d&apos;audience</strong> : Google Analytics via Google Tag Manager dépose des
+            cookies et traite l&apos;adresse IP via Google, comme sur www.dataparl.fr ; un comptage interne
+            des pages vues et des clics, sans cookie, complète la mesure. Pour les visiteurs connectés,
+            l&apos;adresse e-mail du compte y est associée (statistiques internes, jamais partagées).
           </li>
           <li>
-            <strong>CV Matching</strong> : le texte de votre CV est d&apos;abord analysé localement (mise en
-            correspondance par mots-clés), puis, pour affiner le résultat, transmis à l&apos;API La Plateforme de Mistral AI SAS (société française, Paris, hébergement par défaut dans l&apos;Union européenne), qui utilise le modèle Mistral Small (mistral-small-latest). Le texte du CV n&apos;est jamais stocké dans nos bases ; Mistral le conserve au maximum 30 jours à des fins de détection d&apos;abus et ne l&apos;utilise jamais pour entraîner ses modèles. Le score et le conseil obtenus sont purement indicatifs : aucune décision automatisée n&apos;est prise à votre égard, vous restez seul juge de vos candidatures. Seules les coordonnées détectées (e-mail, téléphone) et les
-            compétences extraites sont conservées 3 mois à des fins de recrutement, puis effacées. Vous
-            pouvez demander leur suppression à tout moment via le formulaire de contact.
+            <strong>CV Matching</strong> : le texte du CV est analysé localement par mots-clés, puis transmis
+            à l&apos;API La Plateforme de Mistral AI SAS (société française, modèle Mistral Small) pour
+            affiner le résultat. Il n&apos;est jamais stocké dans nos bases ; Mistral le conserve au maximum
+            30 jours à des fins de détection d&apos;abus et ne l&apos;utilise pas pour entraîner ses modèles.
+            Le score obtenu est purement indicatif : aucune décision automatisée n&apos;est prise à votre égard.
+            Seules les coordonnées et les compétences extraites sont conservées 3 mois dans votre espace
+            Mon compte, à des fins de recrutement ; vous pouvez les supprimer à tout moment.
           </li>
           <li>
-            <strong>Aucun profilage politique</strong> : l&apos;analyse mesure uniquement la correspondance entre
-            votre profil et les offres ; elle n&apos;évalue ni ne classe les candidats selon des opinions
-            politiques.
+            <strong>Aucun profilage politique</strong> : l&apos;analyse mesure uniquement la correspondance
+            entre votre profil et les offres.
           </li>
           <li>
-            <strong>Alertes</strong> : votre adresse e-mail est conservée tant que l&apos;abonnement est actif,
-            désinscription en un clic. L&apos;envoi est réalisé par notre prestataire d&apos;e-mails
-            transactionnels (Resend).
+            <strong>Alertes</strong> : adresse e-mail conservée tant que l&apos;abonnement est actif,
+            désinscription en un clic. Envoi par notre prestataire Resend.
           </li>
           <li>
-            <strong>Offres déposées</strong> : leur contenu est transmis à l&apos;équipe de relecture via une
-            notification interne (Slack) avant publication.
+            <strong>Offres déposées</strong> : transmises à l&apos;équipe de relecture via une notification
+            interne (Slack) avant publication.
           </li>
           <li>
-            <strong>Coordonnées des équipes parlementaires</strong> : les e-mails de contact des équipes ne
-            sont jamais affichés en clair ; ils sont protégés par la vérification anti-robot.
+            <strong>Coordonnées des équipes parlementaires</strong> : jamais affichées en clair, protégées
+            par la vérification anti-robot.
           </li>
         </ul>
       </section>

@@ -219,3 +219,16 @@ export async function lireEvenements(jours = 30): Promise<{ type: string; chemin
     return { type: String(v.type ?? ""), chemin: String(v.chemin ?? ""), jour: String(v.jour ?? ""), page: String(v.page ?? ""), compte: String(v.compte ?? "") };
   });
 }
+
+// Suppression des données d'un compte (demande depuis Mon compte) :
+// abonnement aux alertes (un document par e-mail) et dépôts CV Matching
+// (champ « compte », requête mono-champ + filtrage en mémoire). Nettoyage
+// best effort : la suppression du compte auth reste la source de vérité.
+export async function supprimerDonneesCompte(email: string): Promise<void> {
+  const adresse = email.trim().toLowerCase();
+  await db().collection("alert_subscriptions").doc(adresse).delete();
+  const snaps = await db().collection("cv_deposits").where("compte", "==", adresse).limit(500).get();
+  for (const doc of snaps.docs) {
+    await doc.ref.delete();
+  }
+}

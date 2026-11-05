@@ -184,6 +184,11 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
   const lienFiche = offre.parlementaire_slug
     ? "https://www.dataparl.fr/parlementaires/" + offre.parlementaire_slug
     : null;
+  // Signalement d'une annonce : lien vers le contact avec sujet et message
+  // préremplis (titre et URL canonique de la fiche).
+  const signalement =
+    "Bonjour, je signale l'annonce « " + titrePoste(offre.titre) + " » : " +
+    "https://jobs.dataparl.fr/offre/" + slugOffre(offre) + "\nMotif : ";
 
   const consignes = (candidater?.lignes.filter(Boolean).join(" ") ?? "")
     .replace(EMAIL_RE, "")
@@ -417,7 +422,7 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
               >
                 Se connecter pour tout voir
               </Link>
-              <p className="text-[11px] text-slate-400">Gratuit, sans publicité. Votre adresse n&apos;est jamais partagée.</p>
+              <p className="text-[11px] text-slate-400">Gratuit pour les postulants. Votre adresse n&apos;est jamais partagée.</p>
             </div>
           )}
         </div>
@@ -463,7 +468,7 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
             <div className="border border-[#6C84B0]/20 rounded-2xl p-4 space-y-3 bg-[#ECF1FC] text-center">
               <p className="text-xs font-semibold text-[#4E2E53]">La candidature nécessite un compte DataParl&apos;.</p>
               <p className="text-[11px] text-slate-500">
-                Gratuit, sans publicité : votre adresse n&apos;est jamais partagée ni revendue.
+                Gratuit pour les postulants : votre adresse n&apos;est jamais partagée ni revendue.
               </p>
               <Link
                 href={"/connexion?suite=/offre/" + slugOffre(offre)}
@@ -512,6 +517,16 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
 
           <p className="text-[11px] text-slate-400 text-center flex items-center justify-center gap-1">
             🔒 E-mail protégé contre le spam
+          </p>
+
+          <p className="text-center">
+            <Link
+              href={"/contact?sujet=erreur&message=" + encodeURIComponent(signalement)}
+              data-stat="clic_signaler"
+              className="text-[11px] text-slate-400 hover:text-red-600 underline"
+            >
+              Signaler cette annonce
+            </Link>
           </p>
 
           {onFermer ? (
