@@ -49,8 +49,9 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
   const [compte, setCompte] = useState<string | null | undefined>(undefined);
   const [compteur, setCompteur] = useState<number | null>(typeof nbCandidatures === "number" ? nbCandidatures : null);
 
-  // Postuler nécessite un compte DataParl' : le détail reste public (SEO),
-  // mais contacter l'équipe / révéler l'adresse e-mail exige la connexion.
+  // Un compte DataParl' est requis pour le détail des missions, du profil
+  // recherché, des conditions et de l'équipe, ainsi que pour contacter
+  // l'équipe / révéler l'adresse e-mail.
   useEffect(() => {
     auth.auth.getSession().then(({ data }) => setCompte(data.session?.user?.email ?? null));
     const { data: sub } = auth.auth.onAuthStateChange((_e, s) => setCompte(s?.user?.email ?? null));
