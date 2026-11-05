@@ -112,6 +112,11 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
         if (!vivant || !f?.elu_id) return;
         const conditions = ["and(chambre.eq." + f.chambre + ",elu_id.eq." + f.elu_id + ")"];
         if (f.chambre === "senat" && f.cle) conditions.push('and(chambre.eq.senat,elu_cle.eq."' + f.cle + '")');
+        // Au Parlement européen, les tiers payants et prestataires de services
+        // (le plus souvent des sociétés, ex. un cabinet de paie) sont suivis
+        // comme des collaborateurs mais ne sont pas des personnes : on ne les
+        // affiche pas dans l'équipe (même exclusion que FONCTIONS_SOCIETES
+        // du site www, cf. lib/exclusions.ts).
         const perRes = await fetch(
           DATA_SUPABASE_URL +
             "/rest/v1/periodes?" +
@@ -119,6 +124,7 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
               select: "collab_id",
               en_cours: "eq.true",
               or: "(" + conditions.join(",") + ")",
+              fonction: 'not.in.("Tiers payant","Prestataire de services spécialisé")',
               limit: "60",
             }),
           { headers: tete }
@@ -377,7 +383,7 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
           <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2">
             {/* Offre de groupe : les groupes politiques n'ont pas d'élu identifié et
                 leurs équipes ne sont pas référencées dans l'annuaire DataParl'. */}
-            <h2 className="text-sm font-serif-title font-bold text-[#4E2E53]">{elu ? "L&apos;équipe parlementaire" : "L&apos;équipe"}</h2>
+            <h2 className="text-sm font-serif-title font-bold text-[#4E2E53]">{elu ? "L'équipe parlementaire" : "L'équipe"}</h2>
             {elu ? (
               <p className="text-sm text-slate-600 leading-relaxed">
                 Équipe de <strong>{elu}</strong>
@@ -388,7 +394,7 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
               <p className="text-sm text-slate-600 leading-relaxed">
                 {offre.groupe_politique ? "Équipe du groupe " + offre.groupe_politique : "Équipe parlementaire"}
                 {offre.chambre ? ", " + (CHAMBRE_NOM[offre.chambre] ?? offre.chambre) : ""}.
-                {offre.groupe_politique ? " Les équipes des groupes politiques ne sont pas référencées dans l&apos;annuaire DataParl&apos;." : ""}
+                {offre.groupe_politique ? " Les équipes des groupes politiques ne sont pas référencées dans l'annuaire DataParl'." : ""}
               </p>
             )}
             {lienFiche && (
