@@ -243,7 +243,7 @@ export default function Explorer({ offres }: { offres: OffreListe[] }) {
             <span>
               {filtrees.length} offre{filtrees.length > 1 ? "s" : ""} affichée{filtrees.length > 1 ? "s" : ""} sur {offres.length}
             </span>
-            <a href="https://www.dataparl.fr/jobs/old-jobs" target="_blank" rel="noopener noreferrer" className="text-[#6C84B0] hover:text-[#4E2E53] underline">
+            <a href="/old-jobs" className="text-[#6C84B0] hover:text-[#4E2E53] underline">
               Anciennes offres →
             </a>
           </div>
