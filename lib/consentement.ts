@@ -1,5 +1,5 @@
 import { cookieStorage } from "./cookieStorage";
-import { CLARITY_ID } from "./env";
+import { CLARITY_ID, GA4_ID } from "./env";
 
 // Consentement Google (Consent Mode v2), piloté par le bandeau du site :
 // pas par une bannière Google. Les signaux sont envoyés à GTM et AdSense.
@@ -114,6 +114,35 @@ export function chargerClarity() {
   s.id = "clarity-dataparl";
   s.async = true;
   s.src = `https://www.clarity.ms/tag/${CLARITY_ID}`;
+  document.head.appendChild(s);
+}
+
+// Charge Google Analytics 4 en direct (gtag.js), une seule fois, uniquement
+// après un consentement de mesure d'audience : même promesse que la pub et
+// Clarity. Contexte : la balise GA4 (G-GC1JD019GY) a disparu du conteneur
+// GTM (GTM-KW3MJMTK) le 31/10/2026, lors du retrait du message Funding
+// Choices ; la propriété ne recevait plus aucune donnée (0 utilisateur
+// remonté toute la semaine). Si la balise GA4 revient dans le conteneur
+// GTM, retirer les appels à chargerGA4() pour éviter la double mesure :
+// GA4 ne dédoublonne pas deux sources vers une même propriété.
+// Le script vit sur www.googletagmanager.com (déjà en liste blanche dans la
+// CSP, script-src) et les hits partent vers *.google-analytics.com
+// (connect-src). Les signaux Consent Mode v2 posés par le layout s'appliquent
+// : le stockage suit le choix du visiteur, l'appel se fait après appliquer().
+export function chargerGA4() {
+  if (typeof document === "undefined" || !GA4_ID) return;
+  if (document.getElementById("ga4-dataparl")) return;
+  const w = window as unknown as { dataLayer?: unknown[]; gtag?: (...args: unknown[]) => void };
+  w.dataLayer = w.dataLayer || [];
+  // La fonction gtag du layout (app/layout.tsx) empile dans dataLayer ; le
+  // repli couvre le cas improbable où elle manquerait.
+  const gtag = typeof w.gtag === "function" ? w.gtag : (...args: unknown[]) => w.dataLayer?.push(args);
+  gtag("js", new Date());
+  gtag("config", GA4_ID);
+  const s = document.createElement("script");
+  s.id = "ga4-dataparl";
+  s.async = true;
+  s.src = "https://www.googletagmanager.com/gtag/js?id=" + GA4_ID;
   document.head.appendChild(s);
 }
 

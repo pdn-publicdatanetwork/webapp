@@ -40,6 +40,13 @@ export const ADSENSE_SLOT = process.env.NEXT_PUBLIC_ADSENSE_SLOT ?? "2498344789"
 // chargé qu'après un consentement de mesure d'audience (lib/consentement.ts).
 export const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID ?? "yx9kdu8aj0";
 
+// Google Analytics 4 (mesure d'audience) : identifiant public de la propriété.
+// Le script n'est chargé qu'après un consentement de mesure d'audience
+// (lib/consentement.ts, chargerGA4) : la balise GA4 a disparu du conteneur
+// GTM (GTM-KW3MJMTK) le 31/10/2026, au moment du retrait du message Funding
+// Choices ; sans ce chargeur, la propriété ne recevait plus aucune donnée.
+export const GA4_ID = process.env.NEXT_PUBLIC_GA4_ID ?? "G-GC1JD019GY";
+
 // Clé publique AppLixir (client.applixir.com) : visible dans le navigateur par
 // design, comme les autres identifiants NEXT_PUBLIC : défaut intégré pour que
 // le déblocage vidéo soit actif dès le build. Le déblocage réel exige AUSSI
