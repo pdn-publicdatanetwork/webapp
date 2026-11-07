@@ -60,9 +60,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});`,
           }}
         />
-        {/* Google Analytics 4 : PAS de gtag.js en direct. GA4 (G-GC1JD019GY)
-            est déployé via une balise du conteneur GTM seul : fin de la double
-            mesure (~450 Ko de scripts en moins au chargement). */}
+        {/* Google Analytics 4 : la balise GA4 (G-GC1JD019GY) a disparu du
+            conteneur GTM (GTM-KW3MJMTK) le 31/10/2026 (0 donnée remontée
+            depuis) ; gtag.js est donc chargé en direct, uniquement après un
+            consentement de mesure d'audience (lib/consentement.ts,
+            chargerGA4). Si la balise GA4 revient dans le conteneur GTM,
+            retirer l'appel pour éviter la double mesure. */}
         {/* Google AdSense (ca-pub-6168263680630864) : PAS chargé ici. Le script
             publicitaire n'est injecté qu'après un consentement publicitaire
             explicite (lib/consentement.ts, appelé par le bandeau) : jamais pour

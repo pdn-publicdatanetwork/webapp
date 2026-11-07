@@ -2,6 +2,10 @@
 
 Historique des évolutions de la webapp DataParl' (dataparl.fr).
 
+## 2026-11-07
+
+- **Mesure GA4 réactivée** : la balise Google Analytics 4 (G-GC1JD019GY) a disparu du conteneur GTM (GTM-KW3MJMTK) dans la nuit du 30 au 31 octobre, au moment du retrait du message de consentement Funding Choices ; le site ne remontait donc plus aucune donnée depuis une semaine. gtag.js est désormais chargé en direct, uniquement après un consentement de mesure d'audience, comme Clarity et AdSense (`lib/consentement.ts`, `chargerGA4`, appelé par le bandeau). Si la balise GA4 revient dans le conteneur GTM, retirer l'appel pour éviter la double mesure.
+
 ## 2026-10-31
 
 - **Couleurs des marques VigiParl' et MixiParl'** : retour aux couleurs du kit logo (VigiParl' rouge #E30613, MixiParl' violet #7B3FE4, texte blanc), appliqué partout : surlignages, cartes chiffres, barres, wordmarks, mode clair et sombre.
