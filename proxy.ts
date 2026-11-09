@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { cheminsInactifs } from "./lib/pagesEtat";
 import { estInactif } from "./lib/pagesRegistre";
-import { maintenanceActive } from "./lib/maintenance";
+import { ipExempteeMaintenance, maintenanceActive } from "./lib/maintenance";
 import { estPageReseaux, journaliserVueReseaux } from "./lib/vuesReseaux";
 
 // Routage par sous-domaine (un seul déploiement pour tous les hôtes) :
@@ -167,13 +167,17 @@ export async function proxy(req: NextRequest) {
   // Pilotée par la table maintenance_etat (bascule depuis l'admin ou la
   // commande Slack /maintenance, effective en ≤ 30 s, sans redéploiement) ;
   // MAINTENANCE_ACTIVE=1 (Vercel) force la coupure en dernier recours.
+  // Une IP listée dans maintenance_etat.ips_autorisees (exacte, ou préfixe avec
+  // « * ») passe outre : travail sur le site pendant la coupure.
   // Passe tout le public (www, api, media, jobs, raw, mail, link, survey…)
   // sur la page /maintenance, SAUF :
   //   - l'espace équipe : admin.dataparl.fr et webmail.dataparl.fr (et /api) ;
   //   - la page de contact et son API (/contact, /api/contact) ;
   //   - le webhook mail (/api/mail/*, réception Resend qui alimente le webmail) ;
   //   - les assets techniques (_next, icônes) pour un rendu correct de la page.
-  if (await maintenanceActive()) {
+  const xffMaintenance = req.headers.get("x-forwarded-for") ?? "";
+  const ipMaintenance = (xffMaintenance.split(",")[0] || req.headers.get("x-real-ip") || "").trim();
+  if (await maintenanceActive() && !(await ipExempteeMaintenance(ipMaintenance))) {
     // Espace équipe + liens cliquables depuis les emails (mail/lire/<jeton>,
     // link/<code>) : les destinataires doivent pouvoir ouvrir les messages.
     const equipe = host === `admin.${DOMAINE}` || host === `webmail.${DOMAINE}` ||
