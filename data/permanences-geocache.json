@@ -1960,5 +1960,17 @@
   "lon": 6.495566,
   "score": 0.96,
   "ville": "Embrun"
+ },
+ "48 route de l'hôpital 67100 strasbourg": {
+  "lat": 48.570099,
+  "lon": 7.750866,
+  "score": 0.98,
+  "ville": "Strasbourg"
+ },
+ "4 impasse du faubourg 38690 le grand-lemps": {
+  "lat": 45.398391,
+  "lon": 5.423099,
+  "score": 0.95,
+  "ville": "Le Grand-Lemps"
  }
 }
