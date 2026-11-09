@@ -32,6 +32,75 @@ async function photoElu(slug: string | null): Promise<string | null> {
   }
 }
 
+// Google Emplois exige la description au format HTML (balises <p>, <ul>, <li>
+// ou <br> au minimum). On échappe le texte, puis on structure : chaque titre
+// de section connu ouvre un paragraphe, les puces deviennent une liste <ul>.
+const TITRES_SECTION_LD =
+  /^(Vos missions|Profil recherché|Lieu|Rémunération|Durée|Pour candidater|Process(?:us)? de recrutement|Informations pratiques)\s*:\\s*$/i;
+
+function descriptionHtml(texte: string): string {
+  const e = texte.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const parag: string[] = [];
+  let courant: string[] = [];
+  const flush = () => {
+    if (!courant.length) return;
+    const puce = /^[-•*]\s+/;
+    const puces = courant.filter((l) => puce.test(l));
+    const intro = courant.filter((l) => !puce.test(l));
+    if (puces.length) {
+      parag.push(
+        (intro.length ? "<p>" + intro.join("<br>") + "</p>" : "") +
+          "<ul>" +
+          puces.map((l) => "<li>" + l.replace(puce, "") + "</li>").join("") +
+          "</ul>"
+      );
+    } else {
+      parag.push("<p>" + courant.join("<br>") + "</p>");
+    }
+    courant = [];
+  };
+  for (const ligne of e.split(/\r?\n/)) {
+    const l = ligne.trim();
+    if (!l) {
+      flush();
+      continue;
+    }
+    if (TITRES_SECTION_LD.test(l)) flush();
+    courant.push(l);
+  }
+  flush();
+  return parag.join("");
+}
+
+// Salaire (propriété recommandée par Google) : relayé tel que fourni par
+// l'employeur, mais uniquement si montant ET période sont explicites
+// (après le montant, ou adjectif horaire/mensuel/annuel sur la ligne).
+// Une unité devinée vaudrait pire que pas de salaire : en cas de doute on
+// s'abstient. On s'arrête sur la première ligne contenant un montant : les
+// montants suivants (primes) ne sont pas le salaire de base.
+function salaireLd(desc: string): Record<string, unknown> | null {
+  for (const ligneBrute of desc.split(/\r?\n/)) {
+    const t = ligneBrute.replace(/\s+/g, " ");
+    const m = t.match(/(\d[\d\u00a0 ]*(?:[.,]\d+)?)\s*(?:euros?|€)/i);
+    if (!m) continue;
+    const valeur = parseFloat(m[1].replace(/[\u00a0 ]/g, "").replace(",", "."));
+    if (!isFinite(valeur) || valeur <= 0) return null;
+    const apres = t.slice(t.indexOf(m[0]) + m[0].length);
+    const periode =
+      apres.match(/^\s*(?:bruts?|nets?)?\s*(?:\/|par\s+|de\s+l')?\s*(heures?|h\b|mois\b|ans?\b)/i) ||
+      t.match(/\b(horaires?|mensuels?|mensuelles?|annuels?|annuelles?)\b/i);
+    if (!periode) return null;
+    const p = periode[1].toLowerCase();
+    const unite = p.startsWith("h") ? "HOUR" : p.startsWith("m") ? "MONTH" : "YEAR";
+    return {
+      "@type": "MonetaryAmount",
+      currency: "EUR",
+      value: { "@type": "QuantitativeValue", value: valeur, unitText: unite },
+    };
+  }
+  return null;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const id = idDepuisSlug(slug);
@@ -72,10 +141,16 @@ export default async function Page({ params }: Props) {
   // Les adresses e-mail sont retirées de la description ; l'adresse est
   // normalisée au format PostalAddress attendu par Google Emplois
   // (addressLocality = ville, addressRegion = département, addressCountry).
+  // Conformité doc Google « JobPosting » : description en HTML, identifier
+  // en PropertyValue, directApply faux (candidature derrière compte +
+  // Turnstile), baseSalary relayé tel que fourni par l'employeur.
   const elu = nomElu(offre);
+  // employmentType : valeurs prises en charge par Google uniquement
+  // (l'apprentissage/alternance, contrat à durée déterminée en France,
+  // est balisé TEMPORARY ; APPRENTICESHIP n'est pas dans la liste Google).
   const TYPES_EMPLOI: Record<string, string> = {
     Stage: "INTERN",
-    Alternance: "APPRENTICESHIP",
+    Alternance: "TEMPORARY",
     CDD: "TEMPORARY",
     CDI: "FULL_TIME",
   };
@@ -86,7 +161,7 @@ export default async function Page({ params }: Props) {
     "@context": "https://schema.org",
     "@type": "JobPosting",
     title: titrePoste(offre.titre),
-    description: sansEmail(offre.description ?? ""),
+    description: descriptionHtml(sansEmail(offre.description ?? "")),
     employmentType: emploi,
     hiringOrganization: {
       "@type": "Organization",
@@ -96,11 +171,20 @@ export default async function Page({ params }: Props) {
         : "https://jobs.dataparl.fr",
       ...(logo ? { logo } : {}),
     },
-    identifier: offre.id,
+    identifier: {
+      "@type": "PropertyValue",
+      name: "DataParl' Jobs",
+      value: offre.id,
+    },
+    // La candidature passe par la création de compte + Turnstile : ce n'est
+    // pas une candidature directe au sens de Google (directApply = false).
+    directApply: false,
     url: "https://jobs.dataparl.fr/offre/" + slug,
   };
   if (offre.publie_le) jsonld.datePosted = offre.publie_le;
   if (offre.expire_le) jsonld.validThrough = offre.expire_le;
+  const salaire = salaireLd(offre.description ?? "");
+  if (salaire) jsonld.baseSalary = salaire;
   const ville = villeDe(offre.localisation) ?? offre.localisation;
   if (ville || offre.departement) {
     const adresse: Record<string, unknown> = { "@type": "PostalAddress", addressCountry: "FR" };
