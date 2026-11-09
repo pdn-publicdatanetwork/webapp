@@ -36,7 +36,7 @@ async function photoElu(slug: string | null): Promise<string | null> {
 // ou <br> au minimum). On échappe le texte, puis on structure : chaque titre
 // de section connu ouvre un paragraphe, les puces deviennent une liste <ul>.
 const TITRES_SECTION_LD =
-  /^(Vos missions|Profil recherché|Lieu|Rémunération|Durée|Pour candidater|Process(?:us)? de recrutement|Informations pratiques)\s*:\\s*$/i;
+  /^(Vos missions|Profil recherché|Lieu|Rémunération|Durée|Pour candidater|Process(?:us)? de recrutement|Informations pratiques)\s*:\s*$/i;
 
 function descriptionHtml(texte: string): string {
   const e = texte.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
