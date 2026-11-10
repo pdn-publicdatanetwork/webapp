@@ -26,7 +26,8 @@ export async function POST(req: Request) {
 
   const admin = authAdmin();
   const { data } = await admin.auth.admin.getUserByEmail(user.email!);
-  const existant = data?.user as { id: string; user_metadata?: Record<string, unknown> } | undefined;
+  const brut = data?.user ?? null;
+  const existant = brut ? (brut as unknown as { id: string; user_metadata?: Record<string, unknown> }) : null;
 
   if (!existant) {
     const { data: cree, error } = await admin.auth.admin.createUser({
