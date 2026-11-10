@@ -233,3 +233,5 @@ export async function estConnecte(): Promise<boolean> {
   const { data } = await auth.auth.getSession();
   return Boolean(data.session);
 }
+
+// Build relancé manuellement le 10/11 (échec Vercel transitoire, hors compilation).
