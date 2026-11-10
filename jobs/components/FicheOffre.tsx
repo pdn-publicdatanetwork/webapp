@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Turnstile from "@/components/Turnstile";
 import { auth } from "@/lib/authSupabase";
+import { AUTH_FIREBASE_ACTIF, sessionFirebase } from "@/lib/sessionFirebase";
 import { COULEUR_CHAMBRE, slugOffre } from "@/lib/jobs";
 import { DATA_SUPABASE_KEY, DATA_SUPABASE_URL } from "@/lib/env";
 import {
@@ -53,6 +54,10 @@ export default function FicheOffre({ offre, onFermer, dansModal, nbCandidatures 
   // recherché, des conditions et de l'équipe, ainsi que pour contacter
   // l'équipe / révéler l'adresse e-mail.
   useEffect(() => {
+    if (AUTH_FIREBASE_ACTIF) {
+      sessionFirebase().then((s) => setCompte(s?.email ?? null));
+      return;
+    }
     auth.auth.getSession().then(({ data }) => setCompte(data.session?.user?.email ?? null));
     const { data: sub } = auth.auth.onAuthStateChange((_e, s) => setCompte(s?.user?.email ?? null));
     return () => sub.subscription.unsubscribe();

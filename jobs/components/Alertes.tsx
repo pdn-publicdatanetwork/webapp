@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { auth } from "@/lib/authSupabase";
+import { AUTH_FIREBASE_ACTIF, sessionFirebase } from "@/lib/sessionFirebase";
 
 // Bannière d'alertes : la connexion est obligatoire, l'adresse utilisée est
 // celle du compte connecté (aucune saisie d'e-mail).
@@ -13,6 +14,13 @@ export default function Alertes() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    if (AUTH_FIREBASE_ACTIF) {
+      sessionFirebase().then((s) => {
+        setEmail(s?.email ?? null);
+        setChargement(false);
+      });
+      return;
+    }
     auth.auth.getSession().then(({ data }) => {
       setEmail(data.session?.user?.email ?? null);
       setChargement(false);

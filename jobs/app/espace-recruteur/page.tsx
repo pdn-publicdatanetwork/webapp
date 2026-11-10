@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import EspacePro from "@/components/EspacePro";
 import { auth } from "@/lib/authSupabase";
+import { AUTH_FIREBASE_ACTIF, sessionFirebase } from "@/lib/sessionFirebase";
 import { domaineAutorise } from "@/lib/jobs";
 
 // Espace Recruteur : connexion obligatoire + adresse parlementaire stricte.
@@ -29,6 +30,12 @@ export default function Page() {
   const [email, setEmail] = useState<string | null | undefined>(undefined);
 
   useEffect(() => {
+    // Bascule Firebase : e-mail depuis le cookie partagé .dataparl.fr
+    // (connecté sur www = connecté ici), sinon session GoTrue historique.
+    if (AUTH_FIREBASE_ACTIF) {
+      sessionFirebase().then((s) => setEmail(s?.email ?? null));
+      return;
+    }
     auth.auth.getSession().then(({ data }) => setEmail(data.session?.user?.email ?? null));
     const { data: sub } = auth.auth.onAuthStateChange((_e, s) => setEmail(s?.user?.email ?? null));
     return () => sub.subscription.unsubscribe();

@@ -1,4 +1,6 @@
 import { supprimerDonneesCompte } from "@/lib/firestore";
+import { emailDepuisJetonFirebase } from "@/lib/firebaseAuth";
+import { compteAuthParEmail } from "@/lib/compteAuthSupabase";
 
 export const dynamic = "force-dynamic";
 
@@ -26,8 +28,15 @@ export async function POST(req: Request) {
   }
 
   // Identité relue côté serveur depuis la session : le corps de la requête
-  // ne transporte aucun identifiant de compte auquel se fier.
+  // ne transporte aucun identifiant de compte auquel se fier. Jeton Firebase
+  // (bascule : aud = dataparl-auth) ou jeton GoTrue, même chemin ensuite.
   let utilisateur: { id?: string; email?: string } | null = null;
+  const emailFirebase = await emailDepuisJetonFirebase(jeton).catch(() => null);
+  if (emailFirebase) {
+    const id = await compteAuthParEmail(emailFirebase).catch(() => null);
+    if (!id) return Response.json({ erreur: "compte introuvable" }, { status: 404 });
+    utilisateur = { id, email: emailFirebase };
+  } else {
   try {
     const verif = await fetch(AUTH_URL + "/auth/v1/user", {
       headers: { apikey: AUTH_KEY, Authorization: "Bearer " + jeton },
@@ -36,6 +45,7 @@ export async function POST(req: Request) {
     utilisateur = (await verif.json().catch(() => null)) as { id?: string; email?: string } | null;
   } catch {
     return Response.json({ erreur: "vérification impossible pour le moment" }, { status: 502 });
+  }
   }
   const id = typeof utilisateur?.id === "string" ? utilisateur.id : "";
   const email = typeof utilisateur?.email === "string" ? utilisateur.email.toLowerCase() : "";
