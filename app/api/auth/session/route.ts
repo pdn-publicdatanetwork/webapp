@@ -21,7 +21,17 @@ const Corps = z.object({
 export async function POST(req: Request) {
   const corps = Corps.safeParse(await req.json().catch(() => null));
   if (!corps.success) return NextResponse.json({ error: "requête invalide" }, { status: 400 });
-  const user = await utilisateur(req);
+  let user = null;
+  try {
+    user = await utilisateur(req);
+  } catch (e) {
+    // Diagnostic explicite : une config serveur absente (clé de service
+    // Firebase, clé service_role) doit se lire depuis le navigateur, un 500
+    // muet est impossible à déboguer en prod. Le message ne contient jamais
+    // de secret, seulement le nom de la variable fautive.
+    const detail = (e as { message?: string })?.message ?? "erreur inconnue";
+    return NextResponse.json({ error: "configuration serveur", detail: detail.split("\n")[0].slice(0, 200) }, { status: 500 });
+  }
   if (!user) return NextResponse.json({ error: "jeton invalide" }, { status: 401 });
 
   const admin = authAdmin();
