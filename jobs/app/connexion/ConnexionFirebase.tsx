@@ -27,6 +27,10 @@ export default function ConnexionFirebase() {
   const [essai, setEssai] = useState(0);
   const [etat, setEtat] = useState<"attente" | "envoi" | "ok" | "erreur" | "lien-email">("attente");
   const [message, setMessage] = useState("");
+  // Calculé hors rétrécissement de type : dans la branche « lien-email »,
+  // le type de etat est réduit à "lien-email" et toute comparaison avec
+  // "envoi" serait une erreur TS2367. On fige le booléen avant le rendu.
+  const occupe = etat === "envoi";
 
   // Arrivée : finalisation d'un lien magique, ou redirection si déjà
   // connecté (le cookie partagé suffit : aucune saisie nécessaire).
@@ -156,10 +160,10 @@ export default function ConnexionFirebase() {
             />
             <button
               type="submit"
-              disabled={etat === "envoi"}
+              disabled={occupe}
               className="w-full bg-[#4E2E53] hover:bg-[#3b223f] disabled:opacity-60 text-white py-3 rounded-xl font-bold text-sm transition-all"
             >
-              {etat === "envoi" ? "Vérification…" : "Terminer la connexion"}
+              {occupe ? "Vérification…" : "Terminer la connexion"}
             </button>
           </form>
         ) : (
