@@ -26,7 +26,7 @@ export default function Maintenance() {
       </p>
 
       <div className="chiffres">
-        <div><strong>Mer. 21 oct.</strong><span>Retour prévu le mercredi 21 octobre</span></div>
+        <div><strong>Mer. 11 nov., 17 h</strong><span>Retour prévu le mercredi 11 novembre à 17 h</span></div>
         <div><strong>100&nbsp;%</strong><span>De vos données conservées</span></div>
         <div><strong>0</strong><span>Mouvement raté&nbsp;: tout sera rattrapé</span></div>
       </div>
