@@ -59,7 +59,7 @@ p{line-height:1.6;color:#94a3b8}
 <body>
 <main>
 <h1>Maintenance en cours</h1>
-<p>DataParl' Jobs est momentanément indisponible pour une mise à jour de l'authentification. Le site revient dans quelques instants, merci de votre patience.</p>
+<p>DataParl' Jobs est momentanément indisponible pour une mise à jour de l'authentification. Le site revient le mercredi 11 novembre à 17 h, merci de votre patience.</p>
 <p>Une question ? <a href="https://www.dataparl.fr/contact" style="color:#7dd3fc">Contactez-nous</a></p>
 </main>
 </body>
@@ -69,6 +69,14 @@ export async function middleware(requete: NextRequest) {
   const chemin = requete.nextUrl.pathname;
   // Cron Vercel du resume Slack : appel serveur, pas un visiteur.
   if (chemin === "/api/stats/resume") return NextResponse.next();
+
+  // URL de déploiement (*.vercel.app, preview) : toujours ouverte, même en
+  // maintenance. Les « Deployment Checks » Vercel interrogent cette URL,
+  // pas le domaine de production : sans cette exemption, les checks
+  // échouent sur le 503 et le déploiement n'est jamais promu en
+  // production tant que la maintenance est active.
+  const hote = (requete.headers.get("host") ?? "").toLowerCase();
+  if (hote.endsWith(".vercel.app")) return NextResponse.next();
 
   const { active, ips } = await etatMaintenance();
   if (active) {

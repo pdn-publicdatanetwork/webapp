@@ -76,6 +76,9 @@ export default function Connexion() {
   const [message, setMessage] = useState("");
   const [enCours, setEnCours] = useState(false);
   const [surAdmin, setSurAdmin] = useState(() => typeof window !== "undefined" && window.location.hostname.startsWith("admin."));
+  // ?equipe=1 : la porte GoTrue reste demandée explicitement (retour du flux
+  // Slack, ou un membre de l'équipe qui préfère l'ancienne porte).
+  const [equipe, setEquipe] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("equipe") === "1");
   const [jetonCaptcha, setJetonCaptcha] = useState<string | null>(null);
   // Turnstile (Cloudflare) : sitekey publique du widget ; vide = captcha
   // désactivé (aucun jeton envoyé — utile en dev tant que Supabase ne l'exige pas).
@@ -83,14 +86,16 @@ export default function Connexion() {
 
   useEffect(() => {
     setSurAdmin(window.location.hostname.startsWith("admin."));
+    setEquipe(new URLSearchParams(window.location.search).get("equipe") === "1");
   }, []);
 
   const creation = onglet === "creation";
 
-  // Bascule Firebase (double-run) : sur www., api. et media., la porte
-  // Firebase remplace la porte GoTrue derrière le flag Vercel ; admin.
-  // (Slack) reste sur GoTrue tant que l'espace équipe n'a pas migré.
-  if (AUTH_FIREBASE_ACTIF && !surAdmin) return <ConnexionFirebase />;
+  // Bascule Firebase (double-run) : derrière le flag Vercel, la porte
+  // Firebase remplace la porte GoTrue sur www., api., media. et admin.
+  // (l'espace équipe garde son bouton Slack dans la porte Firebase, flux
+  // GoTrue conservé). ?equipe=1 remonte la porte GoTrue historique.
+  if (AUTH_FIREBASE_ACTIF && !(surAdmin && equipe)) return <ConnexionFirebase surAdmin={surAdmin} />;
 
   const identite = prenom.trim().length > 0 && nom.trim().length > 0;
   const bloque = creation && (!cgu || !identite);

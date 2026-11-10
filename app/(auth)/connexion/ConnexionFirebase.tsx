@@ -2,15 +2,18 @@
 import { useEffect, useRef, useState } from "react";
 import Turnstile, { reinitialiserTurnstile } from "./Turnstile";
 import { controleEmail } from "@/lib/antiAbus";
-import { sessionActuelle } from "@/lib/supabaseBrowser";
+import { authBrowser, sessionActuelle } from "@/lib/supabaseBrowser";
 import { connexionParLien, connexionPopup, emailLienMemorise, finaliserSession, lienConnexionActif, memoriserEmailLien, oublierEmailLien } from "@/lib/sessionFirebase";
 
 // Porte Firebase (projet dataparl-auth), montée par page.tsx derrière le
-// flag NEXT_PUBLIC_AUTH_FIREBASE sur www., api. et media. (admin. reste sur
-// la porte GoTrue/Slack). Fournisseurs v1 : Google et GitHub en popup, lien
-// magique par e-mail (généré serveur, envoyé depuis bienvenue@dataparl.fr).
-// La session est posée dans le cookie dp-firebase sur .dataparl.fr : la
-// connexion vaut pour tous les sous-domaines.
+// flag NEXT_PUBLIC_AUTH_FIREBASE sur www., api., media. et admin. (l'espace
+// équipe garde son bouton Slack, flux GoTrue conservé au double-run).
+// Fournisseurs v1 : Google et GitHub en popup, lien magique par e-mail
+// (généré serveur, envoyé depuis bienvenue@dataparl.fr). La session est
+// posée dans le cookie dp-firebase sur .dataparl.fr : la connexion vaut
+// pour tous les sous-domaines. Sur admin., un compte d'équipe déjà dans
+// staff passe la porte ; le second facteur (TOTP, clé d'accès) s'applique
+// ensuite normalement côté Porte.
 
 const CGU_OK = "dp_cgu_acceptees";
 const IDENTITE = "dp_identite";
@@ -27,6 +30,14 @@ function IconeGoogle() {
   );
 }
 
+function IconeSlack() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="#611f69">
+      <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313a2.527 2.527 0 0 1 2.522 2.52 2.528 2.528 0 0 1-2.522 2.523h-6.313z" />
+    </svg>
+  );
+}
+
 function IconeGitHub() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
@@ -35,7 +46,7 @@ function IconeGitHub() {
   );
 }
 
-export default function ConnexionFirebase() {
+export default function ConnexionFirebase({ surAdmin = false }: { surAdmin?: boolean }) {
   const [onglet, setOnglet] = useState<"connexion" | "creation">("connexion");
   const [cgu, setCgu] = useState(false);
   const [prenom, setPrenom] = useState("");
@@ -56,7 +67,7 @@ export default function ConnexionFirebase() {
   function destination(): string {
     const suite = new URLSearchParams(window.location.search).get("suite");
     if (suite && suite.startsWith("/") && !suite.startsWith("//") && !suite.includes("\\")) return suite;
-    return "/mon-compte";
+    return surAdmin ? "/" : "/mon-compte";
   }
 
   // Après la connexion : cookie de session posé, consentement CGU pour un
@@ -153,6 +164,25 @@ export default function ConnexionFirebase() {
     } catch {}
   }
 
+  // Espace équipe : Slack reste un flux GoTrue (PKCE). Le retour atterrit
+  // sur /connexion?equipe=1&suite=… : la page GoTrue est alors remontée, elle
+  // échange le code et redirige vers la destination. On ne peut pas ouvrir
+  // Slack dans une popup Firebase : c'est un fournisseur GoTrue.
+  async function slack() {
+    if (bloque) return setMessage(motif);
+    memoriserCgu();
+    setEnCours(true);
+    try {
+      await authBrowser().auth.signInWithOAuth({
+        provider: "slack_oidc",
+        options: { redirectTo: `${window.location.origin}/connexion?equipe=1&suite=${encodeURIComponent(destination())}` },
+      });
+    } catch {
+      setEnCours(false);
+      setMessage("Connexion Slack impossible. Réessaie.");
+    }
+  }
+
   async function popup(fournisseur: "google" | "github") {
     if (bloque) return setMessage(motif);
     memoriserCgu();
@@ -230,6 +260,16 @@ export default function ConnexionFirebase() {
 
         {etape !== "attente" ? (
           <>
+            {surAdmin && (
+              <>
+                <button className="fournisseur slack" onClick={slack} disabled={enCours || bloque}>
+                  <IconeSlack /> Continuer avec Slack
+                </button>
+                <p className="meta" style={{ margin: "10px 0" }}>
+                  L&apos;espace équipe se connecte avec Slack (ou GitHub pour les comptes historiques).
+                </p>
+              </>
+            )}
             <button className="fournisseur" onClick={() => popup("google")} disabled={enCours || bloque}>
               <IconeGoogle /> Continuer avec Google
             </button>
