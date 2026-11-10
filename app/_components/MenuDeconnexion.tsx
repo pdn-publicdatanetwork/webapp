@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { authBrowser, sessionActuelle } from "@/lib/supabaseBrowser";
+import { sessionActuelle, deconnexion as fermerSession } from "@/lib/supabaseBrowser";
 
 // « Se déconnecter » dans le menu de l'en-tête www : n'apparaît que si une
 // session DataParl' Auth existe (cookies .dataparl.fr partagés entre les
@@ -18,7 +18,7 @@ export default function MenuDeconnexion() {
   if (!connecte) return null;
 
   async function deconnexion() {
-    await authBrowser().auth.signOut();
+    await fermerSession();
     window.location.replace(window.location.pathname);
   }
 

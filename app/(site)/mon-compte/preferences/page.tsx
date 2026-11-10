@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { authBrowser, sessionActuelle } from "@/lib/supabaseBrowser";
+import { sessionActuelle, deconnexion as fermerSession } from "@/lib/supabaseBrowser";
 import StyleCompte from "../style-compte";
 
 // Données et confidentialité : export et suppression du compte. Les
@@ -48,7 +48,7 @@ export default function DonneesConfidentialite() {
     const r = await appel("/api/compte", { method: "DELETE" });
     setEnCours(false);
     if (!r.ok) return setMessage({ ok: false, texte: "Suppression impossible, réessaie plus tard." });
-    await authBrowser().auth.signOut();
+    await fermerSession();
     window.location.replace("/?compte=supprime");
   }
 

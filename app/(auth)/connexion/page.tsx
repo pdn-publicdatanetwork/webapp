@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { startAuthentication } from "@simplewebauthn/browser";
 import { authBrowser, sessionActuelle } from "@/lib/supabaseBrowser";
+import { AUTH_FIREBASE_ACTIF } from "@/lib/env";
+import ConnexionFirebase from "./ConnexionFirebase";
 import Turnstile, { reinitialiserTurnstile } from "./Turnstile";
 import { controleEmail } from "@/lib/antiAbus";
 
@@ -73,7 +75,7 @@ export default function Connexion() {
   const [mdp, setMdp] = useState("");
   const [message, setMessage] = useState("");
   const [enCours, setEnCours] = useState(false);
-  const [surAdmin, setSurAdmin] = useState(false);
+  const [surAdmin, setSurAdmin] = useState(() => typeof window !== "undefined" && window.location.hostname.startsWith("admin."));
   const [jetonCaptcha, setJetonCaptcha] = useState<string | null>(null);
   // Turnstile (Cloudflare) : sitekey publique du widget ; vide = captcha
   // désactivé (aucun jeton envoyé — utile en dev tant que Supabase ne l'exige pas).
@@ -84,6 +86,12 @@ export default function Connexion() {
   }, []);
 
   const creation = onglet === "creation";
+
+  // Bascule Firebase (double-run) : sur www., api. et media., la porte
+  // Firebase remplace la porte GoTrue derrière le flag Vercel ; admin.
+  // (Slack) reste sur GoTrue tant que l'espace équipe n'a pas migré.
+  if (AUTH_FIREBASE_ACTIF && !surAdmin) return <ConnexionFirebase />;
+
   const identite = prenom.trim().length > 0 && nom.trim().length > 0;
   const bloque = creation && (!cgu || !identite);
   const motif = !identite ? "Indique d'abord ton prénom et ton nom." : "Coche d'abord la case d'acceptation.";
