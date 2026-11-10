@@ -32,26 +32,41 @@ type SessionFirebase = {
 
 let promesseSdk: Promise<{ auth: any; mod: any }> | null = null;
 
-// Chargement (unique) du SDK Auth depuis le CDN, sur une URL variable :
-// bundlers, ne touchez pas à cette importation dynamique.
+// Chargement (unique) du SDK Auth depuis le CDN via un module inline : les
+// import() dynamiques à URL variable sont le terrain de jeu des bundlers
+// (Turbopack refuse les chemins non analysables statiquement), alors qu'un
+// <script type="module"> importe les URLs absolues lui-même. La CSP laisse
+// passer le module inline ('unsafe-inline') et le CDN (gstatic, ajouté).
 async function sdk(): Promise<{ auth: any; mod: any }> {
   if (!promesseSdk) {
-    promesseSdk = (async () => {
-      const url = (fichier: string) => `https://www.gstatic.com/firebasejs/${VERSION_SDK}/${fichier}`;
-      const modApp: any = await import(/* webpackIgnore: true */ /* turbopackIgnore: true */ url("firebase-app.js"));
-      const modAuth: any = await import(/* webpackIgnore: true */ /* turbopackIgnore: true */ url("firebase-auth.js"));
+    promesseSdk = new Promise<{ app: any; mod: any }>((resoudre, rejeter) => {
+      (window as unknown as { __dpSdkFirebase?: (v: { app: any; mod: any }) => void }).__dpSdkFirebase = (v) => resoudre(v);
+      const s = document.createElement("script");
+      s.type = "module";
+      s.textContent =
+        `import * as app from "https://www.gstatic.com/firebasejs/${VERSION_SDK}/firebase-app.js";` +
+        `import * as mod from "https://www.gstatic.com/firebasejs/${VERSION_SDK}/firebase-auth.js";` +
+        "window.__dpSdkFirebase({ app, mod });";
+      s.onerror = () => rejeter(new Error("SDK Firebase introuvable"));
+      document.head.appendChild(s);
+      setTimeout(() => rejeter(new Error("SDK Firebase : delai depasse")), 20_000);
+    }).then((m) => {
       const config = {
         apiKey: FIREBASE_AUTH_API_KEY,
         authDomain: AUTH_DOMAIN_FIREBASE,
         projectId: "dataparl-auth",
         appId: FIREBASE_AUTH_APP_ID,
       };
-      const existe = modApp.getApps().find((a: any) => a.name === "[DEFAULT]");
-      const app = existe ?? modApp.initializeApp(config);
-      const auth = modAuth.getAuth(app);
+      const existe = m.app.getApps().find((a: any) => a.name === "[DEFAULT]");
+      const app = existe ?? m.app.initializeApp(config);
+      const auth = m.mod.getAuth(app);
       if (typeof auth.useDeviceLanguage === "function") auth.useDeviceLanguage();
-      return { auth, mod: modAuth };
-    })();
+      return { auth, mod: m.mod };
+    });
+    // Échec de chargement : on permettra une nouvelle tentative au prochain appel.
+    promesseSdk.catch(() => {
+      promesseSdk = null;
+    });
   }
   return promesseSdk;
 }
