@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { authBrowser, sessionActuelle } from "@/lib/supabaseBrowser";
+import { sessionActuelle, deconnexion as fermerSession } from "@/lib/supabaseBrowser";
 
 type Compte = {
   email: string;
@@ -92,7 +92,7 @@ export default function MonCompte() {
   if (!compte) return <p className="meta">{message?.texte ?? "Chargement…"}</p>;
 
   async function deconnexion() {
-    await authBrowser().auth.signOut();
+    await fermerSession();
     window.location.replace("/");
   }
 

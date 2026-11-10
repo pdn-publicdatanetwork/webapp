@@ -9,6 +9,15 @@ export const DATA_SUPABASE_KEY = process.env.NEXT_PUBLIC_DATA_SUPABASE_KEY ?? "s
 export const AUTH_SUPABASE_URL = process.env.NEXT_PUBLIC_AUTH_SUPABASE_URL ?? "https://kuywydrsfuixppchugpe.supabase.co";
 export const AUTH_SUPABASE_KEY = process.env.NEXT_PUBLIC_AUTH_SUPABASE_KEY ?? "sb_publishable_oYCbgl4J2fz9RnwOmsEz9w_DMVp-rZ6";
 
+// DataParl' Auth sur Firebase (projet dataparl-auth) : identifiants publics
+// par design. Bascule côté client : NEXT_PUBLIC_AUTH_FIREBASE=1 sur Vercel
+// active la porte Firebase sur www/api/media (admin. reste sur GoTrue) ;
+// absent ou 0 = comportement GoTrue inchangé (rollback en une variable).
+export const AUTH_FIREBASE_ACTIF = process.env.NEXT_PUBLIC_AUTH_FIREBASE === "1";
+export const FIREBASE_AUTH_API_KEY = process.env.NEXT_PUBLIC_FIREBASE_AUTH_API_KEY ?? "AIzaSyCtHIiGOh72ypE9vHAScrE60beU7VwD2NA";
+export const FIREBASE_AUTH_APP_ID = process.env.NEXT_PUBLIC_FIREBASE_AUTH_APP_ID ?? "1:78579330321:web:acd058cf1523da101bf0b0";
+export const FIREBASE_AUTH_PROJECT = "dataparl-auth";
+
 export const MAIL_FROM = process.env.MAIL_FROM ?? "\"DataParl'\" <noreply@dataparl.fr>";
 // Boîte qui reçoit les messages du formulaire de contact (jamais affichée sur le site).
 // Copie facultative des messages de contact vers une boîte externe (vide = aucune ;
@@ -61,7 +70,7 @@ export const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID ?? "";
 type Secret =
   | "AUTH_SUPABASE_SERVICE_ROLE_KEY" | "DATA_SUPABASE_SERVICE_ROLE_KEY" | "RESEND_API_KEY" | "CONSENT_SALT"
   | "ADMIN_VAULT_KEY" | "ADMIN_OTP_SECRET" | "RESEND_WEBHOOK_SECRET" | "APPLIXIR_SECRET" | "CRON_SECRET" | "NOTION_TOKEN"
-  | "POSTMARK_SERVER_TOKEN" | "MAILGUN_API_KEY";
+  | "POSTMARK_SERVER_TOKEN" | "MAILGUN_API_KEY" | "FIREBASE_AUTH_SERVICE_ACCOUNT" | "TURNSTILE_SECRET_KEY";
 
 export function secret(name: Secret): string {
   const v = process.env[name];
