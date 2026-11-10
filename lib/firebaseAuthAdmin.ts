@@ -18,13 +18,31 @@ export function authFirebase(): Auth {
 }
 
 // Clé de service depuis FIREBASE_AUTH_SERVICE_ACCOUNT. Les interfaces (Vercel,
-// CLI) échappent parfois les \n du champ private_key une fois de trop : le PEM
-// arrive alors avec des retours à la ligne littéraux et « Failed to parse
-// private key ». On normalise : \n échappés -> vrais retours à la ligne.
+// CLI) abîment parfois le champ private_key : \n échappés une fois de trop,
+// retours à la ligne réels ou CR. On normalise tout ce qui est réparable et
+// on refuse le reste avec un diagnostic lisible (jamais le secret lui-même).
 function configClé(): Record<string, unknown> {
-  const conf = JSON.parse(secret("FIREBASE_AUTH_SERVICE_ACCOUNT"));
-  if (typeof conf.private_key === "string") {
-    conf.private_key = conf.private_key.replace(/\\n/g, "\n").replace(/\\r/g, "\r");
+  const brut = secret("FIREBASE_AUTH_SERVICE_ACCOUNT");
+  let conf: Record<string, unknown>;
+  try {
+    conf = JSON.parse(brut) as Record<string, unknown>;
+  } catch (e) {
+    throw new Error(`FIREBASE_AUTH_SERVICE_ACCOUNT : JSON invalide (${(e as Error).message.slice(0, 120)})`);
   }
+  const k = typeof conf.private_key === "string" ? conf.private_key : "";
+  if (!k) throw new Error("FIREBASE_AUTH_SERVICE_ACCOUNT : champ private_key absent");
+  if (!k.includes("BEGIN")) throw new Error(`FIREBASE_AUTH_SERVICE_ACCOUNT : private_key sans en-tête PEM (longueur ${k.length})`);
+  let cle = k
+    .replace(/\r\n/g, "\n")  // CRLF réels
+    .replace(/\\r\\n/g, "\n") // séquences littérales \r\n
+    .replace(/\\n/g, "\n")   // séquences littérales \n
+    .replace(/\\r/g, "\n")
+    .trim();
+  if (!cle.endsWith("\n")) cle += "\n";
+  const lignes = cle.split("\n").filter(Boolean);
+  if (lignes.length < 3 || !/^-----END PRIVATE KEY-----$/.test(lignes[lignes.length - 1])) {
+    throw new Error(`FIREBASE_AUTH_SERVICE_ACCOUNT : private_key de forme inattendue (${lignes.length} lignes, en-tête : ${lignes[0].slice(0, 32)})`);
+  }
+  conf.private_key = cle;
   return conf;
 }
