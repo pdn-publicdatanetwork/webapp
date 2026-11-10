@@ -235,3 +235,5 @@ export async function estConnecte(): Promise<boolean> {
 }
 
 // Build relancé manuellement le 10/11 (échec Vercel transitoire, hors compilation).
+
+// Redeploiement du 10/11 : promotion du build (checks Vercel) apres ouverture breve de la maintenance.
