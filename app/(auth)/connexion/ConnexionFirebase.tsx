@@ -161,10 +161,15 @@ export default function ConnexionFirebase() {
     try {
       const userFb = await connexionPopup(fournisseur);
       await finaliser(userFb);
-    } catch {
+    } catch (e) {
       setEnCours(false);
       redirige.current = false;
-      setMessage("Fenêtre fermée ou refusée. Réessaie.");
+      // Diagnostic : le code d'erreur Firebase (auth/…) est affiché et
+      // journalisé dans la console, les causes sont indiscernables sinon
+      // (domaine non autorisé, fournisseur désactivé, réseau bloqué…).
+      const code = (e as { code?: string })?.code ?? "erreur-inconnue";
+      console.error("Connexion Firebase refusée :", code, e);
+      setMessage(code === "auth/popup-closed-by-user" ? "Fenêtre fermée avant la fin. Réessaie." : `Connexion refusée (${code}). Réessaie.`);
     }
   }
 
