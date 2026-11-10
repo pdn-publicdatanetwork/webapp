@@ -43,5 +43,9 @@ export async function idAssurePourEmail(email: string): Promise<string> {
 // exacte pour les connexions Firebase, GoTrue ne la tient plus à jour.
 // Un échec ne bloque pas la connexion (best effort).
 export async function majDerniereConnexion(email: string): Promise<void> {
-  await client().rpc("maj_derniere_connexion", { p_email: email }).catch(() => null);
+  try {
+    await client().rpc("maj_derniere_connexion", { p_email: email });
+  } catch {
+    // best effort : la colonne repartira à la connexion suivante
+  }
 }

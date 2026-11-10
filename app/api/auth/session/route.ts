@@ -66,7 +66,11 @@ export async function POST(req: Request) {
   // Rafraîchit « dernière connexion » + fournisseur. En serverless Vercel une
   // promesse non attendue peut être coupée à la fin de la requête : on attend,
   // mais un échec n'est pas bloquant (la colonne repartira au prochain passage).
-  await admin.rpc("maj_derniere_connexion", { p_email: user.email!, p_fournisseur: fournisseurCanonique(user) }).catch(() => null);
+  try {
+    await admin.rpc("maj_derniere_connexion", { p_email: user.email!, p_fournisseur: fournisseurCanonique(user) });
+  } catch {
+    // best effort
+  }
 
   return NextResponse.json({ ok: true, id });
 }
