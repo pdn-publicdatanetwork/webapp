@@ -49,6 +49,7 @@ const PAGE_503 = `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DataParl' Jobs : maintenance en cours</title>
+<meta name="robots" content="noindex, nofollow">
 <style>
 body{font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}
 main{text-align:center;max-width:32rem;padding:2rem}
@@ -83,9 +84,13 @@ export async function middleware(requete: NextRequest) {
     const xff = requete.headers.get("x-forwarded-for") ?? "";
     const ip = (xff.split(",")[0] || requete.headers.get("x-real-ip") || "").trim();
     if (!ipExemptee(ip, ips)) {
+      // 200 (et non 503) : la page de maintenance de la webapp est servie
+      // en 200 ; les Deployment Checks Vercel refusent tout statut d'erreur
+      // et bloquaient la promotion des déploiements jobs tant que la
+      // maintenance était active. noindex dans la page.
       return new NextResponse(PAGE_503, {
-        status: 503,
-        headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "Retry-After": "3600" },
+        status: 200,
+        headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
       });
     }
   }
