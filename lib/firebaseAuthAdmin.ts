@@ -1,6 +1,6 @@
 import "server-only";
-import { cert, getApps, initializeApp, getAuth } from "firebase-admin/app";
-import type { Auth } from "firebase-admin/auth";
+import { cert, getApps, initializeApp } from "firebase-admin/app";
+import { getAuth, type Auth } from "firebase-admin/auth";
 import { secret } from "./env";
 
 // SDK Firebase côté serveur pour l'authentification (projet dataparl-auth),

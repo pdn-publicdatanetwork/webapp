@@ -2,7 +2,7 @@ import "server-only";
 import { createClient, type User } from "@supabase/supabase-js";
 import { AUTH_SUPABASE_KEY, AUTH_SUPABASE_URL, FIREBASE_AUTH_PROJECT } from "./env";
 import { authFirebase } from "./firebaseAuthAdmin";
-import { authAdmin } from "./supabaseAdmin";
+import { compteAuthParEmail } from "./supabaseAdmin";
 
 // Identifie l'utilisateur d'un appel d'API à partir de son en-tête
 // Authorization: Bearer <jeton>. Deux familles de jetons coexistent pendant
@@ -29,12 +29,10 @@ async function utilisateurFirebase(token: string): Promise<User | null> {
   const claims = await authFirebase().verifyIdToken(token, false).catch(() => null);
   const email = claims?.email;
   if (!email) return null;
-  const { data } = await authAdmin().auth.admin.getUserByEmail(email);
-  const u = data?.user as unknown as
-    | ({ id: string; email: string; banned_until?: string | null; created_at?: string } & Record<string, unknown>)
-    | undefined;
+  const u = await compteAuthParEmail(email);
   if (!u) return null;
-  if (u.banned_until && Date.parse(u.banned_until) > Date.now()) return null;
+  const banni = u.banned_until as string | null | undefined;
+  if (banni && Date.parse(banni) > Date.now()) return null;
   return { ...u, aud: "authenticated", role: "authenticated" } as unknown as User;
 }
 

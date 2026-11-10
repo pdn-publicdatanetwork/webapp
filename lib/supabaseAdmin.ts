@@ -27,3 +27,24 @@ export function dataAdmin(): SupabaseClient {
   }
   return data;
 }
+
+// Compte auth.users par e-mail (réconciliation des jetons Firebase). L'API
+// admin de GoTrue n'a pas de getUserByEmail : on liste les utilisateurs (les
+// ~84 comptes tiennent sur une page) et on met le résultat en cache mémoire
+// une heure, l'instance serveur vit plusieurs requêtes.
+const cacheComptes = new Map<string, { compte: Record<string, unknown>; expire: number }>();
+
+export async function compteAuthParEmail(email: string): Promise<Record<string, unknown> | null> {
+  const e = email.trim().toLowerCase();
+  const enMemoire = cacheComptes.get(e);
+  if (enMemoire && enMemoire.expire > Date.now()) return enMemoire.compte;
+  const { data } = await authAdmin().auth.admin.listUsers({ page: 1, perPage: 1000 });
+  for (const u of data?.users ?? []) {
+    if ((u.email ?? "").trim().toLowerCase() === e) {
+      const compte = u as unknown as Record<string, unknown>;
+      cacheComptes.set(e, { compte, expire: Date.now() + 3_600_000 });
+      return compte;
+    }
+  }
+  return null;
+}

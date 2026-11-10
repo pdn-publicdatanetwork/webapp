@@ -2,7 +2,7 @@ import "server-only";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { utilisateur } from "@/lib/userAuth";
-import { authAdmin } from "@/lib/supabaseAdmin";
+import { authAdmin, compteAuthParEmail } from "@/lib/supabaseAdmin";
 
 // Échange un id token Firebase vérifié contre l'identité Postgres du compte.
 // Le jeton est vérifié par lib/userAuth (SDK admin, aud = dataparl-auth),
@@ -25,9 +25,8 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: "jeton invalide" }, { status: 401 });
 
   const admin = authAdmin();
-  const { data } = await admin.auth.admin.getUserByEmail(user.email!);
-  const brut = data?.user ?? null;
-  const existant = brut ? (brut as unknown as { id: string; user_metadata?: Record<string, unknown> }) : null;
+  const trouve = await compteAuthParEmail(user.email!);
+  const existant = trouve ? (trouve as unknown as { id: string; user_metadata?: Record<string, unknown> }) : null;
 
   if (!existant) {
     const { data: cree, error } = await admin.auth.admin.createUser({
