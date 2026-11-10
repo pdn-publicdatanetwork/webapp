@@ -4,6 +4,7 @@ import { extractText, getDocumentProxy } from "unpdf";
 import Link from "next/link";
 import ModalOffre from "@/components/ModalOffre";
 import { auth } from "@/lib/authSupabase";
+import { AUTH_FIREBASE_ACTIF, sessionFirebase } from "@/lib/sessionFirebase";
 import { CHAMBRE_NOM, typeContrat } from "@/lib/jobsTexte";
 import type { OffreListe } from "@/lib/types";
 
@@ -58,6 +59,10 @@ export default function Matching({ offres }: { offres: OffreListe[] }) {
   const [compte, setCompte] = useState<string | null | undefined>(undefined);
 
   useEffect(() => {
+    if (AUTH_FIREBASE_ACTIF) {
+      sessionFirebase().then((s) => setCompte(s?.email ?? null));
+      return;
+    }
     auth.auth.getSession().then(({ data }) => setCompte(data.session?.user?.email ?? null));
     const { data: sub } = auth.auth.onAuthStateChange((_e, s) => setCompte(s?.user?.email ?? null));
     return () => sub.subscription.unsubscribe();

@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { auth } from "@/lib/authSupabase";
+import { AUTH_FIREBASE_ACTIF, sessionFirebase } from "@/lib/sessionFirebase";
 import { CHAMBRE_NOM } from "@/lib/jobsTexte";
 
 // Back-office DataParl' Jobs : réservé au compte admin de DataParl'
@@ -71,6 +72,12 @@ export default function Page() {
   const [erreur, setErreur] = useState("");
 
   useEffect(() => {
+    // Bascule Firebase : e-mail depuis le cookie partagé .dataparl.fr
+    // (connecté sur www = connecté ici), sinon session GoTrue historique.
+    if (AUTH_FIREBASE_ACTIF) {
+      sessionFirebase().then((s) => setEmail(s?.email ?? null));
+      return;
+    }
     auth.auth.getSession().then(({ data }) => setEmail(data.session?.user?.email ?? null));
     const { data: sub } = auth.auth.onAuthStateChange((_e, s) => setEmail(s?.user?.email ?? null));
     return () => sub.subscription.unsubscribe();

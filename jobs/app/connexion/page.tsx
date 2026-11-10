@@ -2,6 +2,8 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { auth, suitePropre } from "@/lib/authSupabase";
+import { AUTH_FIREBASE_ACTIF } from "@/lib/sessionFirebase";
+import ConnexionFirebase from "./ConnexionFirebase";
 import Turnstile from "@/components/Turnstile";
 
 // Connexion : magic link (avec le captcha exigé par Supabase Auth) ou Google.
@@ -118,9 +120,12 @@ function Formulaire() {
 }
 
 export default function Page() {
+  // Bascule Firebase (flag NEXT_PUBLIC_AUTH_FIREBASE) : porte Google + lien
+  // magique, session partagée avec www par le cookie .dataparl.fr. Sans le
+  // flag, le flux GoTrue historique reste exactement en place.
   return (
     <Suspense fallback={null}>
-      <Formulaire />
+      {AUTH_FIREBASE_ACTIF ? <ConnexionFirebase /> : <Formulaire />}
     </Suspense>
   );
 }

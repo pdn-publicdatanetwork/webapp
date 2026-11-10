@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/authSupabase";
+import { AUTH_FIREBASE_ACTIF, deconnexionFirebase, sessionFirebase } from "@/lib/sessionFirebase";
 
 // Espace candidat : suivi des candidatures, alertes e-mail, profil & CV.
 // Le compte est celui de www.dataparl.fr. Le suivi des candidatures gérées
@@ -94,6 +95,19 @@ export default function Page() {
   const [suppressionEnCours, setSuppressionEnCours] = useState(false);
 
   useEffect(() => {
+    // Bascule Firebase : la session vit dans le cookie partagé .dataparl.fr
+    // (connecté sur www = connecté ici). Sinon session GoTrue historique.
+    if (AUTH_FIREBASE_ACTIF) {
+      sessionFirebase().then((s) => {
+        if (!s) {
+          router.replace("/connexion?suite=/mon-compte");
+          return;
+        }
+        setEmail(s.email);
+        setCharge(false);
+      });
+      return;
+    }
     auth.auth.getSession().then(({ data }) => {
       if (!data.session) {
         router.replace("/connexion?suite=/mon-compte");
@@ -105,6 +119,7 @@ export default function Page() {
   }, [router]);
 
   const deconnexion = async () => {
+    if (AUTH_FIREBASE_ACTIF) await deconnexionFirebase();
     await auth.auth.signOut();
     router.replace("/");
   };
@@ -115,14 +130,21 @@ export default function Page() {
   const supprimerCompte = async () => {
     setSuppressionEnCours(true);
     try {
-      const { data } = await auth.auth.getSession();
-      const jeton = data.session?.access_token ?? "";
+      let jeton = "";
+      if (AUTH_FIREBASE_ACTIF) {
+        const s = await sessionFirebase();
+        jeton = s?.it ?? "";
+      } else {
+        const { data } = await auth.auth.getSession();
+        jeton = data.session?.access_token ?? "";
+      }
       const res = await fetch("/api/compte/supprimer", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ jeton }),
       });
       if (res.ok) {
+        if (AUTH_FIREBASE_ACTIF) await deconnexionFirebase();
         await auth.auth.signOut();
         router.replace("/");
         return;

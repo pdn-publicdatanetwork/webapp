@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { auth } from "@/lib/authSupabase";
+import { AUTH_FIREBASE_ACTIF, sessionFirebase } from "@/lib/sessionFirebase";
 
 // En-tête du portail : marque + navigation entre les trois espaces.
 
@@ -16,6 +17,10 @@ export default function Entete() {
   const chemin = usePathname() ?? "/";
   const [connecte, setConnecte] = useState(false);
   useEffect(() => {
+    if (AUTH_FIREBASE_ACTIF) {
+      sessionFirebase().then((s) => setConnecte(Boolean(s)));
+      return;
+    }
     auth.auth.getSession().then(({ data }) => setConnecte(Boolean(data.session)));
     const { data: sub } = auth.auth.onAuthStateChange((_e, s) => setConnecte(Boolean(s)));
     return () => sub.subscription.unsubscribe();

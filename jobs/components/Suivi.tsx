@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { auth } from "@/lib/authSupabase";
+import { AUTH_FIREBASE_ACTIF, sessionFirebase } from "@/lib/sessionFirebase";
 
 // Mesure d'audience : chaque page vue est notée, ainsi que les clics sur
 // les éléments marqués data-stat (Contacter l'équipe, envoyer la
@@ -14,6 +15,10 @@ export default function Suivi() {
   const [compte, setCompte] = useState<string | null>(null);
 
   useEffect(() => {
+    if (AUTH_FIREBASE_ACTIF) {
+      sessionFirebase().then((s) => setCompte(s?.email ?? null));
+      return;
+    }
     auth.auth.getSession().then(({ data }) => setCompte(data.session?.user?.email ?? null));
     const { data: sub } = auth.auth.onAuthStateChange((_e, s) => setCompte(s?.user?.email ?? null));
     return () => sub.subscription.unsubscribe();
