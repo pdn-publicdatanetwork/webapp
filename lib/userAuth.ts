@@ -33,7 +33,10 @@ async function utilisateurFirebase(token: string): Promise<User | null> {
   if (!u) return null;
   const banni = u.banned_until as string | null | undefined;
   if (banni && Date.parse(banni) > Date.now()) return null;
-  return { ...u, aud: "authenticated", role: "authenticated" } as unknown as User;
+  // Fournisseur de la connexion (claims.firebase.sign_in_provider : google.com,
+  // github.com, password, email…) : remonté pour maj_derniere_connexion.
+  const fb = (claims as { firebase?: { sign_in_provider?: string } } | null)?.firebase;
+  return { ...u, aud: "authenticated", role: "authenticated", fournisseur_connexion: fb?.sign_in_provider ?? null } as unknown as User;
 }
 
 export async function utilisateur(req: Request): Promise<User | null> {
@@ -51,4 +54,16 @@ export function fournisseurs(user: User): string[] {
   const ids = (user.identities ?? []).map((i) => i.provider);
   const meta = (user.app_metadata?.providers as string[] | undefined) ?? [];
   return Array.from(new Set([...ids, ...meta]));
+}
+
+// Nom de fournisseur canonique (colonne « Connexion » de l'admin), depuis le
+// sign_in_provider Firebase ; null pour les connexions GoTrue (gérées par
+// GoTrue lui-même) ou inconnues.
+export function fournisseurCanonique(user: User): string | null {
+  const brut = (user as unknown as { fournisseur_connexion?: string | null }).fournisseur_connexion ?? null;
+  if (!brut) return null;
+  if (brut === "google.com") return "google";
+  if (brut === "github.com") return "github";
+  if (brut.startsWith("email")) return "email";
+  return brut;
 }

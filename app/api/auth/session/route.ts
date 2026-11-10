@@ -1,7 +1,7 @@
 import "server-only";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { utilisateur } from "@/lib/userAuth";
+import { fournisseurCanonique, utilisateur } from "@/lib/userAuth";
 import { authAdmin, compteAuthParEmail } from "@/lib/supabaseAdmin";
 
 // Échange un id token Firebase vérifié contre l'identité Postgres du compte.
@@ -11,6 +11,10 @@ import { authAdmin, compteAuthParEmail } from "@/lib/supabaseAdmin";
 // uid = nouvel uuid Postgres, les clés étrangères des 33 tables restent
 // raccordées). Le prénom/nom saisis à la création sont enregistrés ici pour
 // que /api/compte/consentement (mail de bienvenue, copie Slack) les voie.
+// Chaque connexion rafraîchit last_sign_in_at + le fournisseur dans
+// auth.users (fonction maj_derniere_connexion) : la liste /admin/users et sa
+// colonne « Dernière connexion » restent exactes après la bascule Firebase
+// (GoTrue ne le fait plus pour les sessions Firebase).
 
 const Corps = z.object({
   idToken: z.string().min(20).max(4000),
@@ -38,6 +42,7 @@ export async function POST(req: Request) {
   const trouve = await compteAuthParEmail(user.email!);
   const existant = trouve ? (trouve as unknown as { id: string; user_metadata?: Record<string, unknown> }) : null;
 
+  let id: string | null = null;
   if (!existant) {
     const { data: cree, error } = await admin.auth.admin.createUser({
       email: user.email!,
@@ -45,16 +50,23 @@ export async function POST(req: Request) {
       user_metadata: { prenom: corps.data.prenom ?? "", nom: corps.data.nom ?? "" },
     });
     if (error || !cree?.user) return NextResponse.json({ error: "création impossible" }, { status: 502 });
-    return NextResponse.json({ ok: true, id: cree.user.id });
+    id = cree.user.id;
+  } else {
+    id = existant.id;
+    // Compte déjà connu : on complète l'identité si elle manquait (première
+    // connexion post-bascule d'un compte importé sans prénom/nom).
+    const meta = (existant.user_metadata ?? {}) as { prenom?: string; nom?: string };
+    const p = meta.prenom || corps.data.prenom;
+    const n = meta.nom || corps.data.nom;
+    if ((p && !meta.prenom) || (n && !meta.nom)) {
+      await admin.auth.admin.updateUserById(existant.id, { user_metadata: { prenom: p ?? "", nom: n ?? "" } });
+    }
   }
 
-  // Compte déjà connu : on complète l'identité si elle manquait (première
-  // connexion post-bascule d'un compte importé sans prénom/nom).
-  const meta = (existant.user_metadata ?? {}) as { prenom?: string; nom?: string };
-  const p = meta.prenom || corps.data.prenom;
-  const n = meta.nom || corps.data.nom;
-  if ((p && !meta.prenom) || (n && !meta.nom)) {
-    await admin.auth.admin.updateUserById(existant.id, { user_metadata: { prenom: p ?? "", nom: n ?? "" } });
-  }
-  return NextResponse.json({ ok: true, id: existant.id });
+  // Rafraîchit « dernière connexion » + fournisseur. En serverless Vercel une
+  // promesse non attendue peut être coupée à la fin de la requête : on attend,
+  // mais un échec n'est pas bloquant (la colonne repartira au prochain passage).
+  await admin.rpc("maj_derniere_connexion", { p_email: user.email!, p_fournisseur: fournisseurCanonique(user) }).catch(() => null);
+
+  return NextResponse.json({ ok: true, id });
 }

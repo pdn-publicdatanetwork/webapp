@@ -37,3 +37,11 @@ export async function idAssurePourEmail(email: string): Promise<string> {
   if (cache) cache.comptes.set(email.toLowerCase(), data.user.id);
   return data.user.id;
 }
+
+// Rafraîchit last_sign_in_at dans auth.users (fonction security definer du
+// projet auth) : la colonne « Dernière connexion » de l'admin webapp reste
+// exacte pour les connexions Firebase, GoTrue ne la tient plus à jour.
+// Un échec ne bloque pas la connexion (best effort).
+export async function majDerniereConnexion(email: string): Promise<void> {
+  await client().rpc("maj_derniere_connexion", { p_email: email }).catch(() => null);
+}
