@@ -38,11 +38,19 @@ function configClé(): Record<string, unknown> {
     .replace(/\\n/g, "\n")   // séquences littérales \n
     .replace(/\\r/g, "\n")
     .trim();
-  if (!cle.endsWith("\n")) cle += "\n";
-  const lignes = cle.split("\n").filter(Boolean);
-  if (lignes.length < 3 || !/^-----END PRIVATE KEY-----$/.test(lignes[lignes.length - 1])) {
-    throw new Error(`FIREBASE_AUTH_SERVICE_ACCOUNT : private_key de forme inattendue (${lignes.length} lignes, en-tête : ${lignes[0].slice(0, 32)})`);
+  const lignes = cle.split("\n").filter((l) => l.trim().length > 0);
+  if (lignes.length < 3 || !lignes[0].startsWith("-----BEGIN") || !/^-----END PRIVATE KEY-----$/.test(lignes[lignes.length - 1].trim())) {
+    throw new Error(`FIREBASE_AUTH_SERVICE_ACCOUNT : private_key de forme inattendue (${lignes.length} lignes, en-tête : ${(lignes[0] || "").slice(0, 32)})`);
   }
-  conf.private_key = cle;
+  // Le corps base64 est ré-assemblé : tout caractère parasite (espaces
+  // glissés par un copier-coller avec retour automatique à la ligne) est
+  // écarté, puis le PEM est reconstitué en lignes de 64, forme canonique
+  // acceptée par OpenSSL.
+  const corps = lignes.slice(1, -1).join("").replace(/[^A-Za-z0-9+/=]/g, "");
+  if (!corps || corps.length % 4 !== 0) {
+    throw new Error(`FIREBASE_AUTH_SERVICE_ACCOUNT : corps base64 invalide (${corps.length} caractères utiles)`);
+  }
+  const corps64 = (corps.match(/.{1,64}/g) ?? []).join("\n");
+  conf.private_key = `-----BEGIN PRIVATE KEY-----\n${corps64}\n-----END PRIVATE KEY-----\n`;
   return conf;
 }
