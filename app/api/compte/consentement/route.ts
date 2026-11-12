@@ -10,10 +10,30 @@ import { utilisateur, fournisseurs } from "@/lib/userAuth";
 // création d'un compte (case cochée sur la page de connexion), puis envoie
 // le mail de bienvenue (template validé le 23/10/2026) : une seule fois par
 // compte, depuis bienvenue@dataparl.fr.
+// La porte unique auth.dataparl.fr appelle cette route en cross-origin juste
+// après la création d'un compte : CORS limité à cette origine uniquement.
+
+const PORTE_AUTH = "https://auth.dataparl.fr";
+function corsAuth(req: Request): Record<string, string> {
+  return req.headers.get("origin") === PORTE_AUTH
+    ? {
+        "Access-Control-Allow-Origin": PORTE_AUTH,
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Max-Age": "86400",
+        Vary: "Origin",
+      }
+    : {};
+}
+
+export async function OPTIONS(req: Request) {
+  return new NextResponse(null, { status: 204, headers: corsAuth(req) });
+}
 
 export async function POST(req: Request) {
+  const cors = corsAuth(req);
   const user = await utilisateur(req);
-  if (!user) return NextResponse.json({ error: "non connecté" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "non connecté" }, { status: 401, headers: cors });
   const email = normalizeEmail(user.email!);
   await logConsent(email, "subscribe", "compte");
   // Copie de traçabilité vers le canal Slack #new-user, uniquement pour un
@@ -32,5 +52,5 @@ export async function POST(req: Request) {
     });
     await envoyerBienvenue(user.id);
   }
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true }, { headers: cors });
 }
