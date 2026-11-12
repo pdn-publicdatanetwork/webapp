@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { authBrowser, sessionActuelle } from "@/lib/supabaseBrowser";
+import { cheminEspace } from "./useHoteMy";
 
 // Invitation au questionnaire survey.dataparl.fr : après 4 minutes sur le site,
 // un visiteur connecté peut répondre à 3 notes. Une seule fois (localStorage),
@@ -12,10 +14,13 @@ const APRES_MS = 4 * 60 * 1000;         // 4 minutes de connexion
 const REPOUSSE_JOURS = 7;
 
 export default function EnqueteInvite() {
+  const chemin = usePathname() ?? "";
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    // Jamais dans l'espace personnel (capsule et pages de compte).
+    if (cheminEspace(chemin)) return;
     const vue = localStorage.getItem(CLE_VUE);
     if (vue === "non") return;
     if (vue) {
@@ -30,7 +35,7 @@ export default function EnqueteInvite() {
       }).catch(() => { /* pas connecté : rien */ });
     }, APRES_MS);
     return () => clearTimeout(t);
-  }, []);
+  }, [chemin]);
 
   function fermer(valeur: "non" | "plus-tard") {
     localStorage.setItem(CLE_VUE, valeur === "non" ? "non" : new Date().toISOString());
