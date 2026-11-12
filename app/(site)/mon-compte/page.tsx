@@ -32,6 +32,7 @@ function Icone({ nom }: { nom: string }) {
   if (nom === "document") return (<svg {...p}><path d="M7 3h7l4 4v14H7z" /><path d="M14 3v4h4" /></svg>);
   if (nom === "enveloppe") return (<svg {...p}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></svg>);
   if (nom === "porte") return (<svg {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5" /><path d="M21 12H9" /></svg>);
+  if (nom === "mallette") return (<svg {...p}><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" /><path d="M3 12h18" /></svg>);
   return (<svg {...p}><path d="M9 8l-4 4 4 4" /><path d="M15 8l4 4-4 4" /><path d="M13 6l-2 12" /></svg>);
 }
 
@@ -109,7 +110,8 @@ export default function MonCompte() {
     { titre: "Communications", resume: "Newsletter, alertes par email et suivi des e-mails", href: "/mon-compte/communications", icone: "enveloppe" },
     { titre: "Mes alertes", resume: resumeAlertes, href: "/mon-compte/alertes", icone: "cloche" },
     { titre: "Ma fiche collaborateur", resume: "Le profil CV publié sur dataparl.fr", href: "/mon-compte/ma-fiche", icone: "document" },
-    { titre: "Mon espace API", resume: "Ta clé API, sa consommation et la documentation", href: "https://api.dataparl.fr/mon-espace-api", icone: "code", externe: true },
+    { titre: "Mon espace API", resume: "Ta clé API, sa consommation et la documentation", href: "/mon-espace-api", icone: "code" },
+    { titre: "DataParl' Jobs", resume: "Tes candidatures, tes alertes et ton profil de collaborateur", href: "/jobs", icone: "mallette" },
     ...(compte.equipe ? [{ titre: "Achats et abonnements", resume: "Bientôt : des packs sans publicité", href: "/mon-compte/achats", icone: "document" }] : []),
     { titre: "Données et confidentialité", resume: "Export de tes données et suppression du compte", href: "/mon-compte/preferences", icone: "bouclier" },
   ];
