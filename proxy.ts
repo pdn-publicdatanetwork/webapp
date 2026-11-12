@@ -45,11 +45,13 @@ import { estPageReseaux, journaliserVueReseaux } from "./lib/vuesReseaux";
 // Tout autre hôte (localhost, aperçus Vercel) : pas de réécriture.
 // auth.dataparl.fr : porte unique de connexion (Firebase Hosting, hors
 // de ce déploiement) ; les /connexion de www, api, media et jobs y renvoient.
-//   my.dataparl.fr          espace personnel unifié : / = le centre de
-//                           compte (rubriques compte, Jobs et API), /jobs
-//                           (fonctions DataParl' Jobs), /mon-espace-api
-//                           (clé API, même page que le site de l'API),
-//                           /preferences, /desinscription ; le reste -> www.
+//   my.dataparl.fr          capsule « Mon espace » : / = la vue d'ensemble
+//                           (cartes profil, API, emploi + navigation du
+//                           compte), sections aux adresses courtes (/profil,
+//                           /securite, /api, /emploi, /fiche, /alertes,
+//                           /donnees) et chemins canoniques (/mon-compte/*,
+//                           /mon-espace-api, /jobs), /preferences,
+//                           /desinscription ; le reste -> www.
 
 const DOMAINE = "dataparl.fr";
 const ANCIENS = ["cavaparlement.eu", "dataparl.com"];
@@ -477,10 +479,29 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
   // www : pas de contenu dupliqué sur ce sous-domaine. Comme sur www, les
   // pages personnelles ne sont jamais indexées.
   if (host === `my.${DOMAINE}`) {
-    // Racine : le centre de compte (my.dataparl.fr/ EST la page Mon compte).
+    // Racine : la capsule « Mon espace » (cartes profil, API, emploi puis
+    // navigation du compte) — my.dataparl.fr/ EST la capsule.
     if (path === "/" || path === "") {
       const url = req.nextUrl.clone();
-      url.pathname = "/mon-compte";
+      url.pathname = "/capsule";
+      const res = NextResponse.rewrite(url);
+      res.headers.set("X-Robots-Tag", "noindex, nofollow");
+      return res;
+    }
+    // Adresses courtes des sections de la capsule (liens profonds).
+    const COURTS_MY: Record<string, string> = {
+      "/profil": "/mon-compte/informations",
+      "/securite": "/mon-compte/securite",
+      "/communications": "/mon-compte/communications",
+      "/alertes": "/mon-compte/alertes",
+      "/fiche": "/mon-compte/ma-fiche",
+      "/donnees": "/mon-compte/preferences",
+      "/api": "/mon-espace-api",
+      "/emploi": "/mon-compte/jobs",
+    };
+    if (COURTS_MY[path]) {
+      const url = req.nextUrl.clone();
+      url.pathname = COURTS_MY[path];
       const res = NextResponse.rewrite(url);
       res.headers.set("X-Robots-Tag", "noindex, nofollow");
       return res;
@@ -497,7 +518,8 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
     if (path === "/mon-compte") return vers(req, host, "/", 308);
     // « Demander ma clé » (GestionCles) : le formulaire vit sur le site API.
     if (path === "/request-access") return vers(req, `api.${DOMAINE}`, path, 308);
-    if (path.startsWith("/mon-compte/") ||
+    if (path === "/capsule" || path.startsWith("/capsule/") ||
+        path.startsWith("/mon-compte/") ||
         path === "/mon-espace-api" || path.startsWith("/mon-espace-api/") ||
         path.startsWith("/preferences") || path.startsWith("/desinscription") ||
         path.startsWith("/api/") || path.startsWith("/_next/")) {
@@ -512,7 +534,7 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
     // Espaces privés servis sur www (connexion, compte, préférences,
     // désinscription) : robots.txt les exclut déjà du crawl ; l'en-tête HTTP
     // X-Robots-Tag verrouille l'indexation même si un lien fuit ailleurs.
-    if (path === "/mon-compte") return vers(req, `my.${DOMAINE}`, "/", 308);
+    if (path === "/mon-compte" || path === "/capsule") return vers(req, `my.${DOMAINE}`, "/", 308);
     if (path.startsWith("/mon-compte/")) return vers(req, `my.${DOMAINE}`, path, 308);
     if (path === "/mon-espace-api" || path.startsWith("/mon-espace-api/")) {
       return vers(req, `my.${DOMAINE}`, path, 308);
