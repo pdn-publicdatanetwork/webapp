@@ -10,6 +10,7 @@ import { estPageReseaux, journaliserVueReseaux } from "./lib/vuesReseaux";
 //   api.dataparl.fr         /v1/* -> /api/v1/* (l'API elle-même)
 //                           /connexion servie telle quelle (OAuth PKCE sur la même origine)
 //                           /api/* (routes internes des pages) servies telles quelles
+//                           /mon-espace-api -> my.dataparl.fr (308)
 //                           tout le reste -> /espace-api/* (site de l'API)
 //   jobs.dataparl.fr        DataParl' Jobs sans préfixe : / -> /jobs,
 //                           /proposer et /old-jobs -> /jobs/*, /<uuid>_<slug>
@@ -249,6 +250,11 @@ export async function proxy(req: NextRequest) {
     if (path === "/v1" || path.startsWith("/v1/")) {
       url.pathname = `/api${path}`;
       return NextResponse.rewrite(url);
+    }
+    // L'espace API personnel vit désormais sur my.dataparl.fr (/mon-espace-api
+    // y est servi par la même page) : l'ancienne adresse redirige en 308.
+    if (path === "/mon-espace-api" || path.startsWith("/mon-espace-api/")) {
+      return vers(req, `my.${DOMAINE}`, path, 308);
     }
     if (path.startsWith("/api/") || path === "/connexion" || path.startsWith("/espace-api")) return NextResponse.next();
     url.pathname = `/espace-api${path === "/" ? "" : path}`;
