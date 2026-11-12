@@ -186,6 +186,17 @@ export async function middleware(requete: NextRequest) {
   const chemin = requete.nextUrl.pathname;
   // Cron Vercel du resume Slack : appel serveur, pas un visiteur.
   if (chemin === "/api/stats/resume") return NextResponse.next();
+  // Porte unique auth.dataparl.fr : /connexion renvoie à la porte (Firebase
+  // Hosting) avec la destination (?suite=) pour le retour après connexion.
+  // Exception : les liens magiques en vol (oobCode/mode/apiKey), finalisés
+  // par la porte React qui reste en place.
+  if (chemin === "/connexion" &&
+      !["oobCode", "mode", "apiKey"].some((p) => requete.nextUrl.searchParams.has(p))) {
+    const suiteBrute = requete.nextUrl.searchParams.get("suite") ?? "";
+    const suite = suiteBrute.startsWith("/") && !suiteBrute.startsWith("//") && !suiteBrute.includes("\\") ? suiteBrute : "/";
+    return NextResponse.redirect(`https://auth.dataparl.fr/?hote=jobs.dataparl.fr&suite=${encodeURIComponent(suite)}`, 302);
+  }
+
   // Relais du formulaire « M'avertir » de la page de maintenance.
   if (chemin === "/maintenance/prevenir" && requete.method === "POST") return relaisPrevenir(requete);
 
