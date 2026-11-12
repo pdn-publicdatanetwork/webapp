@@ -2,7 +2,7 @@ import "server-only";
 import { createClient, type User } from "@supabase/supabase-js";
 import { AUTH_SUPABASE_KEY, AUTH_SUPABASE_URL, FIREBASE_AUTH_PROJECT } from "./env";
 import { authFirebase } from "./firebaseAuthAdmin";
-import { compteAuthParEmail } from "./supabaseAdmin";
+import { authAdmin, compteAuthParEmail } from "./supabaseAdmin";
 
 // Identifie l'utilisateur d'un appel d'API à partir de son en-tête
 // Authorization: Bearer <jeton>. Deux familles de jetons coexistent pendant
@@ -29,8 +29,24 @@ async function utilisateurFirebase(token: string): Promise<User | null> {
   const claims = await authFirebase().verifyIdToken(token, false).catch(() => null);
   const email = claims?.email;
   if (!email) return null;
-  const u = await compteAuthParEmail(email);
-  if (!u) return null;
+  let u = await compteAuthParEmail(email);
+  if (!u) {
+    // Nouvel arrivant Firebase : le compte Postgres est créé ici, sinon
+    // l'échange de session (/api/auth/session) 401 avant d'atteindre le
+    // createUser de la route et le compte reste invisible côté admin (bug
+    // du 12/11 : inscrits Firebase sans ligne auth.users). Même réconciliation
+    // que jobs/idAssurePourEmail ; le prénom/nom sont complétés par la route
+    // d'échange à sa disposition. Course concurrentielle : le doublon GoTrue
+    // (users_email_partial_key) renvoie null ici, la tentative suivante
+    // retrouvera le compte créé entre-temps.
+    const { data: cree, error } = await authAdmin().auth.admin.createUser({
+      email,
+      email_confirm: true,
+      user_metadata: {},
+    });
+    if (error || !cree?.user) return null;
+    u = cree.user as unknown as Record<string, unknown>;
+  }
   const banni = u.banned_until as string | null | undefined;
   if (banni && Date.parse(banni) > Date.now()) return null;
   // Fournisseur de la connexion (claims.firebase.sign_in_provider : google.com,
