@@ -29,7 +29,9 @@ export async function POST(req: Request) {
 
   let origine = req.headers.get("origin") ?? "https://jobs.dataparl.fr";
   if (!/^https:\/\/([\w-]+\.)?dataparl\.fr$/.test(origine)) origine = "https://jobs.dataparl.fr";
-  const continueUrl = `${origine}/connexion?suite=${encodeURIComponent(suite)}`;
+  // Porte unique : le lien atterrit sur auth.dataparl.fr, qui finalise le
+  // lien magique puis ramène sur jobs (?suite=).
+  const continueUrl = `https://auth.dataparl.fr/?hote=jobs.dataparl.fr&suite=${encodeURIComponent(suite)}`;
 
   try {
     const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${API_KEY}`, {
