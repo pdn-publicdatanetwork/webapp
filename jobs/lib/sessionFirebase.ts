@@ -15,7 +15,10 @@ export const AUTH_FIREBASE_ACTIF = process.env.NEXT_PUBLIC_AUTH_FIREBASE === "1"
 const VERSION_SDK = "12.4.0";
 const API_KEY = process.env.NEXT_PUBLIC_FIREBASE_AUTH_API_KEY ?? "AIzaSyCtHIiGOh72ypE9vHAScrE60beU7VwD2NA";
 const APP_ID = "1:78579330321:web:acd058cf1523da101bf0b0";
-const AUTH_DOMAIN = "dataparl-auth.firebaseapp.com";
+// Domaine de la porte unique : c'est lui qui s'affiche dans la popup Google
+// (« Accéder à l'application auth.dataparl.fr »), le handler /__/auth/handler
+// étant servi par Firebase Hosting sur ce domaine (autorisé côté Firebase).
+const AUTH_DOMAIN = "auth.dataparl.fr";
 const CLE_SESSION = "dp-firebase";
 const CLE_EMAIL = "dp-fb-email";
 const TAILLE = 3000;
