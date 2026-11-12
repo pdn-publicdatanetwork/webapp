@@ -42,6 +42,8 @@ import { estPageReseaux, journaliserVueReseaux } from "./lib/vuesReseaux";
 // Sur admin, webmail et mail : pas d'indexation, pas d'intégration en iframe,
 // pas de Referer transmis.
 // Tout autre hôte (localhost, aperçus Vercel) : pas de réécriture.
+// auth.dataparl.fr : porte unique de connexion (Firebase Hosting, hors
+// de ce déploiement) ; les /connexion de www, api, media et jobs y renvoient.
 
 const DOMAINE = "dataparl.fr";
 const ANCIENS = ["cavaparlement.eu", "dataparl.com"];
@@ -145,6 +147,25 @@ export async function proxy(req: NextRequest) {
       status: 403,
       headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
     });
+  }
+
+  // ── Porte unique auth.dataparl.fr ─────────────────────────────────────────
+  // /connexion des sites publics (www, api, media, jobs) renvoie à la porte
+  // unique hébergée sur auth.dataparl.fr (Firebase Hosting), avec la
+  // destination (?suite=) et l'hôte d'origine (?hote=) pour le retour après
+  // connexion. Exceptions : les liens magiques en vol (paramètres oobCode /
+  // mode / apiKey, finalisés par la porte React qui reste en place) et
+  // ?equipe=1 (flux GoTrue Slack de l'espace équipe). admin.dataparl.fr garde
+  // sa porte locale (Slack, second facteur).
+  if (path === "/connexion" &&
+      (host === `www.${DOMAINE}` || host === `api.${DOMAINE}` || host === `media.${DOMAINE}` || host === `jobs.${DOMAINE}`) &&
+      !["oobCode", "mode", "apiKey"].some((p) => req.nextUrl.searchParams.has(p)) &&
+      req.nextUrl.searchParams.get("equipe") !== "1") {
+    const suiteBrute = req.nextUrl.searchParams.get("suite") ?? "";
+    const suite = suiteBrute.startsWith("/") && !suiteBrute.startsWith("//") && !suiteBrute.includes("\\")
+      ? suiteBrute
+      : host === `jobs.${DOMAINE}` ? "/" : "/mon-compte";
+    return NextResponse.redirect(`https://auth.${DOMAINE}/?hote=${host}&suite=${encodeURIComponent(suite)}`, 302);
   }
 
   // ── Journal des pages WhatsApp/Telegram ────────────────────────────────────
