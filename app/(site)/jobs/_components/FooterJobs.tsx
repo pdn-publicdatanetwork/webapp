@@ -2,9 +2,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useHoteJobs } from "@/app/_components/useHoteJobs";
+import { useHoteMy } from "@/app/_components/useHoteMy";
+import { CapsulePied } from "@/app/_components/CapsuleChrome";
 
 // Pied de page du site www : sur DataParl' Jobs (pages /jobs et sous-domaine
-// jobs.dataparl.fr), le footer Jobs remplace le footer standard. L'hôte est
+// jobs.dataparl.fr), le footer Jobs remplace le footer standard ; sur la
+// capsule my.dataparl.fr, c'est le pied « outil » de la capsule. L'hôte est
 // détecté côté client (useHoteJobs : la réécriture du proxy est transparente
 // pour usePathname) ; le chemin /jobs/… sert de repli.
 // Sur le module Jobs, l'équivalent du « Follow Life at Google on » de Google
@@ -20,6 +23,8 @@ const RESEAUX = [
 
 export default function PiedDePageRoute() {
   const chemin = usePathname() ?? "";
+  const my = useHoteMy() || chemin === "/capsule" || chemin.startsWith("/capsule/");
+  if (my) return <CapsulePied />;
   const jobs = useHoteJobs() || chemin === "/jobs" || chemin.startsWith("/jobs/");
 
   return (
