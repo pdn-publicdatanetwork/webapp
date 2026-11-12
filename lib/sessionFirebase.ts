@@ -17,7 +17,7 @@ import { cookieStorage } from "./cookieStorage";
 const VERSION_SDK = "12.4.0";
 const CLE_SESSION = "dp-firebase";
 const CLE_EMAIL = "dp-fb-email";
-export const AUTH_DOMAIN_FIREBASE = "dataparl-auth.firebaseapp.com";
+export const AUTH_DOMAIN_FIREBASE = "auth.dataparl.com";
 
 type SessionFirebase = {
   rt: string; // refresh token Firebase
