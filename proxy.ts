@@ -44,6 +44,10 @@ import { estPageReseaux, journaliserVueReseaux } from "./lib/vuesReseaux";
 // Tout autre hôte (localhost, aperçus Vercel) : pas de réécriture.
 // auth.dataparl.fr : porte unique de connexion (Firebase Hosting, hors
 // de ce déploiement) ; les /connexion de www, api, media et jobs y renvoient.
+//   my.dataparl.fr          espace personnel : /mon-compte (le centre de
+//                           compte vit ici), /preferences, /desinscription et
+//                           la rubrique /mon-espace-api (même page que
+//                           api.dataparl.fr/mon-espace-api) ; le reste -> www.
 
 const DOMAINE = "dataparl.fr";
 const ANCIENS = ["cavaparlement.eu", "dataparl.com"];
@@ -158,7 +162,8 @@ export async function proxy(req: NextRequest) {
   // ?equipe=1 (flux GoTrue Slack de l'espace équipe). admin.dataparl.fr garde
   // sa porte locale (Slack, second facteur).
   if (path === "/connexion" &&
-      (host === `www.${DOMAINE}` || host === `api.${DOMAINE}` || host === `media.${DOMAINE}` || host === `jobs.${DOMAINE}`) &&
+      (host === `www.${DOMAINE}` || host === `api.${DOMAINE}` || host === `media.${DOMAINE}` ||
+       host === `jobs.${DOMAINE}` || host === `my.${DOMAINE}`) &&
       !["oobCode", "mode", "apiKey"].some((p) => req.nextUrl.searchParams.has(p)) &&
       req.nextUrl.searchParams.get("equipe") !== "1") {
     const suiteBrute = req.nextUrl.searchParams.get("suite") ?? "";
@@ -458,11 +463,38 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
     return protege(res);
   }
 
+  // my.dataparl.fr : espace personnel, même application (donc même charte et
+  // même pied de page) que www. Le centre de compte y vit à la racine,
+  // l'espace API personnel devient une rubrique (/mon-espace-api, la même
+  // page que api.dataparl.fr/mon-espace-api). Tout autre chemin revient vers
+  // www : pas de contenu dupliqué sur ce sous-domaine. Comme sur www, les
+  // pages personnelles ne sont jamais indexées.
+  if (host === `my.${DOMAINE}`) {
+    if (path === "/mon-espace-api" || path.startsWith("/mon-espace-api/")) {
+      const url = req.nextUrl.clone();
+      url.pathname = `/espace-api${path}`;
+      const res = NextResponse.rewrite(url);
+      res.headers.set("X-Robots-Tag", "noindex, nofollow");
+      return res;
+    }
+    if (path === "/mon-compte" || path.startsWith("/mon-compte/") ||
+        path.startsWith("/preferences") || path.startsWith("/desinscription") ||
+        path.startsWith("/api/") || path.startsWith("/_next/")) {
+      const res = NextResponse.next();
+      res.headers.set("X-Robots-Tag", "noindex, nofollow");
+      return res;
+    }
+    return vers(req, `www.${DOMAINE}`, path, 308);
+  }
+
   if (host === `www.${DOMAINE}`) {
     // Espaces privés servis sur www (connexion, compte, préférences,
     // désinscription) : robots.txt les exclut déjà du crawl ; l'en-tête HTTP
     // X-Robots-Tag verrouille l'indexation même si un lien fuit ailleurs.
-    if (path === "/connexion" || path === "/mon-compte" || path.startsWith("/mon-compte/") ||
+    if (path === "/mon-compte" || path.startsWith("/mon-compte/")) {
+      return vers(req, `my.${DOMAINE}`, path, 308);
+    }
+    if (path === "/connexion" ||
         path.startsWith("/preferences") || path.startsWith("/desinscription")) {
       const res = NextResponse.next();
       res.headers.set("X-Robots-Tag", "noindex, nofollow");
