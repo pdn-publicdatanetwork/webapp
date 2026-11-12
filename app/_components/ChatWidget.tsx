@@ -9,7 +9,9 @@
 // Style : charte DataParl' via les variables CSS du site.
 
 import { useState, useRef, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { sessionActuelle } from "@/lib/supabaseBrowser";
+import { cheminEspace } from "./useHoteMy";
 
 const RELAIS = process.env.NEXT_PUBLIC_DPCHAT_URL ?? "https://chat.dataparl.fr/api/chat";
 const CGU_URL = "/informations-legales/cgu-chat";
@@ -101,6 +103,7 @@ function Md({ texte }: { texte: string }) {
 }
 
 export default function ChatWidget() {
+  const chemin = usePathname() ?? "";
   const [open, setOpen] = useState(false);
   const [porte, setPorte] = useState<"verification" | "non-connecte" | "cgu" | "ouvert">("verification");
   const [input, setInput] = useState("");
@@ -157,6 +160,10 @@ export default function ChatWidget() {
   }
 
   const ouvert = open && porte === "ouvert";
+
+  // La capsule my.dataparl.fr est un outil privé : pas de chat flottant sur
+  // ses pages (vue d'ensemble, compte, espace API).
+  if (cheminEspace(chemin)) return null;
 
   return (
     <>
