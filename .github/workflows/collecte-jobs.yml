@@ -1,0 +1,93 @@
+name: Collecte Jobs
+
+# CI de la collecte DataParl' Jobs, migrée depuis GitLab (plan Free :
+# quota de 400 minutes/mois épuisé, GitHub en offre 2000 pour un dépôt
+# privé). Le CODE SOURCE reste sur GitLab (publicdatanetwork-group/
+# dataparl-jobs, projet 88469399) : ce workflow télécharge son archive
+# à chaque run. Les SECRETS restent dans les variables CI du projet
+# GitLab (source de vérité), lues via l'API au démarrage ; seul le
+# token GitLab est stocké ici (secret GitHub GITLAB_TOKEN, scope api,
+# accès en lecture aux variables du projet 88469399).
+# En cas de rotation du token GitLab : mettre à jour ce secret.
+
+on:
+  schedule:
+    - cron: "0 11 * * *"   # 12h00 Paris (UTC+1, heure d'hiver)
+    - cron: "0 17 * * *"   # 18h00 Paris (UTC+1)
+  workflow_dispatch:
+    inputs:
+      skip_promo_telegram:
+        description: "Sauter la promotion Telegram (run de test)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: collecte-jobs
+  cancel-in-progress: false
+
+jobs:
+  collecte:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Code source (archive GitLab)
+        run: |
+          set -euo pipefail
+          curl -sf -H "PRIVATE-TOKEN: ${{ secrets.GITLAB_TOKEN }}" \
+            "https://gitlab.com/api/v4/projects/88469399/repository/archive.tar.gz" \
+            -o /tmp/repo.tar.gz
+          mkdir -p repo
+          tar -xzf /tmp/repo.tar.gz -C repo --strip-components 1
+          rm -f /tmp/repo.tar.gz
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Secrets (variables CI GitLab)
+        working-directory: repo
+        run: |
+          set -euo pipefail
+          curl -sf -H "PRIVATE-TOKEN: ${{ secrets.GITLAB_TOKEN }}" \
+            "https://gitlab.com/api/v4/projects/88469399/variables?per_page=100" -o /tmp/vars.json
+          for k in DATA_SUPABASE_KEY RESEND_API_KEY APP_SECRET MISTRAL_API_KEY TELEGRAM_BOT_TOKEN FIREBASE_SERVICE_ACCOUNT GOOGLE_INDEXING_ACCOUNT; do
+            v=$(jq -r --arg k "$k" '.[] | select(.key==$k) | .value' /tmp/vars.json)
+            if [ -z "$v" ] || [ "$v" = "null" ]; then
+              echo "ATTENTION : variable GitLab $k absente (le script concerné gère son absence)."
+              continue
+            fi
+            case "$v" in *$'\n'*) ;; *) echo "::add-mask::$v" ;; esac
+            {
+              echo "$k<<DPV_SECRET_EOF"
+              echo "$v"
+              echo "DPV_SECRET_EOF"
+            } >> "$GITHUB_ENV"
+          done
+          rm -f /tmp/vars.json
+          echo "Variables GitLab chargées."
+      - name: Installation des dépendances
+        working-directory: repo
+        run: npm install --no-audit --no-fund
+      - name: Collecte des offres
+        working-directory: repo
+        run: |
+          node scripts/collecte-offres.mjs
+          node scripts/collecte-offres-elus.mjs
+          node scripts/collecte-offres-bluesky.mjs
+          node scripts/notif-poljobs.mjs
+          node scripts/indexation-google.mjs
+      - name: Balayage IA
+        working-directory: repo
+        run: node scripts/enrichissement-ia.mjs
+      - name: Insights élu
+        working-directory: repo
+        continue-on-error: true   # un raté de scraping ne doit jamais bloquer les alertes
+        run: node scripts/insights.mjs
+      - name: Alertes e-mail
+        working-directory: repo
+        run: node scripts/alerte-nouvelles-offres.mjs
+      - name: Promotion Telegram
+        if: ${{ !inputs.skip_promo_telegram }}
+        working-directory: repo
+        run: node scripts/promotion-offres.mjs
