@@ -197,6 +197,14 @@ export async function middleware(requete: NextRequest) {
     return NextResponse.redirect(`https://auth.dataparl.fr/?hote=jobs.dataparl.fr&suite=${encodeURIComponent(suite)}`, 302);
   }
 
+  // Le centre de compte vit désormais sur my.dataparl.fr (rubrique Jobs) :
+  // l'ancienne adresse redirige en 308. L'espace candidat détaillé reste
+  // joignable quand un onglet est demandé (?onglet=candidatures, alertes ou
+  // profil : liens depuis la rubrique Jobs de my.dataparl.fr).
+  if (chemin === "/mon-compte" && !requete.nextUrl.searchParams.has("onglet")) {
+    return NextResponse.redirect("https://my.dataparl.fr/jobs", 308);
+  }
+
   // Relais du formulaire « M'avertir » de la page de maintenance.
   if (chemin === "/maintenance/prevenir" && requete.method === "POST") return relaisPrevenir(requete);
 
