@@ -14,7 +14,7 @@ import { sessionActuelle } from "@/lib/supabaseBrowser";
 
 type Etat = "cache" | "otp" | "pret" | "erreur";
 
-const HORS_EDITION = ["/mon-compte"];
+const HORS_EDITION = ["/mon-compte", "/capsule", "/mon-espace-api"];
 
 async function jeton(): Promise<string | null> {
   return (await sessionActuelle())?.access_token ?? null;
