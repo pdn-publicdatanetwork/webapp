@@ -95,6 +95,9 @@ export default function Page() {
   const [suppressionEnCours, setSuppressionEnCours] = useState(false);
 
   useEffect(() => {
+    // Onglet présélectionné par la rubrique Jobs de my.dataparl.fr (?onglet=).
+    const demande = new URLSearchParams(window.location.search).get("onglet");
+    if (demande === "candidatures" || demande === "alertes" || demande === "profil") setOnglet(demande);
     // Bascule Firebase : la session vit dans le cookie partagé .dataparl.fr
     // (connecté sur www = connecté ici). Sinon session GoTrue historique.
     if (AUTH_FIREBASE_ACTIF) {
@@ -263,12 +266,12 @@ export default function Page() {
             <p className="text-[11px] text-slate-500">Un seul compte pour l&apos;écosystème parlementaire.</p>
           </div>
           <a
-            href="https://www.dataparl.fr/mon-compte"
+            href="https://my.dataparl.fr/"
             target="_blank"
             rel="noreferrer"
             className="bg-[#4E2E53] hover:bg-[#3b223f] text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm whitespace-nowrap"
           >
-            dataparl.fr/mon-compte ↗
+            my.dataparl.fr ↗
           </a>
         </div>
       </div>
