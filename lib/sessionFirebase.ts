@@ -17,7 +17,10 @@ import { cookieStorage } from "./cookieStorage";
 const VERSION_SDK = "12.4.0";
 const CLE_SESSION = "dp-firebase";
 const CLE_EMAIL = "dp-fb-email";
-export const AUTH_DOMAIN_FIREBASE = "dataparl-auth.firebaseapp.com";
+// Domaine de la porte unique : c'est lui qui s'affiche dans la popup Google
+// (« Accéder à l'application auth.dataparl.fr »), le handler /__/auth/handler
+// étant servi par Firebase Hosting sur ce domaine (autorisé côté Firebase).
+export const AUTH_DOMAIN_FIREBASE = "auth.dataparl.fr";
 
 type SessionFirebase = {
   rt: string; // refresh token Firebase
