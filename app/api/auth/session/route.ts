@@ -15,6 +15,21 @@ import { authAdmin, compteAuthParEmail } from "@/lib/supabaseAdmin";
 // auth.users (fonction maj_derniere_connexion) : la liste /admin/users et sa
 // colonne « Dernière connexion » restent exactes après la bascule Firebase
 // (GoTrue ne le fait plus pour les sessions Firebase).
+// La porte unique auth.dataparl.fr (Firebase Hosting) appelle cette route en
+// cross-origin : CORS limité à cette origine uniquement, préflight OPTIONS.
+
+const PORTE_AUTH = "https://auth.dataparl.fr";
+function corsAuth(req: Request): Record<string, string> {
+  return req.headers.get("origin") === PORTE_AUTH
+    ? {
+        "Access-Control-Allow-Origin": PORTE_AUTH,
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Max-Age": "86400",
+        Vary: "Origin",
+      }
+    : {};
+}
 
 const Corps = z.object({
   idToken: z.string().min(20).max(4000),
@@ -22,9 +37,14 @@ const Corps = z.object({
   nom: z.string().trim().max(60).optional(),
 });
 
+export async function OPTIONS(req: Request) {
+  return new NextResponse(null, { status: 204, headers: corsAuth(req) });
+}
+
 export async function POST(req: Request) {
+  const cors = corsAuth(req);
   const corps = Corps.safeParse(await req.json().catch(() => null));
-  if (!corps.success) return NextResponse.json({ error: "requête invalide" }, { status: 400 });
+  if (!corps.success) return NextResponse.json({ error: "requête invalide" }, { status: 400, headers: cors });
   let user = null;
   try {
     user = await utilisateur(req);
@@ -34,9 +54,9 @@ export async function POST(req: Request) {
     // muet est impossible à déboguer en prod. Le message ne contient jamais
     // de secret, seulement le nom de la variable fautive.
     const detail = (e as { message?: string })?.message ?? "erreur inconnue";
-    return NextResponse.json({ error: "configuration serveur", detail: detail.split("\n")[0].slice(0, 200) }, { status: 500 });
+    return NextResponse.json({ error: "configuration serveur", detail: detail.split("\n")[0].slice(0, 200) }, { status: 500, headers: cors });
   }
-  if (!user) return NextResponse.json({ error: "jeton invalide" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "jeton invalide" }, { status: 401, headers: cors });
 
   const admin = authAdmin();
   const trouve = await compteAuthParEmail(user.email!);
@@ -49,7 +69,7 @@ export async function POST(req: Request) {
       email_confirm: true,
       user_metadata: { prenom: corps.data.prenom ?? "", nom: corps.data.nom ?? "" },
     });
-    if (error || !cree?.user) return NextResponse.json({ error: "création impossible" }, { status: 502 });
+    if (error || !cree?.user) return NextResponse.json({ error: "création impossible" }, { status: 502, headers: cors });
     id = cree.user.id;
   } else {
     id = existant.id;
@@ -72,5 +92,5 @@ export async function POST(req: Request) {
     // best effort
   }
 
-  return NextResponse.json({ ok: true, id });
+  return NextResponse.json({ ok: true, id }, { headers: cors });
 }
