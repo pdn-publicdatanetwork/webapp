@@ -60,12 +60,42 @@ export default function CapsuleClient() {
   }, [session, appel]);
 
   if (session === undefined) return <p className="meta">Chargement…</p>;
+  // Accueil non connecté : une seule invitation à se connecter (celle de la
+  // carte ; le bouton de l'en-tête est masqué sur cette page), un texte
+  // court, et un aperçu des trois cartes de la capsule en pointillés — on
+  // montre la valeur avant de demander la connexion, sans dévoiler de données.
   if (!session) {
     return (
-      <div className="card">
-        <h1>Mon espace</h1>
-        <p>La capsule DataParl&apos; réunit ton compte, ta clé API et tes outils Jobs en un seul endroit. Connecte-toi pour la découvrir.</p>
+      <div className="capsule-accueil">
+        <style>{`
+          .capsule-accueil { max-width: 600px; margin: 0 auto; padding: 26px 0 8px; }
+          .capsule-accueil h1 { margin: 0; }
+          .capsule-accueil-intro { color: var(--muted); margin: 10px 0 22px; font-size: 1rem; }
+          .capsule-accueil-ou { font-size: .82rem; color: var(--muted); margin: 12px 0 30px; }
+          .capsule-accueil-teaser { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+          .capsule-accueil-apercu { border: 1px dashed var(--line); border-radius: var(--radius-card); padding: 16px; background: var(--card); }
+          .capsule-accueil-apercu h2 { display: flex; align-items: center; gap: 8px; font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); margin: 0 0 10px; }
+          .capsule-accueil-apercu p { font-size: .85rem; color: var(--muted); margin: 0; line-height: 1.45; }
+          @media (max-width: 700px) { .capsule-accueil-teaser { grid-template-columns: 1fr; } }
+        `}</style>
+        <h1>Mon <span className="surligne">espace</span></h1>
+        <p className="capsule-accueil-intro">Ton compte, ta clé API et tes outils Jobs, au même endroit.</p>
         <a className="btn" href="/connexion?suite=/">Se connecter</a>
+        <p className="capsule-accueil-ou">Par email (lien magique), Google ou GitHub, depuis la porte de connexion.</p>
+        <div className="capsule-accueil-teaser" aria-label="Aperçu des rubriques de la capsule">
+          <div className="capsule-accueil-apercu">
+            <h2><Icone nom="personne" /> Mon profil</h2>
+            <p>Prénom, nom, email et fiche de collaborateur publiée.</p>
+          </div>
+          <div className="capsule-accueil-apercu">
+            <h2><Icone nom="code" /> Mon API</h2>
+            <p>Ta clé, tes requêtes du jour et ton quota, en direct.</p>
+          </div>
+          <div className="capsule-accueil-apercu">
+            <h2><Icone nom="mallette" /> Mon emploi</h2>
+            <p>Candidatures, alertes et CV Matching, en direct de Jobs.</p>
+          </div>
+        </div>
       </div>
     );
   }
