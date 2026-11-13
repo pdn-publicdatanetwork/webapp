@@ -1,0 +1,52 @@
+/* Mur d'accès (remplace le bandeau cookies) : carte fixe en bas de page,
+   jamais d'overlay ni de blocage, la page reste lisible et cliquable.
+   Variables de charte partagées avec globals.css : le mode sombre est géré
+   par les variables (--card, --ink, --line, --muted, --bleu). */
+.mur {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  max-width: 680px;
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 10px 30px rgba(7, 26, 65, .15);
+  z-index: 50;
+}
+.mur .titre {
+  font-family: var(--font-spectral), "Spectral", serif;
+  font-weight: 700;
+  font-size: 1.25rem;
+  margin: 4px 0 12px;
+}
+.mur-tete { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.mur-tete .meta { margin: 0; }
+.mur-tete .lien { font-size: .78rem; }
+.mur-choix { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mur-col { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; }
+.mur-col-payante { border: 2px solid var(--bleu); }
+.mur-col-titre { font-weight: 700; margin: 0 0 2px; font-size: .95rem; }
+.mur-col-meta { margin: 0 0 8px; font-size: .78rem; color: var(--bleu); font-weight: 600; }
+.mur-col p { margin: 0 0 12px; font-size: .82rem; color: var(--muted); flex-grow: 1; }
+.mur-col p strong { color: var(--ink); }
+.mur-col button { margin-top: auto; }
+.mur-mesure { margin-top: 12px; }
+.mur-engagements {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: .76rem;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+.mur-persistance { margin: 8px 0 0; font-size: .78rem; font-weight: 600; }
+.mur > a { font-size: .78rem; }
+@media (max-width: 640px) {
+  .mur { left: 10px; right: 10px; bottom: 10px; max-height: 70vh; overflow: auto; }
+  .mur-choix { grid-template-columns: 1fr; }
+}
