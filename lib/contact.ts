@@ -1,6 +1,7 @@
 export const SUJETS = [
   { v: "question", l: "Question générale" },
   { v: "erreur", l: "Signaler une erreur de donnée" },
+  { v: "offre", l: "Signaler une offre d'emploi" },
   { v: "bug", l: "Signaler un bug" },
   { v: "phishing", l: "Signaler un phishing" },
   { v: "rgpd", l: "Demande RGPD (suppression, droits)" },
