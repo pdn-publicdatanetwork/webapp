@@ -58,8 +58,10 @@ export default async function IlsParlentDeNous({ searchParams }: { searchParams:
             <article key={m.id} className={m.capture ? "mention-carte avec-capture" : "mention-carte"}>
               {m.capture && (
                 <figure className="mention-capture">
-                  <img src={m.capture} alt={"Capture publiée par " + m.media} loading="lazy" />
-                  {m.creditCapture && <figcaption className="meta">{m.creditCapture}</figcaption>}
+                  <img src={m.capture} alt={m.legendeCapture ?? m.creditCapture ?? "Capture publiée par " + m.media} loading="lazy" />
+                  {(m.legendeCapture || m.creditCapture) && (
+                    <figcaption className="meta">{[m.legendeCapture, m.creditCapture].filter(Boolean).join(", ")}</figcaption>
+                  )}
                 </figure>
               )}
               <div className="mention-corps">
