@@ -19,15 +19,26 @@ export default function BandeauCookies() {
 
   useEffect(() => {
     if (espaceInterne()) return;
-    const c = lire();
-    if (c) {
-      // Déjà choisi : appliquer à chaque page (les défauts « denied » du layout
-      // s'appliquent avant GTM ; ici on réactualise avec le choix mémorisé).
-      appliquer(c);
-      if (c.mesure) chargerGA4();
-      if (c.mesure) chargerClarity();
-      if (c.pub) chargerPub();
-    } else setVisible(true);
+    let annule = false;
+    (async () => {
+      // Bandeau coupé depuis la console admin (site_parametres) : il ne
+      // s'affiche pas ET aucun traceur soumis au consentement n'est chargé.
+      try {
+        const r = await fetch("/api/parametres-site");
+        const p = (await r.json()) as { popup_cookies?: boolean };
+        if (annule || p?.popup_cookies === false) return;
+      } catch { /* indisponible : comportement par défaut (bandeau actif) */ }
+      const c = lire();
+      if (c) {
+        // Déjà choisi : appliquer à chaque page (les défauts « denied » du layout
+        // s'appliquent avant GTM ; ici on réactualise avec le choix mémorisé).
+        appliquer(c);
+        if (c.mesure) chargerGA4();
+        if (c.mesure) chargerClarity();
+        if (c.pub) chargerPub();
+      } else setVisible(true);
+    })();
+    return () => { annule = true; };
   }, []);
 
   function valider(c: { mesure: boolean; pub: boolean }) {

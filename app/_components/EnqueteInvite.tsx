@@ -21,20 +21,30 @@ export default function EnqueteInvite() {
     if (typeof window === "undefined") return;
     // Jamais dans l'espace personnel (capsule et pages de compte).
     if (cheminEspace(chemin)) return;
-    const vue = localStorage.getItem(CLE_VUE);
-    if (vue === "non") return;
-    if (vue) {
-      // Date de dernière repousse : au-delà de REPOUSSE_JOURS, on peut re-proposer.
-      const relance = new Date(vue);
-      relance.setDate(relance.getDate() + REPOUSSE_JOURS);
-      if (Date.now() < relance.getTime()) return;
-    }
-    const t = setTimeout(() => {
-      sessionActuelle().then((s) => {
-        if (s?.user) setVisible(true);
-      }).catch(() => { /* pas connecté : rien */ });
-    }, APRES_MS);
-    return () => clearTimeout(t);
+    let minuteur: ReturnType<typeof setTimeout> | null = null;
+    let annule = false;
+    (async () => {
+      const vue = localStorage.getItem(CLE_VUE);
+      if (vue === "non") return;
+      if (vue) {
+        // Date de dernière repousse : au-delà de REPOUSSE_JOURS, on peut re-proposer.
+        const relance = new Date(vue);
+        relance.setDate(relance.getDate() + REPOUSSE_JOURS);
+        if (Date.now() < relance.getTime()) return;
+      }
+      // Pop-up du sondage coupé depuis la console admin (site_parametres) : rien.
+      try {
+        const r = await fetch("/api/parametres-site");
+        const p = (await r.json()) as { popup_sondage?: boolean };
+        if (annule || p?.popup_sondage === false) return;
+      } catch { /* indisponible : comportement par défaut (actif) */ }
+      minuteur = setTimeout(() => {
+        sessionActuelle().then((s) => {
+          if (s?.user) setVisible(true);
+        }).catch(() => { /* pas connecté : rien */ });
+      }, APRES_MS);
+    })();
+    return () => { annule = true; if (minuteur) clearTimeout(minuteur); };
   }, [chemin]);
 
   function fermer(valeur: "non" | "plus-tard") {

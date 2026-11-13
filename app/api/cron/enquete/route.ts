@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { authAdmin } from "@/lib/supabaseAdmin";
+import { lireParametresSite } from "@/lib/parametresSite";
 import { bouton, expedier, hashJeton } from "@/lib/mail";
 import { randomToken } from "@/lib/tokens";
 
@@ -37,6 +38,15 @@ function salut(c: Compte): string {
 
 export async function GET(req: Request) {
   if (!autorise(req)) return NextResponse.json({ error: "non autorisé" }, { status: 401 });
+
+  // Interrupteur « envoi automatique » (console admin → site_parametres) :
+  // coupé, aucune insertion ni envoi ; les comptes restent éligibles et le
+  // rattrapage repart de lui-même à la réactivation.
+  const { survey_envoi_auto } = await lireParametresSite();
+  if (!survey_envoi_auto) {
+    return NextResponse.json({ ok: true, envoyes: 0, ignore: "survey_envoi_auto = false" });
+  }
+
   const db = authAdmin();
 
   // Comptes créés il y a 3 jours ou plus (la fenêtre ouverte rattrape
