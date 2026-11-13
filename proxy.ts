@@ -259,6 +259,15 @@ export async function proxy(req: NextRequest) {
     if (path === "/mon-espace-api" || path.startsWith("/mon-espace-api/")) {
       return vers(req, `my.${DOMAINE}`, path, 308);
     }
+    // Favicon du site de l'API (Σ' encre sur blanc, identique à celle du
+    // module media) : la route /espace-api/icon.svg n'est pas générée par
+    // Next (fichiers de métadonnées dans un route group), on sert celle du
+    // module media, rendue à l'identique.
+    if (path === "/icon.svg" || path === "/apple-icon") {
+      const url = req.nextUrl.clone();
+      url.pathname = `/media${path}`;
+      return NextResponse.rewrite(url);
+    }
     if (path.startsWith("/api/") || path === "/connexion" || path.startsWith("/espace-api")) return NextResponse.next();
     url.pathname = `/espace-api${path === "/" ? "" : path}`;
     return NextResponse.rewrite(url);
@@ -461,7 +470,8 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
   for (const espace of ["admin", "webmail"] as const) {
     if (host !== `${espace}.${DOMAINE}`) continue;
     let res: NextResponse;
-    if (path.startsWith("/api/") || path.startsWith(`/${espace}`) || path === "/connexion") res = NextResponse.next();
+    if (path.startsWith("/api/") || path.startsWith(`/${espace}`) || path === "/connexion" ||
+        path === "/icon.svg" || path === "/apple-icon") res = NextResponse.next();
     else {
       const nouveau = espace === "admin" ? nouvelCheminAdmin(path) : null;
       if (nouveau) return protege(vers(req, `admin.${DOMAINE}`, nouveau || "/", 308));
@@ -518,7 +528,8 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
     if (path === "/mon-compte") return vers(req, host, "/", 308);
     // « Demander ma clé » (GestionCles) : le formulaire vit sur le site API.
     if (path === "/request-access") return vers(req, `api.${DOMAINE}`, path, 308);
-    if (path === "/capsule" || path.startsWith("/capsule/") ||
+    if (path === "/icon.svg" || path === "/apple-icon" ||
+        path === "/capsule" || path.startsWith("/capsule/") ||
         path.startsWith("/mon-compte/") ||
         path === "/mon-espace-api" || path.startsWith("/mon-espace-api/") ||
         path.startsWith("/preferences") || path.startsWith("/desinscription") ||
