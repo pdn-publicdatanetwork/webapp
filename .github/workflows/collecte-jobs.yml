@@ -109,8 +109,12 @@ jobs:
       - name: Alertes e-mail
         run: |
           set -euo pipefail
+          # Jeton = sha256 de FIREBASE_SERVICE_ACCOUNT (secret partagé avec le
+          # webapp ; jamais transmis en clair). APP_SECRET n'est pas encore
+          # posé sur le projet Vercel, la route accepte ce sha256.
+          token=$(printf '%s' "$FIREBASE_SERVICE_ACCOUNT" | sha256sum | cut -d' ' -f1)
           code=$(curl -sS -o /tmp/alerte-jobs.json -w "%{http_code}" \
-            -H "Authorization: Bearer $APP_SECRET" \
+            -H "Authorization: Bearer $token" \
             "https://www.dataparl.fr/api/cron/alertes-jobs")
           cat /tmp/alerte-jobs.json; echo
           grep -q '"ok"' /tmp/alerte-jobs.json

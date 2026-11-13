@@ -31,11 +31,26 @@ const FENETRE_DEFAUT_MS = 4 * 24 * 3600 * 1000;
 
 const CHAMBRES: Record<string, string> = { an: "Assemblée nationale", senat: "Sénat", pe: "Parlement européen" };
 
+// Authentification machine-à-machine : APP_SECRET (si le projet Vercel le
+// porte) ou le sha256 hexadécimal de FIREBASE_SERVICE_ACCOUNT, secret déjà
+// partagé avec la collecte (tant que APP_SECRET n'est pas posé côté Vercel,
+// la CI ne connaît que celui-là). Le sha256 n'expose pas la clé : c'est une
+// preuve de connaissance, le JSON n'est jamais transmis par l'appelant.
+const sha256hex = (s: string) => createHash("sha256").update(s).digest("hex");
+
+function jetonsAttendus(): string[] {
+  const attendus: string[] = [];
+  if (process.env.APP_SECRET) attendus.push(`Bearer ${process.env.APP_SECRET}`);
+  if (process.env.FIREBASE_SERVICE_ACCOUNT)
+    attendus.push(`Bearer ${sha256hex(process.env.FIREBASE_SERVICE_ACCOUNT)}`);
+  return attendus;
+}
+
 function autorise(req: Request): boolean {
-  const s = process.env.APP_SECRET ?? "";
   const recu = req.headers.get("authorization") ?? "";
-  const attendu = `Bearer ${s}`;
-  return !!s && recu.length === attendu.length && timingSafeEqual(Buffer.from(recu), Buffer.from(attendu));
+  return jetonsAttendus().some(
+    (attendu) => recu.length === attendu.length && timingSafeEqual(Buffer.from(recu), Buffer.from(attendu)),
+  );
 }
 
 const str = (v: unknown) => String(v ?? "");
@@ -51,10 +66,14 @@ const slugPart = (x: string) =>
 const slugOffre = (o: Offre) => [str(o.id), slugPart(titrePoste(o.titre)).slice(0, 48)].filter(Boolean).join("_");
 
 // Lien de désinscription signé : même formule que la route
-// /api/jobs/desinscription (HMAC-SHA256 de l'adresse, 32 premiers hexadécimaux,
-// APP_SECRET partagé avec la collecte).
+// /api/jobs/desinscription (HMAC-SHA256 de l'adresse, 32 premiers hexadécimaux).
+// Clé : APP_SECRET si le projet Vercel le porte, sinon le sha256 de
+// FIREBASE_SERVICE_ACCOUNT (repli des deux côtés, cf. cette même route).
+const cleJetons = () =>
+  process.env.APP_SECRET || sha256hex(process.env.FIREBASE_SERVICE_ACCOUNT ?? "");
+
 const jetonPour = (email: string) =>
-  createHmac("sha256", process.env.APP_SECRET ?? "")
+  createHmac("sha256", cleJetons())
     .update(email.toLowerCase().trim())
     .digest("hex")
     .slice(0, 32);
