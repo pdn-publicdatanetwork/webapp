@@ -4,6 +4,11 @@ import { compteAffectations, dataQuery } from "@/lib/data";
 import { dateTitre } from "@/lib/daily";
 import { authAdmin } from "@/lib/supabaseAdmin";
 import FormulairePresse from "./FormulairePresse";
+import { derniereMention, MENTIONS_PRESSE } from "./mentions";
+
+// Styles propres à l'espace presse (bandeau « Vu dans la presse », cartes de
+// la revue de presse). globals.css ne doit plus être modifié directement.
+import "../_styles/presse.css";
 
 export const metadata: Metadata = {
   title: { absolute: "Presse & médias | DataParl'" },
@@ -26,6 +31,7 @@ const n = (x: number) => x.toLocaleString("fr-FR");
 
 export default async function Presse() {
   const c = await chiffres();
+  const mention = derniereMention();
   // Dernier communiqué publié : teasing en page presse.
   let dernier: { slug: string; titre: string; chapo: string; publie_le: string } | null = null;
   try {
@@ -35,18 +41,39 @@ export default async function Presse() {
   const aujourdhui = new Date().toISOString().slice(0, 10);
   return (
     <>
+      {/* Navigation secondaire de l'espace presse. */}
+      <nav className="onglets-pages" aria-label="Espace presse">
+        <a href="/presse" aria-current="page">Vue d&apos;ensemble</a>
+        <a href="/presse/ils-parlent-de-nous">Ils parlent de nous ({MENTIONS_PRESSE.length})</a>
+        <a href="/presse/communiques">Communiqués</a>
+      </nav>
+
       {/* Bandeau d'accueil presse : marine plein, chiffres du jour poses dessus. */}
       <section className="presse-hero">
-      <h1>DataParl&apos; pour les <span className="surligne">rédactions</span></h1>
-      <p className="lead">Savoir qui arrive, qui part et qui change d&apos;équipe, chaque matin, avant tout le monde.</p>
-      <div className="chiffres">
-        {c.enPoste > 0 && <div><strong>{n(c.enPoste)}</strong><span>collaborateurs suivis aujourd&apos;hui</span></div>}
-        {c.fiches > 0 && <div><strong>{n(c.fiches)}</strong><span>parcours reconstitués depuis 2015</span></div>}
-        {c.mouvements > 0 && <div><strong>{n(c.mouvements)}</strong><span>arrivées, départs et transferts recensés</span></div>}
-        <div><strong>Chaque matin</strong><span>mise à jour d&apos;après les listes officielles</span></div>
-      </div>
-      <p className="presse-hero-meta">Chiffres au {dateTitre(aujourdhui)}, mise à jour chaque matin.</p>
+        <h1>DataParl&apos; pour les <span className="surligne">rédactions</span></h1>
+        <p className="lead">Savoir qui arrive, qui part et qui change d&apos;équipe, chaque matin, avant tout le monde.</p>
+        <div className="chiffres">
+          {c.enPoste > 0 && <div><strong>{n(c.enPoste)}</strong><span>collaborateurs suivis aujourd&apos;hui</span></div>}
+          {c.fiches > 0 && <div><strong>{n(c.fiches)}</strong><span>parcours reconstitués depuis 2015</span></div>}
+          {c.mouvements > 0 && <div><strong>{n(c.mouvements)}</strong><span>arrivées, départs et transferts recensés</span></div>}
+          <div><strong>Chaque matin</strong><span>mise à jour d&apos;après les listes officielles</span></div>
+        </div>
+        <p className="presse-hero-actions">
+          <a className="btn" href="#contact">Demander un accès rédaction</a>
+          <a className="btn contour" href="/presse/ils-parlent-de-nous">Voir les articles qui nous citent ({MENTIONS_PRESSE.length}) →</a>
+        </p>
+        <p className="presse-hero-meta">Chiffres au {dateTitre(aujourdhui)}, mise à jour chaque matin.</p>
       </section>
+
+      {/* Preuve d'usage : la dernière mention presse, juste sous le hero. */}
+      {mention && (
+        <section className="derniere-mention">
+          <h2>Vu dans la presse</h2>
+          <p className="meta">Dernière mention : {dateTitre(mention.publieLe)}, {mention.media}</p>
+          <blockquote className="citation">« {mention.citation} »</blockquote>
+          <p className="meta"><a href="/presse/ils-parlent-de-nous">Consulter la revue de presse complète →</a></p>
+        </section>
+      )}
 
       <h2>Ce que DataParl&apos; permet de raconter</h2>
       <div className="atouts colonnes-3">
@@ -58,7 +85,7 @@ export default async function Presse() {
       {dernier && (
         <section className="teaser-communique">
           <h2>Dernier communiqué</h2>
-          <a className="teaser-carte" href={`/presse/communiques/${dernier.slug}`}>
+          <a className="teaser-carte" href={"/presse/communiques/" + dernier.slug}>
             <span className="meta">{dateTitre(dernier.publie_le.slice(0, 10))}</span>
             <strong>{dernier.titre}</strong>
             {dernier.chapo && <span className="teaser-chapo">{dernier.chapo}</span>}
@@ -75,7 +102,7 @@ export default async function Presse() {
       </ol>
 
       <h2>Téléchargements presse</h2>
-      <p>Gratuits, sur simple demande par email (formulaire ci-dessous) :</p>
+      <p>Gratuits, sur simple demande via le formulaire ci-dessous :</p>
       <ul>
         <li><strong>Le fichier CSV du jour</strong> : tous les mouvements publiés, avec chambre, élu, groupe et type ;</li>
         <li><strong>Les fiches VigiParl&apos; et MixiParl&apos;</strong> : les chiffres et graphiques du moment, prêts à citer ;</li>
@@ -96,7 +123,7 @@ export default async function Presse() {
       <p className="meta">L&apos;offre se met en place au cas par cas : écrivez-nous en précisant votre média.</p>
 
       <h2 id="contact">Écrire à la presse</h2>
-      <p>Pour une demande de données, une précision ou un échange par écrit : <a href="mailto:presse@dataparl.fr">presse@dataparl.fr</a>. Réponse sous 48 heures ouvrées.</p>
+      <p>Pour une demande de données, une précision ou un échange par écrit, le formulaire ci-dessous transmet directement votre message à la rédaction de DataParl&apos;. Réponse sous 48 heures ouvrées.</p>
       <FormulairePresse />
 
       <h2>Citer DataParl&apos;</h2>

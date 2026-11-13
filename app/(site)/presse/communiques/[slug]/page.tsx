@@ -31,7 +31,7 @@ export default async function Communique({ params }: Props) {
       {c.chapo && <p className="communique-chapo">{c.chapo}</p>}
       <div dangerouslySetInnerHTML={{ __html: texteVersHtml(c.corps) }} />
       <Partage url={url} titre={c.titre} texte={c.titre} />
-      <p className="meta">Contact presse : <a href="mailto:presse@dataparl.fr">presse@dataparl.fr</a>. Réutilisation libre avec la mention « DataParl&apos; (dataparl.fr) ».</p>
+      <p className="meta">Contact presse : <a href="/presse#contact">formulaire presse</a>. Réutilisation libre avec la mention « DataParl&apos; (dataparl.fr) ».</p>
     </article>
   );
 }

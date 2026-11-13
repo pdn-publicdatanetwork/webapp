@@ -15,7 +15,10 @@ export const VERSIONS: Record<string, VersionTexte[]> = {
   cguChat: [{ date: "22 octobre 2026" }],
   cguSheets: [{ date: "22 octobre 2026" }],
   cguJobs: [{ date: "22 octobre 2026" }],
-  confidentialite: [{ date: "22 octobre 2026" }],
+  confidentialite: [
+    { date: "13 novembre 2026", resume: "retrait du carnet presse désormais via le formulaire de contact, sans adresse email en clair" },
+    { date: "22 octobre 2026" },
+  ],
   cookies: [{ date: "22 octobre 2026" }],
   licences: [{ date: "22 octobre 2026" }],
   mentions: [{ date: "22 octobre 2026" }],
