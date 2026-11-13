@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { PRIORITES } from "@/lib/enquete";
 import { hashJeton } from "@/lib/mail";
 import { authAdmin } from "@/lib/supabaseAdmin";
 
@@ -12,6 +13,7 @@ const Reponses = z.object({
   note_experience: z.coerce.number().int().min(1).max(5),
   note_contenu: z.coerce.number().int().min(1).max(5),
   note_global: z.coerce.number().int().min(1).max(5),
+  priorites: z.array(z.enum(PRIORITES)).max(PRIORITES.length).optional().default([]),
   commentaire: z.string().trim().max(2000).optional().default(""),
 });
 
@@ -31,6 +33,7 @@ export async function POST(req: Request) {
     note_experience: p.data.note_experience,
     note_contenu: p.data.note_contenu,
     note_global: p.data.note_global,
+    priorites: p.data.priorites,
     commentaire: p.data.commentaire,
     repondu_le: new Date().toISOString(),
   }).eq("id", r.id);

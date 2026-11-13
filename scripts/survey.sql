@@ -12,6 +12,7 @@ create table if not exists public.survey_reponses (
   note_experience int check (note_experience between 1 and 5),
   note_contenu int check (note_contenu between 1 and 5),
   note_global int check (note_global between 1 and 5),
+  priorites text[],                   -- priorités d'amélioration choisies (interface DataForm')
   commentaire text,
   cree_le timestamptz not null default now(),
   repondu_le timestamptz
@@ -23,3 +24,8 @@ create index if not exists survey_reponses_user_idx on public.survey_reponses (u
 -- Le service role fait tout ; personne d'autre ne lit ni n'écrit ces lignes
 -- (le questionnaire passe par les routes API du site).
 alter table public.survey_reponses enable row level security;
+
+-- Migration de la table existante (questionnaire interface DataForm',
+-- novembre 2026) : ajout des priorités sans toucher aux données.
+alter table public.survey_reponses
+  add column if not exists priorites text[];

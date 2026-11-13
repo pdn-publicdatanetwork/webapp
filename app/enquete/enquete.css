@@ -1,0 +1,52 @@
+/* Questionnaire « Ton avis sur DataParl' » : styles propres à l'enquête,
+   par-dessus dataform.css (base DataForm' partagée avec le contact). */
+
+/* Surlignage jaune hors logo (titres, écran merci). */
+.df-zone .df-surligne {
+  background: var(--df-yellow);
+  color: #071a41;
+  padding: 0 0.12em;
+}
+
+/* Notes 1 à 5 : gros boutons carrés, remplissage jaune pâle jusqu'à la note
+   choisie (même affordance que les étoiles de l'ancien questionnaire). */
+.df-notes {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.df-note-btn {
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 12px;
+  border: 1px solid var(--df-line);
+  background: var(--df-cream);
+  color: var(--df-muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.df-note-btn:hover {
+  border-color: color-mix(in srgb, var(--df-bleu) 45%, var(--df-line));
+}
+
+.df-note-btn.pleine {
+  background: #fff7d6;
+  color: var(--df-navy);
+}
+
+.df-note-btn.choisie {
+  border-color: var(--df-bleu);
+  color: var(--df-navy);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--df-bleu) 18%, transparent);
+}
+
+/* Écran merci : les trois sites sont l'action principale, on les affiche
+   en marque (Spectral) plutôt qu'en liens discrets. */
+.df-zone-avis .df-decouvre a {
+  font-family: Spectral, Georgia, serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
