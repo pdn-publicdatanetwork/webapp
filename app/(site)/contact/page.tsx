@@ -4,7 +4,7 @@ import "./dataform.css";
 
 export const metadata: Metadata = { title: "Contact", alternates: { canonical: "/contact" } };
 
-// Contact unifiŤ (DataForm') : dataparl.fr/contact sert le formulaire pour tout
+// Contact unifié (DataForm') : dataparl.fr/contact sert le formulaire pour tout
 // l'écosystème ; jobs.dataparl.fr/contact et api.dataparl.fr/contact
 // redirigent ici (jobs/app/contact/page.tsx et proxy.ts). ?provenance=
 // pré-sélectionne le site d'origine, ?sujet= pré-sélectionne le motif (liens

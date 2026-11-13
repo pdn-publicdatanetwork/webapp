@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type JSX } from "react";
 import { sessionActuelle } from "@/lib/supabaseBrowser";
 import Turnstile, { reinitialiserTurnstile } from "./Turnstile";
 

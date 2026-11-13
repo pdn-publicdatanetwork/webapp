@@ -48,7 +48,7 @@ export async function POST(req: Request) {
   if (error) return NextResponse.json({ error: "Envoi impossible, réessayez plus tard." }, { status: 500 });
 
   const libelle = SUJETS.find((s) => s.v === d.sujet)?.l ?? d.sujet;
-  const objet = `[Contact » ${libelle}] ${d.prenom} ${d.nom}`;
+  const objet = `[Contact · ${libelle}] ${d.prenom} ${d.nom}`;
   // Les demandes presse arrivent (et sont accusées) sur presse@dataparl.fr.
   const boite = d.sujet === "presse" ? "presse@dataparl.fr" : "hello@dataparl.fr";
 
@@ -59,13 +59,13 @@ export async function POST(req: Request) {
     folder: "inbox", read: false, source: "site",
   });
 
-  // 2. Accusé de réception à l&apos;expéditeur.
+  // 2. Accusé de réception à l'expéditeur.
   await accuserReception({ to: email, from: boite, objet: libelle, extrait: d.message, prenom: d.prenom, contact: true });
 
   // 3. Copie vers le canal Slack #contact (archive de l'équipe).
   await copieSlack(SLACK_CONTACT, {
     subject: objet, titre: libelle,
-    corpsHtml: `<p><strong>${esc(d.prenom)} ${esc(d.nom)}</strong> &lt(s${esc(email)}&gt;</p><p style="white-space:pre-wrap;line-height:1.6">${esc(d.message)}</p>`,
+    corpsHtml: `<p><strong>${esc(d.prenom)} ${esc(d.nom)}</strong> &lt;${esc(email)}&gt;</p><p style="white-space:pre-wrap;line-height:1.6">${esc(d.message)}</p>`,
     text: `${libelle}\n${d.prenom} ${d.nom} <${email}>\n\n${d.message}`,
   });
 
