@@ -17,7 +17,8 @@ export type MentionPresse = {
   contexte?: string; // la donnée DataParl' utilisée par l'article
   etiquette: string; // « Changement d'équipe », « Enquête »…
   vedette?: boolean; // épinglée sur la page /presse
-  capture?: string; // chemin de l'image dans /public (facultatif)
+  capture?: string; // chemin servi de l'image posée dans public/presse/ (facultatif)
+  legendeCapture?: string; // légende affichée sous l'image
   creditCapture?: string; // crédit de la photo ou de la capture
 };
 
@@ -33,6 +34,11 @@ export const MENTIONS_PRESSE: MentionPresse[] = [
     contexte: "La fiche collaborateur certifiée de DataParl' documente son nouveau rattachement, auprès du député Matthias Renault (RN), d'après les listes officielles.",
     etiquette: "Changement d'équipe",
     vedette: true,
+    // Capture d'article : déposer l'image dans public/presse/ (voir
+    // public/presse/README.md), puis décommenter ces trois lignes.
+    // capture: "/presse/est-republicain-2026-11-02.png",
+    // legendeCapture: "Capture de l'article, L'Est Républicain, rubrique Écoute voir",
+    // creditCapture: "Photo Karine Frelin",
   },
 ];
 
