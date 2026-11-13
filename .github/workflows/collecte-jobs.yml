@@ -17,6 +17,11 @@ name: Collecte Jobs
 # Paris, heure d'hiver), « Run workflow » manuel, ou push d'une
 # modification du fichier jobs-collecte.trigger (déclenchement à la
 # demande sans passer par l'onglet Actions).
+#
+# Alertes e-mail : envoyées par le webapp (route www.dataparl.fr/
+# api/cron/alertes-jobs, clé Resend du projet Vercel où dataparl.fr
+# est vérifié) ; la clé RESEND_API_KEY des variables GitLab ne sert
+# plus que pour la notification POL JOBS (scripts/notif-poljobs.mjs).
 
 on:
   schedule:
@@ -41,7 +46,7 @@ concurrency:
 
 env:
   GITLAB_TOKEN: glpat-gZEfmvClp3VV87H3UWwvuGM6MQpvOjEKdTpxN2t3cw8.01.171rzea8f
-  SKIP_PROMO_TELEGRAM: "true"   # « true » = promo Telegram sautée ; passer à « false » pour la rétablir
+  SKIP_PROMO_TELEGRAM: "false"   # « true » = promo Telegram sautée (run de test)
 
 jobs:
   collecte:
@@ -102,8 +107,14 @@ jobs:
         continue-on-error: true   # un raté de scraping ne doit jamais bloquer les alertes
         run: node scripts/insights.mjs
       - name: Alertes e-mail
-        working-directory: repo
-        run: node scripts/alerte-nouvelles-offres.mjs
+        run: |
+          set -euo pipefail
+          code=$(curl -sS -o /tmp/alerte-jobs.json -w "%{http_code}" \
+            -H "Authorization: Bearer $APP_SECRET" \
+            "https://www.dataparl.fr/api/cron/alertes-jobs")
+          cat /tmp/alerte-jobs.json; echo
+          grep -q '"ok"' /tmp/alerte-jobs.json
+          test "$code" = 200
       - name: Promotion Telegram
         if: ${{ env.SKIP_PROMO_TELEGRAM != 'true' && inputs.skip_promo_telegram != true }}
         working-directory: repo

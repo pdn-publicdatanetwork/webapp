@@ -154,3 +154,35 @@ export async function desinscritAlerte(email: string): Promise<void> {
     .doc(email)
     .set({ actif: false, updated_at: new Date().toISOString() }, { merge: true });
 }
+
+// ── Alertes jobs : envoi depuis le webapp (route /api/cron/alertes-jobs) ────
+// La fenêtre d'envoi (alert_state/last) reste dans Firestore ; la CI ne garde
+// que le déclenchement (curl vers le webapp, qui porte la clé Resend valide).
+
+// Offres actives approuvées mises à jour après la date ISO donnée (fenêtre des
+// alertes : une offre validée en retard est notifiée au moment de sa
+// validation).
+export async function offresDepuisAlerte(depuisIso: string): Promise<Offre[]> {
+  const snaps = await db().collection("job_offers").where("review_status", "==", "approved").limit(500).get();
+  return snaps.docs
+    .map(enOffre)
+    .filter((o) => o.statut === "active" && String(o.updated_at ?? "") > depuisIso)
+    .sort((a, b) => String(b.updated_at ?? "").localeCompare(String(a.updated_at ?? "")))
+    .slice(0, 25);
+}
+
+// Abonnés actifs aux alertes emplois (documents = adresses, champ « actif »).
+export async function abonnesAlerte(): Promise<Offre[]> {
+  const snaps = await db().collection("alert_subscriptions").where("actif", "==", true).limit(1000).get();
+  return snaps.docs.map(enOffre);
+}
+
+// État du dernier envoi (alert_state/last) : « envoye_le » au format ISO.
+export async function lireEtatAlerte(): Promise<{ envoye_le?: string }> {
+  const snap = await db().collection("alert_state").doc("last").get();
+  return (snap.data() ?? {}) as { envoye_le?: string };
+}
+
+export async function ecrireEtatAlerte(champs: Offre): Promise<void> {
+  await db().collection("alert_state").doc("last").set(champs, { merge: true });
+}
