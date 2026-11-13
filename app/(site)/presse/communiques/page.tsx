@@ -25,7 +25,7 @@ export default async function Communiques() {
           <p className="communiques-vide-titre">Aucun communiqué publié pour l&apos;instant</p>
           <p className="communiques-vide-texte">Les communiqués de presse apparaîtront ici dès leur publication. En attendant, vous pouvez nous écrire pour toute demande de données ou de précision.</p>
           <a className="btn" href="/presse">Retour à la page Presse</a>
-          <p className="meta">Contact : <a href="mailto:presse@dataparl.fr">presse@dataparl.fr</a></p>
+          <p className="meta">Contact : <a href="/presse#contact">formulaire presse</a></p>
         </div>
       ) : (
         <ul className="jours">

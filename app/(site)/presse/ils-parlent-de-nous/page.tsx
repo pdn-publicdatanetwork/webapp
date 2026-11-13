@@ -79,7 +79,7 @@ export default async function IlsParlentDeNous({ searchParams }: { searchParams:
       )}
 
       <section className="contribution-presse">
-        <p>Vous avez utilisé DataParl&apos; dans un article, une enquête ou une chronique ? Signalez la parution, elle sera ajoutée ici : <a href="mailto:presse@dataparl.fr">presse@dataparl.fr</a>.</p>
+        <p>Vous avez utilisé DataParl&apos; dans un article, une enquête ou une chronique ? Signalez la parution via le <a href="/presse#contact">formulaire presse</a>, elle sera ajoutée ici.</p>
       </section>
     </>
   );

@@ -102,7 +102,7 @@ export default async function Presse() {
       </ol>
 
       <h2>Téléchargements presse</h2>
-      <p>Gratuits, sur simple demande par email (formulaire ci-dessous) :</p>
+      <p>Gratuits, sur simple demande via le formulaire ci-dessous :</p>
       <ul>
         <li><strong>Le fichier CSV du jour</strong> : tous les mouvements publiés, avec chambre, élu, groupe et type ;</li>
         <li><strong>Les fiches VigiParl&apos; et MixiParl&apos;</strong> : les chiffres et graphiques du moment, prêts à citer ;</li>
@@ -123,7 +123,7 @@ export default async function Presse() {
       <p className="meta">L&apos;offre se met en place au cas par cas : écrivez-nous en précisant votre média.</p>
 
       <h2 id="contact">Écrire à la presse</h2>
-      <p>Pour une demande de données, une précision ou un échange par écrit : <a href="mailto:presse@dataparl.fr">presse@dataparl.fr</a>. Réponse sous 48 heures ouvrées.</p>
+      <p>Pour une demande de données, une précision ou un échange par écrit, le formulaire ci-dessous transmet directement votre message à la rédaction de DataParl&apos;. Réponse sous 48 heures ouvrées.</p>
       <FormulairePresse />
 
       <h2>Citer DataParl&apos;</h2>

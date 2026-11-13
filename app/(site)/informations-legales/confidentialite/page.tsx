@@ -110,7 +110,7 @@ export default function Confidentialite() {
       <p>
         <strong>Journalistes.</strong> Le carnet presse (nom, média, adresse professionnelle) sert à envoyer nos communiqués, sur la base de
         notre intérêt légitime à informer la presse. Chaque communiqué contient un lien de désinscription ; toute personne
-        concernée peut aussi écrire à presse@dataparl.fr.
+        concernée peut aussi demander son retrait du carnet presse via le <a href={CONTACT_RGPD}>formulaire de contact</a>.
       </p>
 
       <h2>3. Personnes citées dans les données</h2>
