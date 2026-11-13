@@ -6,7 +6,8 @@ import { estPageReseaux, journaliserVueReseaux } from "./lib/vuesReseaux";
 
 // Routage par sous-domaine (un seul déploiement pour tous les hôtes) :
 //   www.dataparl.fr         site public ; /api -> api.dataparl.fr
-//   dataparl.fr             -> redirection 308 vers www
+//   dataparl.fr             -> redirection 308 vers www ; exception
+//                           /ads.txt, servi tel quel (voir le matcher)
 //   api.dataparl.fr         /v1/* -> /api/v1/* (l'API elle-même)
 //                           /connexion servie telle quelle (OAuth PKCE sur la même origine)
 //                           /api/* (routes internes des pages) servies telles quelles
@@ -44,6 +45,11 @@ import { estPageReseaux, journaliserVueReseaux } from "./lib/vuesReseaux";
 // Sur admin, webmail et mail : pas d'indexation, pas d'intégration en iframe,
 // pas de Referer transmis.
 // Tout autre hôte (localhost, aperçus Vercel) : pas de réécriture.
+// /ads.txt : fichier statique racine servi hors proxy (voir le matcher),
+// comme robots.txt et sitemap.xml. Les crawlers publicitaires (Google,
+// acheteurs programmatiques) doivent toujours pouvoir le lire : le 503 de
+// la fenêtre de maintenance du 11/11 l'a marqué « introuvable » dans la
+// console AdSense (alerte « risque de perte de revenus »).
 // auth.dataparl.fr : porte unique de connexion (Firebase Hosting, hors
 // de ce déploiement) ; les /connexion de www, api, media et jobs y renvoient.
 //   my.dataparl.fr          capsule « Mon espace » : / = la vue d'ensemble
@@ -604,6 +610,12 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)"],
+  // ads.txt exclu du proxy : servi comme fichier statique sur tous les
+  // hôtes, la demande ne passe ni par la base (maintenance, vues) ni par
+  // le mode maintenance, qui l'aurait réécrite en page HTML. Le crawler
+  // AdSense recrawl toutes les 24 h ; l'apex reste en 308 vers www
+  // (redirection au niveau Vercel, que la documentation Google décrit
+  // comme valide pour le crawl de ads.txt).
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|ads.txt).*)"],
 };
 
