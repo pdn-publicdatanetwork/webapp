@@ -42,9 +42,9 @@ function useEtatCapsule(): EtatCapsule {
 // Les trois sites DataParl', accessibles depuis la capsule (sous-domaines :
 // la session .dataparl.fr est partagée, pas de reconnexion).
 const SITES = [
-  { href: "https://www.dataparl.fr/", nom: "dataparl.fr", couleur: "var(--bleu)" },
-  { href: "https://jobs.dataparl.fr/", nom: "jobs.dataparl.fr", couleur: "#9333EA" },
-  { href: "https://api.dataparl.fr/", nom: "api.dataparl.fr", couleur: "#10B981" },
+  { href: "https://www.dataparl.fr/", nom: "dataparl.fr", icon: "https://www.dataparl.fr/icon.svg" },
+  { href: "https://jobs.dataparl.fr/", nom: "jobs.dataparl.fr", icon: "https://jobs.dataparl.fr/icon.svg" },
+  { href: "https://api.dataparl.fr/", nom: "api.dataparl.fr", icon: "https://api.dataparl.fr/icon.svg" },
 ];
 
 export function CapsuleEntete() {
@@ -58,7 +58,7 @@ export function CapsuleEntete() {
         .capsule-sites { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: center; }
         .capsule-site-lien { display: inline-flex; align-items: center; gap: 7px; text-decoration: none; color: var(--muted); font-size: .84rem; font-weight: 500; padding: 7px 12px; border-radius: 8px; transition: background .15s, color .15s; }
         .capsule-site-lien:hover { background: var(--bg); color: var(--ink); }
-        .capsule-point { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .capsule-logo-site { width: 17px; height: 17px; border-radius: 5px; flex-shrink: 0; object-fit: cover; border: 1px solid var(--line); }
         .capsule-droite { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
         .capsule-pill { display: inline-flex; align-items: center; gap: 6px; background: #ECFDF5; color: #047857; font-size: .78rem; font-weight: 500; padding: 5px 10px; border-radius: 20px; white-space: nowrap; }
         .capsule-pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #10B981; }
@@ -76,13 +76,13 @@ export function CapsuleEntete() {
       <header className="site" style={{ background: "var(--card)" }}>
         <div className="wrap capsule-entete">
           <a className="capsule-logo" href="/" aria-label="Mon espace DataParl', accueil" style={{ fontFamily: "var(--font-spectral), 'Spectral', Georgia, serif", fontWeight: 700, fontSize: "1.15rem" }}>
-            Data<span className="surligne">Parl&apos;</span>
+            <span>Data<span className="surligne">Parl&apos;</span></span>
             <span style={{ color: "var(--bleu)", fontSize: ".8rem", fontWeight: 600 }}>Mon espace</span>
           </a>
           <nav className="capsule-sites" aria-label="Les sites DataParl'">
             {SITES.map((s) => (
               <a key={s.href} className="capsule-site-lien" href={s.href}>
-                <span className="capsule-point" style={{ background: s.couleur }} aria-hidden="true" />
+                <img className="capsule-logo-site" src={s.icon} alt="" width={17} height={17} aria-hidden="true" />
                 {s.nom}
               </a>
             ))}
