@@ -23,9 +23,11 @@ const RESEAUX = [
 
 export default function PiedDePageRoute() {
   const chemin = usePathname() ?? "";
+  // Les deux hooks sont TOUJOURS appelés avant tout retour anticipé (même
+  // raison que l'en-tête : sinon React error #300 sur my.dataparl.fr).
   const my = useHoteMy() || chemin === "/capsule" || chemin.startsWith("/capsule/");
-  if (my) return <CapsulePied />;
   const jobs = useHoteJobs() || chemin === "/jobs" || chemin.startsWith("/jobs/");
+  if (my) return <CapsulePied />;
 
   return (
     <footer className="site">
