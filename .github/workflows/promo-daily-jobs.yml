@@ -5,6 +5,8 @@ name: Promo Daily Jobs
 # du commit contenait « promo-daily ») : ici, déclenchement manuel.
 # Le message vient de scripts/promo-daily-message.txt sur GitLab
 # (absent ou vide : rien n'est envoyé, sortie propre).
+# Jeton GitLab embarqué : voir la note de collecte-jobs.yml (dépôt
+# privé, rotation à prévoir).
 
 on:
   workflow_dispatch:
@@ -12,15 +14,20 @@ on:
 permissions:
   contents: read
 
+env:
+  GITLAB_TOKEN: glpat-gZEfmvClp3VV87H3UWwvuGM6MQpvOjEKdTpxN2t3cw8.01.171rzea8f
+
 jobs:
   promo-daily:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - name: Masquage du jeton GitLab dans les logs
+        run: echo "::add-mask::$GITLAB_TOKEN"
       - name: Code source (archive GitLab)
         run: |
           set -euo pipefail
-          curl -sf -H "PRIVATE-TOKEN: ${{ secrets.GITLAB_TOKEN }}" \
+          curl -sf -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
             "https://gitlab.com/api/v4/projects/88469399/repository/archive.tar.gz" \
             -o /tmp/repo.tar.gz
           mkdir -p repo
@@ -32,7 +39,7 @@ jobs:
         working-directory: repo
         run: |
           set -euo pipefail
-          curl -sf -H "PRIVATE-TOKEN: ${{ secrets.GITLAB_TOKEN }}" \
+          curl -sf -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
             "https://gitlab.com/api/v4/projects/88469399/variables?per_page=100" -o /tmp/vars.json
           v=$(jq -r '.[] | select(.key=="TELEGRAM_BOT_TOKEN") | .value' /tmp/vars.json)
           if [ -z "$v" ] || [ "$v" = "null" ]; then

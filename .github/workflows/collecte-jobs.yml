@@ -5,10 +5,18 @@ name: Collecte Jobs
 # privé). Le CODE SOURCE reste sur GitLab (publicdatanetwork-group/
 # dataparl-jobs, projet 88469399) : ce workflow télécharge son archive
 # à chaque run. Les SECRETS restent dans les variables CI du projet
-# GitLab (source de vérité), lues via l'API au démarrage ; seul le
-# token GitLab est stocké ici (secret GitHub GITLAB_TOKEN, scope api,
-# accès en lecture aux variables du projet 88469399).
-# En cas de rotation du token GitLab : mettre à jour ce secret.
+# GitLab (source de vérité), lues via l'API au démarrage.
+#
+# Jeton GitLab : embarqué ci-dessous (env GITLAB_TOKEN, scope api du
+# compte pdn-publicdatanetwork). Dépôt PRIVÉ : ne JAMAIS rendre ce
+# repo public sans retirer le jeton. Rotation à prévoir : créer un
+# Project Access Token read_api sur le projet GitLab et remplacer
+# la valeur ici.
+#
+# Déclenchement : planification 2 fois par jour (12h00 et 18h00
+# Paris, heure d'hiver), « Run workflow » manuel, ou push d'une
+# modification du fichier jobs-collecte.trigger (déclenchement à la
+# demande sans passer par l'onglet Actions).
 
 on:
   schedule:
@@ -20,6 +28,9 @@ on:
         description: "Sauter la promotion Telegram (run de test)"
         type: boolean
         default: false
+  push:
+    branches: [main]
+    paths: ["jobs-collecte.trigger"]
 
 permissions:
   contents: read
@@ -28,15 +39,21 @@ concurrency:
   group: collecte-jobs
   cancel-in-progress: false
 
+env:
+  GITLAB_TOKEN: glpat-gZEfmvClp3VV87H3UWwvuGM6MQpvOjEKdTpxN2t3cw8.01.171rzea8f
+  SKIP_PROMO_TELEGRAM: "true"   # « true » = promo Telegram sautée ; passer à « false » pour la rétablir
+
 jobs:
   collecte:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
+      - name: Masquage du jeton GitLab dans les logs
+        run: echo "::add-mask::$GITLAB_TOKEN"
       - name: Code source (archive GitLab)
         run: |
           set -euo pipefail
-          curl -sf -H "PRIVATE-TOKEN: ${{ secrets.GITLAB_TOKEN }}" \
+          curl -sf -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
             "https://gitlab.com/api/v4/projects/88469399/repository/archive.tar.gz" \
             -o /tmp/repo.tar.gz
           mkdir -p repo
@@ -49,7 +66,7 @@ jobs:
         working-directory: repo
         run: |
           set -euo pipefail
-          curl -sf -H "PRIVATE-TOKEN: ${{ secrets.GITLAB_TOKEN }}" \
+          curl -sf -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
             "https://gitlab.com/api/v4/projects/88469399/variables?per_page=100" -o /tmp/vars.json
           for k in DATA_SUPABASE_KEY RESEND_API_KEY APP_SECRET MISTRAL_API_KEY TELEGRAM_BOT_TOKEN FIREBASE_SERVICE_ACCOUNT GOOGLE_INDEXING_ACCOUNT; do
             v=$(jq -r --arg k "$k" '.[] | select(.key==$k) | .value' /tmp/vars.json)
@@ -88,6 +105,6 @@ jobs:
         working-directory: repo
         run: node scripts/alerte-nouvelles-offres.mjs
       - name: Promotion Telegram
-        if: ${{ !inputs.skip_promo_telegram }}
+        if: ${{ env.SKIP_PROMO_TELEGRAM != 'true' && inputs.skip_promo_telegram != true }}
         working-directory: repo
         run: node scripts/promotion-offres.mjs
