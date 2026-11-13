@@ -11,6 +11,7 @@ import { estPageReseaux, journaliserVueReseaux } from "./lib/vuesReseaux";
 //                           /connexion servie telle quelle (OAuth PKCE sur la même origine)
 //                           /api/* (routes internes des pages) servies telles quelles
 //                           /mon-espace-api -> my.dataparl.fr (308)
+//                           /contact -> www.dataparl.fr/contact (DataForm', 308)
 //                           tout le reste -> /espace-api/* (site de l'API)
 //   jobs.dataparl.fr        DataParl' Jobs sans préfixe : / -> /jobs,
 //                           /proposer et /old-jobs -> /jobs/*, /<uuid>_<slug>
@@ -250,6 +251,8 @@ export async function proxy(req: NextRequest) {
 
   if (host === `api.${DOMAINE}`) {
     const url = req.nextUrl.clone();
+    // Contact unifié (DataForm') : servi par www, paramètres conservés.
+    if (path === "/contact") return vers(req, `www.${DOMAINE}`, path, 308);
     if (path === "/v1" || path.startsWith("/v1/")) {
       url.pathname = `/api${path}`;
       return NextResponse.rewrite(url);
@@ -603,3 +606,4 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)"],
 };
+
