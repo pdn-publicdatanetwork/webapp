@@ -72,6 +72,10 @@ const MOTIF_DEPUIS_SUJET: Record<string, string> = {
   question: "A", erreur: "B", bug: "C", phishing: "D", rgpd: "E", api: "F", presse: "G", legal: "H", offre: "J",
 };
 
+// Ordre canonique des écrans : référence de navigation quand l'étape active
+// vient d'être retirée de la liste des étapes actives (voir la note plus bas).
+const ORDRE_ETAPES = [0, 1, 9, 2, 4, 5, 6, 7, 3, 8];
+
 // Presse : puces de médias courants + saisie libre.
 const MEDIAS = [
   "Le Monde", "Le Figaro", "AFP", "Reuters", "Franceinfo", "Libération", "BFM TV",
@@ -177,9 +181,20 @@ export default function DataForm({
     return base;
   }, [compte, motif, identiteComplete]);
 
-  const index = etapes.indexOf(etape);
-  const progression = Math.max(0, ((index + 1) / etapes.length) * 100);
-  const derniere = etape === etapes[etapes.length - 1];
+  // L'étape active peut avoir disparu de la liste au fil de la saisie (ex :
+  // l'étape 2 « Comment vous appeler ? » est retirée dès que prénom ET nom
+  // sont remplis, la liste se recalcule sans elle et etapes.indexOf(etape)
+  // renvoie -1, ce qui rendait suivant() inactif : le parcours se bloquait,
+  // bouton précédent et barre de progression figés). On navigue donc par
+  // position dans l'ordre canonique, indépendamment de la liste.
+  const position = ORDRE_ETAPES.indexOf(etape);
+  const suiteActives = ORDRE_ETAPES.slice(position + 1).filter((e) => etapes.includes(e));
+  const etapesAvecCourante = etapes.includes(etape) ? etapes.length : etapes.length + 1;
+  const index = etapes.includes(etape)
+    ? etapes.indexOf(etape)
+    : etapes.filter((e) => ORDRE_ETAPES.indexOf(e) < position).length;
+  const progression = Math.max(0, ((index + 1) / etapesAvecCourante) * 100);
+  const derniere = suiteActives.length === 0;
 
   const emailValide = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
@@ -199,12 +214,11 @@ export default function DataForm({
   };
 
   const suivant = () => {
-    const i = etapes.indexOf(etape);
-    if (i >= 0 && i + 1 < etapes.length) setEtape(etapes[i + 1]);
+    if (suiteActives.length) setEtape(suiteActives[0]);
   };
   const precedent = () => {
-    const i = etapes.indexOf(etape);
-    if (i > 0) setEtape(etapes[i - 1]);
+    const avant = ORDRE_ETAPES.slice(0, position).filter((e) => etapes.includes(e));
+    if (avant.length) setEtape(avant[avant.length - 1]);
   };
 
   const continuerSansCompte = () => {
