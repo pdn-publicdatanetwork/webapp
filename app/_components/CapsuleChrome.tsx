@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { sessionActuelle, deconnexion as fermerSession } from "@/lib/supabaseBrowser";
 
 // Chrome de la capsule my.dataparl.fr (« Mon espace ») : en-tête et pied de
@@ -49,6 +50,10 @@ const SITES = [
 
 export function CapsuleEntete() {
   const etat = useEtatCapsule();
+  const chemin = usePathname() ?? "";
+  // Sur l'accueil de la capsule, la carte contient déjà « Se connecter » :
+  // on masque le bouton de l'en-tête pour éviter le doublon.
+  const accueilCapsule = chemin === "/" || chemin === "/capsule";
   const initiale = (etat.prenom || etat.email || "D")[0].toUpperCase();
   return (
     <>
@@ -77,7 +82,7 @@ export function CapsuleEntete() {
         <div className="wrap capsule-entete">
           <a className="capsule-logo" href="/" aria-label="Mon espace DataParl', accueil" style={{ fontFamily: "var(--font-spectral), 'Spectral', Georgia, serif", fontWeight: 700, fontSize: "1.15rem" }}>
             <span>Data<span className="surligne">Parl&apos;</span></span>
-            <span style={{ color: "var(--bleu)", fontSize: ".8rem", fontWeight: 600 }}>Mon espace</span>
+            <span style={{ color: "var(--bleu)", fontSize: ".85rem", fontWeight: 700 }}>Mon espace</span>
           </a>
           <nav className="capsule-sites" aria-label="Les sites DataParl'">
             {SITES.map((s) => (
@@ -99,7 +104,7 @@ export function CapsuleEntete() {
                   <button type="button" onClick={async () => { await fermerSession(); window.location.replace("/"); }}>Se déconnecter</button>
                 </div>
               </details>
-            ) : (
+            ) : accueilCapsule ? null : (
               <a className="btn" href="/connexion?suite=/">Se connecter</a>
             )}
           </div>
