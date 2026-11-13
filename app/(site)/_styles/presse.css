@@ -20,10 +20,13 @@
 .mentions { display: grid; gap: 16px; margin: 12px 0 28px; }
 .mention-carte { border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--card); padding: 20px 22px; box-shadow: var(--shadow-sm); transition: background-color .3s ease, border-color .3s ease, box-shadow .3s ease; }
 .mention-carte:hover { background: var(--card-elevated); border-color: color-mix(in srgb, var(--ink) 20%, var(--line)); box-shadow: var(--shadow-md); }
-.mention-entete { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.mention-entete { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
 .mention-entete .meta { margin: 0; }
 .mention-media { font-size: .82rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
-.mention-etiquette { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: .76rem; font-weight: 700; color: var(--bleu); background: color-mix(in srgb, var(--bleu) 10%, transparent); border: 1px solid color-mix(in srgb, var(--bleu) 30%, transparent); white-space: nowrap; }
+/* Logo du média : pastille aux couleurs de sa marque. Le masthead de L'Est
+   Républicain est blanc, posé sur le rouge officiel du journal (#E2000B). */
+.mention-logo { display: inline-flex; align-items: center; height: 30px; padding: 0 9px; border-radius: var(--radius-btn); background: #E2000B; }
+.mention-logo img { display: block; height: 100%; width: auto; }
 .mention-carte h2 { margin: 0 0 4px; font-size: 1.15rem; line-height: 1.35; }
 .mention-carte .citation { margin: 8px 0; font-size: 1.02rem; }
 .mention-corps { min-width: 0; }
