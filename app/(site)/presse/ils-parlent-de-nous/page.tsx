@@ -7,7 +7,7 @@ import "../../_styles/presse.css";
 
 export const metadata: Metadata = {
   title: "Ils parlent de nous",
-  description: "Revue de presse : les articles qui s'appuient sur DataParl' pour documenter et vérifier les mouvements des collaborateurs parlementaires.",
+  description: "Revue de presse : les articles qui parlent de DataParl' et utilisent ses données certifiées pour documenter et vérifier les mouvements des collaborateurs parlementaires.",
   alternates: { canonical: "/presse/ils-parlent-de-nous" },
 };
 export const revalidate = 3600;
@@ -32,7 +32,7 @@ export default async function IlsParlentDeNous({ searchParams }: { searchParams:
       </nav>
 
       <p className="meta"><a href="/presse">Presse</a></p>
-      <h1>Ils s&apos;appuient sur <span className="surligne">DataParl&apos;</span></h1>
+      <h1>Ils parlent de <span className="surligne">DataParl&apos;</span></h1>
       <p className="lead">Presse quotidienne régionale, rédactions nationales, médias spécialisés : voici comment les journalistes utilisent DataParl&apos; pour documenter et vérifier les mouvements au sein des équipes parlementaires.</p>
 
       {(categories.length > 1 || MENTIONS_PRESSE.length > 1) && (
@@ -66,9 +66,12 @@ export default async function IlsParlentDeNous({ searchParams }: { searchParams:
               )}
               <div className="mention-corps">
                 <header className="mention-entete">
-                  <strong className="mention-media">{m.media}</strong>
+                  {m.logo ? (
+                    <span className="mention-logo"><img src={m.logo} alt={m.media} /></span>
+                  ) : (
+                    <strong className="mention-media">{m.media}</strong>
+                  )}
                   <time className="meta" dateTime={m.publieLe}>{dateTitre(m.publieLe)}</time>
-                  <span className="mention-etiquette">{m.etiquette}</span>
                 </header>
                 <h2><a className="titre-lien" href={m.url}>{m.titre}</a></h2>
                 <blockquote className="citation">« {m.citation} »</blockquote>

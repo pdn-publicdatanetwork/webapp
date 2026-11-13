@@ -15,8 +15,8 @@ export type MentionPresse = {
   url: string;
   citation: string; // extrait exact qui cite DataParl'
   contexte?: string; // la donnée DataParl' utilisée par l'article
-  etiquette: string; // « Changement d'équipe », « Enquête »…
   vedette?: boolean; // épinglée sur la page /presse
+  logo?: string; // logo du média servi depuis public/presse/logos/ (facultatif)
   capture?: string; // chemin servi de l'image posée dans public/presse/ (facultatif)
   legendeCapture?: string; // légende affichée sous l'image
   creditCapture?: string; // crédit de la photo ou de la capture
@@ -32,8 +32,8 @@ export const MENTIONS_PRESSE: MentionPresse[] = [
     url: "https://www.estrepublicain.fr/politique/2026/11/02/ecoute-voir-nos-echos-politiques-cette-semaine-un-changement-d-equipe-et-une-visite-officielle",
     citation: "Sur le site officiel DataParl', Jean-Eudes Le Moulec-Deschamps a changé d'écurie parlementaire.",
     contexte: "La fiche collaborateur certifiée de DataParl' documente son nouveau rattachement, auprès du député Matthias Renault (RN), d'après les listes officielles.",
-    etiquette: "Changement d'équipe",
     vedette: true,
+    logo: "/presse/logos/est-republicain.svg",
     // Capture d'article : déposer l'image dans public/presse/ (voir
     // public/presse/README.md), puis décommenter ces trois lignes.
     // capture: "/presse/est-republicain-2026-11-02.png",

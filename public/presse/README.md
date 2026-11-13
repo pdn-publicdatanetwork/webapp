@@ -14,6 +14,14 @@ Pour ajouter une capture :
    - `creditCapture` : le crédit, obligatoire pour une image de presse.
 3. La carte passe en deux colonnes (capture à gauche) automatiquement.
 
+## Logos de médias
+
+Le sous-dossier `logos/` contient les logotypes officiels des médias cités,
+idéalement en SVG. Le champ `logo` de `mentions.ts` contient le chemin servi
+(`/presse/logos/exemple.svg`). Le logo s'affiche dans l'en-tête de la carte,
+à la place du nom du média, sur une pastille colorée par la marque du média
+(voir `.mention-logo` dans `app/(site)/_styles/presse.css`).
+
 Droits : pour une capture d'article, créditer le média et le photographe et
 garder le lien vers l'article original. Une capture de l'interface DataParl'
 (fiche certifiée) ne pose aucun problème de droits.
