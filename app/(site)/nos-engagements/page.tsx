@@ -53,7 +53,7 @@ const ENGAGEMENTS: { titre: string; texte: ReactNode }[] = [
     ),
   },
   {
-    titre: "La publicité finance l&apos;accès libre",
+    titre: "La publicité finance l'accès libre",
     texte: (
       <>
         C&apos;est elle qui finance l&apos;accès libre au site, l&apos;hébergement, la collecte
