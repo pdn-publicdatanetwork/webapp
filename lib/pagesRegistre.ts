@@ -47,6 +47,7 @@ export const PAGES: PageSite[] = [
   { chemin: "/mixiparl/pe/parlementaires", titre: "MixiParl', Parlement européen, par élu", sitemap: true },
   { chemin: "/alertes", titre: "Alertes par email", sitemap: true },
   { chemin: "/presse", titre: "Presse & médias", sitemap: true },
+  { chemin: "/presse/ils-parlent-de-nous", titre: "Presse, ils parlent de nous", sitemap: true },
   { chemin: "/presse/communiques", titre: "Communiqués de presse", dynamique: "une page par communiqué publié", sitemap: true },
   { chemin: "/faq", titre: "Questions fréquentes", sitemap: true },
   { chemin: "/a-propos", titre: "À propos", sitemap: true },

@@ -1,0 +1,41 @@
+/* Espace presse : bandeau « Vu dans la presse » de /presse et cartes de la
+   revue de presse /presse/ils-parlent-de-nous. Fichier séparé : globals.css ne
+   doit plus être modifié directement (voir explorer-jobs.css). */
+
+/* Actions du bandeau d'accueil presse (marine plein) : bouton plein corail
+   et bouton contour crème, lisibles sur le fond fixe quel que soit le thème. */
+.presse-hero-actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0 4px; }
+.presse-hero-actions .btn { margin-top: 0; }
+.presse-hero-actions .btn.contour { background: transparent; color: #FFFDF5; border-color: rgba(255, 253, 245, .55); }
+.presse-hero-actions .btn.contour:hover { background: rgba(255, 253, 245, .12); border-color: #FFFDF5; }
+
+/* Bandeau « Vu dans la presse » sous le hero de /presse : la preuve d'usage
+   la plus récente, sobre, la citation mise en exergue par .citation. */
+.derniere-mention { margin: 26px 0 8px; padding: 18px 20px; border: 1px solid var(--line); border-left: 4px solid var(--jaune); border-radius: var(--radius-card); background: var(--card); box-shadow: var(--shadow-sm); }
+.derniere-mention h2 { margin: 0 0 6px; font-size: 1.15rem; }
+.derniere-mention .citation { margin: 10px 0; font-size: 1.05rem; }
+.derniere-mention .meta { margin: 0; }
+
+/* Grille des cartes de mention (page /presse/ils-parlent-de-nous). */
+.mentions { display: grid; gap: 16px; margin: 12px 0 28px; }
+.mention-carte { border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--card); padding: 20px 22px; box-shadow: var(--shadow-sm); transition: background-color .3s ease, border-color .3s ease, box-shadow .3s ease; }
+.mention-carte:hover { background: var(--card-elevated); border-color: color-mix(in srgb, var(--ink) 20%, var(--line)); box-shadow: var(--shadow-md); }
+.mention-entete { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.mention-entete .meta { margin: 0; }
+.mention-media { font-size: .82rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.mention-etiquette { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: .76rem; font-weight: 700; color: var(--bleu); background: color-mix(in srgb, var(--bleu) 10%, transparent); border: 1px solid color-mix(in srgb, var(--bleu) 30%, transparent); white-space: nowrap; }
+.mention-carte h2 { margin: 0 0 4px; font-size: 1.15rem; line-height: 1.35; }
+.mention-carte .citation { margin: 8px 0; font-size: 1.02rem; }
+.mention-corps { min-width: 0; }
+.mention-contexte { line-height: 1.5; }
+.mention-lien { font-weight: 600; }
+/* Carte avec capture : deux colonnes sur grand écran, empilées en mobile. */
+.mention-carte.avec-capture { display: grid; grid-template-columns: minmax(200px, 300px) 1fr; gap: 18px; align-items: start; }
+.mention-capture { margin: 0; }
+.mention-capture img { width: 100%; height: auto; border-radius: var(--radius-btn); border: 1px solid var(--line); display: block; }
+.mention-capture figcaption { margin-top: 6px; font-size: .8rem; }
+@media (max-width: 640px) { .mention-carte.avec-capture { grid-template-columns: 1fr; } }
+
+/* Appel à contribution en bas de la revue de presse. */
+.contribution-presse { border: 1px dashed var(--line); border-radius: var(--radius-card); padding: 16px 20px; margin: 8px 0 24px; }
+.contribution-presse p { margin: 0; }

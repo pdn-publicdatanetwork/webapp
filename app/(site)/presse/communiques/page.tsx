@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { dateTitre } from "@/lib/daily";
 import { authAdmin } from "@/lib/supabaseAdmin";
+import { MENTIONS_PRESSE } from "../mentions";
 
 export const metadata: Metadata = { title: "Communiqués de presse", alternates: { canonical: "/presse/communiques" } };
 export const revalidate = 3600;
@@ -13,7 +14,11 @@ export default async function Communiques() {
   } catch { /* liste vide */ }
   return (
     <>
-      <p className="meta"><a href="/presse">Presse</a></p>
+      <nav className="onglets-pages" aria-label="Espace presse">
+        <a href="/presse">Vue d&apos;ensemble</a>
+        <a href="/presse/ils-parlent-de-nous">Ils parlent de nous ({MENTIONS_PRESSE.length})</a>
+        <a href="/presse/communiques" aria-current="page">Communiqués</a>
+      </nav>
       <h1><span className="surligne">Communiqués</span></h1>
       {liste.length === 0 ? (
         <div className="communiques-vide">
@@ -25,7 +30,7 @@ export default async function Communiques() {
       ) : (
         <ul className="jours">
           {liste.map((c) => (
-            <li key={c.slug}><a href={`/presse/communiques/${c.slug}`}><strong>{c.titre}</strong><span>{dateTitre(c.publie_le.slice(0, 10))}</span></a></li>
+            <li key={c.slug}><a href={"/presse/communiques/" + c.slug}><strong>{c.titre}</strong><span>{dateTitre(c.publie_le.slice(0, 10))}</span></a></li>
           ))}
         </ul>
       )}
