@@ -30,6 +30,12 @@
   color: var(--df-navy);
 }
 
+/* Le CSS global du site pose margin-top: 18px sur tous les <button> : les
+   boutons DataForm' gèrent eux-mêmes leur espacement (stack, grilles). */
+.df-zone button {
+  margin-top: 0;
+}
+
 .df-h1-cache {
   position: absolute;
   width: 1px;
@@ -374,6 +380,10 @@ textarea.df-field {
   justify-content: center;
   width: 2.25rem;
   height: 2.25rem;
+  /* Le CSS global du site pose padding: 11px 18px sur tous les <button> :
+     sans ce reset, le padding mange tout l'intérieur du bouton (36px - 2×18px)
+     et le chevron est rétréci à zéro par flexbox. */
+  padding: 0;
   border-radius: var(--df-radius-btn);
   cursor: pointer;
   font: inherit;

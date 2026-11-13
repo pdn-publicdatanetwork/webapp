@@ -230,10 +230,29 @@ export default function DataForm({
       if (s?.user) {
         const md = (s.user.user_metadata ?? {}) as Record<string, unknown>;
         const complet = typeof md.full_name === "string" ? md.full_name : "";
-        setPrenom(typeof md.prenom === "string" && md.prenom ? md.prenom : complet.split(" ")[0] || "");
-        setNom(typeof md.nom === "string" && md.nom ? md.nom : complet.split(" ").slice(1).join(" "));
-        setEmail(s.user.email ?? "");
+        let p = typeof md.prenom === "string" && md.prenom ? md.prenom : complet.split(" ")[0] || "";
+        let n = typeof md.nom === "string" && md.nom ? md.nom : complet.split(" ").slice(1).join(" ");
+        let mel = s.user.email ?? "";
         setSessionTrouvee(true);
+        // Session Firebase synthétique : le cookie .dataparl.fr ne porte pas
+        // toujours le prénom/nom (comptes importés, connexion Google). On
+        // demande alors l'identité authentique au serveur (métadonnées du
+        // compte, même source que mon-compte), pour ne pas redemander un nom
+        // déjà connu.
+        if (!p || !n) {
+          try {
+            const res = await fetch("/api/compte", { headers: { authorization: "Bearer " + s.access_token } });
+            if (res.ok) {
+              const c = (await res.json()) as { prenom?: string; nom?: string; email?: string };
+              p = p || (c.prenom ?? "");
+              n = n || (c.nom ?? "");
+              mel = mel || (c.email ?? "");
+            }
+          } catch {}
+        }
+        setPrenom(p);
+        setNom(n);
+        setEmail(mel);
       }
     } catch {
       setSessionTrouvee(false);
