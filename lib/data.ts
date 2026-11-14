@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { DATA_SUPABASE_KEY, DATA_SUPABASE_URL } from "./env";
 import { FONCTIONS_SOCIETES, paramExclusionMvts } from "./exclusions";
 import { siglesDe } from "./familles";
@@ -30,16 +31,37 @@ export const COLONNES_PUBLIQUES =
   "id,date_event,chambre,type,collab_cle,collab_nom,collab_prenom,collab_civilite,elu_cle,elu_id,elu_nom,elu_groupe," +
   "elu_origine_nom,elu_origine_groupe,fonction,contexte,source,confiance";
 
-export async function dataQuery<T>(table: string, params: URLSearchParams, revalidate = 300): Promise<{ rows: T[]; total: number | null }> {
-  const url = `${DATA_SUPABASE_URL}/rest/v1/${table}?${params.toString()}`;
+// Requête PostgREST brute. Jamais mise en cache par le fetch lui-même :
+// le Data Cache de fetch ignore les requêtes portant un en-tête Authorization
+// (comportement documenté de Next). Le cache passe par unstable_cache
+// ci-dessous, qui gare le résultat côté serveur quel que soit le rendu de
+// la page (statique, ISR ou dynamique : page 404, recherche, comptes…).
+async function requeteBrute(table: string, requete: string): Promise<{ rows: unknown[]; total: number | null }> {
+  const url = `${DATA_SUPABASE_URL}/rest/v1/${table}?${requete}`;
   const r = await fetch(url, {
     headers: { apikey: DATA_SUPABASE_KEY, Authorization: `Bearer ${DATA_SUPABASE_KEY}`, Prefer: "count=estimated" },
-    next: { revalidate },
+    cache: "no-store",
   });
   if (!r.ok) throw new Error(`dataparl ${table} : HTTP ${r.status}`);
   const range = r.headers.get("content-range");
   const total = range && range.includes("/") && !range.endsWith("*") ? Number(range.split("/")[1]) : null;
-  return { rows: (await r.json()) as T[], total };
+  return { rows: (await r.json()) as unknown[], total };
+}
+
+// Lecture avec cache serveur persistant (clé : table + requête). Une lecture
+// identique ne part vers Supabase qu'une fois par fenêtre de revalidation,
+// quel que soit le nombre de rendus. Avant ce cache, toutes les lectures
+// partaient réellement vers Supabase (~100 000 requêtes REST/24 h, egress
+// dépassé), dont 16 000 rien que pour la page 404. revalidate <= 0 (données
+// admin ou nominatives) court-circuite le cache. Étiquette « dp-<table> » :
+// revalidateTag permet de rafraîchir une table après une collecte sans
+// attendre la fin de la fenêtre.
+export async function dataQuery<T>(table: string, params: URLSearchParams, revalidate = 300): Promise<{ rows: T[]; total: number | null }> {
+  const requete = params.toString();
+  const r = revalidate <= 0
+    ? await requeteBrute(table, requete)
+    : await unstable_cache(requeteBrute, ["dp", table, requete], { revalidate, tags: [`dp-${table}`] })(table, requete);
+  return { rows: r.rows as T[], total: r.total };
 }
 
 export async function derniersMouvements(limit = 10, chambre?: Mouvement["chambre"]): Promise<Mouvement[]> {
@@ -116,12 +138,12 @@ export type Filtres = {
 const CHAMBRES_OK = new Set(["assemblee", "senat", "europarl"]);
 const TYPES_OK = new Set(["arrivee", "depart", "transfert"]);
 const DATE_OK = /^\d{4}-\d{2}-\d{2}$/;
-const TEXTE_OK = /^[\p{L}\p{N} .'’_-]{1,80}$/u;
-const GROUPE_OK = /^[\p{L}\p{N} .'’/&-]{1,40}$/u;
+const TEXTE_OK = /^[\p{L}\p{N} .'''_-]{1,80}$/u;
+const GROUPE_OK = /^[\p{L}\p{N} .'''\/&-]{1,40}$/u;
 const q_ = (v: string) => `"${v.replace(/"/g, "")}"`;
 
 export function normaliser(t: string): string {
-  return t.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[-'’.]/g, " ").replace(/[^a-z0-9 ]/g, "").trim();
+  return t.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[-'''.]/g, " ").replace(/[^a-z0-9 ]/g, "").trim();
 }
 
 // Construit les paramètres PostgREST ; renvoie null si un filtre est invalide.
