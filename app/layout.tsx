@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, Spectral } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
-import BandeauCookies from "./_components/BandeauCookies";
+import MurAcces from "./_components/MurAcces";
 import TagsGoogle from "./_components/TagsGoogle";
 import PageTrace from "./_components/PageTrace";
 import JournalConnexion from "./_components/JournalConnexion";
@@ -52,8 +52,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
         {/* Consent Mode v2 (Google) : tout refusé par défaut, AVANT tout script
-            publicitaire. Le bandeau du site actualise ensuite ces signaux selon
-            le choix du visiteur (lib/consentement.ts). */}
+            publicitaire. Le mur d'accès actualise ensuite ces signaux selon le
+            choix du visiteur (lib/consentement.ts). */}
         <script
           dangerouslySetInnerHTML={{
             __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
@@ -68,9 +68,11 @@ gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personali
             retirer l'appel pour éviter la double mesure. */}
         {/* Google AdSense (ca-pub-6168263680630864) : PAS chargé ici. Le script
             publicitaire n'est injecté qu'après un consentement publicitaire
-            explicite (lib/consentement.ts, appelé par le bandeau) : jamais pour
-            un visiteur qui n'a pas répondu ou a tout refusé, conformément à la
-            promesse du bandeau. Cela allège aussi le chargement des pages
+            explicite (lib/consentement.ts, appelé par le mur d'accès) : jamais
+            pour un visiteur qui a tout refusé, conformément à la promesse du
+            mur. Sans choix, les signaux publicitaires restent « denied » :
+            AdSense sert des annonces limitées (contextuelles, sans cookie).
+            Cela allège aussi le chargement des pages
             (~220 Ko de scripts publicitaires évités par défaut). */}
         {/* Google Tag Manager (GTM-KW3MJMTK) : PLUS injecté ici. Il était chargé
             sur TOUTES les pages, y compris admin.dataparl.fr et
@@ -82,7 +84,10 @@ gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personali
       </head>
       <body>
         {children}
-        <BandeauCookies />
+        {/* Mur d'accès : deux voies (continuer gratuitement avec publicité /
+            passer sans pub 3 € par mois), affiché une seule fois. Il remplace
+            l'ancien bandeau cookies (app/_components/BandeauCookies.tsx). */}
+        <MurAcces />
         {/* Google Tag Manager : espaces publics uniquement (voir TagsGoogle). */}
         <TagsGoogle />
         {/* Parcours des comptes connectés (route seule, 90 jours, admin

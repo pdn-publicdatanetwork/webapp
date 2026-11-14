@@ -1,13 +1,19 @@
 import { cookieStorage } from "./cookieStorage";
 import { CLARITY_ID, GA4_ID } from "./env";
 
-// Consentement Google (Consent Mode v2), piloté par le bandeau du site :
-// pas par une bannière Google. Les signaux sont envoyés à GTM et AdSense.
-// Les valeurs par défaut (« denied ») sont définies dans app/layout.tsx,
-// AVANT le chargement des scripts ; ce module ne fait qu'actualiser l'état.
+// Consentement Google (Consent Mode v2), piloté par le mur d'accès du site
+// (app/_components/MurAcces.tsx) : pas par une bannière Google. Les signaux
+// sont envoyés à GTM et AdSense. Les valeurs par défaut (« denied ») sont
+// définies dans app/layout.tsx, AVANT le chargement des scripts ; ce module
+// ne fait qu'actualiser l'état.
 
 export type Choix = { mesure: boolean; pub: boolean; date: string };
 export const CLE_CONSENTEMENT = "dp_consentement_v1";
+
+// Mur d'accès (13/11/2026) : le mur n'est affiché qu'une fois par visiteur.
+// Sans choix enregistré, la publicité reste contextuelle (annonces limitées
+// Google : sans cookie publicitaire), qui ne requiert aucun consentement.
+export const CLE_MUR = "dp_mur_vu_v1";
 
 declare global {
   interface Window {
@@ -19,7 +25,7 @@ declare global {
 
 // Espaces internes (admin.dataparl.fr, webmail.dataparl.fr, mail.dataparl.fr,
 // ou chemins /admin et /webmail servis sur www) : aucune mesure, aucun
-// consentement demandé. GTM, le bandeau et les scripts tiers ne chargent pas
+// consentement demandé. GTM, le mur et les scripts tiers ne chargent pas
 // là : c'était le conteneur GTM qui affichait la bulle Google « Paramètres
 // concernant la confidentialité et les cookies » (Funding Choices) sur
 // l'admin et le webmail.
@@ -44,13 +50,18 @@ function maj(e: Record<string, "granted" | "denied">) {
   window.dataLayer?.push({ event: "consentement", ...e });
 }
 
-// Applique un choix complet : mesure d'audience et publicité.
+// Applique un choix : mesure d'audience et publicité.
+// Publicité contextuelle uniquement (décision du 13/11/2026) : les signaux
+// publicitaires restent TOUJOURS refusés, quel que soit le choix. AdSense
+// sert alors des annonces limitées (contextuelles : sans cookie publicitaire,
+// sans profil) : la promesse « sans pistage » tient même pour les visiteurs
+// qui acceptent la publicité.
 export function appliquer(c: Choix) {
   maj({
     analytics_storage: c.mesure ? "granted" : "denied",
-    ad_storage: c.pub ? "granted" : "denied",
-    ad_user_data: c.pub ? "granted" : "denied",
-    ad_personalization: c.pub ? "granted" : "denied",
+    ad_storage: "denied",
+    ad_user_data: "denied",
+    ad_personalization: "denied",
   });
 }
 
@@ -64,7 +75,7 @@ export function appliquer(c: Choix) {
 export function pagePubAutorisee(): boolean {
   if (typeof window === "undefined") return false;
   const p = window.location.pathname;
-  // Sections éditoriales autorisées : sénatoriales, VigiParl’, MixiParl’, groupes.
+  // Sections éditoriales autorisées : sénatoriale, VigiParl’, MixiParl’, groupes.
   return (
     p.startsWith("/collab/") ||
     p.startsWith("/parlementaires/") ||
@@ -75,13 +86,27 @@ export function pagePubAutorisee(): boolean {
   );
 }
 
-// Charge le script Google AdSense (une seule fois), uniquement après un
-// consentement publicitaire. Sans accord, le script n'est jamais injecté :
-// c'est la promesse du bandeau (« rien n'est activé sans ton accord »),
-// et ~220 Ko de scripts publicitaires en moins au chargement.
+// La publicité est-elle acceptée ? Sans choix enregistré : oui, la publicité
+// contextuelle ne stocke rien sur l'appareil, aucun consentement n'est requis
+// (annonces limitées Google). Un visiteur qui avait explicitement tout refusé
+// via l'ancien bandeau (pub: false) garde son refus.
+export function pubAutorisee(): boolean {
+  const c = lire();
+  return c ? c.pub : true;
+}
+
+// Charge le script Google AdSense (une seule fois), uniquement sur les pages
+// de la liste blanche, et sauf refus explicite. Trois cas :
+// - « Continuer gratuitement » (mur) : publicité acceptée ;
+// - pas de choix (« Continuer sans choisir ») : publicité contextuelle par
+//   défaut, sans cookie ;
+// - refus explicite (ancien bandeau, pub: false) : le script ne charge pas.
+// Les signaux publicitaires restent « denied » (appliquer) : AdSense sert des
+// annonces limitées, sans stockage sur l'appareil.
 export function chargerPub() {
   if (typeof document === "undefined") return;
   if (!pagePubAutorisee()) return;
+  if (!pubAutorisee()) return;
   if (document.getElementById("adsense-dataparl")) return;
   const s = document.createElement("script");
   s.id = "adsense-dataparl";
@@ -165,4 +190,17 @@ export function enregistrer(c: Choix) {
   if (typeof document === "undefined") return;
   cookieStorage.setItem(CLE_CONSENTEMENT, JSON.stringify(c));
   appliquer(c);
+}
+
+// Mur d'accès : déjà présenté à ce visiteur ? Le marqueur suit le même cookie
+// .dataparl.fr que la session (cookieStorage, 30 jours) : le mur ne revient
+// pas à chaque page.
+export function murDejaVu(): boolean {
+  if (typeof document === "undefined") return true;
+  return cookieStorage.getItem(CLE_MUR) === "1";
+}
+
+export function marquerMurVu() {
+  if (typeof document === "undefined") return;
+  cookieStorage.setItem(CLE_MUR, "1");
 }
