@@ -138,12 +138,12 @@ export type Filtres = {
 const CHAMBRES_OK = new Set(["assemblee", "senat", "europarl"]);
 const TYPES_OK = new Set(["arrivee", "depart", "transfert"]);
 const DATE_OK = /^\d{4}-\d{2}-\d{2}$/;
-const TEXTE_OK = /^[\p{L}\p{N} .'''_-]{1,80}$/u;
-const GROUPE_OK = /^[\p{L}\p{N} .'''\/&-]{1,40}$/u;
+const TEXTE_OK = /^[\p{L}\p{N} .'${APOS}_-]{1,80}$/u;
+const GROUPE_OK = /^[\p{L}\p{N} .'${APOS}\/&-]{1,40}$/u;
 const q_ = (v: string) => `"${v.replace(/"/g, "")}"`;
 
 export function normaliser(t: string): string {
-  return t.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[-'''.]/g, " ").replace(/[^a-z0-9 ]/g, "").trim();
+  return t.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[-'${APOS}.]/g, " ").replace(/[^a-z0-9 ]/g, "").trim();
 }
 
 // Construit les paramètres PostgREST ; renvoie null si un filtre est invalide.
