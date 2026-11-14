@@ -27,7 +27,7 @@ export default function Phishing() {
         Important : quel que soit le domaine de l&apos;exp&eacute;diteur, <strong>tous les liens cliquables</strong>
         d&apos;un v&eacute;ritable courriel DataParl&apos; m&egrave;nent toujours &agrave; une adresse qui se{" "}
         <strong>termine</strong> par <code>dataparl.fr</code> ou <code>dataparl.com</code>, quel que soit le
-        sous-domaine inscrit avant (<code>www.dataparl.fr</code>, <code>survey.dataparl.fr</code>, etc.).
+        sous-domaine inscrit avant (<code>www.dataparl.fr</code>, <code>forms.dataparl.fr</code>, etc.).
         Avant de cliquer, survolez le lien (ou appuyez longuement sur mobile) et v&eacute;rifiez la fin de
         l&apos;adresse affich&eacute;e : m&eacute;fiez-vous des adresses qui contiennent &laquo; dataparl &raquo;
         sans se terminer par <code>dataparl.fr</code> ou <code>dataparl.com</code>{" "}

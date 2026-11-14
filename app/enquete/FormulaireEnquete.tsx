@@ -2,12 +2,11 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { PRIORITES, type Priorite } from "@/lib/enquete";
 
-// Questionnaire « Ton avis sur DataParl' » (survey.dataparl.fr), interface
+// Questionnaire « Ton avis sur DataParl' » (forms.dataparl.fr/avis), interface
 // DataForm' : une question par écran, progression, chevrons, raccourcis
 // clavier (1-5 pour les notes, numéro pour les priorités, Entrée). Le jeton
-// à usage unique protège l'envoi : pas de captcha ni honeypot.
-// v2 (DNS forms.dataparl.fr) : la page déménage sur forms.dataparl.fr/avis,
-// le moteur reste le même pour d'autres enquêtes.
+// à usage unique protège l'envoi : pas de captcha ni honeypot. Le moteur
+// restera le même pour d'autres enquêtes.
 
 const ETAPES = [0, 1, 2, 3, 4, 5];
 
@@ -231,7 +230,7 @@ export default function FormulaireEnquete({ jeton }: { jeton: string }) {
             />
             <p className="df-note">
               Besoin d&apos;écrire plus précisément, ou d&apos;une vraie réponse ?{" "}
-              <a className="df-lien" href="https://www.dataparl.fr/contact">Écrivez-nous via le formulaire de contact</a>.
+              <a className="df-lien" href="https://forms.dataparl.fr/contact">Écrivez-nous via le formulaire de contact</a>.
             </p>
           </div>
         )}

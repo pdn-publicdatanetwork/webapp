@@ -9,7 +9,7 @@ type Reponse = {
 
 const NOTE = (n: number | null) => (n === null ? "–" : `${n}/5`);
 
-// Enquête utilisateurs (survey.dataparl.fr) : qui a répondu, quand, et les
+// Enquête utilisateurs (forms.dataparl.fr/avis) : qui a répondu, quand, et les
 // notes. Les invitations ouvertes mais non répondues sont visibles aussi.
 export default function EnqueteAdmin() {
   const { data, err } = useRessource<{ reponses: Reponse[] }>("/api/admin/content/survey");
@@ -27,7 +27,7 @@ export default function EnqueteAdmin() {
     <>
       <h1>Enquête <span className="surligne">utilisateurs</span></h1>
       <p className="meta">
-        Questionnaire survey.dataparl.fr, proposé sur le site après 4 minutes à un visiteur connecté.
+        Questionnaire forms.dataparl.fr/avis, proposé sur le site après 4 minutes à un visiteur connecté.
         Réponses liées au compte ; une invitation non répondue apparaît aussi.
       </p>
       <div className="chiffres">

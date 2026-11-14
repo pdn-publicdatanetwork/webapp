@@ -21,7 +21,11 @@
   max-width: 46rem;
   margin: 0 auto;
   padding: 0 16px 24px;
-  min-height: 60vh;
+  /* Formulaires détachés du site (forms.dataparl.fr) : la coquille occupe
+     tout l'écran (en-tête en haut, pied en bas, contenu au milieu),
+     y compris sur mobile où la barre d'URL compte (dvh). */
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   justify-content: space-between;

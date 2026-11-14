@@ -2,6 +2,14 @@
 
 Historique des évolutions de la webapp DataParl' (dataparl.fr).
 
+## 2026-11-14
+
+- **Formulaires DataForm' détachés du site** : le contact et le questionnaire « Ton avis » vivent sur leur domaine dédié forms.dataparl.fr, dans le groupe de routes `(forms)` : ni en-tête, ni recherche, ni pied de page du site, la coquille `df-zone` occupe tout l'écran (en-tête en haut, pied en bas). www.dataparl.fr/contact, api.dataparl.fr/contact et jobs.dataparl.fr/contact redirigent en 308 vers forms.dataparl.fr/contact (paramètres conservés) ; survey.dataparl.fr redirige vers forms.dataparl.fr/avis en conservant le jeton ?j= (les API du questionnaire restent servies telles quelles). Les liens d'invitation (pop-up du site, cron J+3, renvoi admin et Slack) pointent directement sur forms.dataparl.fr/avis, la connexion depuis le formulaire passe par la porte auth.dataparl.fr avec retour au formulaire, et le lien contact du questionnaire mène au formulaire détaché.
+
+## 2026-11-13
+
+- **Enquête « Ton avis » en interface DataForm'** : le questionnaire survey.dataparl.fr adopte le parcours DataForm' du contact (une question par écran, progression, chevrons, raccourcis clavier 1-5 et Entrée, vouvoiement) : trois notes par étoiles, nouvelle étape priorités à puces multi-sélection (colonne `priorites text[]` sur `survey_reponses`, liste partagée `lib/enquete.ts` validée par zod), commentaire facultatif, écran merci avec les trois sites ; écrans « lien expiré » et « déjà répondu » restylés. Le backend reste inchangé : jeton à usage unique (seul le hash est stocké), réponse unique, pas de captcha nécessaire.
+
 ## 2026-11-07
 
 - **Mesure GA4 réactivée** : la balise Google Analytics 4 (G-GC1JD019GY) a disparu du conteneur GTM (GTM-KW3MJMTK) dans la nuit du 30 au 31 octobre, au moment du retrait du message de consentement Funding Choices ; le site ne remontait donc plus aucune donnée depuis une semaine. gtag.js est désormais chargé en direct, uniquement après un consentement de mesure d'audience, comme Clarity et AdSense (`lib/consentement.ts`, `chargerGA4`, appelé par le bandeau). Si la balise GA4 revient dans le conteneur GTM, retirer l'appel pour éviter la double mesure.

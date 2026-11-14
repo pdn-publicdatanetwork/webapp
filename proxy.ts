@@ -12,7 +12,7 @@ import { estPageReseaux, journaliserVueReseaux } from "./lib/vuesReseaux";
 //                           /connexion servie telle quelle (OAuth PKCE sur la même origine)
 //                           /api/* (routes internes des pages) servies telles quelles
 //                           /mon-espace-api -> my.dataparl.fr (308)
-//                           /contact -> www.dataparl.fr/contact (DataForm', 308)
+//                           /contact -> forms.dataparl.fr/contact (DataForm', 308)
 //                           tout le reste -> /espace-api/* (site de l'API)
 //   jobs.dataparl.fr        DataParl' Jobs sans préfixe : / -> /jobs,
 //                           /proposer et /old-jobs -> /jobs/*, /<uuid>_<slug>
@@ -34,7 +34,12 @@ import { estPageReseaux, journaliserVueReseaux } from "./lib/vuesReseaux";
 //                           NB : les fichiers du bucket « assets » sont servis
 //                           par /assets/* (dépôt admin.dataparl.fr/assets).
 //   raw.dataparl.fr        /schemas/*.json (schémas de données bruts) ; le reste -> www
-//   survey.dataparl.fr     / -> /enquete (questionnaire d'avis, jeton ?j=) ; le reste -> www
+//   forms.dataparl.fr      les formulaires DataForm' détachés du site :
+//                           /contact (racine -> /contact), /avis -> /enquete
+//                           (questionnaire d'avis, jeton ?j=), /connexion ->
+//                           porte auth ; le reste -> www
+//   survey.dataparl.fr     ancien domaine du questionnaire -> forms.dataparl.fr/avis
+//                           (308, jeton conservé) ; /api/* servi tel quel ; le reste -> www
 //   drive.dataparl.fr      ancien domaine du tableur -> media (308)
 // Sur www, tout /jobs part vers jobs.dataparl.fr (sans le préfixe)
 // Sur www : une page désactivée dans l'admin (Plan du site) répond 404.
@@ -257,8 +262,8 @@ export async function proxy(req: NextRequest) {
 
   if (host === `api.${DOMAINE}`) {
     const url = req.nextUrl.clone();
-    // Contact unifié (DataForm') : servi par www, paramètres conservés.
-    if (path === "/contact") return vers(req, `www.${DOMAINE}`, path, 308);
+    // Contact unifié (DataForm') : servi par forms (domaine dédié), paramètres conservés.
+    if (path === "/contact") return vers(req, `forms.${DOMAINE}`, path, 308);
     if (path === "/v1" || path.startsWith("/v1/")) {
       url.pathname = `/api${path}`;
       return NextResponse.rewrite(url);
@@ -452,21 +457,42 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
   // media.dataparl.fr (le tableur vit sur media.dataparl.fr/sheets).
   if (host === `drive.${DOMAINE}`) return vers(req, `media.${DOMAINE}`, path, 308);
 
-  // survey.dataparl.fr : le questionnaire d'avis ouvert depuis le site
-  // (invitation après quelques minutes, jeton ?j=…). Une seule page ; le
-  // reste du domaine revient vers www. Jamais indexé.
-  if (host === `survey.${DOMAINE}`) {
-    // Les API du questionnaire (enregistrement des réponses) sont servies
-    // telles quelles : sans ça, le POST du formulaire suivait une 308 vers
-    // www et n'atteignait jamais l'API (0 réponse enregistrée depuis le 07/10).
-    if (path.startsWith("/api/")) return NextResponse.next();
-    if (path === "/" || path === "") {
+  // forms.dataparl.fr : la maison des formulaires DataForm' (contact, avis),
+  // pages détachées du site public (groupe (forms) : ni en-tête, ni recherche,
+  // ni pied de page du site). Tout autre chemin revient vers www.
+  if (host === `forms.${DOMAINE}`) {
+    // Racine : le formulaire de contact est la page d'accueil du domaine.
+    if (path === "/" || path === "") return vers(req, host, "/contact", 308);
+    // « Ton avis sur DataParl' » : invitation par jeton ?j=…, jamais indexée.
+    if (path === "/avis") {
       const url = req.nextUrl.clone();
       url.pathname = "/enquete";
-      const res = protege(NextResponse.rewrite(url));
-      res.headers.set("X-Robots-Tag", "noindex");
-      return res;
+      return protege(NextResponse.rewrite(url));
     }
+    // Connexion : la porte unique auth.dataparl.fr, retour au formulaire.
+    if (path === "/connexion") {
+      return NextResponse.redirect(`https://auth.${DOMAINE}/?hote=${host}&suite=${encodeURIComponent("/contact")}`, 302);
+    }
+    // Le formulaire de contact et les API (contact, enquete) : servis tels quels.
+    if (path === "/contact" || path.startsWith("/api/")) return NextResponse.next();
+    // Favicon du domaine : Σ' bleu encre sur blanc, servi depuis /enquete/*.
+    if (path === "/icon.svg" || path === "/apple-icon") {
+      const url = req.nextUrl.clone();
+      url.pathname = `/enquete${path}`;
+      return protege(NextResponse.rewrite(url));
+    }
+    return vers(req, `www.${DOMAINE}`, path, 308);
+  }
+
+  // survey.dataparl.fr : ancienne adresse du questionnaire d'avis. Tout vient
+  // de forms.dataparl.fr (308 en conservant le jeton ?j=…) ; le reste du
+  // domaine revient vers www. Jamais indexé.
+  if (host === `survey.${DOMAINE}`) {
+    // Les API du questionnaire (enregistrement des réponses) sont servies
+    // telles quelles : sans ça, le POST du formulaire suivrait une 308 et
+    // n'atteindrait jamais l'API (0 réponse enregistrée depuis le 07/10).
+    if (path.startsWith("/api/")) return NextResponse.next();
+    if (path === "/" || path === "") return vers(req, `forms.${DOMAINE}`, "/avis", 308);
     // Favicon du domaine : Σ' bleu encre sur blanc, servi depuis /enquete/*.
     if (path === "/icon.svg" || path === "/apple-icon") {
       const url = req.nextUrl.clone();
@@ -551,6 +577,9 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
   }
 
   if (host === `www.${DOMAINE}`) {
+    // Contact unifié (DataForm') : le formulaire vit sur son domaine dédié,
+    // détaché du site (forms.dataparl.fr), paramètres conservés.
+    if (path === "/contact") return vers(req, `forms.${DOMAINE}`, path, 308);
     // Espaces privés servis sur www (connexion, compte, préférences,
     // désinscription) : robots.txt les exclut déjà du crawl ; l'en-tête HTTP
     // X-Robots-Tag verrouille l'indexation même si un lien fuit ailleurs.

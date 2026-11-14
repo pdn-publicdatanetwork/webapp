@@ -5,7 +5,7 @@ import { randomToken } from "@/lib/tokens";
 
 export const dynamic = "force-dynamic";
 
-// Enquête utilisateurs (survey.dataparl.fr) : liste des réponses et détail.
+// Enquête utilisateurs (forms.dataparl.fr/avis) : liste des réponses et détail.
 // ?id= : la réponse entière (qui, notes, commentaire). Le prénom/nom du compte
 // est retrouvé via l'auth au moment de la lecture.
 export async function GET(req: Request) {
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
       console.error("survey insert", error);
       return erreur(500, "enquête momentanément indisponible");
     }
-    const url = `https://survey.dataparl.fr/?j=${jeton}`;
+    const url = `https://forms.dataparl.fr/avis?j=${jeton}`;
     const res = await expedier({
       from: "enquetes@dataparl.fr",
       to: [r.email],

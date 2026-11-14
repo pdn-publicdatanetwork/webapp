@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import FormulaireEnquete from "./FormulaireEnquete";
 import { hashJeton } from "@/lib/mail";
 import { authAdmin } from "@/lib/supabaseAdmin";
-import "../(site)/contact/dataform.css";
+import "../(forms)/contact/dataform.css";
 import "./enquete.css";
 
 export const metadata: Metadata = {
@@ -12,10 +12,10 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-// Questionnaire « Ton avis sur DataParl' » (survey.dataparl.fr, interface
+// Questionnaire « Ton avis sur DataParl' » (forms.dataparl.fr/avis, interface
 // DataForm'). Invitation par jeton ?j=… ouvert depuis le site (pop-up après
 // quelques minutes de visite, compte connecté) ; réponse unique par jeton.
-// v2 (DNS forms.dataparl.fr) : la page déménage sur forms.dataparl.fr/avis.
+// survey.dataparl.fr (ancienne adresse) redirige ici en 308 ; jamais indexé.
 
 export default async function Enquete({ searchParams }: { searchParams: Promise<{ j?: string }> }) {
   const j = ((await searchParams).j ?? "").trim();

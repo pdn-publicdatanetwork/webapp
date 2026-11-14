@@ -4,9 +4,11 @@ import "./dataform.css";
 
 export const metadata: Metadata = { title: "Contact", alternates: { canonical: "/contact" } };
 
-// Contact unifié (DataForm') : dataparl.fr/contact sert le formulaire pour tout
-// l'écosystème ; jobs.dataparl.fr/contact et api.dataparl.fr/contact
-// redirigent ici (jobs/app/contact/page.tsx et proxy.ts). ?provenance=
+// Contact unifié (DataForm') : forms.dataparl.fr/contact est l'adresse du
+// formulaire pour tout l'écosystème, sur une page détachée du site (groupe
+// (forms) : ni en-tête, ni recherche, ni pied de page du site).
+// www.dataparl.fr/contact, api.dataparl.fr/contact et jobs.dataparl.fr/contact
+// y redirigent en 308 (proxy.ts et jobs/app/contact/page.tsx). ?provenance=
 // pré-sélectionne le site d'origine, ?sujet= pré-sélectionne le motif (liens
 // de signalement existants), ?message= pré-remplit le détail.
 export default async function Contact({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {

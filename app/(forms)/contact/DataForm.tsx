@@ -3,8 +3,10 @@ import { useEffect, useMemo, useRef, useState, type JSX } from "react";
 import { sessionActuelle } from "@/lib/supabaseBrowser";
 import Turnstile, { reinitialiserTurnstile } from "./Turnstile";
 
-// DataForm' : formulaire de contact unifié de l'écosystème DataParl' (www,
-// jobs, api). Parcours en étapes inspiré de Typeform : une question par écran,
+// DataForm' : formulaire de contact unifié de l'écosystème DataParl', servi
+// sur son domaine dédié forms.dataparl.fr (www, jobs et api y redirigent),
+// détaché du site : pas d'en-tête, ni recherche, ni pied de page du site.
+// Parcours en étapes inspiré de Typeform : une question par écran,
 // logique conditionnelle, e-mail demandé en fin de parcours sans compte
 // (foot-in-the-door), raccourcis clavier (chiffres + Entrée), honeypot
 // anti-spam, Turnstile à l'envoi. Design validé en canvas (dataform-contact).
@@ -511,7 +513,7 @@ export default function DataForm({
             <h2 className="df-h2">Aucune session active trouvée</h2>
             <p className="df-lead">Connectez-vous sur auth.dataparl.fr pour que vos informations soient remplies automatiquement.</p>
             <div className="df-nav-group">
-              <a className="df-btn" href="/connexion">Se connecter</a>
+              <a className="df-btn" href="https://auth.dataparl.fr/?hote=forms.dataparl.fr&amp;suite=%2Fcontact">Se connecter</a>
               <button type="button" className="df-lien" onClick={continuerSansCompte}>Continuer sans compte</button>
             </div>
           </div>

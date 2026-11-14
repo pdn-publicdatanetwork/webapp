@@ -12,7 +12,7 @@ const SITE = "https://www.dataparl.fr";
 
 // Enquête utilisateurs à J+3 : chaque compte créé il y a 3 jours ou plus,
 // jamais invité et toujours actif, reçoit une invitation à répondre au
-// questionnaire (survey.dataparl.fr). Appelé chaque matin par la tâche
+// questionnaire (forms.dataparl.fr/avis). Appelé chaque matin par la tâche
 // planifiée de Vercel (vercel.json). Idempotent : un compte déjà présent
 // dans survey_reponses (ligne d'invitation, répondue ou non) n'est jamais
 // réinvité ; les comptes supprimés sont exclus via audit_comptes. Un envoi
@@ -81,7 +81,7 @@ export async function GET(req: Request) {
     });
     if (errInsert) { erreurs.push(`${email} : insert ${errInsert.message}`); continue; }
 
-    const url = `https://survey.dataparl.fr/?j=${jeton}`;
+    const url = `https://forms.dataparl.fr/avis?j=${jeton}`;
     const salutation = salut(c);
     const r = await expedier({
       from: "enquetes@dataparl.fr",
@@ -111,7 +111,7 @@ export async function GET(req: Request) {
         "L'équipe DataParl' — Le Parlement, pièce par pièce.",
       ].join("\n"),
       type: "transactionnel",
-      pied: `<a href="${SITE}/contact" style="color:#4A5670">Une question ? Contactez-nous</a> · <a href="${SITE}/informations-legales/confidentialite" style="color:#4A5670">Données personnelles</a>`,
+      pied: `<a href="https://forms.dataparl.fr/contact" style="color:#4A5670">Une question ? Contactez-nous</a> · <a href="${SITE}/informations-legales/confidentialite" style="color:#4A5670">Données personnelles</a>`,
     });
 
     if (!r.ok) {
