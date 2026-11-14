@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 // Ouverture d'une session d'enquête : appelé par le site quand un visiteur
 // connecté accepte de répondre (après ~4 minutes sur le site). La réponse est
-// liée à son compte ; le lien survey.dataparl.fr porte un jeton aléatoire dont
+// liée à son compte ; le lien forms.dataparl.fr/avis porte un jeton aléatoire dont
 // seul le sha256 est stocké (même convention que les versions en ligne des
 // emails). Une nouvelle invitation crée une nouvelle ligne.
 export async function POST(req: Request) {
@@ -22,5 +22,5 @@ export async function POST(req: Request) {
     console.error("survey insert", error);
     return NextResponse.json({ error: "enquête momentanément indisponible" }, { status: 500 });
   }
-  return NextResponse.json({ url: `https://survey.dataparl.fr/?j=${jeton}` });
+  return NextResponse.json({ url: `https://forms.dataparl.fr/avis?j=${jeton}` });
 }

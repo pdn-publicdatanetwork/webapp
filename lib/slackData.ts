@@ -258,7 +258,7 @@ export async function inviterEnquete(qui: string, id: string): Promise<{ ok: tru
   const jeton = randomToken(24);
   const { error } = await db.from("survey_reponses").insert({ user_id: r.user_id, email: r.email, jeton_hash: hashJeton(jeton) });
   if (error) return { ok: false, erreur: "survey_reponses : " + error.message };
-  const url = "https://survey.dataparl.fr/?j=" + jeton;
+  const url = "https://forms.dataparl.fr/avis?j=" + jeton;
   const res = await expedier({
     from: "enquetes@dataparl.fr", to: [r.email], subject: "Ton avis sur DataParl'", titre: "Ton avis compte",
     corpsHtml: [
