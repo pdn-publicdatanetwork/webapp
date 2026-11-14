@@ -1,0 +1,503 @@
+/* DataForm' : formulaire de contact unifié (charte v2 www.dataparl.fr).
+   Fond neutre froid, corail = action, jaune = surlignage, bleu = liens,
+   Spectral = titres et marque. Tout est préfixé df- et scopé sous .df-zone
+   pour ne jamais fuiter dans le reste du site. */
+
+.df-zone {
+  --df-bg: #f8fafc;
+  --df-cream: #ffffff;
+  --df-navy: #071a41;
+  --df-bleu: #164dff;
+  --df-corail: #f0444f;
+  --df-yellow: #ffd23f;
+  --df-red: #c8102e;
+  --df-violet: #9333ea;
+  --df-vert: #10b981;
+  --df-muted: #4a5670;
+  --df-line: #e2e8f0;
+  --df-radius-btn: 6px;
+  --df-radius-card: 10px;
+
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 0 16px 24px;
+  /* Formulaires détachés du site (forms.dataparl.fr) : la coquille occupe
+     tout l'écran (en-tête en haut, pied en bas, contenu au milieu),
+     y compris sur mobile où la barre d'URL compte (dvh). */
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--df-navy);
+}
+
+/* Le CSS global du site pose margin-top: 18px sur tous les <button> : les
+   boutons DataForm' gèrent eux-mêmes leur espacement (stack, grilles). */
+.df-zone button {
+  margin-top: 0;
+}
+
+.df-h1-cache {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.df-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--df-line);
+}
+
+/* Logo exact de la webapp (Logo.tsx + .surligne du globals.css) */
+.df-logo {
+  font-family: Spectral, Georgia, "Times New Roman", serif;
+  font-weight: 700;
+  font-size: 1.35rem;
+  color: var(--df-navy);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.df-logo .df-surligne {
+  background: var(--df-yellow);
+  color: #071a41;
+  padding: 0 0.12em;
+  margin-left: 1px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.df-progress {
+  width: 9rem;
+  height: 0.625rem;
+  background: var(--df-line);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.df-progress-fill {
+  height: 100%;
+  background: var(--df-yellow);
+  transition: width 0.3s ease;
+}
+
+.df-main {
+  margin: auto 0;
+  padding: 2rem 0;
+}
+.df-h1 {
+  font-family: Spectral, Georgia, serif;
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  font-weight: 700;
+  margin: 0 0 1rem;
+  line-height: 1.2;
+}
+.df-h2 {
+  font-family: Spectral, Georgia, serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 0 1.5rem;
+  line-height: 1.25;
+}
+.df-center {
+  text-align: center;
+}
+.df-lead {
+  color: var(--df-muted);
+  font-size: 1.05rem;
+  margin: 0;
+}
+.df-stack > * + * {
+  margin-top: 1.5rem;
+}
+.df-grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+@media (max-width: 640px) {
+  .df-grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.df-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+  padding: 1.25rem;
+  border-radius: var(--df-radius-card);
+  border: 1px solid var(--df-line);
+  background: var(--df-cream);
+  color: var(--df-navy);
+  cursor: pointer;
+  font: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.df-option:hover {
+  border-color: color-mix(in srgb, var(--df-bleu) 45%, var(--df-line));
+  box-shadow: 0 4px 12px rgba(7, 26, 65, 0.05);
+}
+.df-option.selected {
+  border-color: var(--df-bleu);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--df-bleu) 18%, transparent);
+}
+.df-option .df-titre {
+  font-weight: 600;
+  font-size: 1.02rem;
+}
+.df-option .df-desc {
+  font-size: 0.86rem;
+  color: var(--df-muted);
+}
+.df-option-site {
+  justify-content: center;
+  padding: 1.5rem;
+}
+.df-wordmark {
+  font-family: Spectral, Georgia, serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+.df-hl-jaune {
+  background: #ffd23f;
+  color: #071a41;
+  padding: 0 0.12em;
+}
+.df-hl-violet {
+  background: var(--df-violet);
+  color: #fff;
+  padding: 0 0.12em;
+}
+.df-hl-vert {
+  background: var(--df-vert);
+  color: #fff;
+  padding: 0 0.12em;
+}
+
+.df-ico-tile {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: var(--df-yellow);
+  color: #071a41;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.df-ico-tile svg,
+.df-btn-nav svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+@keyframes df-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.df-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid var(--df-line);
+  border-top-color: var(--df-bleu);
+  border-radius: 50%;
+  animation: df-spin 0.8s linear infinite;
+  margin: 0 auto;
+}
+
+.df-compte-carte {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--df-cream);
+  border: 1px solid var(--df-line);
+  border-radius: var(--df-radius-card);
+  padding: 1.25rem;
+}
+.df-compte-avatar {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: var(--df-yellow);
+  color: #071a41;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Spectral, Georgia, serif;
+  font-weight: 700;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+/* Lien charte : bleu, souligné (globals.css) */
+.df-lien {
+  color: var(--df-bleu);
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.df-sub {
+  margin: -1rem 0 1.25rem;
+  color: var(--df-muted);
+  font-size: 0.95rem;
+}
+
+.df-btn {
+  background: var(--df-corail);
+  color: #fff;
+  border: 1px solid var(--df-corail);
+  border-radius: var(--df-radius-btn);
+  padding: 11px 18px;
+  font: inherit;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+.df-btn:hover:not(:disabled) {
+  background: #d63a45;
+  border-color: #d63a45;
+}
+.df-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.df-lbl {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--df-navy);
+}
+.df-field {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--df-radius-btn);
+  border: 1px solid var(--df-line);
+  background: var(--df-bg);
+  color: var(--df-navy);
+  font: inherit;
+  font-size: 1rem;
+}
+.df-field:focus {
+  outline: none;
+  border-color: var(--df-bleu);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--df-bleu) 15%, transparent);
+}
+textarea.df-field {
+  resize: vertical;
+}
+
+.df-scroll {
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+.df-scroll .df-option + .df-option {
+  margin-top: 0.75rem;
+}
+
+.df-note {
+  font-size: 0.82rem;
+  color: var(--df-muted);
+  margin-top: 0.5rem;
+}
+.df-erreur {
+  color: var(--df-red);
+  font-size: 0.88rem;
+  margin-top: 0.5rem;
+}
+
+/* Médias (demande presse) : puces cliquables + saisie libre */
+.df-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.df-chip {
+  border: 1px solid var(--df-line);
+  background: var(--df-cream);
+  color: var(--df-navy);
+  border-radius: 9999px;
+  padding: 0.4rem 0.9rem;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.df-chip:hover {
+  border-color: var(--df-bleu);
+}
+.df-chip.selected {
+  border-color: var(--df-bleu);
+  background: color-mix(in srgb, var(--df-bleu) 8%, var(--df-cream));
+  font-weight: 600;
+}
+
+.df-recap {
+  background: var(--df-cream);
+  border: 1px solid var(--df-line);
+  border-radius: var(--df-radius-card);
+  padding: 1.5rem;
+  font-size: 0.92rem;
+  box-shadow: 0 1px 3px rgba(7, 26, 65, 0.05);
+}
+.df-recap > div + div {
+  margin-top: 0.75rem;
+}
+.df-recap b {
+  font-weight: 700;
+}
+
+.df-turnstile {
+  margin: 0.5rem 0;
+}
+
+.df-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0;
+  border-top: 1px solid var(--df-line);
+}
+.df-btn-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  /* Le CSS global du site pose padding: 11px 18px sur tous les <button> :
+     sans ce reset, le padding mange tout l'intérieur du bouton (36px - 2×18px)
+     et le chevron est rétréci à zéro par flexbox. */
+  padding: 0;
+  border-radius: var(--df-radius-btn);
+  cursor: pointer;
+  font: inherit;
+  color: var(--df-navy);
+}
+.df-btn-nav.ghost {
+  border: 1px solid var(--df-line);
+  background: var(--df-cream);
+}
+.df-btn-nav.ghost:hover {
+  border-color: var(--df-bleu);
+  color: var(--df-bleu);
+}
+.df-btn-nav.solid {
+  background: var(--df-corail);
+  color: #fff;
+  border: 1px solid var(--df-corail);
+}
+.df-btn-nav.solid:hover:not(:disabled) {
+  background: #d63a45;
+  border-color: #d63a45;
+}
+.df-btn-nav.solid:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.df-nav-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.df-btn-envoyer {
+  padding: 0.5rem 1.25rem;
+  background: var(--df-corail);
+  color: #fff;
+  border: 1px solid var(--df-corail);
+  border-radius: var(--df-radius-btn);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.df-btn-envoyer:hover:not(:disabled) {
+  background: #d63a45;
+  border-color: #d63a45;
+}
+.df-btn-envoyer:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.df-succes-check {
+  width: 4rem;
+  height: 4rem;
+  background: var(--df-yellow);
+  color: #071a41;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  font-size: 1.75rem;
+  font-weight: 800;
+}
+.df-decouvre {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+.df-decouvre a {
+  font-size: 1.05rem;
+  color: var(--df-navy);
+  text-decoration: none;
+}
+.df-decouvre a:hover {
+  text-decoration: underline;
+}
+
+/* Footer du formulaire (bande propre à forms) */
+.df-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.5rem;
+  padding: 0.75rem 0;
+  font-size: 0.82rem;
+  color: var(--df-muted);
+}
+.df-footer a {
+  color: var(--df-muted);
+  text-decoration: none;
+}
+.df-footer a:hover {
+  color: var(--df-bleu);
+  text-decoration: underline;
+}
+.df-footer .df-copyright {
+  margin-left: auto;
+}
+@media (max-width: 640px) {
+  .df-footer .df-copyright {
+    margin-left: 0;
+  }
+}
+
+/* Honeypot anti-spam : jamais visible, en prod il doit rester vide */
+.df-hp {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+}
