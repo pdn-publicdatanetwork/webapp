@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: 767002c11fea299b8d24d73d678dcbfe71fef523)
 import type { Metadata } from "next";
 
 export const revalidate = 3600;
