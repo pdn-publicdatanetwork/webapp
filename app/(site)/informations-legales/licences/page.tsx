@@ -40,6 +40,10 @@ export default function Licences() {
           </tr>
         </tbody>
       </table>
+      <p>
+        Les photos des élus et les logos affichés sur le site ont leurs propres détenteurs :
+        voir <a href="/informations-legales/licences/photos">Photos et logos : détenteurs et conditions</a>.
+      </p>
 
       <h2>Ce que DataParl&apos; ajoute</h2>
       <ul>
