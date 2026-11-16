@@ -16,8 +16,10 @@ export const metadata: Metadata = {
 };
 
 // Page méthode générale : elle explique la chaîne de traitement commune à tout
-// DataParl' (collecte → référentiel → croisement → publication), puis renvoie
-// vers les méthodes détaillées de chaque indicateur et vers la liste des sources.
+// DataParl' (collecte → référentiel → croisement → publication), ce que le site
+// apporte aux données officielles et comment la provenance de chaque élément
+// est affichée, puis renvoie vers les méthodes détaillées de chaque indicateur
+// et vers la liste des sources.
 
 export default function MethodeDataParl() {
   return (
@@ -40,12 +42,14 @@ export default function MethodeDataParl() {
         </li>
         <li>
           <strong>Traçable.</strong> Chaque chiffre renvoie à sa publication d&apos;origine et à sa date
-          d&apos;extraction : voir la <a href="/methode/sources">liste complète des sources</a>. Citer
-          DataParl&apos;, c&apos;est citer les publications officielles derrière.
+          d&apos;extraction : voir la <a href="/methode/sources">liste complète des sources</a>. Chaque type
+          d&apos;élément affiche aussi sa provenance : donnée officielle, complément rédigé par DataParl&apos;
+          ou rubrique déclarée par l&apos;intéressé. Citer DataParl&apos;, c&apos;est citer les publications
+          officielles derrière.
         </li>
         <li>
           <strong>Séparé du commentaire.</strong> Les fiches décrivent ; elles ne jugent pas. Un taux de
-          renouvellement ou une biographie ne portent aucune appréciation politique.
+          renouvellement ou une biographie ne portent aucune <strong>appréciation politique</strong>.
         </li>
       </ol>
 
@@ -54,21 +58,42 @@ export default function MethodeDataParl() {
       <ol className="etapes-methode">
         <li>
           <p className="parcours-titre"><strong>1. Extraction</strong></p>
-          <p className="meta">Les listes officielles sont relevées : collaborateurs (A.G.A.S. au Sénat, données ouvertes de l&apos;Assemblée), parlementaires, mandats, groupes et commissions. La date de la publication source est conservée : c&apos;est elle qui fait foi, pas la date du relevé.</p>
+          <p className="meta">Les listes officielles sont relevées : collaborateurs, assistants des députés européens, parlementaires, mandats, groupes et commissions. La date de la publication source est conservée : c&apos;est elle qui fait foi, pas la date du relevé.</p>
         </li>
         <li>
           <p className="parcours-titre"><strong>2. Référentiel</strong></p>
-          <p className="meta">Les personnes sont identifiées une seule fois : un collaborateur qui change d&apos;élu garde le même identifiant, un député devenu sénateur garde le même dossier (ses deux fiches historiques sont rattachées au même parcours). C&apos;est ce croisement qui rend possibles les « transferts » d&apos;un élu à l&apos;autre et d&apos;une chambre à l&apos;autre.</p>
+          <p className="meta">Les personnes sont identifiées une seule fois : un collaborateur qui change d&apos;élu garde le même identifiant, un député devenu sénateur ou député européen garde le même dossier (ses fiches historiques sont rattachées au même parcours). C&apos;est ce croisement qui rend possibles les « transferts » d&apos;un élu à l&apos;autre et d&apos;une chambre à l&apos;autre.</p>
         </li>
         <li>
           <p className="parcours-titre"><strong>3. Compléments manuels</strong></p>
-          <p className="meta">Ce que l&apos;officiel ne couvre pas (mandats locaux, fonctions partisanes, biographies) est rédigé à la main par l&apos;équipe, depuis l&apos;administration, sans jamais écraser une donnée synchronisée. Chaque complément porte sa source et son auteur ; les fiches concernées le signalent (« précisé par DataParl&apos; »).</p>
+          <p className="meta">Ce que l&apos;officiel ne couvre pas (mandats locaux, fonctions partisanes, biographies) est rédigé à la main par l&apos;équipe DataParl&apos;, sans jamais dégrader une donnée officielle. Chaque complément porte sa source et son auteur ; les fiches concernées le signalent (« précisé par DataParl&apos; »).</p>
         </li>
         <li>
           <p className="parcours-titre"><strong>4. Publication</strong></p>
           <p className="meta">Les pages sont régénérées (au maximum toutes les heures), les indicateurs recalculés sur les données fraîches. Les erreurs détectées sont corrigées à la source et les changements de méthode sont datés et documentés en bas de chaque page concernée.</p>
         </li>
       </ol>
+
+      <h2 id="apports">Ce que DataParl&apos; apporte aux données officielles</h2>
+      <p>
+        Les publications officielles existent, mais clairsemées : chaque chambre publie ses listes dans son
+        propre format, sans identifiant commun, sans historique consolidé et sans lien entre les chambres.
+        DataParl&apos; ajoute quatre briques sur ces données :
+      </p>
+      <ul>
+        <li><strong>Un identifiant unique par personne.</strong> Une même personne garde le même identifiant qu&apos;elle change d&apos;employeur, de chambre ou de mandat. Ce référentiel n&apos;existe dans aucune source officielle : c&apos;est lui qui permet de suivre un parcours complet.</li>
+        <li><strong>Des séries de mouvements depuis 2015.</strong> Arrivées, départs et transferts sont reconstitués par différence entre les listes successives, avec leur date de publication. Aucune institution ne publie ces séries.</li>
+        <li><strong>Le croisement inter-chambres.</strong> Collaborateur passé de l&apos;Assemblée au Parlement européen, député devenu sénateur, assistant retrouvé chez plusieurs employeurs : les parcours sont rattachés au même dossier.</li>
+        <li><strong>Une publication réutilisable.</strong> Les jeux de données sont publiés sous licence ODbL sur <a href="https://www.data.gouv.fr/fr/organizations/dataparl/" target="_blank" rel="noopener noreferrer">data.gouv.fr</a>, référencés par le portail européen de la donnée (<a href="https://data.europa.eu/data/datasets/6ace9136d245a88b845d0f02" target="_blank" rel="noopener noreferrer">data.europa.eu</a>) et accompagnés de schémas documentés.</li>
+      </ul>
+
+      <h2 id="provenance">La provenance de chaque élément, explicitement</h2>
+      <p>Sur les fiches, la provenance n&apos;est jamais laissée implicite :</p>
+      <ul>
+        <li><strong>Données synchronisées</strong> (collaborateurs, mandats, groupes, commissions) : publications officielles, date de publication conservée.</li>
+        <li><strong>Compléments rédigés</strong> (biographies, mandats locaux, fonctions partisanes) : signalés « précisé par DataParl&apos; », source et date portées par chaque élément.</li>
+        <li><strong>Rubrique « déclarée par l&apos;intéressé »</strong> (parcours, CV) : renseignée par la personne elle-même, associée à son compte via son adresse e-mail parlementaire, puis revue par l&apos;équipe avant publication. Elle n&apos;est jamais fondue dans les données officielles et ne prétend pas l&apos;être.</li>
+      </ul>
 
       <h2 id="indicateurs">Les indicateurs et leurs méthodes</h2>
       <p>
@@ -84,7 +109,9 @@ export default function MethodeDataParl() {
       <ul>
         <li><strong>La date de publication n&apos;est pas la date réelle.</strong> Les listes officielles donnent rarement la date effective d&apos;un départ ou d&apos;une embauche : nous retenons la date de publication, et nous le disons.</li>
         <li><strong>L&apos;officiel peut être en retard.</strong> Après un scrutin, les groupes, commissions et fiches mettent des semaines à paraître : les pages affichent alors ce qui est publié, et marquent « à compléter » le reste plutôt que d&apos;inventer.</li>
+        <li><strong>Une même personne peut exister sous deux fiches.</strong> Un changement de nom (mariage, ajout d&apos;un second nom, nom composé avec tiret), une variante d&apos;orthographe ou une translittération peut faire naître deux fiches pour une même personne. La veille et les signalements permettent de détecter ces doublons puis de rattacher les deux fiches au même parcours, avec la correction documentée. Le dispositif n&apos;est pas infaillible : un doublon peut subsister.</li>
         <li><strong>Les compléments manuels sont datés et sourcés.</strong> Une biographie rédigée par l&apos;équipe est signalée comme telle : elle n&apos;est jamais présentée comme une donnée officielle.</li>
+        <li><strong>La rubrique « déclarée par l&apos;intéressé » dépend de l&apos;intéressé.</strong> DataParl&apos; n&apos;en vérifie que la cohérence avec les données officielles, pas l&apos;exhaustivité.</li>
       </ul>
 
       <h2 id="corrections">Corrections</h2>
@@ -95,7 +122,9 @@ export default function MethodeDataParl() {
       </p>
 
       <p className="meta" style={{ marginTop: 32 }}>
-        Voir aussi : <a href="/methode/sources">la liste des sources</a>, <a href="/faq">les questions fréquentes</a>,{" "}
+        Voir aussi : <a href="/methode/sources">la liste des sources</a>,{" "}
+        <a href="https://www.data.gouv.fr/fr/organizations/dataparl/" target="_blank" rel="noopener noreferrer">les jeux de données publiés</a>,{" "}
+        <a href="/faq">les questions fréquentes</a>,{" "}
         <a href="/informations-legales/mentions-legales">les mentions légales</a>
       </p>
     </div>
