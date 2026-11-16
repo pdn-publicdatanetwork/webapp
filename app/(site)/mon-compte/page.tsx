@@ -38,8 +38,8 @@ function Icone({ nom }: { nom: string }) {
 
 // Mon compte : le centre du compte, à la manière du compte Google : grand
 // avatar et salutation, puis une liste aérée de rubriques avec icône et
-// chevron. Les rubriques en préparation (Achats) ne sont proposées qu'à
-// l'équipe ; Se déconnecter ferme la liste, dans le même système de
+// chevron. La rubrique Achats est masquée tant que les paiements ne sont pas
+// branchés (voir plus bas) ; Se déconnecter ferme la liste, dans le même système de
 // lignes mais en style destructeur (liseré rouge au survol).
 export default function MonCompte() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
@@ -112,7 +112,11 @@ export default function MonCompte() {
     { titre: "Ma fiche collaborateur", resume: "Le profil CV publié sur dataparl.fr", href: "/mon-compte/ma-fiche", icone: "document" },
     { titre: "Mon espace API", resume: "Ta clé API, sa consommation et la documentation", href: "/mon-espace-api", icone: "code" },
     { titre: "DataParl' Jobs", resume: "Tes candidatures, tes alertes et ton profil de collaborateur", href: "/jobs", icone: "mallette" },
-    ...(compte.equipe ? [{ titre: "Achats et abonnements", resume: "Bientôt : des packs sans publicité", href: "/mon-compte/achats", icone: "document" }] : []),
+    // Rubrique « Achats et abonnements » masquée le 16/11/2026 tant que la
+    // publicité n'est pas servie et que Stripe n'est pas branché (cohérent avec
+    // le mur d'accès sans voie payante, PR #157). La page reste accessible en
+    // URL directe pour l'équipe. Réactiver cette ligne à la mise en service.
+    // ...(compte.equipe ? [{ titre: "Achats et abonnements", resume: "Bientôt : des packs sans publicité", href: "/mon-compte/achats", icone: "document" }] : []),
     { titre: "Données et confidentialité", resume: "Export de tes données et suppression du compte", href: "/mon-compte/preferences", icone: "bouclier" },
   ];
 
