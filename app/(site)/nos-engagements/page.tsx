@@ -1,10 +1,11 @@
+successfully downloaded text file (SHA: 1fe4ac4e48b4e1af9a1eeebe5daa5d063df1ae69)
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: "Nos engagements",
   description:
-    "Données libres (ODbL), publicité contextuelle sans traceur, communications opt-in, données nominatives jamais revendues : tout ce que DataParl' garantit, visiteur ou inscrit.",
+    "Données libres (ODbL), publicité contextuelle jamais personnalisée, communications opt-in, données nominatives jamais revendues : tout ce que DataParl' garantit, visiteur ou inscrit.",
   alternates: { canonical: "/nos-engagements" },
 };
 export const revalidate = 86400;
@@ -22,13 +23,15 @@ const ENGAGEMENTS: { titre: string; texte: ReactNode }[] = [
     ),
   },
   {
-    titre: "Aucun traceur publicitaire",
+    titre: "Une publicité contextuelle, jamais personnalisée",
     texte: (
       <>
-        La publicité est <strong>contextuelle uniquement</strong> : aucun cookie publicitaire,
-        aucune annonce personnalisée, aucun profil. Vos lectures ne servent jamais à vous cibler,
-        même gratuit. Un bloc par page de contenu, jamais en plein écran, jamais de publicité
-        politique.
+        La publicité est <strong>contextuelle uniquement</strong> : elle dépend de la page
+        consultée, jamais de la personne qui la lit. Aucune annonce personnalisée, aucun profil :
+        vos lectures ne servent jamais à vous cibler. Des cookies techniques peuvent accompagner la
+        diffusion des annonces (limitation de la répétition, lutte contre la fraude), sans jamais
+        profiler : le détail est sur la page <a href="/informations-legales/cookies">cookies</a>.
+        Un bloc par page de contenu, jamais en plein écran, jamais de publicité politique.
       </>
     ),
   },
@@ -43,7 +46,7 @@ const ENGAGEMENTS: { titre: string; texte: ReactNode }[] = [
     ),
   },
   {
-    titre: "Chaque communication a son interrupteur",
+    titre: "Vous choisissez ce que vous recevez",
     texte: (
       <>
         <a href="/alertes">Alertes</a>, newsletter : tout s&apos;active et se coupe librement,

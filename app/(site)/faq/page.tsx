@@ -9,32 +9,32 @@ export const metadata: Metadata = {
 const QUESTIONS: { q: string; a: string; href: string }[] = [
   {
     q: "Qui sont les collaborateurs parlementaires ?",
-    a: "Les collaborateurs parlementaires sont les personnes employ\u00e9es par chaque d\u00e9put\u00e9, s\u00e9nateur ou eurod\u00e9put\u00e9 fran\u00e7ais pour l\u2019aider dans son travail : suivi des dossiers, r\u00e9daction, relations avec les \u00e9lecteurs et les administrations. Leurs noms figurent sur les listes officielles publi\u00e9es par l\u2019Assembl\u00e9e nationale, le S\u00e9nat et le Parlement europ\u00e9en.",
+    a: "Les collaborateurs parlementaires sont les personnes employées par chaque député, sénateur ou eurodéputé français pour l’aider dans son travail : suivi des dossiers, rédaction, relations avec les électeurs et les administrations. Leurs noms figurent sur les listes officielles publiées par l’Assemblée nationale, le Sénat et le Parlement européen.",
     href: "/questions/qui-sont-les-collaborateurs-parlementaires",
   },
   {
-    q: "Combien de collaborateurs a un d\u00e9put\u00e9 ou un s\u00e9nateur ?",
-    a: "En g\u00e9n\u00e9ral entre un et cinq collaborateurs par parlementaire, r\u00e9partis entre Paris et la circonscription, selon l\u2019enveloppe de cr\u00e9dits dont dispose chaque \u00e9lu. Les effectifs exacts, \u00e9quipe par \u00e9quipe, sont suivis en continu par DataParl\u2019.",
+    q: "Combien de collaborateurs a un député ou un sénateur ?",
+    a: "En général entre un et cinq collaborateurs par parlementaire, répartis entre Paris et la circonscription, selon l’enveloppe de crédits dont dispose chaque élu. Les effectifs exacts, équipe par équipe, sont suivis en continu par DataParl’.",
     href: "/questions/combien-de-collaborateurs",
   },
   {
-    q: "Quelle est la mixit\u00e9 des \u00e9quipes parlementaires ?",
-    a: "La part de femmes parmi les collaborateurs varie nettement selon les groupes politiques et les chambres. DataParl\u2019 mesure ce taux pour chaque \u00e9quipe et chaque groupe : le seul suivi public et continu de la mixit\u00e9 des cabinets parlementaires.",
+    q: "Quelle est la mixité des équipes parlementaires ?",
+    a: "La part de femmes parmi les collaborateurs varie nettement selon les groupes politiques et les chambres. DataParl’ mesure ce taux pour chaque équipe et chaque groupe : le seul suivi public et continu de la mixité des cabinets parlementaires.",
     href: "/questions/mixite-des-equipes",
   },
   {
     q: "Combien de temps reste-t-on collaborateur parlementaire ?",
-    a: "Le renouvellement des \u00e9quipes est suivi mois par mois : chaque mois des collaborateurs arrivent et d\u00e9partent. Le taux de renouvellement sur 12 mois varie fortement selon les chambres et les groupes politiques.",
+    a: "Le renouvellement des équipes est suivi mois par mois : chaque mois des collaborateurs arrivent et départent. Le taux de renouvellement sur 12 mois varie fortement selon les chambres et les groupes politiques.",
     href: "/questions/turnover-des-equipes",
   },
   {
-    q: "O\u00f9 trouver la liste compl\u00e8te des collaborateurs en poste ?",
-    a: "Sur la page liste de r\u00e9f\u00e9rence de DataParl\u2019 : tous les collaborateurs en poste, toutes chambres confondues, avec l\u2019\u00e9lu employeur et la fonction, d\u2019apr\u00e8s les listes officielles mises \u00e0 jour quotidiennement.",
+    q: "Où trouver la liste complète des collaborateurs en poste ?",
+    a: "Sur la page liste de référence de DataParl’ : tous les collaborateurs en poste, toutes chambres confondues, avec l’élu employeur et la fonction, d’après les listes officielles mises à jour quotidiennement.",
     href: "/collab/liste",
   },
   {
-    q: "Comment retrouver l\u2019\u00e9quipe d\u2019un \u00e9lu en particulier ?",
-    a: "Chaque fiche de parlementaire de DataParl\u2019 affiche son \u00e9quipe actuelle, l\u2019historique complet de ses collaborateurs et les mouvements de son cabinet.",
+    q: "Comment retrouver l’équipe d’un élu en particulier ?",
+    a: "Chaque fiche de parlementaire de DataParl’ affiche son équipe actuelle, l’historique complet de ses collaborateurs et les mouvements de son cabinet.",
     href: "/parlementaires",
   },
 ];
@@ -50,20 +50,20 @@ export default function FAQ() {
   };
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\u003c") }} />
-      <h1>Questions <span className="surligne">fr\u00e9quentes</span></h1>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      <h1>Questions <span className="surligne">fréquentes</span></h1>
       <p className="lead">
-        Les r\u00e9ponses courtes aux questions les plus pos\u00e9es sur les collaborateurs parlementaires, avec pour chacune la page de d\u00e9tail et les chiffres officiels.
+        Les réponses courtes aux questions les plus posées sur les collaborateurs parlementaires, avec pour chacune la page de détail et les chiffres officiels.
       </p>
       <ul className="organes">
         {QUESTIONS.map((x) => (
           <li key={x.href}>
             <a href={x.href}>{x.q}</a>
-            <span className="meta"> \u2014 {x.a}</span>
+            <span className="meta"> {x.a}</span>
           </li>
         ))}
       </ul>
-      <p className="meta">Une autre question&nbsp;? <a href="/contact">Formulaire de contact</a> \u00b7 <a href="/questions">Toutes les questions d\u00e9taill\u00e9es</a></p>
+      <p className="meta">Une autre question&nbsp;? Consultez le <a href="/contact">formulaire de contact</a> ou <a href="/questions">toutes les questions détaillées</a>.</p>
     </>
   );
 }

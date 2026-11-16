@@ -1,3 +1,4 @@
+successfully downloaded text file (SHA: 621fa5a58ff64948c22910193bdc6ee33a443aa7)
 import type { Metadata } from "next";
 import { CONTACT_RGPD } from "../maj";
 
@@ -90,7 +91,7 @@ export default function Confidentialite() {
       <p>
         <strong>Mesure d&apos;audience et publicité.</strong> Par défaut, aucune mesure d&apos;audience et aucune
         publicité : les seuls cookies déposés sans accord sont strictement nécessaires au service. Si
-        l&apos;utilisateur l&apos;accepte dans le bandeau, trois traitements sont activés, chacun révocable à
+        l&apos;utilisateur l&apos;accepte dans le mur d&apos;accès, trois traitements sont activés, chacun révocable à
         tout moment en supprimant les cookies du site :
       </p>
       <ul>
@@ -98,13 +99,14 @@ export default function Confidentialite() {
           fréquentation, dans une optique d&apos;amélioration de la qualité du service ;</li>
         <li><strong>Mesure comportementale</strong> (Microsoft Clarity) : analyse anonymisée de l&apos;usage du site,
           dans une optique d&apos;amélioration de la qualité du service ;</li>
-        <li><strong>Publicité</strong> (Google AdSense) : annonces contextualisées, avec personnalisation
-          publicitaire uniquement si l&apos;utilisateur l&apos;accepte. Ce traitement n&apos;est pas
-          implémenté à ce jour : aucun cookie publicitaire n&apos;est déposé, même en cas d&apos;accord.</li>
+        <li><strong>Publicité</strong> (Google AdSense) : annonces contextuelles, jamais personnalisées.
+          Des cookies publicitaires techniques peuvent accompagner la diffusion des annonces (limitation
+          de la répétition, lutte contre la fraude), sans jamais servir à profiler : le détail est sur
+          la page <a href="/informations-legales/cookies">Cookies</a>.</li>
       </ul>
       <p>
-        Tant que l&apos;utilisateur n&apos;a pas répondu au bandeau, ou s&apos;il refuse, aucun de ces cookies
-        n&apos;est déposé et aucun script correspondant n&apos;est chargé. Le détail des cookies est
+        Tant que l&apos;utilisateur n&apos;a pas répondu au mur d&apos;accès, ou s&apos;il refuse, aucune mesure
+        d&apos;audience n&apos;est collectée et aucune annonce n&apos;est diffusée. Le détail des cookies est
         décrit sur la page <a href="/informations-legales/cookies">Cookies</a>.
       </p>
       <p>
@@ -184,7 +186,7 @@ export default function Confidentialite() {
           <tr><td>Supabase</td><td>Base de données, comptes</td><td>Union européenne (Irlande)</td></tr>
           <tr><td>Vercel</td><td>Hébergement du site</td><td>États-Unis, réseau mondial</td></tr>
           <tr><td>Resend</td><td>Envoi des emails</td><td>Envoi depuis l&apos;Union européenne (Irlande) ; société américaine</td></tr>
-          <tr><td>Google (Analytics 4, Tag Manager, AdSense)</td><td>Mesure d&apos;audience et publicité, uniquement après acceptation dans le bandeau</td><td>États-Unis, réseau mondial</td></tr>
+          <tr><td>Google (Analytics 4, Tag Manager, AdSense)</td><td>Mesure d&apos;audience et publicité, uniquement après acceptation dans le mur d&apos;accès</td><td>États-Unis, réseau mondial</td></tr>
           <tr><td>Microsoft (Clarity)</td><td>Mesure comportementale, uniquement après acceptation de la mesure d&apos;audience</td><td>États-Unis (Azure)</td></tr>
           <tr><td>Google, GitHub</td><td>Connexion, uniquement si l&apos;utilisateur choisit ces services</td><td>Union européenne et États-Unis</td></tr>
         </tbody>

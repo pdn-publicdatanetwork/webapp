@@ -1,3 +1,4 @@
+successfully downloaded text file (SHA: 250d6481a31ca1ac2bfcafa99eff7ed2000f7372)
 import type { Metadata } from "next";
 
 import { HistoriqueTexte, VERSIONS } from "../historique";
@@ -10,10 +11,10 @@ export default function Cookies() {
       <h1><span className="surligne">Cookies</span></h1>
       <HistoriqueTexte versions={VERSIONS.cookies} />
       <p>
-        Par défaut, les seuls cookies déposés sont strictement nécessaires au service : ils sont dispensés de
+        Par défaut, les seuls cookies déposés par DataParl&apos; sont strictement nécessaires au service : ils sont dispensés de
         consentement (article 82 de la loi Informatique et libertés). La publicité est contextuelle
-        uniquement : sans cookie publicitaire, elle ne requiert aucun consentement, mais un refus
-        explicite est respecté. La mesure d&apos;audience n&apos;est activée qu&apos;après l&apos;accord de
+        uniquement, jamais personnalisée : elle s&apos;appuie sur la page consultée, pas sur un
+        profil, et un refus explicite est respecté. La mesure d&apos;audience n&apos;est activée qu&apos;après l&apos;accord de
         l&apos;utilisateur, donné dans le mur d&apos;accès : ces choix peuvent être ajustés à tout moment en
         supprimant les cookies du navigateur.
       </p>
@@ -67,13 +68,15 @@ export default function Cookies() {
         <li><strong>Mesure d&apos;audience</strong> : statistiques de fréquentation anonymisées, pour savoir quelles
           pages sont lues et améliorer le site ;</li>
         <li><strong>Publicité</strong> : annonces de Google AdSense <strong>contextuelles uniquement</strong>
-          (annonces limitées) : jamais de publicité personnalisée, jamais de cookie publicitaire, quel
-          que soit le choix de l&apos;utilisateur.</li>
+          (annonces limitées) : jamais de publicité personnalisée, jamais de profil, quel que soit
+          le choix de l&apos;utilisateur. Pour diffuser ces annonces, Google et ses partenaires peuvent
+          déposer des cookies publicitaires techniques (limitation de la répétition, lutte contre la
+          fraude), qui ne servent jamais à profiler.</li>
       </ul>
       <p>
         Ces choix sont transmis à Google (Tag Manager et AdSense) via les signaux de consentement officiels
-        (Consent Mode v2) : tant que l&apos;utilisateur n&apos;a pas répondu, ou en cas de refus, aucun cookie publicitaire
-        ni cookie de mesure n&apos;est déposé et aucune annonce personnalisée n&apos;est diffusée.
+        (Consent Mode v2) : tant que l&apos;utilisateur n&apos;a pas répondu, ou en cas de refus, aucune annonce
+        personnalisée n&apos;est diffusée et aucun cookie de mesure d&apos;audience n&apos;est déposé.
       </p>
       <p>
         La mesure d&apos;audience inclut, avec le même accord, <strong>Microsoft Clarity</strong> : heatmaps et
