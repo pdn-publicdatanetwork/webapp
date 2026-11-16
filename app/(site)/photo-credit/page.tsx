@@ -125,7 +125,7 @@ export default async function CreditPhoto({ searchParams }: { searchParams: Prom
             </li>
           </ul>
 
-          {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\u003c") }} />}
+          {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />}
         </>
       )}
       <p>
