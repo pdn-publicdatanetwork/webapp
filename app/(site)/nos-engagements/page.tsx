@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: 1fe4ac4e48b4e1af9a1eeebe5daa5d063df1ae69)
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
