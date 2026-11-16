@@ -1,3 +1,4 @@
+successfully downloaded text file (SHA: 4d3c6140fc1afc77adcc2ac8a8354b0fd607e576)
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -44,7 +45,7 @@ export default function NoticeAds() {
         <li><strong>Aucune publicité partisane</strong> : les annonces à caractère politique sont exclues via les paramètres de filtrage de Google.</li>
         <li><strong>Aucune revente de données nominatives</strong> à des fins de ciblage publicitaire.</li>
         <li><strong>Contenu inchangé</strong> : les données demeurent librement accessibles sous licence ODbL, et les alertes par courriel ne comportent pas de publicité.</li>
-        <li><strong>Libre choix de l&apos;utilisateur</strong> : la publicité est désactivée par défaut. Elle n&apos;est activée qu&apos;avec le consentement exprès dans le bandeau cookies, et ce consentement est révocable à tout moment.</li>
+        <li><strong>Libre choix de l&apos;utilisateur</strong> : la publicité est désactivée par défaut. Elle n&apos;est activée qu&apos;avec le consentement exprès dans le mur d&apos;accès, et ce consentement est révocable à tout moment.</li>
       </ul>
 
       <h2>Nous contacter</h2>
