@@ -4,7 +4,7 @@ export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Méthode : comment DataParl' collecte et croise les données parlementaires",
-  description: "Les étapes de DataParl' : sources officielles, synchronisation nocturne, compléments manuels vérifiés, identifiant unique par personne, provenance affichée, indicateurs (VigiParl', MixiParl') et contrôle qualité : tout ce qui sépare une donnée brute d'une donnée utilisable.",
+  description: "Les étapes de DataParl' : sources officielles, synchronisation nocturne, compléments manuels vérifiés, indicateurs (VigiParl', MixiParl') et contrôle qualité : tout ce qui sépare une donnée brute d'une donnée utilisable.",
   alternates: { canonical: "/methode" },
   openGraph: {
     siteName: "DataParl'",
@@ -16,10 +16,10 @@ export const metadata: Metadata = {
 };
 
 // Page méthode générale : elle explique la chaîne de traitement commune à tout
-// DataParl' (collecte → référentiel → croisement → publication), ce que le
-// référentiel apporte aux données officielles, la provenance affichée pour
-// chaque type d'élément, puis renvoie vers les méthodes détaillées de chaque
-// indicateur et vers la liste des sources.
+// DataParl' (collecte → référentiel → croisement → publication), ce que le site
+// apporte aux données officielles et comment la provenance de chaque élément
+// est affichée, puis renvoie vers les méthodes détaillées de chaque indicateur
+// et vers la liste des sources.
 
 export default function MethodeDataParl() {
   return (
@@ -62,7 +62,7 @@ export default function MethodeDataParl() {
         </li>
         <li>
           <p className="parcours-titre"><strong>2. Référentiel</strong></p>
-          <p className="meta">Les personnes sont identifiées une seule fois : un collaborateur qui change d&apos;élu garde le même identifiant, un député devenu sénateur ou député européen garde le même dossier (ses deux fiches historiques sont rattachées au même parcours). C&apos;est ce croisement qui rend possibles les « transferts » d&apos;un élu à l&apos;autre et d&apos;une chambre à l&apos;autre.</p>
+          <p className="meta">Les personnes sont identifiées une seule fois : un collaborateur qui change d&apos;élu garde le même identifiant, un député devenu sénateur ou député européen garde le même dossier (ses fiches historiques sont rattachées au même parcours). C&apos;est ce croisement qui rend possibles les « transferts » d&apos;un élu à l&apos;autre et d&apos;une chambre à l&apos;autre.</p>
         </li>
         <li>
           <p className="parcours-titre"><strong>3. Compléments manuels</strong></p>
@@ -74,54 +74,25 @@ export default function MethodeDataParl() {
         </li>
       </ol>
 
-      <h2 id="valeur">Ce que DataParl&apos; apporte aux données officielles</h2>
+      <h2 id="apports">Ce que DataParl&apos; apporte aux données officielles</h2>
       <p>
         Les publications officielles existent, mais clairsemées : chaque chambre publie ses listes dans son
         propre format, sans identifiant commun, sans historique consolidé et sans lien entre les chambres.
         DataParl&apos; ajoute quatre briques sur ces données :
       </p>
       <ul>
-        <li>
-          <strong>Un identifiant unique par personne.</strong> Une même personne garde le même identifiant
-          qu&apos;elle change d&apos;employeur, de chambre ou de mandat. Ce référentiel n&apos;existe dans
-          aucune source officielle : c&apos;est lui qui permet de suivre un parcours complet.
-        </li>
-        <li>
-          <strong>Des séries de mouvements depuis 2015.</strong> Arrivées, départs et transferts sont
-          reconstitués par différence entre les listes successives, avec leur date de publication. Aucune
-          institution ne publie ces séries.
-        </li>
-        <li>
-          <strong>Le croisement inter-chambres.</strong> Collaborateur passé de l&apos;Assemblée au
-          Parlement européen, député devenu sénateur, assistant retrouvé chez plusieurs employeurs : les
-          parcours sont rattachés au même dossier.
-        </li>
-        <li>
-          <strong>Une publication réutilisable.</strong> Les jeux de données sont publiés sous licence
-          ODbL sur <a href="https://www.data.gouv.fr/fr/organizations/dataparl/" target="_blank" rel="noopener noreferrer">data.gouv.fr</a>,
-          référencés par le portail européen de la donnée
-          (<a href="https://data.europa.eu/data/datasets/6ace9136d245a88b845d0f02" target="_blank" rel="noopener noreferrer">data.europa.eu</a>)
-          et accompagnés de schémas documentés.
-        </li>
+        <li><strong>Un identifiant unique par personne.</strong> Une même personne garde le même identifiant qu&apos;elle change d&apos;employeur, de chambre ou de mandat. Ce référentiel n&apos;existe dans aucune source officielle : c&apos;est lui qui permet de suivre un parcours complet.</li>
+        <li><strong>Des séries de mouvements depuis 2015.</strong> Arrivées, départs et transferts sont reconstitués par différence entre les listes successives, avec leur date de publication. Aucune institution ne publie ces séries.</li>
+        <li><strong>Le croisement inter-chambres.</strong> Collaborateur passé de l&apos;Assemblée au Parlement européen, député devenu sénateur, assistant retrouvé chez plusieurs employeurs : les parcours sont rattachés au même dossier.</li>
+        <li><strong>Une publication réutilisable.</strong> Les jeux de données sont publiés sous licence ODbL sur <a href="https://www.data.gouv.fr/fr/organizations/dataparl/" target="_blank" rel="noopener noreferrer">data.gouv.fr</a>, référencés par le portail européen de la donnée (<a href="https://data.europa.eu/data/datasets/6ace9136d245a88b845d0f02" target="_blank" rel="noopener noreferrer">data.europa.eu</a>) et accompagnés de schémas documentés.</li>
       </ul>
 
       <h2 id="provenance">La provenance de chaque élément, explicitement</h2>
       <p>Sur les fiches, la provenance n&apos;est jamais laissée implicite :</p>
       <ul>
-        <li>
-          <strong>Données synchronisées</strong> (collaborateurs, mandats, groupes, commissions) :
-          publications officielles, date de publication conservée.
-        </li>
-        <li>
-          <strong>Compléments rédigés</strong> (biographies, mandats locaux, fonctions partisanes) :
-          signalés « précisé par DataParl&apos; », source et date portées par chaque élément.
-        </li>
-        <li>
-          <strong>Rubrique « déclarée par l&apos;intéressé »</strong> (parcours, CV) : renseignée par la
-          personne elle-même, associée à son compte via son adresse e-mail parlementaire, puis revue par
-          l&apos;équipe avant publication. Elle n&apos;est jamais fondue dans les données officielles et ne
-          prétend pas l&apos;être.
-        </li>
+        <li><strong>Données synchronisées</strong> (collaborateurs, mandats, groupes, commissions) : publications officielles, date de publication conservée.</li>
+        <li><strong>Compléments rédigés</strong> (biographies, mandats locaux, fonctions partisanes) : signalés « précisé par DataParl&apos; », source et date portées par chaque élément.</li>
+        <li><strong>Rubrique « déclarée par l&apos;intéressé »</strong> (parcours, CV) : renseignée par la personne elle-même, associée à son compte via son adresse e-mail parlementaire, puis revue par l&apos;équipe avant publication. Elle n&apos;est jamais fondue dans les données officielles et ne prétend pas l&apos;être.</li>
       </ul>
 
       <h2 id="indicateurs">Les indicateurs et leurs méthodes</h2>
