@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: 250d6481a31ca1ac2bfcafa99eff7ed2000f7372)
 import type { Metadata } from "next";
 
 import { HistoriqueTexte, VERSIONS } from "../historique";
