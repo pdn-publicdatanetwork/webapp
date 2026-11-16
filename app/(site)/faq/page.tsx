@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 const QUESTIONS: { q: string; a: string; href: string }[] = [
   {
     q: "Qui sont les collaborateurs parlementaires ?",
-    a: "Les collaborateurs parlementaires sont les personnes employ\u00e9es par chaque d\u00e9put\u00e9 ou s\u00e9nateur pour l\u2019aider dans son travail : suivi des dossiers, r\u00e9daction, relations avec les \u00e9lecteurs et les administrations. Leurs noms figurent sur les listes officielles publi\u00e9es par l\u2019Assembl\u00e9e nationale et le S\u00e9nat.",
+    a: "Les collaborateurs parlementaires sont les personnes employ\u00e9es par chaque d\u00e9put\u00e9, s\u00e9nateur ou eurod\u00e9put\u00e9 fran\u00e7ais pour l\u2019aider dans son travail : suivi des dossiers, r\u00e9daction, relations avec les \u00e9lecteurs et les administrations. Leurs noms figurent sur les listes officielles publi\u00e9es par l\u2019Assembl\u00e9e nationale, le S\u00e9nat et le Parlement europ\u00e9en.",
     href: "/questions/qui-sont-les-collaborateurs-parlementaires",
   },
   {
@@ -19,7 +19,7 @@ const QUESTIONS: { q: string; a: string; href: string }[] = [
   },
   {
     q: "Quelle est la mixit\u00e9 des \u00e9quipes parlementaires ?",
-    a: "La part de femmes parmi les collaborateurs varie nettement selon les groupes politiques et les chambres. DataParl\u2019 mesure ce taux pour chaque \u00e9quipe et chaque groupe \u2014 le seul suivi public et continu de la mixit\u00e9 des cabinets parlementaires.",
+    a: "La part de femmes parmi les collaborateurs varie nettement selon les groupes politiques et les chambres. DataParl\u2019 mesure ce taux pour chaque \u00e9quipe et chaque groupe : le seul suivi public et continu de la mixit\u00e9 des cabinets parlementaires.",
     href: "/questions/mixite-des-equipes",
   },
   {

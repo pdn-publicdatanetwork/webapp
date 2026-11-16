@@ -11,9 +11,11 @@ export default function Cookies() {
       <HistoriqueTexte versions={VERSIONS.cookies} />
       <p>
         Par défaut, les seuls cookies déposés sont strictement nécessaires au service : ils sont dispensés de
-        consentement (article 82 de la loi Informatique et libertés). La mesure d&apos;audience et la publicité
-        ne sont activées qu&apos;après l&apos;accord de l&apos;utilisateur, donné dans le bandeau d&apos;accueil : elles
-        peuvent être refusées ou ajustées à tout moment en supprimant les cookies du navigateur.
+        consentement (article 82 de la loi Informatique et libertés). La publicité est contextuelle
+        uniquement : sans cookie publicitaire, elle ne requiert aucun consentement, mais un refus
+        explicite est respecté. La mesure d&apos;audience n&apos;est activée qu&apos;après l&apos;accord de
+        l&apos;utilisateur, donné dans le mur d&apos;accès : ces choix peuvent être ajustés à tout moment en
+        supprimant les cookies du navigateur.
       </p>
       <p>
         Une seule exception, à la demande de l&apos;utilisateur : pour débloquer gratuitement le parcours d&apos;une
@@ -44,6 +46,11 @@ export default function Cookies() {
             <td>Mémoriser le choix de consentement : mesure d&apos;audience et publicité accordées ou refusées</td>
             <td>30 jours</td>
           </tr>
+          <tr>
+            <td><code>dp_mur_vu_v1</code> (cookie)</td>
+            <td>Marquer que le mur d&apos;accès a déjà été proposé, pour ne pas l&apos;afficher à chaque page</td>
+            <td>30 jours</td>
+          </tr>
         </tbody>
       </table>
       <p>
@@ -51,16 +58,17 @@ export default function Cookies() {
         cookies sur leurs domaines, selon leurs politiques respectives. DataParl&apos; n&apos;y a pas accès.
       </p>
 
-      <h2>Mesure d&apos;audience et publicité (avec l&apos;accord de l&apos;utilisateur)</h2>
+      <h2>Mesure d&apos;audience et publicité</h2>
       <p>
-        Si l&apos;utilisateur les accepte, deux traitements complémentaires sont activés, pilotés par le bandeau du
-        site (pas par une bannière Google) :
+        Deux traitements complémentaires, pilotés par le mur d&apos;accès du site (pas par une
+        bannière Google) :
       </p>
       <ul>
         <li><strong>Mesure d&apos;audience</strong> : statistiques de fréquentation anonymisées, pour savoir quelles
           pages sont lues et améliorer le site ;</li>
-        <li><strong>Publicité</strong> : annonces de Google AdSense, avec personnalisation publicitaire si
-          l&apos;utilisateur l&apos;accepte : sinon, des annonces non personnalisées.</li>
+        <li><strong>Publicité</strong> : annonces de Google AdSense <strong>contextuelles uniquement</strong>
+          (annonces limitées) : jamais de publicité personnalisée, jamais de cookie publicitaire, quel
+          que soit le choix de l&apos;utilisateur.</li>
       </ul>
       <p>
         Ces choix sont transmis à Google (Tag Manager et AdSense) via les signaux de consentement officiels
@@ -97,7 +105,7 @@ export default function Cookies() {
       <p>
         Un bloqueur de publicité empêche la vidéo de se charger : la fiche reste alors bloquée, le reste du site
         fonctionne normalement. Pour revoir les choix de consentement, supprimer les cookies du site suffit : le
-        bandeau s&apos;affichera à nouveau.
+        mur d&apos;accès s&apos;affichera à nouveau.
       </p>
     </>
   );

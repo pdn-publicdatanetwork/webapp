@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 export const metadata: Metadata = {
   title: "Nos engagements",
   description:
-    "Données libres (ODbL), publicité contextuelle sans traceur, communications opt-in, données nominatives jamais revendues : tout ce que DataParl' garantit, visiteur, inscrit ou abonné.",
+    "Données libres (ODbL), publicité contextuelle sans traceur, communications opt-in, données nominatives jamais revendues : tout ce que DataParl' garantit, visiteur ou inscrit.",
   alternates: { canonical: "/nos-engagements" },
 };
 export const revalidate = 86400;
@@ -58,7 +58,6 @@ const ENGAGEMENTS: { titre: string; texte: ReactNode }[] = [
       <>
         C&apos;est elle qui finance l&apos;accès libre au site, l&apos;hébergement, la collecte
         quotidienne et l&apos;infrastructure qui reconstitue le Parlement chaque jour.
-        L&apos;abonnement sans publicité la remplace, à hauteur de 3 € par mois.
       </>
     ),
   },
@@ -80,7 +79,7 @@ export default function NosEngagements() {
       <h1>Nos <span className="surligne">engagements</span></h1>
       <p className="lead">
         DataParl&apos; reconstitue le Parlement chaque jour et publie tout ce qu&apos;il collecte.
-        Voici ce que nous garantissons, que vous soyez visiteur, inscrit ou abonné.
+        Voici ce que nous garantissons, que vous soyez visiteur ou inscrit.
       </p>
 
       {ENGAGEMENTS.map((e) => (
@@ -90,12 +89,12 @@ export default function NosEngagements() {
         </section>
       ))}
 
-      <h2>Le Sans pub, 3 € par mois</h2>
+      <h2>Pour aller plus loin</h2>
       <p>
-        Zéro publicité, zéro traceur, aucun partenaire annonceur, résiliable à tout moment depuis
-        la rubrique <a href="/mon-compte/achats">Achats de Mon espace</a>. Pour les détails
-        (éditeur, hébergement, traitements), lisez les{" "}
-        <a href="/informations-legales">Informations légales</a>.
+        Pour les détails (éditeur, hébergement, traitements), lisez les{" "}
+        <a href="/informations-legales">Informations légales</a> ; la{" "}
+        <a href="/methode">méthode</a> et la <a href="/methode/sources">liste des sources</a>{" "}
+        décrivent la collecte et la provenance des données.
       </p>
     </div>
   );

@@ -67,6 +67,13 @@ const COLLABORATEURS: Source[] = [
     licence: "document administratif public",
   },
   {
+    nom: "Parlement européen : assistants des collaborateurs des députés européens",
+    href: "https://www.europarl.europa.eu/meps/fr/full-list",
+    contenu: "Assistants des députés européens français (fonction, période)",
+    frequence: "quotidien (relève la date de publication)",
+    licence: "réutilisation libre",
+  },
+  {
     nom: "Archives des listes officielles",
     href: "https://www.dataparl.fr/mouvements",
     contenu: "Historique des publications pour retracer les arrivées et départs passés",
@@ -105,6 +112,13 @@ const COMPLEMENTS: Source[] = [
     href: "https://www.dataparl.fr/methode",
     contenu: "Biographies, mandats locaux et fonctions partisanes non couverts par les syncs : toujours signalés « précisé par DataParl' », avec source et date",
     frequence: "en continu",
+    licence: "© DataParl'",
+  },
+  {
+    nom: "Rubrique « déclarée par l'intéressé » (fiches collaborateurs)",
+    href: "https://www.dataparl.fr/mon-compte/ma-fiche",
+    contenu: "Parcours et CV déclarés par la personne elle-même, associés à son compte via son adresse e-mail parlementaire, revus avant publication ; jamais fondus dans les données officielles",
+    frequence: "à chaque déclaration",
     licence: "© DataParl'",
   },
 ];
@@ -152,9 +166,9 @@ export default function SourcesDataParl() {
 
       <h2 id="citation">Citer DataParl&apos;</h2>
       <p>
-        Nos tableaux sont la donnée de référence de la donnée officielle : citez
+        Citer DataParl&apos;, c&apos;est citer la donnée officielle mise en forme : citez
         «&nbsp;DataParl&apos; (dataparl.fr), d&apos;après les publications officielles de
-        l&apos;Assemblée nationale et du Sénat&nbsp;» et la date des données. Le détail des formules
+        l&apos;Assemblée nationale, du Sénat et du Parlement européen&nbsp;» et la date des données. Le détail des formules
         et exclusions de chaque indicateur est dans la <a href="/methode">méthode</a> et les pages
         <a href="/vigiparl/methode"> VigiParl&apos;</a> et <a href="/mixiparl/methode"> MixiParl&apos;</a>.
       </p>
