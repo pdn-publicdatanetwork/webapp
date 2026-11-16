@@ -1,3 +1,4 @@
+successfully downloaded text file (SHA: 767002c11fea299b8d24d73d678dcbfe71fef523)
 import type { Metadata } from "next";
 
 export const revalidate = 3600;
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
 
 type Source = {
   nom: string;
-  href: string;
+  href?: string;
   contenu: string;
   frequence: string;
   licence: string;
@@ -30,21 +31,18 @@ type Source = {
 const PARLEMENTAIRES: Source[] = [
   {
     nom: "Assemblée nationale : données ouvertes (data.assemblee-nationale.fr)",
-    href: "https://data.assemblee-nationale.fr/",
     contenu: "Députés, mandats, groupes et commissions ; identifiants officiels (PA…)",
     frequence: "quotidien",
     licence: "réutilisation libre (licences ouvertes de l'AN)",
   },
   {
     nom: "Sénat : data.senat.fr et senat.fr",
-    href: "https://data.senat.fr/",
     contenu: "Sénateurs, mandats, groupes et commissions ; pages individuelles senat.fr",
     frequence: "quotidien",
     licence: "réutilisation libre (licences ouvertes du Sénat)",
   },
   {
     nom: "Parlement européen",
-    href: "https://www.europarl.europa.eu/meps/fr/full-list",
     contenu: "Députés européens, mandats, groupes et commissions",
     frequence: "quotidien",
     licence: "réutilisation libre",
@@ -54,28 +52,25 @@ const PARLEMENTAIRES: Source[] = [
 const COLLABORATEURS: Source[] = [
   {
     nom: "Assemblée nationale : liste des collaborateurs des députés",
-    href: "https://www2.assemblee-nationale.fr/qui/fiche_deputes",
     contenu: "Collaborateurs parlementaires par député (fonction, période)",
     frequence: "quotidien (relève la date de publication)",
     licence: "document administratif public",
   },
   {
     nom: "Sénat : A.G.A.S. (liste des collaborateurs par sénateur)",
-    href: "https://www.senat.fr/senateurs/collaborateurs.html",
     contenu: "Collaborateurs parlementaires par sénateur (fonction, période)",
     frequence: "quotidien (relève la date de publication)",
     licence: "document administratif public",
   },
   {
     nom: "Parlement européen : assistants des collaborateurs des députés européens",
-    href: "https://www.europarl.europa.eu/meps/fr/full-list",
     contenu: "Assistants des députés européens français (fonction, période)",
     frequence: "quotidien (relève la date de publication)",
     licence: "réutilisation libre",
   },
   {
     nom: "Archives des listes officielles",
-    href: "https://www.dataparl.fr/mouvements",
+    href: "/mouvements",
     contenu: "Historique des publications pour retracer les arrivées et départs passés",
     frequence: "à chaque publication",
     licence: "non précisée",
@@ -85,14 +80,12 @@ const COLLABORATEURS: Source[] = [
 const ELECTIONS: Source[] = [
   {
     nom: "Ministère de l'Intérieur : résultats des élections",
-    href: "https://www.resultats-elections.interieur.gouv.fr/",
     contenu: "Résultats officiels des scrutins (sénatoriales 2026, législatives…), listes des élus",
     frequence: "à chaque scrutin",
     licence: "réutilisation libre",
   },
   {
     nom: "Journal officiel (JO République française : Légifrance)",
-    href: "https://www.legifrance.gouv.fr/",
     contenu: "Nominations, décrets, compositions officielles (gouvernement, cabinets)",
     frequence: "à chaque publication",
     licence: "réutilisation libre",
@@ -102,21 +95,21 @@ const ELECTIONS: Source[] = [
 const COMPLEMENTS: Source[] = [
   {
     nom: "Sites institutionnels des élus (pages senat.fr, assemblee-nationale.fr, sites personnels)",
-    href: "https://www.dataparl.fr/parlementaires",
+    href: "/parlementaires",
     contenu: "Pages officielles et présence en ligne citées dans les fiches et biographies",
     frequence: "à la rédaction",
     licence: "non précisée",
   },
   {
     nom: "Rédaction DataParl'",
-    href: "https://www.dataparl.fr/methode",
+    href: "/methode",
     contenu: "Biographies, mandats locaux et fonctions partisanes non couverts par les syncs : toujours signalés « précisé par DataParl' », avec source et date",
     frequence: "en continu",
     licence: "© DataParl'",
   },
   {
     nom: "Rubrique « déclarée par l'intéressé » (fiches collaborateurs)",
-    href: "https://www.dataparl.fr/mon-compte/ma-fiche",
+    href: "/mon-compte/ma-fiche",
     contenu: "Parcours et CV déclarés par la personne elle-même, associés à son compte via son adresse e-mail parlementaire, revus avant publication ; jamais fondus dans les données officielles",
     frequence: "à chaque déclaration",
     licence: "© DataParl'",
@@ -135,7 +128,7 @@ function TableauSources({ titre, id, sources }: { titre: string; id: string; sou
           <tbody>
             {sources.map((s) => (
               <tr key={s.nom}>
-                <td><a href={s.href} target="_blank" rel="noopener noreferrer">{s.nom}</a></td>
+                <td>{s.href ? <a href={s.href}>{s.nom}</a> : s.nom}</td>
                 <td>{s.contenu}</td>
                 <td>{s.frequence}</td>
                 <td>{s.licence}</td>
@@ -156,7 +149,8 @@ export default function SourcesDataParl() {
       <p className="lead">
         Tout chiffre publié sur DataParl&apos; provient d&apos;une publication officielle relevée dans
         cette liste : ou d&apos;un complément rédigé à la main, toujours signalé comme tel. Pour chaque
-        source : le contenu utilisé, la fréquence de relevé et la licence de réutilisation.
+        source : le contenu utilisé, la fréquence de relevé et la licence de réutilisation. Les listes
+        officielles se consultent sur les sites publics des institutions citées.
       </p>
 
       <TableauSources titre="Parlementaires : identités, mandats, groupes" id="parlementaires" sources={PARLEMENTAIRES} />
