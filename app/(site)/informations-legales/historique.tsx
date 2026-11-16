@@ -20,7 +20,11 @@ export const VERSIONS: Record<string, VersionTexte[]> = {
     { date: "22 octobre 2026" },
   ],
   cookies: [{ date: "22 octobre 2026" }],
-  licences: [{ date: "22 octobre 2026" }],
+  licences: [
+    { date: "16 novembre 2026", resume: "ajout de la page Photos et logos : détenteurs des images et conditions d'affichage" },
+    { date: "22 octobre 2026" },
+  ],
+  photos: [{ date: "16 novembre 2026" }],
   mentions: [{ date: "22 octobre 2026" }],
   phishing: [{ date: "23 octobre 2026" }],
 };

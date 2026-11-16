@@ -8,7 +8,7 @@ import CrayonEdition from "@/app/_components/CrayonEdition";
 import { eluDepuisFiche, eluDepuisId, equipe, lienOfficiel, mouvementsElu, statsElu } from "@/lib/elus";
 import { FONCTIONS_SOCIETES } from "@/lib/exclusions";
 import { familleDe } from "@/lib/familles";
-import { photoAbsolue } from "@/lib/media";
+import { CODE_CHAMBRE, CREDIT, photoAbsolue, urlLicence } from "@/lib/media";
 import { CHAMBRE_LONG, nomAffiche, prenomNom } from "@/lib/format";
 import { chevauche, fusionner, libellePeriode, moisAnnee } from "@/lib/periodes";
 import { collaborateurDeLaPersonne, fonctionsGouvernement, parlementaireDepuisId, periodesElu, personne, type Appartenance, type Mandat, type Ministre, type Parlementaire } from "@/lib/referentiel";
@@ -126,11 +126,27 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
       { "@type": "ListItem", position: 2, name: nom, item: `https://www.dataparl.fr/parlementaires/${f.slug}` },
     ],
   };
+  // Métadonnées de licence de la photo officielle (Google Images : crédit du
+  // détenteur, badge « Licensable »). La page de crédit de la photo
+  // (www.dataparl.fr/photo-credit?img=…) détaille source, licence et usage.
+  const photoPourLicence = (f.photo_url && photoAbsolue(f.chambre, f.slug, 400)) || null;
+  const codePhoto = CODE_CHAMBRE[f.chambre];
+  const jsonLdPhoto = photoPourLicence ? {
+    "@context": "https://schema.org", "@type": "ImageObject",
+    contentUrl: photoPourLicence,
+    name: `Photo officielle de ${nom}`,
+    creditText: CREDIT[codePhoto],
+    copyrightNotice: `© ${CREDIT[codePhoto]}`,
+    license: urlLicence(codePhoto) ?? undefined,
+  } : null;
+  // Lien vers la page de crédit de la photo affichée sur la fiche (200 px).
+  const imgCredit = `${codePhoto}/${f.slug}_${codePhoto}_200.png`;
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(filAriane).replace(/</g, "\\u003c") }} />
+      {jsonLdPhoto && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdPhoto).replace(/</g, "\\u003c") }} />}
       <div className="entete-elu">
         <Photo chambre={f.chambre} slug={f.slug} src={f.photo_url} nom={nom} />
         <div>
@@ -144,6 +160,7 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
           <p className="meta" style={{ marginTop: 6 }}>
             {f.actif ? `En fonction depuis ${moisAnnee(dernierDebut(mandats, f))}` : f.fin_mandat ? `Mandat terminé en ${moisAnnee(f.fin_mandat)}` : ""}
             {f.url_officielle && <>, <a href={f.url_officielle}>fiche officielle</a></>}
+            {photoPourLicence && <>, <a href={`/photo-credit?img=${encodeURIComponent(imgCredit)}`}>crédit photo</a></>}
             {hrefDepartement(f.departement || f.circonscription, slugDepartement) && <>, <a href={hrefDepartement(f.departement || f.circonscription, slugDepartement)!}>fiche élus de {f.departement || f.circonscription}</a></>}
             {!sansGroupe(f.groupe) && hrefGroupe(f.chambre, f.groupe) && <>, <a href={hrefGroupe(f.chambre, f.groupe)!}>fiche groupe {f.groupe}</a></>}
             {!sansGroupe(f.groupe) && hrefParti(f.groupe) && <>, <a href={hrefParti(f.groupe)!}>fiche parti {f.groupe}</a></>}

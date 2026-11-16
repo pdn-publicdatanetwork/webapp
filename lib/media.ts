@@ -122,3 +122,22 @@ export function analyserLogoGroupe(fichier: string): { sigle: string; chambre: s
   if (!leg || m[3] !== leg.romain.replace(/e$/, "")) return null;
   return { sigle: m[1], chambre, romain: m[3] };
 }
+
+// ---------------------------------------------------------------------------
+// Licences des photos et logos : page centrale par institution. La page de
+// crédit de chaque photo (www.dataparl.fr/photo-credit?img=…) et les
+// ImageObject (JSON-LD) des fiches pointent vers la section de l'institution
+// détentrice. Une seule adresse à maintenir par institution.
+// ---------------------------------------------------------------------------
+
+export const LICENCE_PHOTOS = "https://www.dataparl.fr/informations-legales/licences/photos";
+
+// Section de la page des licences qui décrit le détenteur d'une photo.
+const ANCRES_LICENCE: Record<string, string> = {
+  an: "assemblee-nationale", senat: "senat", pe: "parlement-europeen", gouv: "gouvernement",
+};
+
+export function urlLicence(credit: string): string | null {
+  const ancre = ANCRES_LICENCE[credit];
+  return ancre ? `${LICENCE_PHOTOS}#${ancre}` : null;
+}
