@@ -76,7 +76,7 @@ export default function APropos() {
       <ul>
         <li>Les données viennent des <strong>listes officielles</strong> publiées par l&apos;Assemblée nationale, le Sénat et le Parlement européen, complétées par les archives publiées au JORF.</li>
         <li>Tout est sourcé : chaque chiffre affiché renvoie à sa source, la <a href="/methode">méthode</a> est publiée en détail et datée.</li>
-        <li>Les données sont publiées sous <strong>licence ODbL</strong> : libre réutilisation avec mention.</li>
+        <li>Les données sont publiées sous <strong>licence ODbL</strong> : libre réutilisation avec mention. Les jeux de données sont disponibles sur <a href="https://www.data.gouv.fr/fr/organizations/dataparl/" target="_blank" rel="noopener noreferrer">data.gouv.fr</a> et référencés par le portail européen de la donnée, <a href="https://data.europa.eu/data/datasets/6ace9136d245a88b845d0f02" target="_blank" rel="noopener noreferrer">data.europa.eu</a>.</li>
         <li>Le financement est indépendant : pas de publicité partisane, pas de revente de données nominatives à des fins de ciblage. Détail des coûts et de l&apos;affectation des revenus : <a href="/notice/ads">notice publicité</a>.</li>
       </ul>
 
