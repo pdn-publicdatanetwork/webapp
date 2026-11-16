@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: 4d3c6140fc1afc77adcc2ac8a8354b0fd607e576)
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

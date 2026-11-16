@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: 621fa5a58ff64948c22910193bdc6ee33a443aa7)
 import type { Metadata } from "next";
 import { CONTACT_RGPD } from "../maj";
 
