@@ -32,7 +32,7 @@ export type Verdict =
 export async function consommer(req: Request): Promise<Verdict> {
   const cle = cleDepuisRequete(req);
   if (!cle || cle.length > 80) {
-    return { ok: false, status: 401, message: "clé API requise : en-tête Authorization: Bearer <clé> (gratuite, à demander sur https://api.dataparl.fr/request-access)" };
+    return { ok: false, status: 401, message: "clé API requise : en-tête Authorization: Bearer <clé>" };
   }
   const { data, error } = await authAdmin().rpc("api_consommer", { p_hash: await sha256(cle), p_ip: ipDepuisRequete(req) });
   if (error || !data?.[0]) return { ok: false, status: 503, message: "vérification de la clé impossible, réessaie" };
