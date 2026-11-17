@@ -113,7 +113,7 @@ export default function CapsuleClient() {
     { titre: "Communications", resume: "Newsletter, alertes par email et suivi des e-mails", href: "/mon-compte/communications", icone: "enveloppe" },
     { titre: "Mes alertes", resume: resumeAlertes, href: "/mon-compte/alertes", icone: "cloche" },
     { titre: "Ma fiche collaborateur", resume: "Le profil CV publié sur dataparl.fr", href: "/mon-compte/ma-fiche", icone: "document" },
-    { titre: "Mon espace API", resume: "Ta clé API, sa consommation et la documentation", href: "/mon-espace-api", icone: "code" },
+    { titre: "Mon espace API", resume: "Ta clé API et sa consommation", href: "/mon-espace-api", icone: "code" },
     { titre: "DataParl' Jobs", resume: "Tes candidatures, tes alertes et ton profil de collaborateur", href: "/jobs", icone: "mallette" },
     ...(compte.equipe ? [{ titre: "Achats et abonnements", resume: "Bientôt : des packs sans publicité", href: "/mon-compte/achats", icone: "document" }] : []),
     { titre: "Données et confidentialité", resume: "Export de tes données et suppression du compte", href: "/mon-compte/preferences", icone: "bouclier" },
@@ -156,7 +156,7 @@ export default function CapsuleClient() {
               ? <>requêtes aujourd&apos;hui · dernier appel {cle.last_used_at ? "effectué" : "jamais"}</>
               : <>Demande ta clé pour brancher l&apos;API DataParl&apos;</>}
           </p>
-          <a className="capsule-carte-action" href="/mon-espace-api">Voir ma clé et la documentation →</a>
+          <a className="capsule-carte-action" href="/mon-espace-api">Voir ma clé →</a>
         </div>
         <div className="capsule-carte">
           <h2>Mon emploi <span style={{ color: "var(--muted)", display: "flex" }}><Icone nom="mallette" /></span></h2>
