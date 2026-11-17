@@ -168,8 +168,7 @@ export default function SourcesDataParl() {
 
       <h2 id="api">Pour aller plus loin</h2>
       <p className="meta">
-        Les données sont aussi disponibles via l&apos;<a href="https://api.dataparl.fr">API DataParl&apos;</a>{" "}
-        et les exports de chaque fiche. Une source manque ou une donnée vous semble fausse ?{" "}
+        Les données sont aussi disponibles dans les exports de chaque fiche. Une source manque ou une donnée vous semble fausse ?{" "}
         <a href="/contact">Écrivez-nous</a>.
       </p>
     </div>
