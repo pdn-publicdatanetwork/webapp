@@ -45,7 +45,7 @@ async function journaliser(etat: string, raison: string, claims: Record<string, 
 
 async function clesJwks(): Promise<Jwk[]> {
   if (cacheJwks && cacheJwks.expire > Date.now()) return cacheJwks.cles;
-  const r = await fetch(`${ISSUER}/.well-known/jwks.json`, { cache: "no-store" });
+  const r = await fetch(`${ISSUER}/.well-known/jwks`, { cache: "no-store" });
   if (!r.ok) throw new Error("JWKS GitHub indisponible");
   const corps = (await r.json()) as { keys?: Jwk[] };
   cacheJwks = { cles: corps.keys ?? [], expire: Date.now() + 3600_000 };
