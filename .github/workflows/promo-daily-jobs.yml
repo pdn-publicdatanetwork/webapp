@@ -5,8 +5,9 @@ name: Promo Daily Jobs
 # du commit contenait « promo-daily ») : ici, déclenchement manuel.
 # Le message vient de scripts/promo-daily-message.txt sur GitLab
 # (absent ou vide : rien n'est envoyé, sortie propre).
-# Jeton GitLab embarqué : voir la note de collecte-jobs.yml (dépôt
-# privé, rotation à prévoir).
+# Jeton GitLab : secret GitHub GITLAB_TOKEN (rotation du 17/11/2026,
+# cf. collecte-jobs.yml : l'ancien jeton était exposé en clair dans un
+# dépôt public).
 
 on:
   workflow_dispatch:
@@ -15,7 +16,7 @@ permissions:
   contents: read
 
 env:
-  GITLAB_TOKEN: glpat-gZEfmvClp3VV87H3UWwvuGM6MQpvOjEKdTpxN2t3cw8.01.171rzea8f
+  GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
 
 jobs:
   promo-daily:
