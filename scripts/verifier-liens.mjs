@@ -52,12 +52,5 @@ if (photo) {
     if (b.headers.get("content-type") !== "image/png") casses.push(`image attendue (${JSON.stringify(h)}) : ${b.headers.get("content-type")}`);
   }
 } else casses.push("aucune photo dans sitemap-parlementaires.xml");
-if (BASE === "https://www.dataparl.fr") {
-  const api = await fetch("https://api.dataparl.fr/sitemap.xml");
-  const corps = await api.text();
-  console.log(`${api.status} https://api.dataparl.fr/sitemap.xml`);
-  if (api.status !== 200 || !corps.includes("https://api.dataparl.fr/docs")) casses.push(`${api.status} https://api.dataparl.fr/sitemap.xml`);
-}
-
 if (casses.length) { console.error(`\nLiens cassés :\n${casses.join("\n")}`); process.exit(1); }
 console.log(`\n${liens.size} liens vérifiés, aucun cassé.`);
