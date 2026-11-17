@@ -36,8 +36,9 @@ export default function MentionsLegales() {
       </p>
       <p>
         Plusieurs sous-domaines organisent le service : <strong>www.dataparl.fr</strong> (le site public),
-        <strong> media.dataparl.fr/sheets</strong> (DataParl&apos; Sheets, le tableur et la recherche dans les bases de
-        données) et{" "}
+        {" "}<strong>my.dataparl.fr</strong> (l&apos;espace personnel des comptes),{" "}
+        <strong>auth.dataparl.fr</strong> (la connexion),{" "}
+        <strong>forms.dataparl.fr</strong> (les formulaires) et{" "}
         <strong>media.dataparl.fr</strong> (les photos des élus, voir ci-dessous). Tous sont hébergés dans les
         conditions décrites ci-dessus.
       </p>

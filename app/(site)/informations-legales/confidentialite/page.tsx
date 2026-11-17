@@ -12,7 +12,7 @@ export default function Confidentialite() {
       <HistoriqueTexte versions={VERSIONS.confidentialite} />
       <p>
         DataParl&apos; traite deux sortes de données personnelles : celles des personnes qui utilisent le site
-        (compte, alertes, API, contact), et celles des personnes citées dans les données publiées (élus et
+        (compte, alertes, contact), et celles des personnes citées dans les données publiées (élus et
         collaborateurs parlementaires). Aucune donnée n&apos;est vendue, louée ni utilisée à des fins publicitaires.
       </p>
 
@@ -64,12 +64,6 @@ export default function Confidentialite() {
             <td>Suivre la délivrabilité, traiter les erreurs d&apos;envoi</td>
             <td>Intérêt légitime</td>
             <td>12 mois</td>
-          </tr>
-          <tr>
-            <td>Usage déclaré et empreinte de la clé API, nombre de requêtes par jour</td>
-            <td>Fournir l&apos;API, appliquer les quotas</td>
-            <td>Exécution des conditions de l&apos;API</td>
-            <td>Jusqu&apos;à la révocation de la clé ; compteurs 12 mois</td>
           </tr>
           <tr>
             <td>Journaux techniques de l&apos;hébergeur (adresse IP, pages demandées)</td>
