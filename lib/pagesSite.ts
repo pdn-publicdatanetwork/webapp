@@ -20,7 +20,6 @@ export const PAGES_SITE: PageSite[] = [
   { libelle: "Presse & médias", detail: "Données et accès pour les rédactions", href: "/presse", mots: "presse medias journalistes redaction citer" },
   { libelle: "Questions fréquentes", detail: "FAQ", href: "/faq", mots: "faq questions aide" },
   { libelle: "Contact", detail: "Nous écrire", href: "/contact", mots: "contact ecrire message" },
-  { libelle: "API DataParl'", detail: "Les données pour vos outils", href: "https://api.dataparl.fr", mots: "api donnees developpeurs csv export" },
 ];
 
 const norm = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
