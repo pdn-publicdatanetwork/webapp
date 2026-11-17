@@ -1,28 +1,29 @@
 name: Collecte Jobs
 
 # CI de la collecte DataParl' Jobs, migrée depuis GitLab (plan Free :
-# quota de 400 minutes/mois épuisé, GitHub en offre 2000 pour un dépôt
-# privé). Le CODE SOURCE reste sur GitLab (publicdatanetwork-group/
-# dataparl-jobs, projet 88469399) : ce workflow télécharge son archive
-# à chaque run. Les SECRETS restent dans les variables CI du projet
-# GitLab (source de vérité), lues via l'API au démarrage.
+# quota de 400 minutes/mois épuisé, GitHub en offre 2000). Le CODE SOURCE
+# reste sur GitLab (publicdatanetwork-group/dataparl-jobs, projet
+# 88469399) : ce workflow télécharge son archive à chaque run. Les
+# SECRETS restent dans les variables CI du projet GitLab (source de
+# vérité), lues via l'API au démarrage.
 #
-# Jeton GitLab : secret GitHub GITLAB_TOKEN (project access token
-# read_api sur le projet 88469399). ROTATION du 17/11/2026 : l'ancien
-# jeton (scope api complet) était embarqué en clair dans ce fichier
-# alors que le dépôt est PUBLIC ; un tiers s'en est servi pour créer
-# des projets « sonde GPU » sur le compte GitLab. Ne JAMAIS embarquer
-# de jeton en clair ici.
+# Jeton GitLab : AUCUN secret GitHub, AUCUN jeton embarqué (rotation du
+# 17/11/2026 après compromission de l'ancien jeton exposé en clair dans
+# ce fichier, dépôt public). Le jeton est remis au run par la route du
+# webapp www.dataparl.fr/api/cron/ci-jeton après validation du jeton
+# OIDC GitHub de CE run (id-token: write, audience dataparl-ci, branche
+# main uniquement). Le PAT vit dans la table ci_secrets Supabase
+# (dataparl-auth) ; sa rotation = POST /personal_access_tokens/:id/rotate
+# puis mise à jour de la ligne SQL, sans toucher à ce fichier.
 #
-# Déclenchement : planification 2 fois par jour (12h00 et 18h00
-# Paris, heure d'hiver), « Run workflow » manuel, ou push d'une
-# modification du fichier jobs-collecte.trigger (déclenchement à la
-# demande sans passer par l'onglet Actions).
+# Déclenchement : planification 2 fois par jour (12h00 et 18h00 Paris,
+# heure d'hiver), « Run workflow » manuel, ou push d'une modification du
+# fichier jobs-collecte.trigger.
 #
-# Alertes e-mail : envoyées par le webapp (route www.dataparl.fr/
-# api/cron/alertes-jobs, clé Resend du projet Vercel où dataparl.fr
-# est vérifié) ; la clé RESEND_API_KEY des variables GitLab ne sert
-# plus que pour la notification POL JOBS (scripts/notif-poljobs.mjs).
+# Alertes e-mail : envoyées par le webapp (route /api/cron/alertes-jobs,
+# Bearer APP_SECRET, clé Resend du projet Vercel où dataparl.fr est
+# vérifié) ; RESEND_API_KEY des variables GitLab ne sert plus que pour
+# la notification POL JOBS (scripts/notif-poljobs.mjs).
 
 on:
   schedule:
@@ -40,13 +41,13 @@ on:
 
 permissions:
   contents: read
+  id-token: write   # jeton OIDC pour la remise du jeton GitLab (route ci-jeton)
 
 concurrency:
   group: collecte-jobs
   cancel-in-progress: false
 
 env:
-  GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
   SKIP_PROMO_TELEGRAM: "false"   # « true » = promo Telegram sautée (run de test)
 
 jobs:
@@ -54,8 +55,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - name: Masquage du jeton GitLab dans les logs
-        run: echo "::add-mask::$GITLAB_TOKEN"
+      - name: Jeton GitLab (OIDC)
+        run: |
+          set -euo pipefail
+          test -n "$ACTIONS_ID_TOKEN_REQUEST_TOKEN"
+          jeton=$(curl -sSf -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=dataparl-ci" | jq -r .value)
+          test -n "$jeton"
+          code=$(curl -sSf -o /tmp/ci-jeton.json -w "%{http_code}" \
+            -H "x-oidc: $jeton" \
+            "https://www.dataparl.fr/api/cron/ci-jeton")
+          v=$(jq -r '.token // empty' /tmp/ci-jeton.json)
+          rm -f /tmp/ci-jeton.json
+          test -n "$v"
+          echo "::add-mask::$v"
+          {
+            echo "GITLAB_TOKEN<<DPV_SECRET_EOF"
+            echo "$v"
+            echo "DPV_SECRET_EOF"
+          } >> "$GITHUB_ENV"
       - name: Code source (archive GitLab)
         run: |
           set -euo pipefail
@@ -116,7 +134,7 @@ jobs:
           # sha256 de FIREBASE_SERVICE_ACCOUNT ne convient pas : la
           # variable GitLab est le JSON multi-lignes du fichier de clé, la
           # variable Vercel est le même JSON sur une seule ligne, les
-          # empreintes diffèrent (401 sur tous les runs depuis le 13/11).
+          # empreintes diffèrent (401 sur tous les runs du 13 au 17/11).
           test -n "$APP_SECRET"
           code=$(curl -sS -o /tmp/alerte-jobs.json -w "%{http_code}" \
             -H "Authorization: Bearer $APP_SECRET" \
