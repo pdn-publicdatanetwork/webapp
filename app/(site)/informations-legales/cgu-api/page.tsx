@@ -11,13 +11,14 @@ export default function CGUAPI() {
       <HistoriqueTexte versions={VERSIONS.cguApi} />
       <p>
         Ces conditions complètent les <a href="/informations-legales/cgu">conditions générales d&apos;utilisation</a>.
-        La documentation est sur <a href="https://api.dataparl.fr/docs">api.dataparl.fr/docs</a>.
-        Retour à l&apos;API : <a href="https://api.dataparl.fr/">api.dataparl.fr</a>.
+        L&apos;API publique est en pause depuis le 17 novembre 2026 : site et documentation sont retirés (réactivation
+        possible) ; la gestion des clés reste accessible sur{" "}
+        <a href="https://my.dataparl.fr/mon-espace-api">my.dataparl.fr/mon-espace-api</a>.
       </p>
 
       <h2>1. Accès par clé</h2>
       <ul>
-        <li>L&apos;API est gratuite. Chaque appel nécessite une clé personnelle, obtenue sur <a href="https://api.dataparl.fr/request-access">api.dataparl.fr/request-access</a> après avoir lu et accepté les présentes conditions.</li>
+        <li>L&apos;API est gratuite. Chaque appel nécessite une clé personnelle, obtenue après avoir lu et accepté les présentes conditions.</li>
         <li>Une seule clé par compte. Elle peut être révoquée puis remplacée à tout moment depuis l&apos;espace API.</li>
         <li>
           La clé est transmise dans l&apos;en-tête <code>Authorization: Bearer &lt;clé&gt;</code> (ou <code>X-API-Key</code>).
