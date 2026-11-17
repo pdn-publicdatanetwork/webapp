@@ -7,11 +7,12 @@ name: Collecte Jobs
 # à chaque run. Les SECRETS restent dans les variables CI du projet
 # GitLab (source de vérité), lues via l'API au démarrage.
 #
-# Jeton GitLab : embarqué ci-dessous (env GITLAB_TOKEN, scope api du
-# compte pdn-publicdatanetwork). Dépôt PRIVÉ : ne JAMAIS rendre ce
-# repo public sans retirer le jeton. Rotation à prévoir : créer un
-# Project Access Token read_api sur le projet GitLab et remplacer
-# la valeur ici.
+# Jeton GitLab : secret GitHub GITLAB_TOKEN (project access token
+# read_api sur le projet 88469399). ROTATION du 17/11/2026 : l'ancien
+# jeton (scope api complet) était embarqué en clair dans ce fichier
+# alors que le dépôt est PUBLIC ; un tiers s'en est servi pour créer
+# des projets « sonde GPU » sur le compte GitLab. Ne JAMAIS embarquer
+# de jeton en clair ici.
 #
 # Déclenchement : planification 2 fois par jour (12h00 et 18h00
 # Paris, heure d'hiver), « Run workflow » manuel, ou push d'une
@@ -45,7 +46,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  GITLAB_TOKEN: glpat-gZEfmvClp3VV87H3UWwvuGM6MQpvOjEKdTpxN2t3cw8.01.171rzea8f
+  GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
   SKIP_PROMO_TELEGRAM: "false"   # « true » = promo Telegram sautée (run de test)
 
 jobs:
@@ -109,12 +110,16 @@ jobs:
       - name: Alertes e-mail
         run: |
           set -euo pipefail
-          # Jeton = sha256 de FIREBASE_SERVICE_ACCOUNT (secret partagé avec le
-          # webapp ; jamais transmis en clair). APP_SECRET n'est pas encore
-          # posé sur le projet Vercel, la route accepte ce sha256.
-          token=$(printf '%s' "$FIREBASE_SERVICE_ACCOUNT" | sha256sum | cut -d' ' -f1)
+          # Jeton = APP_SECRET, posé à l'identique dans les variables CI
+          # GitLab du projet Jobs et dans les variables Vercel du webapp
+          # (vérifié le 17/11/2026 : la route répond 200 à ce bearer). Le
+          # sha256 de FIREBASE_SERVICE_ACCOUNT ne convient pas : la
+          # variable GitLab est le JSON multi-lignes du fichier de clé, la
+          # variable Vercel est le même JSON sur une seule ligne, les
+          # empreintes diffèrent (401 sur tous les runs depuis le 13/11).
+          test -n "$APP_SECRET"
           code=$(curl -sS -o /tmp/alerte-jobs.json -w "%{http_code}" \
-            -H "Authorization: Bearer $token" \
+            -H "Authorization: Bearer $APP_SECRET" \
             "https://www.dataparl.fr/api/cron/alertes-jobs")
           cat /tmp/alerte-jobs.json; echo
           grep -q '"ok"' /tmp/alerte-jobs.json
