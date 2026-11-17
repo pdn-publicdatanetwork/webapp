@@ -48,7 +48,6 @@ function Decouvre() {
     <div className="df-decouvre">
       <a href="https://www.dataparl.fr">Data<span className="df-hl-jaune">Parl&apos;</span></a>
       <a href="https://jobs.dataparl.fr">Data<span className="df-hl-violet">Parl&apos;</span> Jobs</a>
-      <a href="https://api.dataparl.fr">Data<span className="df-hl-vert">Parl&apos;</span> API</a>
     </div>
   );
 }
