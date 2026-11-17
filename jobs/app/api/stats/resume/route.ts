@@ -28,10 +28,6 @@ export async function GET(req: Request) {
   if (cle && new URL(req.url).searchParams.get("cle") !== cle) {
     return Response.json({ erreur: "clé invalide" }, { status: 401 });
   }
-  const webhook = process.env.SLACK_WEBHOOK_URL;
-  if (!webhook) {
-    return Response.json({ erreur: "SLACK_WEBHOOK_URL absente" }, { status: 500 });
-  }
   try {
     const evenements = await lireEvenements(30);
     const veille = jourParis(1);
@@ -52,6 +48,14 @@ export async function GET(req: Request) {
       lignes.push(`Top pages : ${topPages.map((p) => `${p.chemin} (${p.total})`).join(", ")}`);
     }
     const texte = lignes.join("\n");
+    const webhook = process.env.SLACK_WEBHOOK_URL;
+    if (!webhook) {
+      // Webhook Slack absent du projet : le résumé est quand même calculé (visible
+      // dans les journaux du cron Vercel), mais rien n'est envoyé. On répond 200
+      // pour que le cron quotidien ne remonte pas une erreur chaque matin ;
+      // ajouter SLACK_WEBHOOK_URL au projet Vercel jobs-webapp pour réactiver l'envoi.
+      return Response.json({ ok: false, avertissement: "SLACK_WEBHOOK_URL absente : résumé calculé mais non envoyé", message: texte });
+    }
     const reponse = await fetch(webhook, {
       method: "POST",
       headers: { "content-type": "application/json" },
