@@ -15,9 +15,7 @@ import { AUTH_SUPABASE_URL, secret } from "./env";
 export const CHEMINS_RESEAUX = [
   "/daily", // canaux Telegram et WhatsApp + archives jour par jour
   "/a-propos", // présentation des canaux
-  "/chat", // assistant Telegram
   "/desinscription/wa", // désinscription du Daily WhatsApp
-  "/informations-legales/cgu-chat/tm-bot", // CGU du bot Telegram
 ] as const;
 
 export function estPageReseaux(path: string): boolean {

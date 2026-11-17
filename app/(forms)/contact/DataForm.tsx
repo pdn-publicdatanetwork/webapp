@@ -655,7 +655,6 @@ export default function DataForm({
             <div className="df-decouvre">
               <a href="https://www.dataparl.fr">Data<span className="df-hl-jaune">Parl&apos;</span></a>
               <a href="https://jobs.dataparl.fr">Data<span className="df-hl-violet">Parl&apos;</span> Jobs</a>
-              <a href="https://api.dataparl.fr">Data<span className="df-hl-vert">Parl&apos;</span> API</a>
             </div>
             <div><a className="df-btn" href={retour}>Revenir où vous étiez</a></div>
             <p className="df-note">Retour automatique vers votre page dans quelques secondes.</p>

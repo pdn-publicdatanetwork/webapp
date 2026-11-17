@@ -40,12 +40,11 @@ function useEtatCapsule(): EtatCapsule {
   return etat;
 }
 
-// Les trois sites DataParl', accessibles depuis la capsule (sous-domaines :
+// Les sites DataParl', accessibles depuis la capsule (sous-domaines :
 // la session .dataparl.fr est partagée, pas de reconnexion).
 const SITES = [
   { href: "https://www.dataparl.fr/", nom: "dataparl.fr", icon: "https://www.dataparl.fr/icon.svg" },
   { href: "https://jobs.dataparl.fr/", nom: "jobs.dataparl.fr", icon: "https://jobs.dataparl.fr/icon.svg" },
-  { href: "https://api.dataparl.fr/", nom: "api.dataparl.fr", icon: "https://api.dataparl.fr/icon.svg" },
 ];
 
 export function CapsuleEntete() {
@@ -132,7 +131,6 @@ export function CapsulePied() {
               : <>DataParl&apos; · Mon espace</>}
           </span>
           <nav aria-label="Liens utiles">
-            <a href="https://api.dataparl.fr/docs">Documentation API</a>
             <a href="https://status.dataparl.fr">Statut des services</a>
             <a href="https://www.dataparl.fr/informations-legales">Informations légales</a>
             <a href="/mon-compte/preferences">Supprimer mon compte</a>

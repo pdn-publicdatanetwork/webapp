@@ -14,7 +14,7 @@ export function useHoteMy(): boolean {
 }
 
 // Chemins de l'espace personnel (capsule et pages de compte) : sur ces
-// pages, les modules du site public (chat, crayon, invitation à l'enquête)
+// pages, les modules du site public (crayon, invitation à l'enquête)
 // ne doivent pas apparaître — la capsule est un outil privé.
 export function cheminEspace(chemin: string): boolean {
   return chemin === "/capsule" || chemin.startsWith("/capsule/") ||

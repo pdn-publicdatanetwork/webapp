@@ -4,8 +4,6 @@ import MenuDeconnexion from "./MenuDeconnexion";
 import LiensVigiMixi from "./LiensVigiMixi";
 import BasculeTheme from "./BasculeTheme";
 
-export const API_URL = "https://api.dataparl.fr";
-
 // Liens du menu de navigation (en-tête www).
 const NAV = [
   { href: "/mouvements", label: "Mouvements" },

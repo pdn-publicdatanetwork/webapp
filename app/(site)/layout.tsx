@@ -3,7 +3,6 @@ import PiedDePageRoute from "./jobs/_components/FooterJobs";
 import RetourHaut from "../_components/RetourHaut";
 import CrayonPage from "../_components/CrayonPage";
 import EnqueteInvite from "../_components/EnqueteInvite";
-import ChatWidget from "../_components/ChatWidget";
 
 // Carte DataParl' Jobs de la grille Explorer : palette du module (violet et lavande),
 // dans un fichier séparé (globals.css ne doit plus être modifié directement).
@@ -24,7 +23,6 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       <RetourHaut />
       <CrayonPage />
       <EnqueteInvite />
-      <ChatWidget />
     </div>
   );
 }

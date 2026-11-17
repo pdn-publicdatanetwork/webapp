@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 // les aperçus ne le sont jamais.
 export async function GET() {
   const host = ((await headers()).get("host") ?? "").split(":")[0].toLowerCase();
-  const public_ = host === "www.dataparl.fr" || host === "api.dataparl.fr";
+  const public_ = host === "www.dataparl.fr";
 
   // Sections exclues de l'indexation (moteurs classiques ET IA génératives) :
   // espaces privés, back-office et pages hors périmètre pour le moment (jobs).

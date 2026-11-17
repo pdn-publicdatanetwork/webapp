@@ -38,7 +38,6 @@ const PAGES: [string, string, string][] = [
   ["Turnover des équipes parlementaires", "/questions/turnover-des-equipes", "Combien de temps reste-t-on collaborateur : renouvellement sur 12 mois par chambre et par groupe."],
   ["Méthode", "/methode", "Chaîne de traitement : sources officielles, croisement quotidien, compléments vérifiés."],
   ["Sources", "/methode/sources", "Liste complète des publications officielles derrière chaque donnée."],
-  ["Espace API", "/espace-api", "API publique de DataParl' : documentation, données, clés et conditions d'utilisation."],
   ["Questions fréquentes", "/faq", "Réponses aux questions sur les données et le projet."],
 ];
 
@@ -61,7 +60,6 @@ export function GET() {
     "",
     "# Pour les assistants et les agents",
     "",
-    "- API publique et documentation OpenAPI : https://www.dataparl.fr/espace-api (https://www.dataparl.fr/v1/openapi.json)",
     "- Ce fichier : https://www.dataparl.fr/llms.txt — mise à jour horaire.",
     "- Les effectifs affichés sont mis à jour quotidiennement ; chaque page indique sa date de génération.",
     "- Citer DataParl' revient à citer les publications officielles derrière (voir /methode/sources).",

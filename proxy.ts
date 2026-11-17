@@ -5,15 +5,13 @@ import { ipExempteeMaintenance, maintenanceActive } from "./lib/maintenance";
 import { estPageReseaux, journaliserVueReseaux } from "./lib/vuesReseaux";
 
 // Routage par sous-domaine (un seul déploiement pour tous les hôtes) :
-//   www.dataparl.fr         site public ; /api -> api.dataparl.fr
+//   www.dataparl.fr         site public
 //   dataparl.fr             -> redirection 308 vers www ; exception
 //                           /ads.txt, servi tel quel (voir le matcher)
-//   api.dataparl.fr         /v1/* -> /api/v1/* (l'API elle-même)
-//                           /connexion servie telle quelle (OAuth PKCE sur la même origine)
-//                           /api/* (routes internes des pages) servies telles quelles
-//                           /mon-espace-api -> my.dataparl.fr (308)
-//                           /contact -> forms.dataparl.fr/contact (DataForm', 308)
-//                           tout le reste -> /espace-api/* (site de l'API)
+//   api.dataparl.fr         en pause le 17/11/2026 (code archivé dans le repo
+//                           dataparl-suite, dossier api-archive) : /contact ->
+//                           forms.dataparl.fr (308), /mon-espace-api ->
+//                           my.dataparl.fr (308), le reste -> www.dataparl.fr (308)
 //   jobs.dataparl.fr        DataParl' Jobs sans préfixe : / -> /jobs,
 //                           /proposer et /old-jobs -> /jobs/*, /<uuid>_<slug>
 //                           -> /jobs/<slug> ; /sitemap, /informations-legales,
@@ -125,7 +123,6 @@ const API_MACHINE = [
   /^\/api\/slack\//,
   /^\/api\/cron\//,
   /^\/api\/revalidate$/,
-  /^\/api\/chat-telegram$/,
   /^\/api\/maintenance\/slack$/,
   /^\/api\/csp-rapport$/,
 ];
@@ -170,7 +167,7 @@ export async function proxy(req: NextRequest) {
   }
 
   // ── Porte unique auth.dataparl.fr ─────────────────────────────────────────
-  // /connexion des sites publics (www, api, media, jobs) renvoie à la porte
+  // /connexion des sites publics (www, media, jobs) renvoie à la porte
   // unique hébergée sur auth.dataparl.fr (Firebase Hosting), avec la
   // destination (?suite=) et l'hôte d'origine (?hote=) pour le retour après
   // connexion. Exceptions : les liens magiques en vol (paramètres oobCode /
@@ -178,7 +175,7 @@ export async function proxy(req: NextRequest) {
   // ?equipe=1 (flux GoTrue Slack de l'espace équipe). admin.dataparl.fr garde
   // sa porte locale (Slack, second facteur).
   if (path === "/connexion" &&
-      (host === `www.${DOMAINE}` || host === `api.${DOMAINE}` || host === `media.${DOMAINE}` ||
+      (host === `www.${DOMAINE}` || host === `media.${DOMAINE}` ||
        host === `jobs.${DOMAINE}` || host === `my.${DOMAINE}`) &&
       !["oobCode", "mode", "apiKey"].some((p) => req.nextUrl.searchParams.has(p)) &&
       req.nextUrl.searchParams.get("equipe") !== "1") {
@@ -260,31 +257,18 @@ export async function proxy(req: NextRequest) {
   }
   if (host === DOMAINE) return vers(req, `www.${DOMAINE}`, path, 308);
 
+  // api.dataparl.fr : site et API mis en pause le 17/11/2026 (recentrage sur
+  // les sujets prioritaires ; code archivé dans le repo dataparl-suite, dossier
+  // api-archive). Les adresses avec une destination dédiée continuent de
+  // rediriger : /contact vers forms (DataForm') et /mon-espace-api vers my
+  // (espace clé API personnel). Tout le reste revient vers l'accueil www en
+  // 308 : retirer ce bloc (et le DNS) quand les liens externes seront éteints.
   if (host === `api.${DOMAINE}`) {
-    const url = req.nextUrl.clone();
-    // Contact unifié (DataForm') : servi par forms (domaine dédié), paramètres conservés.
     if (path === "/contact") return vers(req, `forms.${DOMAINE}`, path, 308);
-    if (path === "/v1" || path.startsWith("/v1/")) {
-      url.pathname = `/api${path}`;
-      return NextResponse.rewrite(url);
-    }
-    // L'espace API personnel vit désormais sur my.dataparl.fr (/mon-espace-api
-    // y est servi par la même page) : l'ancienne adresse redirige en 308.
     if (path === "/mon-espace-api" || path.startsWith("/mon-espace-api/")) {
       return vers(req, `my.${DOMAINE}`, path, 308);
     }
-    // Favicon du site de l'API (Σ' encre sur blanc, identique à celle du
-    // module media) : la route /espace-api/icon.svg n'est pas générée par
-    // Next (fichiers de métadonnées dans un route group), on sert celle du
-    // module media, rendue à l'identique.
-    if (path === "/icon.svg" || path === "/apple-icon") {
-      const url = req.nextUrl.clone();
-      url.pathname = `/media${path}`;
-      return NextResponse.rewrite(url);
-    }
-    if (path.startsWith("/api/") || path === "/connexion" || path.startsWith("/espace-api")) return NextResponse.next();
-    url.pathname = `/espace-api${path === "/" ? "" : path}`;
-    return NextResponse.rewrite(url);
+    return vers(req, `www.${DOMAINE}`, "/", 308);
   }
 
   // jobs.dataparl.fr : DataParl' Jobs vit à la racine, sans préfixe /jobs.
@@ -595,7 +579,6 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
       return res;
     }
 
-    if (path === "/api" || path === "/api/") return vers(req, `api.${DOMAINE}`, "/", 308);
     // DataParl' Jobs vit sur son sous-domaine, sans le préfixe /jobs.
     if (path === "/jobs" || path.startsWith("/jobs/")) {
       const cibleJobs = path === "/jobs" ? "/" : path.slice("/jobs".length) || "/";
@@ -623,7 +606,6 @@ if (/^\/assets\/(collab|parl)\/[a-z0-9-]+(\.csv)?$/.test(path)) return NextRespo
       return protege(vers(req, `admin.${DOMAINE}`, nouvelCheminAdmin(cible) ?? cible, 307));
     }
     if (path.startsWith("/webmail")) return protege(vers(req, `webmail.${DOMAINE}`, path.replace(/^\/webmail/, "") || "/", 307));
-    if (path.startsWith("/espace-api")) return vers(req, `api.${DOMAINE}`, path.replace(/^\/espace-api/, "") || "/", 308);
   }
 
   // Pages désactivées ou en brouillon (site public et environnements de test).

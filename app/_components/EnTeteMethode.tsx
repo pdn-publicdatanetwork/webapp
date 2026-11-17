@@ -44,7 +44,7 @@ export function PiedMethode({ historique, extractions }: { historique: { date: s
       </div>
       <p className="meta">
         Publications sous Licence Ouverte 2.0 ; archives depuis 2015. Base DataParl&apos; sous <a href="https://opendatacommons.org/licenses/odbl/1-0/">ODbL 1.0</a>.
-        Détails : <a href="/informations-legales/licences">licences et réutilisation</a>. Besoin des données dans un autre format : <a href="/presse#contact">écrivez-nous</a> ou utilisez l&apos;<a href="https://api.dataparl.fr">API</a>.
+        Détails : <a href="/informations-legales/licences">licences et réutilisation</a>. Besoin des données dans un autre format : <a href="/presse#contact">écrivez-nous</a>.
       </p>
       <h2 id="historique">Historique de la méthode</h2>
       <ul>{historique.map((h) => <li key={h.date}><strong>{dateTitre(h.date)}</strong> : {h.texte}</li>)}</ul>

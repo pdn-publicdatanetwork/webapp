@@ -70,7 +70,7 @@ export default function Licences() {
 
       <h2>Accéder aux données</h2>
       <ul>
-        <li>API avec clé gratuite : <a href="https://api.dataparl.fr">api.dataparl.fr</a> et ses <a href="/informations-legales/cgu-api">conditions d&apos;utilisation</a>.</li>
+        <li>L&apos;API avec clé gratuite est en pause depuis le 17 novembre 2026 ; les données restent accessibles par les exports des fiches. Les <a href="/informations-legales/cgu-api">conditions d&apos;utilisation</a> sont conservées.</li>
       </ul>
 
       <h2>Données personnelles</h2>
