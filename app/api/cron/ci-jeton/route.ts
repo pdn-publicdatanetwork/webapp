@@ -15,6 +15,11 @@ export const maxDuration = 60;
 // uniquement). Rotation future du PAT : POST /personal_access_tokens/:id/rotate
 // côté GitLab puis mise à jour de la ligne SQL, rien d'autre (ni GitHub, ni
 // ce fichier, ni Vercel).
+//
+// Chaque appel portant un jeton est tracé dans public.ci_jeton_journal
+// (etat ok/refus, raison détaillée, claims reçus) pour diagnostiquer un refus
+// sans accès aux logs GitHub Actions. Le journal ne doit jamais faire
+// échouer la remise.
 
 const ISSUER = "https://token.actions.githubusercontent.com";
 const AUDIENCE = "dataparl-ci";
@@ -27,6 +32,17 @@ const b64url = (s: string) => Buffer.from(s.replace(/-/g, "+").replace(/_/g, "/"
 type Jwk = { kid?: unknown; kty?: unknown; n?: unknown; e?: unknown };
 let cacheJwks: { cles: Jwk[]; expire: number } | null = null;
 
+type Refus = { ok: false; raison: string; claims: Record<string, unknown> };
+type Verdict = Refus | { ok: true; claims: Record<string, unknown> };
+
+async function journaliser(etat: string, raison: string, claims: Record<string, unknown>): Promise<void> {
+  try {
+    await authAdmin().from("ci_jeton_journal").insert({ etat, raison, claims });
+  } catch {
+    // jamais bloquant
+  }
+}
+
 async function clesJwks(): Promise<Jwk[]> {
   if (cacheJwks && cacheJwks.expire > Date.now()) return cacheJwks.cles;
   const r = await fetch(`${ISSUER}/.well-known/jwks.json`, { cache: "no-store" });
@@ -36,53 +52,71 @@ async function clesJwks(): Promise<Jwk[]> {
   return cacheJwks.cles;
 }
 
-async function validerJetonsOidc(jetons: string): Promise<boolean> {
+function refus(raison: string, charge: Record<string, unknown>): Refus {
+  return { ok: false, raison, claims: charge };
+}
+
+async function validerJetonsOidc(jetons: string): Promise<Verdict> {
   const parties = jetons.split(".");
-  if (parties.length !== 3 || !parties.every(Boolean)) return false;
+  if (parties.length !== 3 || !parties.every(Boolean)) return refus("format", {});
+  const vide: Record<string, unknown> = {};
   let entete: { alg?: unknown; kid?: unknown };
   let charge: Record<string, unknown>;
   try {
     entete = JSON.parse(b64url(parties[0]).toString("utf8"));
     charge = JSON.parse(b64url(parties[1]).toString("utf8"));
   } catch {
-    return false;
+    return refus("format-json", vide);
   }
-  if (entete.alg !== "RS256" || typeof entete.kid !== "string") return false;
-  const cles = await clesJwks();
+  if (entete.alg !== "RS256" || typeof entete.kid !== "string") return refus("entete", charge);
+  let cles: Jwk[];
+  try {
+    cles = await clesJwks();
+  } catch {
+    return refus("jwks", charge);
+  }
   const jwk = cles.find((c) => c.kid === entete.kid && c.kty === "RSA");
-  if (!jwk || typeof jwk.n !== "string" || typeof jwk.e !== "string") return false;
+  if (!jwk || typeof jwk.n !== "string" || typeof jwk.e !== "string") return refus("cle-inconnue", charge);
   try {
     const cle = createPublicKey({ key: { kty: "RSA", n: jwk.n, e: jwk.e }, format: "jwk" });
     const signatureValide = createVerify("RSA-SHA256")
       .update(`${parties[0]}.${parties[1]}`)
       .verify(cle, b64url(parties[2]));
-    if (!signatureValide) return false;
+    if (!signatureValide) return refus("signature", charge);
   } catch {
-    return false;
+    return refus("signature-erreur", charge);
   }
   const aud = charge.aud;
   const audOk = aud === AUDIENCE || (Array.isArray(aud) && aud.includes(AUDIENCE));
-  if (charge.iss !== ISSUER || !audOk) return false;
-  if (typeof charge.exp !== "number" || charge.exp < Math.floor(Date.now() / 1000)) return false;
-  if (charge.repository !== REPO) return false;
-  if (charge.ref !== REF_AUTORISE) return false;
+  if (charge.iss !== ISSUER) return refus("iss", charge);
+  if (!audOk) return refus("aud", charge);
+  if (typeof charge.exp !== "number" || charge.exp < Math.floor(Date.now() / 1000)) return refus("exp", charge);
+  if (charge.repository !== REPO) return refus("repository", charge);
+  if (charge.ref !== REF_AUTORISE) return refus("ref", charge);
   if (typeof charge.job_workflow_ref !== "string" || !charge.job_workflow_ref.startsWith(PREFIXE_WORKFLOW)) {
-    return false;
+    return refus("job_workflow_ref", charge);
   }
-  return true;
+  return { ok: true, claims: charge };
 }
 
 export async function GET(req: Request) {
   const jetons = req.headers.get("x-oidc") ?? "";
-  if (!jetons || !(await validerJetonsOidc(jetons))) {
-    return NextResponse.json({ error: "non autorisé" }, { status: 401 });
+  if (!jetons) {
+    return NextResponse.json({ error: "non autorisé", raison: "absent" }, { status: 401 });
   }
+  const verdict = await validerJetonsOidc(jetons);
+  if (!verdict.ok) {
+    await journaliser("refus", verdict.raison, verdict.claims);
+    return NextResponse.json({ error: "non autorisé", raison: verdict.raison }, { status: 401 });
+  }
+  await journaliser("ok", "", verdict.claims);
   const { data, error } = await authAdmin()
     .from("ci_secrets")
     .select("valeur")
     .eq("cle", "gitlab_token_jobs")
     .maybeSingle();
   if (error || !data?.valeur) {
+    await journaliser("secret-indisponible", "ci_secrets", {});
     return NextResponse.json({ error: "secret CI indisponible" }, { status: 503 });
   }
   return NextResponse.json({ token: data.valeur });
