@@ -50,7 +50,7 @@ export default function Licences() {
         <li>la normalisation des noms, pour reconnaître une même personne d&apos;une publication à l&apos;autre ;</li>
         <li>la détection des arrivées, départs et transferts, et leur datation ;</li>
         <li>l&apos;historisation depuis 2015 (Sénat) et 2017 (Assemblée nationale), et l&apos;harmonisation des groupes politiques ;</li>
-        <li>la diffusion par le site, les alertes et l&apos;API.</li>
+        <li>la diffusion par le site et les alertes.</li>
       </ul>
 
       <h2>Licence de la base DataParl&apos;</h2>
@@ -70,13 +70,13 @@ export default function Licences() {
 
       <h2>Accéder aux données</h2>
       <ul>
-        <li>L&apos;API avec clé gratuite est en pause depuis le 17 novembre 2026 ; les données restent accessibles par les exports des fiches. Les <a href="/informations-legales/cgu-api">conditions d&apos;utilisation</a> sont conservées.</li>
+        <li>Les données restent accessibles par les exports des fiches.</li>
       </ul>
 
       <h2>Données personnelles</h2>
       <p>
         Les données citent des personnes. Toute réutilisation doit respecter le RGPD et les interdictions posées par
-        les <a href="/informations-legales/cgu-api">conditions de l&apos;API</a> (pas de harcèlement, pas de prospection
+        les <a href="/informations-legales/cgu">conditions d&apos;utilisation</a> (pas de harcèlement, pas de prospection
         commerciale hors activité parlementaire, pas de revente). Voir aussi la page <a href="/informations-legales/confidentialite">Données personnelles</a>.
       </p>
     </>

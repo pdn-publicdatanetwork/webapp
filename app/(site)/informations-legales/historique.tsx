@@ -10,22 +10,24 @@ export type VersionTexte = { date: string; resume?: string };
 // précédentes (reconstituées depuis l'historique du dépôt) ne sont plus
 // affichées ; elles reprennent à compter de cette date.
 export const VERSIONS: Record<string, VersionTexte[]> = {
-  cgu: [{ date: "22 octobre 2026" }],
+  cgu: [{ date: "17 novembre 2026", resume: "retrait des mentions de l'API" }, { date: "22 octobre 2026" }],
   cguApi: [{ date: "22 octobre 2026" }],
   cguChat: [{ date: "22 octobre 2026" }],
   cguSheets: [{ date: "22 octobre 2026" }],
   cguJobs: [{ date: "22 octobre 2026" }],
   confidentialite: [
+    { date: "17 novembre 2026", resume: "retrait des mentions de l'API" },
     { date: "13 novembre 2026", resume: "retrait du carnet presse désormais via le formulaire de contact, sans adresse email en clair" },
     { date: "22 octobre 2026" },
   ],
-  cookies: [{ date: "22 octobre 2026" }],
+  cookies: [{ date: "17 novembre 2026", resume: "retrait de la mention de l'espace API" }, { date: "22 octobre 2026" }],
   licences: [
+    { date: "17 novembre 2026", resume: "retrait des mentions de l'API" },
     { date: "16 novembre 2026", resume: "ajout de la page Photos et logos : détenteurs des images et conditions d'affichage" },
     { date: "22 octobre 2026" },
   ],
   photos: [{ date: "16 novembre 2026" }],
-  mentions: [{ date: "22 octobre 2026" }],
+  mentions: [{ date: "17 novembre 2026", resume: "mise à jour de la liste des sous-domaines" }, { date: "22 octobre 2026" }],
   phishing: [{ date: "23 octobre 2026" }],
 };
 

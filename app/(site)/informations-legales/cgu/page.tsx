@@ -15,8 +15,7 @@ export default function CGU() {
       <p>
         DataParl&apos; recense les collaborateurs des députés, sénateurs et eurodéputés à partir des publications
         officielles, et signale leurs arrivées, départs et transferts. Les présentes conditions encadrent
-        l&apos;utilisation du site, des alertes par email et du compte utilisateur. L&apos;usage de l&apos;API relève en
-        plus des <a href="/informations-legales/cgu-api">conditions d&apos;utilisation de l&apos;API</a>.
+        l&apos;utilisation du site, des alertes par email et du compte utilisateur.
       </p>
       <p>
         <strong>Définition de l&apos;utilisateur.</strong> Au sens des présentes conditions, l&apos;utilisateur désigne toute
@@ -106,11 +105,11 @@ export default function CGU() {
         <li>utiliser les informations ou les adresses pour harceler, menacer ou discriminer les personnes citées ;</li>
         <li>envoyer des sollicitations commerciales sans rapport avec l&apos;activité parlementaire, ou en masse ;</li>
         <li>revendre, céder ou publier les listes d&apos;adresses obtenues ;</li>
-        <li>extraire le site de manière automatisée en dehors de l&apos;API, ou chercher à contourner ses limites ;</li>
+        <li>extraire le site de manière automatisée, ou chercher à contourner ses limites ;</li>
         <li>porter atteinte à la sécurité ou au fonctionnement du service ;</li>
         <li>présenter les informations de façon trompeuse, notamment en les sortant de leur contexte ou de leur date.</li>
       </ul>
-      <p>Un usage contraire à ces règles peut entraîner la suspension du compte ou des clés API concernés.</p>
+      <p>Un usage contraire à ces règles peut entraîner la suspension du compte concerné.</p>
 
       <h2>8. Responsabilité</h2>
       <p>

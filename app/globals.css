@@ -1006,3 +1006,46 @@ html.dark a { transition: color .2s ease; }
   border-color: #6C84B0;
   color: #fff;
 }
+
+/* ===== Centre légal (page d'accueil des informations légales) :
+   badges d'engagement, rubriques en accordéon (<details> natif, donc
+   accessible au clavier et au lecteur d'écran), encart Mon espace et
+   bande de contact. Tout passe par les variables de la charte, le thème
+   sombre suit donc sans règle supplémentaire. ===== */
+.cl-badges { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 4px; }
+.cl-badge { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 14px; font-size: .87rem; font-weight: 500; box-shadow: var(--shadow-sm); }
+.cl-badge::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--jaune); flex: none; }
+.cl-badge.bleu::before { background: var(--bleu); }
+.cl-badge.corail::before { background: var(--corail); }
+.legal .cl-rubrique { border-bottom: 1px solid var(--line); }
+.legal .cl-rubrique:first-of-type { border-top: 1px solid var(--line); margin-top: 22px; }
+.cl-rubrique summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 2px; }
+.cl-rubrique summary::-webkit-details-marker { display: none; }
+.cl-rubrique summary h2 { margin: 0; font-size: 1.45rem; }
+.cl-rubrique summary:hover h2 { color: var(--bleu); }
+.cl-plus { position: relative; width: 16px; height: 16px; flex: none; transition: transform .2s cubic-bezier(.16, 1, .3, 1); }
+.cl-plus::before, .cl-plus::after { content: ""; position: absolute; background: var(--bleu); border-radius: 2px; }
+.cl-plus::before { top: 7px; left: 0; width: 16px; height: 2px; }
+.cl-plus::after { top: 0; left: 7px; width: 2px; height: 16px; }
+.cl-rubrique[open] .cl-plus { transform: rotate(45deg); }
+.cl-corps { padding: 0 2px 22px; }
+.cl-quand { color: var(--muted); font-size: .98rem; margin: 0 0 14px; }
+.cl-docs { display: flex; flex-direction: column; gap: 8px; }
+.cl-doc { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; padding: 14px 18px; border: 1px solid var(--line); background: var(--card); border-radius: var(--radius-card); text-decoration: none; color: var(--ink); box-shadow: var(--shadow-sm); transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.cl-doc:hover { border-color: var(--bleu); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.cl-doc strong { font-weight: 600; font-size: .98rem; flex: none; }
+.cl-resume { color: var(--muted); font-size: .88rem; line-height: 1.45; flex: 1; text-align: right; }
+.cl-fleche { color: var(--muted); flex: none; transition: color .15s ease, transform .15s ease; }
+.cl-doc:hover .cl-fleche { color: var(--bleu); transform: translateX(3px); }
+.cl-acces { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0 0; padding: 12px 16px; background: rgba(255, 210, 63, .14); border: 1px solid rgba(255, 210, 63, .5); border-radius: var(--radius-card); font-size: .92rem; }
+.cl-acces a { color: var(--bleu); font-weight: 600; }
+.cl-bande { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; margin: 34px 0 8px; padding: 28px 30px; background: var(--ink); color: var(--bg); border-radius: 16px; box-shadow: var(--shadow-md); }
+.cl-bande h3 { margin: 0 0 6px; font-size: 1.35rem; color: inherit; }
+.cl-bande p { margin: 0; max-width: 52ch; opacity: .8; font-size: .96rem; }
+.cl-cta { flex: none; display: inline-block; background: var(--jaune); color: #071A41; font-weight: 600; text-decoration: none; border-radius: var(--radius-btn); padding: 11px 22px; }
+.cl-cta:hover { background: var(--jaune); filter: brightness(1.06); }
+@media (max-width: 640px) {
+  .cl-doc { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .cl-resume { text-align: left; }
+  .cl-bande { flex-direction: column; align-items: flex-start; }
+}

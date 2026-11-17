@@ -26,7 +26,7 @@ export default function Cookies() {
       <h2>Ce qui est stocké</h2>
       <p>
         Ces cookies sont posés sur le domaine <code>dataparl.fr</code>, pour qu&apos;une seule connexion vaille sur
-        le site et sur l&apos;espace API.
+        l&apos;ensemble des sites DataParl&apos;.
       </p>
       <table>
         <thead><tr><th>Nom</th><th>Rôle</th><th>Durée</th></tr></thead>
