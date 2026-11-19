@@ -151,7 +151,7 @@ export default async function MixiParl() {
             { "@type": "ListItem", position: 1, name: "Accueil", item: "https://www.dataparl.fr/" },
             { "@type": "ListItem", position: 2, name: "MixiParl'", item: "https://www.dataparl.fr/mixiparl" },
           ],
-        }).replace(/</g, "\u003c") }}
+        }).replace(/</g, "\\u003c") }}
       />
       {/* Annonce display AdSense : emplacement unique de la page, en fin de contenu (charte publicitaire). */}
       <PubGoogle />
