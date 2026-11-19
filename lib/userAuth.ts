@@ -24,8 +24,10 @@ function audDuJeton(token: string): string | null {
 
 // Jeton Firebase → utilisateur Postgres. La vérification du jeton ne révoque
 // pas (les comptes suspendus sont refusés par banned_until, double verrou
-// posé par le cron d'anti-abus côté admin SDK).
-async function utilisateurFirebase(token: string): Promise<User | null> {
+// posé par le cron d'anti-abus côté admin SDK). Exportée pour les routes de
+// téléchargement CSV, qui vérifient le jeton du cookie de session (le même
+// parcourt que celui de l'en-tête Authorization), sans autre différence.
+export async function utilisateurFirebase(token: string): Promise<User | null> {
   const claims = await authFirebase().verifyIdToken(token, false).catch(() => null);
   const email = claims?.email;
   if (!email) return null;
