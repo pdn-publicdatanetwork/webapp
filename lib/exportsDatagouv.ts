@@ -1,5 +1,6 @@
 import { dataQueryTout } from "./data";
 import { utilisateur } from "./userAuth";
+import { entetesSetCookie, utilisateurCookie, type SessionFirebaseCookie } from "./sessionServeur";
 import { NOMS_COMPLETS } from "./partisNoms";
 
 // Moteur des exports CSV publiés sur data.gouv.fr (jeux « Collaborateurs
@@ -285,7 +286,18 @@ export const EXPORTS_PARL: Record<string, ExportDef> = {
 
 // : Réponse CSV générique : verrou compte, CORS www, BOM UTF-8 :
 export async function servirCSV(req: Request, file: string, exportsDisponibles: Record<string, ExportDef>, prefixe: string): Promise<Response> {
-  const user = await utilisateur(req);
+  // Le verrou compte accepte l'en-tête Bearer (clients du site, tableur) ET
+  // le cookie dp-firebase (navigations directes : lien data.gouv.fr, retour
+  // de la porte auth.dataparl.fr vers ?suite=). Sans le cookie, un visiteur
+  // connecté serait renvoyé en boucle au mur : sa navigation ne porte jamais
+  // l'en-tête Authorization. Le cookie n'est utilisé que par cette route.
+  let user = await utilisateur(req);
+  let sessionAPoser: SessionFirebaseCookie | null = null;
+  if (!user) {
+    const deco = await utilisateurCookie(req);
+    user = deco.user;
+    sessionAPoser = deco.sessionAPoser;
+  }
   if (!user) {
     const suite = "/assets/" + prefixe + "/" + encodeURIComponent(file);
     return Response.redirect("https://www.dataparl.fr/acces-ressource?suite=" + encodeURIComponent(suite), 302);
@@ -302,7 +314,7 @@ export async function servirCSV(req: Request, file: string, exportsDisponibles: 
     return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   };
   const csv = "\uFEFF" + def.entetes.join(",") + "\n" + (lignes.length ? lignes.map((l) => l.map(esc).join(",")).join("\n") + "\n" : "");
-  return new Response(csv, {
+  const reponse = new Response(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
       "Cache-Control": "private, no-store",
@@ -310,6 +322,11 @@ export async function servirCSV(req: Request, file: string, exportsDisponibles: 
       "Access-Control-Allow-Origin": "https://www.dataparl.fr",
     },
   });
+  // Session rafraîchie côté serveur (id token expiré) : le nouveau couple
+  // rt/it remplace le cookie courant, sinon le refresh token posé par le
+  // navigateur ne serait plus celui que Firebase vient d'émettre.
+  if (sessionAPoser) for (const c of entetesSetCookie(sessionAPoser, req)) reponse.headers.append("Set-Cookie", c);
+  return reponse;
 }
 
 export function reponseOptions(): Response {
