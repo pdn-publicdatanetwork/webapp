@@ -75,7 +75,7 @@ export default async function DailyIndex({ searchParams }: Props) {
             { "@type": "ListItem", position: 1, name: "Accueil", item: "https://www.dataparl.fr/" },
             { "@type": "ListItem", position: 2, name: "Les mouvements du jour", item: "https://www.dataparl.fr/daily" },
           ],
-        }).replace(/</g, "\u003c") }}
+        }).replace(/</g, "\\u003c") }}
       />
       <h1>Les mouvements <span className="surligne">jour par jour</span></h1>
       <p className="lead">
