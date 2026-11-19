@@ -45,7 +45,7 @@ export function GET() {
   const lignes = [
     "# DataParl'",
     "",
-    "> Qui travaille pour qui au Parlement : collaborateurs parlementaires, mouvements d'équipes et indicateurs pour l'Assemblée nationale, le Sénat et le Parlement européen. Gouvernements et cabinets depuis 2012. Données officielles suivies quotidiennement, historique depuis 2015.",
+    "> DataParl' recense les équipes des députés, sénateurs et eurodéputés et suit chaque matin les mouvements de leurs collaborateurs, à partir des publications officielles. Gouvernements et cabinets depuis 2012. Données officielles suivies quotidiennement, historique depuis 2015.",
     "",
     "# Pages",
     "",
