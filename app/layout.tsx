@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.dataparl.fr"),
   title: { default: "DataParl' : le Parlement, pièce par pièce", template: "%s | DataParl'" },
   description:
-    "Chaque matin, trouvez qui travaille pour un député, un sénateur ou un eurodéputé : équipes, parcours et mouvements quotidiens, d'après les publications officielles.",
+    "Qui travaille pour vos élus ? Assemblée nationale, Sénat et Parlement européen : équipes, parcours et mouvements quotidiens, d'après les publications officielles.",
   applicationName: "DataParl'",
   openGraph: { siteName: "DataParl'", locale: "fr_FR", type: "website" },
   // Cartes de partage (X, LinkedIn, Bluesky, Facebook, messageries) : grande image par défaut.
