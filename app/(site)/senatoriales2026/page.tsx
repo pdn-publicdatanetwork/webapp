@@ -7,9 +7,9 @@ import { libelleElection } from "@/lib/senatorialesClassement";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Sénatoriales 2026 : les nouveaux sénateurs, département par département",
+  title: "Sénatoriales 2026 : les résultats et les sénateurs élus",
   description:
-    "Résultats des sénatoriales 2026 : les nouveaux sénateurs élus et les sortants, pour chaque département renouvelé (métropole et outre-mer). Leur groupe politique, leur fiche, leur équipe de collaborateurs.",
+    "Les résultats des sénatoriales 2026 : sénateurs élus et sortants, département par département, leur groupe politique et leur équipe de collaborateurs.",
   alternates: { canonical: "/senatoriales2026" },
   openGraph: {
     siteName: "DataParl'",
@@ -46,6 +46,17 @@ export default async function Senatoriales2026() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Accueil", item: "https://www.dataparl.fr/" },
+            { "@type": "ListItem", position: 2, name: "Sénatoriales 2026", item: "https://www.dataparl.fr/senatoriales2026" },
+          ],
+        }).replace(/</g, "\\u003c") }}
+      />
       <h1>Sénatoriales 2026 : <span className="surligne">les nouveaux sénateurs</span></h1>
       <p className="lead">
         Le {libelleElection()}, une partie du Sénat a été renouvelée : dans chaque département concerné,
