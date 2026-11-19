@@ -7,8 +7,8 @@ import { slugGouvernement } from "@/lib/gouvernementTypes";
 export const revalidate = 3600;
 
 export const metadata = {
-  title: "Gouvernement et cabinets ministériels",
-  description: "Composition du gouvernement français et membres des cabinets ministériels, d'après le Journal officiel.",
+  title: "Annuaire du gouvernement et des conseillers ministériels",
+  description: "L'annuaire du gouvernement et des cabinets ministériels : composition, directeurs, chefs de cabinet et conseillers, d'après le Journal officiel.",
 };
 
 // /gouv ouvre directement le gouvernement en exercice ; l'historique

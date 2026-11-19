@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { dateTitre, derniersJours, joursPublies, PREMIER_JOUR, type Jour } from "@/lib/daily";
 
 export const metadata: Metadata = {
-  title: "Les mouvements jour par jour",
-  description: "Chaque jour de publication, les arrivées, départs et transferts de collaborateurs parlementaires à l'Assemblée nationale, au Sénat et au Parlement européen.",
+  title: "Les mouvements du jour au Parlement",
+  description: "Qui arrive, qui part, qui change d'équipe au Parlement aujourd'hui : les mouvements du jour, à l'Assemblée nationale, au Sénat et au Parlement européen.",
   alternates: { canonical: "/daily" },
 };
 
@@ -66,6 +66,17 @@ export default async function DailyIndex({ searchParams }: Props) {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Accueil", item: "https://www.dataparl.fr/" },
+            { "@type": "ListItem", position: 2, name: "Les mouvements du jour", item: "https://www.dataparl.fr/daily" },
+          ],
+        }).replace(/</g, "\\u003c") }}
+      />
       <h1>Les mouvements <span className="surligne">jour par jour</span></h1>
       <p className="lead">
         Chaque jour où les listes officielles changent, une page : qui arrive, qui part, qui change d&apos;équipe, à

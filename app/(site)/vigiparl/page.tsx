@@ -12,8 +12,8 @@ import {
 } from "@/lib/stats";
 
 export const metadata: Metadata = {
-  title: { absolute: "VigiParl' : le renouvellement des équipes parlementaires" },
-  description: "Taux de renouvellement (turnover) des équipes de collaborateurs, par élu, groupe et chambre.",
+  title: { absolute: "VigiParl' : le taux de turnover des équipes parlementaires" },
+  description: "Le taux de turnover des équipes de collaborateurs sur 12 mois, élu par élu, par groupe et par chambre (Assemblée nationale, Sénat, Parlement européen).",
   alternates: { canonical: "/vigiparl" },
 };
 export const revalidate = 3600;
@@ -133,6 +133,17 @@ export default async function VigiParl() {
         Dates de publication officielles, archives depuis 2015. {CHAMBRE.europarl} : suivi repris le 8 octobre 2026, indicateurs dès 12 mois de recul.{" "}
         <a href="/vigiparl/methode">La méthode complète, avec un exemple chiffré →</a>
       </p>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Accueil", item: "https://www.dataparl.fr/" },
+            { "@type": "ListItem", position: 2, name: "VigiParl'", item: "https://www.dataparl.fr/vigiparl" },
+          ],
+        }).replace(/</g, "\\u003c") }}
+      />
       {/* Annonce display AdSense : emplacement unique de la page, en fin de contenu (charte publicitaire). */}
       <PubGoogle />
     </>

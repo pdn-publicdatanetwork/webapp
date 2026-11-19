@@ -5,8 +5,8 @@ import Equipes from "./Equipes";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Liste des collaborateurs parlementaires (AN, Sénat, Parlement européen)",
-  description: "La liste des collaborateurs parlementaires français : qui travaille pour quel député, sénateur ou député européen, aujourd'hui et depuis 2015, fiche par collaborateur, listes complètes par chambre, recherche par élu, parti ou groupe.",
+  title: "Annuaire des collaborateurs parlementaires",
+  description: "Qui travaille pour quel député, sénateur ou député européen : l'annuaire des collaborateurs parlementaires, en poste et historisé depuis 2015.",
   alternates: { canonical: "/collab" },
 };
 
