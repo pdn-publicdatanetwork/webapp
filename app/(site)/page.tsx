@@ -18,7 +18,7 @@ const jsonLd = [
     "@type": "WebSite",
     name: "DataParl'",
     url: "https://www.dataparl.fr",
-    description: "DataParl' recense les équipes des députés, sénateurs et eurodéputés et suit chaque matin les mouvements de leurs collaborateurs, à partir des publications officielles.",
+    description: "DataParl' recense les équipes des députés, sénateurs et eurodéputés et suit chaque jour les mouvements de leurs collaborateurs, à partir des publications officielles.",
     inLanguage: "fr-FR",
     potentialAction: {
       "@type": "SearchAction",
@@ -32,7 +32,7 @@ const jsonLd = [
     name: "DataParl'",
     url: "https://www.dataparl.fr",
     logo: "https://www.dataparl.fr/icon.svg",
-    description: "DataParl' recense les équipes des députés, sénateurs et eurodéputés et suit chaque matin les mouvements de leurs collaborateurs, à partir des publications officielles.",
+    description: "DataParl' recense les équipes des députés, sénateurs et eurodéputés et suit chaque jour les mouvements de leurs collaborateurs, à partir des publications officielles.",
     contactPoint: { "@type": "ContactPoint", contactType: "customer support", url: "https://www.dataparl.fr/contact" },
   },
 ];
