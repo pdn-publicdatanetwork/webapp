@@ -145,8 +145,10 @@ export async function sessionFirebase(): Promise<SessionFirebase | null> {
         body: JSON.stringify({ grantType: "refresh_token", refreshToken: s.rt }),
       });
       if (!r.ok) throw new Error("refresh");
+      // securetoken répond en snake_case (id_token, refresh_token, expires_in) :
+      // les clés camelCase n'existent pas, la session était vidée au refresh.
       const j = await r.json();
-      s = { ...s, it: j.idToken, rt: j.refreshToken, exp: Math.floor(Date.now() / 1000 + Number(j.expiresIn ?? 3600)), email: j.email ?? s.email };
+      s = { ...s, it: j.id_token, rt: j.refresh_token, exp: Math.floor(Date.now() / 1000 + Number(j.expires_in ?? 3600)) };
       ecrireCookieSession(s);
     } catch {
       await deconnexionFirebase();
