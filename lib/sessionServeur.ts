@@ -28,6 +28,7 @@ export type SessionFirebaseCookie = {
 };
 
 const CLE = "dp-firebase";
+// (Le cookie est pose par la porte, lib/sessionFirebase.ts et ce module.)
 const TAILLE = 3000; // même découpe que lib/cookieStorage.ts
 const DUREE = 60 * 60 * 24 * 30; // 30 jours, rafraîchie au fil des visites
 
@@ -82,7 +83,7 @@ async function jetonEffectif(s: SessionFirebaseCookie): Promise<{ jeton: string;
       rt: j.refresh_token,
       exp: Math.floor(Date.now() / 1000 + Number(j.expires_in ?? 3600)),
     };
-    return { jeton: j.idToken, sessionAPoser: rafraichie };
+    return { jeton: j.id_token, sessionAPoser: rafraichie };
   } catch {
     return null; // securetoken injoignable : pas de session exploitable
   }
