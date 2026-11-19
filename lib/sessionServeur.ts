@@ -28,6 +28,7 @@ export type SessionFirebaseCookie = {
 };
 
 const CLE = "dp-firebase";
+// (Le cookie est pose par la porte, lib/sessionFirebase.ts et ce module.)
 const TAILLE = 3000; // même découpe que lib/cookieStorage.ts
 const DUREE = 60 * 60 * 24 * 30; // 30 jours, rafraîchie au fil des visites
 
