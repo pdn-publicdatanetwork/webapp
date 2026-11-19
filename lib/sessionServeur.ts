@@ -72,14 +72,15 @@ async function jetonEffectif(s: SessionFirebaseCookie): Promise<{ jeton: string;
       body: JSON.stringify({ grantType: "refresh_token", refreshToken: s.rt }),
     });
     if (!r.ok) return null; // refresh refusé : jeton révoqué, compte désactivé…
-    const j = (await r.json()) as { idToken?: string; refreshToken?: string; expiresIn?: string | number; email?: string };
-    if (!j.idToken || !j.refreshToken) return null;
+    // L'API securetoken répond en snake_case (id_token, refresh_token,
+    // expires_in) : les clés camelCase n'existent pas.
+    const j = (await r.json()) as { id_token?: string; refresh_token?: string; expires_in?: string | number };
+    if (!j.id_token || !j.refresh_token) return null;
     const rafraichie: SessionFirebaseCookie = {
       ...s,
-      it: j.idToken,
-      rt: j.refreshToken,
-      exp: Math.floor(Date.now() / 1000 + Number(j.expiresIn ?? 3600)),
-      email: j.email ?? s.email,
+      it: j.id_token,
+      rt: j.refresh_token,
+      exp: Math.floor(Date.now() / 1000 + Number(j.expires_in ?? 3600)),
     };
     return { jeton: j.idToken, sessionAPoser: rafraichie };
   } catch {
