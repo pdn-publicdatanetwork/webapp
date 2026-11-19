@@ -83,7 +83,7 @@ async function jetonEffectif(s: SessionFirebaseCookie): Promise<{ jeton: string;
       rt: j.refresh_token,
       exp: Math.floor(Date.now() / 1000 + Number(j.expires_in ?? 3600)),
     };
-    return { jeton: j.idToken, sessionAPoser: rafraichie };
+    return { jeton: j.id_token, sessionAPoser: rafraichie };
   } catch {
     return null; // securetoken injoignable : pas de session exploitable
   }
