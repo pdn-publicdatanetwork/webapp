@@ -12,8 +12,8 @@ import {
 } from "@/lib/stats";
 
 export const metadata: Metadata = {
-  title: { absolute: "MixiParl' : la mixité des équipes parlementaires" },
-  description: "Le taux de mixité des équipes de collaborateurs parlementaires, par élu, groupe et chambre.",
+  title: { absolute: "MixiParl' : le taux de mixité des équipes parlementaires" },
+  description: "Le taux de mixité des équipes de collaborateurs parlementaires : part de femmes et d'hommes, élu par élu, par groupe et par chambre.",
   alternates: { canonical: "/mixiparl" },
 };
 export const revalidate = 3600;
@@ -142,6 +142,17 @@ export default async function MixiParl() {
         Parlement européen : suivi en pause.{" "}
         <a href="/mixiparl/methode">La méthode complète, avec des exemples →</a>
       </p>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Accueil", item: "https://www.dataparl.fr/" },
+            { "@type": "ListItem", position: 2, name: "MixiParl'", item: "https://www.dataparl.fr/mixiparl" },
+          ],
+        }).replace(/</g, "\u003c") }}
+      />
       {/* Annonce display AdSense : emplacement unique de la page, en fin de contenu (charte publicitaire). */}
       <PubGoogle />
     </>
