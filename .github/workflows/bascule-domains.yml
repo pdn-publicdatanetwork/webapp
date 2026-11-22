@@ -65,7 +65,7 @@ jobs:
           aide="Authorization: Bearer $CF_TOKEN"
           echo "===== INVENTAIRE AVANT"
           curl -fsS -H "$aide" "$api" -o avant.json
-          jq -r '.result[] | [.hostname, .service] | @tsv' avant.json | tee inventaire_avant.txt
+          jq -r '.result[] | [.id, .hostname, .service] | @tsv' avant.json | tee inventaire_avant.txt
           cible=""
           while IFS=$'\t' read -r hid hname service; do
             [ "$service" = "dataparl-maintenance" ] || continue
@@ -82,7 +82,7 @@ jobs:
           done < inventaire_avant.txt
           echo "===== INVENTAIRE APRES"
           curl -fsS -H "$aide" "$api" -o apres.json
-          jq -r '.result[] | [.hostname, .service] | @tsv' apres.json | tee inventaire_apres.txt
+          jq -r '.result[] | [.id, .hostname, .service] | @tsv' apres.json | tee inventaire_apres.txt
       - name: Verification sur les vrais domaines
         run: |
           {
