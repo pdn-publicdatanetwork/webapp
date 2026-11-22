@@ -140,6 +140,12 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
   const motif = !f.actif ? motifCourt(f.motif_fin_mandat) : "";
   const ficheSuppleant = f.suppleant_id ? await parlementaireDepuisId(f.suppleant_id).catch(() => null) : null;
   const nomSuppleant = f.suppleant || (ficheSuppleant ? prenomNom(ficheSuppleant.prenom, ficheSuppleant.nom) : "");
+  // Fiches des députés remplacés (art. LO176 du Code électoral) : chaque
+  // mandat de remplacement porte l'identifiant du remplacé (remplace_id),
+  // alimenté par le pipeline à partir de l'open data de l'Assemblée.
+  const remplacesIds = [...new Set(mandats.filter((m) => m.chambre === "assemblee" && m.remplace_id).map((m) => m.remplace_id!))];
+  const fichesRemplaces = await Promise.all(remplacesIds.map((r) => parlementaireDepuisId(r).catch(() => null)));
+  const remplaces = new Map(remplacesIds.map((id, i) => [id, fichesRemplaces[i]] as const));
   // Période affichée dans l'en-tête : en exercice, ou mandat complet avec la
   // date exacte de fin (gabarit : « De juin 2002 au 19 novembre 2026 »).
   const periodeAffichee = f.actif
@@ -318,6 +324,11 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
             }
             if (!m) return null;
             const pendant = appartenances.filter((a) => a.chambre === m.chambre && chevauche(a, m, 7) && (!m.elu_id || a.elu_id === m.elu_id));
+            // Mandat de remplacement (art. LO176 : suppléant d'un député décédé,
+            // démissionnaire...) : cause_debut officielle de l'Assemblée et fiche
+            // du remplacé pour la mention « Remplace … ».
+            const causeDebut = (m.cause_debut || "").toLowerCase();
+            const remplace = causeDebut.startsWith("remplacement") && m.remplace_id ? remplaces.get(m.remplace_id) ?? null : null;
             const groupes = successifs(pendant.filter((a) => a.type === "groupe"));
             // Hors mandat en cours, on écarte les passages de moins de 15 jours (suppléances).
             const organes = fusionner(pendant.filter((a) => a.type !== "groupe")).filter((a) => !m.fin || !a.fin || chevauche(a, a, 15));
@@ -336,6 +347,17 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
                   </span>
                   <span className="meta">{periodeMandat(m)}</span>
                 </p>
+                {remplace && (
+                  <p className="notice-suite">
+                    Remplace{" "}
+                    {remplace.slug !== f.slug
+                      ? <a href={`/parlementaires/${encodeURIComponent(remplace.slug)}`}>{prenomNom(remplace.prenom, remplace.nom)}</a>
+                      : prenomNom(remplace.prenom, remplace.nom)}
+                    {remplace.date_deces && causeDebut.includes("décédé")
+                      ? `, ${remplace.civilite === "Mme" ? "décédée" : "décédé"} le ${jourMoisAnnee(remplace.date_deces)}`
+                      : ""}
+                  </p>
+                )}
                 {groupes.length > 0 && (
                   <p className="meta" style={{ margin: "2px 0" }}>
                     {groupes.map((g, j) => <span key={j}>{j ? " puis " : "Groupe "}{g}</span>)}
