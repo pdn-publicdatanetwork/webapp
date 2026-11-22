@@ -1,2 +1,1 @@
-trigger deploy 2026-11-22T13:19:45.202Z
-(fix firebase-admin: compat flag experimentalAllowEvalAlways)
+trigger deploy shim dp-firebase-admin (REST/WebCrypto, alias DEPLOY_CIBLE=cloudflare) 2026-11-22T13:32:12.588Z

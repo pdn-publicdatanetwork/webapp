@@ -1,0 +1,12 @@
+{
+  "name": "dp-firebase-admin",
+  "version": "1.0.0",
+  "description": "Shim REST/WebCrypto du SDK Firebase Admin pour Cloudflare Workers (DataParl): app, auth (verifyIdToken, generateSignInWithEmailLink), firestore (REST). Alias via turbopack.resolveAlias, uniquement lors des builds Cloudflare (DEPLOY_CIBLE=cloudflare).",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./app": "./src/app.mjs",
+    "./auth": "./src/auth.mjs",
+    "./firestore": "./src/firestore.mjs"
+  }
+}
