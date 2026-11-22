@@ -1,0 +1,121 @@
+/* Fiche parlementaire « style notice » (gabarit validé).
+   Feuille dédiée à la page /parlementaires/[id], importée par page.tsx.
+   Uniquement des variables de la charte (globals.css) : rien d'inventé,
+   compatible clair et sombre via prefers-color-scheme. */
+
+/* En-tête : photo (avec crédit dessous) à gauche, identité en regard, tout en haut. */
+.entete-elu {
+  align-items: flex-start;
+  gap: 28px;
+}
+.photo-col {
+  margin: 0;
+  flex: none;
+}
+.photo-col figcaption {
+  margin-top: 6px;
+  font-size: 0.78rem;
+}
+.photo-col figcaption a {
+  color: var(--muted);
+  text-decoration: none;
+}
+.photo-col figcaption a:hover,
+.photo-col figcaption a:focus-visible {
+  color: var(--bleu);
+  text-decoration: underline;
+}
+
+/* Statut en puces fines : titre, circonscription, groupe. */
+ul.statut-puces {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 0;
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  color: var(--ink);
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+ul.statut-puces > li + li::before {
+  content: "•";
+  margin: 0 9px;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+/* Liens secondaires en pastilles discrètes (pattern des nav-liens du site). */
+ul.liens-secondaires {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 12px;
+  padding: 0;
+  list-style: none;
+}
+ul.liens-secondaires a {
+  display: inline-block;
+  padding: 4px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 400;
+  text-decoration: none;
+}
+ul.liens-secondaires a:hover,
+ul.liens-secondaires a:focus-visible {
+  border-color: var(--bleu);
+  color: var(--bleu);
+}
+
+/* Chiffres clés de la fiche : filet à gauche, sans carte. */
+.chiffres.fiche {
+  gap: 14px 36px;
+  margin: 20px 0 30px;
+}
+.chiffres.fiche div {
+  padding: 0 0 4px 14px;
+  border: 0;
+  border-left: 2px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+.chiffres.fiche strong {
+  font-size: 1.5rem;
+}
+
+/* Parcours « notice » : une entrée par mandat, libellé à gauche, période à droite. */
+ol.parcours-notice {
+  border-left: 0;
+  margin: 8px 0 4px;
+}
+ol.parcours-notice > li {
+  position: static;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+ol.parcours-notice > li:last-child {
+  border-bottom: 0;
+}
+ol.parcours-notice > li::before {
+  content: none;
+}
+ol.parcours-notice .parcours-titre {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4px 16px;
+  flex-wrap: wrap;
+}
+ol.parcours-notice .parcours-titre .meta {
+  white-space: normal;
+}
+
+/* Zébrage discret du tableau de l'équipe (les lignes paires, clair et sombre). */
+table.stats-zebres tbody tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--ink) 3%, transparent);
+}
