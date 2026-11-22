@@ -26,8 +26,10 @@ type Props = { params: Promise<{ id: string }> };
 // exposant unicode plutôt que <sup> : le texte reste copiable et sélectionnable).
 const ordinaux = (s: string) => s.replace(/\b1re\b/g, "1ʳᵉ").replace(/(\d+)e\b/g, "$1ᵉ");
 
-// Date ISO du référentiel (2026-11-19) en JJ/MM/AAAA pour les repères d'état civil.
-const fmtDate = (iso: string) => { const p = iso.split("-"); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso; };
+// Dates complètes du référentiel en toutes lettres (1961-03-16 -> « 16 mars
+// 1961 ») : état civil et jour exact de fin de mandat (gabarit « notice »).
+const dateLongue = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+const jourMoisAnnee = (iso: string) => (iso ? (iso.length === 4 ? moisAnnee(iso) : dateLongue.format(new Date(iso))) : "");
 
 // Motif de fin de mandat en mention courte pour la ligne de période (champ
 // motif_fin_mandat : causeFin de l'Assemblée, « Motif fin de mandat » du Sénat).
@@ -88,27 +90,6 @@ const TITRE: Record<string, [string, string]> = {
 const titre = (f: Pick<Parlementaire, "chambre" | "civilite">) => TITRE[f.chambre][f.civilite === "Mme" ? 1 : 0];
 const ancien = (f: Pick<Parlementaire, "civilite">) => (f.civilite === "Mme" ? "Ancienne" : "Ancien");
 
-// Repères de l'en-tête : naissance, décès éventuel, suppléant (avec lien vers
-// sa fiche quand il a lui-même une fiche parlementaire) et identifiant public.
-function reperesElu(f: Parlementaire, ficheSuppleant: Parlementaire | null): ReactNode[] {
-  const r: ReactNode[] = [];
-  if (f.date_naissance) r.push(`${f.civilite === "Mme" ? "Née" : "Né"} le ${fmtDate(f.date_naissance)}`);
-  if (f.date_deces) r.push(`${f.civilite === "Mme" ? "décédée" : "décédé"} le ${fmtDate(f.date_deces)}`);
-  const nomSuppleant = f.suppleant || (ficheSuppleant ? prenomNom(ficheSuppleant.prenom, ficheSuppleant.nom) : "");
-  if (nomSuppleant) {
-    r.push(
-      <>
-        {f.civilite === "Mme" ? "Suppléante" : "Suppléant"} :{" "}
-        {ficheSuppleant && ficheSuppleant.slug !== f.slug
-          ? <a href={`/parlementaires/${encodeURIComponent(ficheSuppleant.slug)}`}>{nomSuppleant}</a>
-          : nomSuppleant}
-      </>
-    );
-  }
-  r.push(`identifiant : ${f.elu_id}`);
-  return r;
-}
-
 function ListeOrganes({ items }: { items: Appartenance[] }) {
   if (!items.length) return null;
   return (
@@ -152,17 +133,56 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
   // (ex. député devenu sénateur) est déjà résumée par ses mandats ci-dessous,
   // et son URL renvoie vers la fiche active).
   const autres = fiches.filter((x) => x.chambre !== f.chambre && x.actif);
-  // Motif de fin de mandat, en mention courte, pour la ligne de période des
-  // mandats clos. Suppléant : fiche parlementaire éventuelle, pour le lien.
+  // Motif de fin de mandat en mention courte (causeFin de l'Assemblée,
+  // « Motif fin de mandat » du Sénat) : il alimente la ligne de précision de
+  // l'en-tête et la mention de remplacement du parcours, jamais la période.
+  // Fiche du suppléant : lien depuis le parcours (art. LO176 du Code électoral).
   const motif = !f.actif ? motifCourt(f.motif_fin_mandat) : "";
   const ficheSuppleant = f.suppleant_id ? await parlementaireDepuisId(f.suppleant_id).catch(() => null) : null;
-  const reperes = reperesElu(f, ficheSuppleant);
-  // Période affichée dans l'en-tête : en exercice, mandat complet ou fin seule.
+  const nomSuppleant = f.suppleant || (ficheSuppleant ? prenomNom(ficheSuppleant.prenom, ficheSuppleant.nom) : "");
+  // Période affichée dans l'en-tête : en exercice, ou mandat complet avec la
+  // date exacte de fin (gabarit : « De juin 2002 au 19 novembre 2026 »).
   const periodeAffichee = f.actif
     ? `En fonction depuis ${moisAnnee(dernierDebut(mandats, f))}`
     : f.fin_mandat
-      ? (f.premier_mandat ? `Mandat de ${moisAnnee(f.premier_mandat)} à ${moisAnnee(f.fin_mandat)}${motif ? `, ${motif}` : ""}` : `Mandat terminé en ${moisAnnee(f.fin_mandat)}${motif ? `, ${motif}` : ""}`)
+      ? (f.premier_mandat ? `De ${moisAnnee(f.premier_mandat)} au ${jourMoisAnnee(f.fin_mandat)}` : `Mandat terminé le ${jourMoisAnnee(f.fin_mandat)}`)
       : "";
+  // Précisions sous la période, en couleur d'encre, séparées par des puces
+  // fines (gabarit) : décès en toutes lettres, invalidation en alerte, autre
+  // motif de fin sauf les fins ordinaires déjà lisibles dans la période.
+  const FIN_ORDINAIRE = new Set(["fin de législature", "non-réélection", "non-candidature à sa succession", "cessation de mandat"]);
+  const precision: ReactNode[] = [];
+  if (!f.actif) {
+    if (motif === "décès" || f.date_deces) {
+      precision.push(`${f.civilite === "Mme" ? "Décédée" : "Décédé"} le ${jourMoisAnnee(f.date_deces || f.fin_mandat)}`);
+    } else if (motif === "invalidation de l'élection par le Conseil constitutionnel") {
+      precision.push(<span className="alerte-texte">Élection invalidée</span>);
+      precision.push(<>décision du <a href="https://www.conseil-constitutionnel.fr" target="_blank" rel="noopener noreferrer">Conseil constitutionnel</a></>);
+    } else if (motif && !FIN_ORDINAIRE.has(motif)) {
+      precision.push(motif.charAt(0).toUpperCase() + motif.slice(1));
+    }
+  }
+  // Encadré « Repères » (gabarit notice) : état civil, dernier groupe connu de
+  // la chambre et identifiant public, sur des lignes dt/dd zébrées.
+  const groupesChambre = appartenances
+    .filter((a) => a.chambre === f.chambre && a.type === "groupe" && (a.sigle || a.libelle))
+    .sort((a, b) => (a.debut || "").localeCompare(b.debut || ""));
+  const dernierGroupe = groupesChambre[groupesChambre.length - 1];
+  const premierMandatAffiche = f.premier_mandat || mandats.map((m) => m.debut).filter(Boolean).sort()[0] || "";
+  const derFin = f.fin_mandat || [...mandats].sort((a, b) => (b.fin || b.debut).localeCompare(a.fin || a.debut))[0]?.fin || "";
+  const lignesReperes: [string, ReactNode][] = [];
+  if (f.date_naissance) lignesReperes.push([f.civilite === "Mme" ? "Née le" : "Né le", jourMoisAnnee(f.date_naissance)]);
+  if (f.date_deces) lignesReperes.push([f.civilite === "Mme" ? "Décédée le" : "Décédé le", jourMoisAnnee(f.date_deces)]);
+  if (dernierGroupe) {
+    lignesReperes.push([f.actif ? "Groupe" : "Dernier groupe", <>
+      {dernierGroupe.sigle || dernierGroupe.libelle}{dernierGroupe.debut ? `, depuis ${dernierGroupe.debut.slice(0, 4)}` : ""}
+    </>]);
+  }
+  lignesReperes.push(["Identifiant", f.elu_id]);
+  const resumeFiche = mandats.length > 0
+    ? `${mandats.length} mandat${mandats.length > 1 ? "s" : ""} parlementaire${mandats.length > 1 ? "s" : ""}`
+      + (premierMandatAffiche ? (f.actif ? `, depuis ${moisAnnee(premierMandatAffiche)}` : derFin ? `, de ${moisAnnee(premierMandatAffiche)} à ${jourMoisAnnee(derFin)}` : "") : "")
+    : "";
   // Parcours chronologique unique : mandats parlementaires et fonctions
   // gouvernementales, du plus récent au plus ancien.
   type Etape = { mandat: Mandat | null; gouvern: Ministre | null };
@@ -223,12 +243,10 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
             {f.actif && f.groupe && <li>Groupe {f.groupe}</li>}
           </ul>
           {periodeAffichee && <p className="meta" style={{ margin: "0 0 12px" }}>{periodeAffichee}</p>}
-          {reperes.length > 0 && (
-            <p className="meta" style={{ margin: "0 0 12px" }}>
-              {reperes.map((r, i) => (
-                <span key={i}>{i > 0 ? ", " : ""}{r}</span>
-              ))}
-            </p>
+          {precision.length > 0 && (
+            <ul className="ligne-motif-fin">
+              {precision.map((p, i) => <li key={i}>{p}</li>)}
+            </ul>
           )}
           <ul className="liens-secondaires">
             {f.url_officielle && <li><a href={f.url_officielle}>Fiche officielle</a></li>}
@@ -246,141 +264,172 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
       </div>
       <CrayonEdition personneId={f.personne_id} nom={nom} />
 
-      <p className="lead" style={{ marginBottom: 0 }}>
-        {nom}, {f.actif ? titre(f).toLowerCase() : `${ancien(f).toLowerCase()} ${titre(f).toLowerCase()}`}
-        {f.circonscription && f.chambre !== "europarl" ? ` pour ${ordinaux(f.circonscription)}` : ""}
-        {f.actif && f.groupe ? ` (groupe ${f.groupe})` : ""} : ici se trouvent son équipe de collaborateurs
-        parlementaires, ses mandats et commissions et les mouvements de son cabinet.
-      </p>
+      <div className="grille-fiche">
+        <div className="col-principale">
+        <p className="lead" style={{ marginBottom: 0 }}>
+          {nom}, {f.actif ? titre(f).toLowerCase() : `${ancien(f).toLowerCase()} ${titre(f).toLowerCase()}`}
+          {f.circonscription && f.chambre !== "europarl" ? ` pour ${ordinaux(f.circonscription)}` : ""}
+          {f.actif && f.groupe ? ` (groupe ${f.groupe})` : ""} : ici se trouvent son équipe de collaborateurs
+          parlementaires, ses mandats et commissions et les mouvements de son cabinet.
+        </p>
 
-      <div className="chiffres fiche">
-        {stats && <>
-          {f.chambre === "europarl" && !stats.premier_depart ? (
+        <div className="chiffres fiche">
+          {stats && <>
+            {f.chambre === "europarl" && !stats.premier_depart ? (
+              <div>
+                <strong>–</strong>
+                <span><a href="/vigiparl">VigiParl&apos;</a>, renouvellement : suivi repris le 8 octobre 2026, taux disponible avec 12 mois de recul</span>
+              </div>
+            ) : (
+              <div>
+                <strong style={{ color: "var(--vigi)" }}>{pct(tauxTurnover(stats))}</strong>
+                <span><a href="/vigiparl">VigiParl&apos;</a>, renouvellement sur 12 mois ({stats.departs_12m} départ{stats.departs_12m > 1 ? "s" : ""})</span>
+              </div>
+            )}
             <div>
-              <strong>–</strong>
-              <span><a href="/vigiparl">VigiParl&apos;</a>, renouvellement : suivi repris le 8 octobre 2026, taux disponible avec 12 mois de recul</span>
+              <strong style={{ color: "var(--mixi)" }}>{pct(partFemmes(stats))}</strong>
+              <span><a href="/mixiparl">MixiParl&apos;</a>, de femmes ({stats.femmes} F, {stats.hommes} H{indetermines > 0 ? `, ${indetermines} ind.` : ""})</span>
             </div>
-          ) : (
+          </>}
+          {nbCollabs > 0 && (
             <div>
-              <strong style={{ color: "var(--vigi)" }}>{pct(tauxTurnover(stats))}</strong>
-              <span><a href="/vigiparl">VigiParl&apos;</a>, renouvellement sur 12 mois ({stats.departs_12m} départ{stats.departs_12m > 1 ? "s" : ""})</span>
+              <strong>{nbCollabs}</strong>
+              <span><a href={`/parlementaires/${encodeURIComponent(f.slug)}/historique`}>collaborateurs{depuis ? ` depuis ${depuis.slice(0, 4)}` : ""}</a>, toutes chambres</span>
             </div>
           )}
-          <div>
-            <strong style={{ color: "var(--mixi)" }}>{pct(partFemmes(stats))}</strong>
-            <span><a href="/mixiparl">MixiParl&apos;</a>, de femmes ({stats.femmes} F, {stats.hommes} H{indetermines > 0 ? `, ${indetermines} ind.` : ""})</span>
-          </div>
-        </>}
-        {nbCollabs > 0 && (
-          <div>
-            <strong>{nbCollabs}</strong>
-            <span><a href={`/parlementaires/${encodeURIComponent(f.slug)}/historique`}>collaborateurs{depuis ? ` depuis ${depuis.slice(0, 4)}` : ""}</a>, toutes chambres</span>
-          </div>
-        )}
-      </div>
+        </div>
 
-      <h2>Parcours parlementaire et gouvernemental</h2>
-      <ol className="parcours parcours-notice">
-        {chrono.map(({ mandat: m, gouvern: g }, i) => {
-          if (g) {
+        <h2>Parcours parlementaire et gouvernemental</h2>
+        <ol className="parcours parcours-notice">
+          {chrono.map(({ mandat: m, gouvern: g }, i) => {
+            if (g) {
+              return (
+                <li key={`gouv-${g.debut}-${i}`}>
+                  <p className="parcours-titre">
+                    <span>
+                      <strong>{g.fonction}</strong>
+                      {g.portefeuille ? `, ${g.portefeuille}` : ""}
+                    </span>
+                    <span className="meta">gouvernement {g.gouvernement}, {libellePeriode({ debut: g.debut, debut_connu: true, fin: g.fin, fin_connue: !!g.fin, en_cours: !g.fin })}</span>
+                  </p>
+                  <p className="meta" style={{ margin: "4px 0" }}><a href={"/gouv/m/" + encodeURIComponent(g.id)}>Voir la fiche gouvernement et le cabinet</a></p>
+                </li>
+              );
+            }
+            if (!m) return null;
+            const pendant = appartenances.filter((a) => a.chambre === m.chambre && chevauche(a, m, 7) && (!m.elu_id || a.elu_id === m.elu_id));
+            const groupes = successifs(pendant.filter((a) => a.type === "groupe"));
+            // Hors mandat en cours, on écarte les passages de moins de 15 jours (suppléances).
+            const organes = fusionner(pendant.filter((a) => a.type !== "groupe")).filter((a) => !m.fin || !a.fin || chevauche(a, a, 15));
+            const fiche = fiches.find((x) => x.chambre === m.chambre);
+            // Mandat clos à l'Assemblée hors fin de législature : remplacement
+            // par le suppléant (art. LO176 du Code électoral), mots du gabarit.
+            const remplacement = m.chambre === "assemblee" && f.chambre === "assemblee" && !f.actif
+              && !!m.fin && m.fin === f.fin_mandat && !!motif && motif !== "fin de législature";
             return (
-              <li key={`gouv-${g.debut}-${i}`}>
+              <li key={`${m.chambre}-${m.debut}-${i}`}>
                 <p className="parcours-titre">
                   <span>
-                    <strong>{g.fonction}</strong>
-                    {g.portefeuille ? `, ${g.portefeuille}` : ""}
+                    <strong>{ordinaux(m.libelle)}</strong>
+                    {m.circonscription && m.chambre !== "europarl" ? `, ${ordinaux(m.circonscription)}` : ""}
+                    {fiche && fiche.slug !== f.slug && <>, <a href={`/parlementaires/${encodeURIComponent(fiche.slug)}`}>voir la fiche</a></>}
                   </span>
-                  <span className="meta">gouvernement {g.gouvernement}, {libellePeriode({ debut: g.debut, debut_connu: true, fin: g.fin, fin_connue: !!g.fin, en_cours: !g.fin })}</span>
+                  <span className="meta">{periodeMandat(m)}</span>
                 </p>
-                <p className="meta" style={{ margin: "4px 0" }}><a href={"/gouv/m/" + encodeURIComponent(g.id)}>Voir la fiche gouvernement et le cabinet</a></p>
+                {groupes.length > 0 && (
+                  <p className="meta" style={{ margin: "2px 0" }}>
+                    {groupes.map((g, j) => <span key={j}>{j ? " puis " : "Groupe "}{g}</span>)}
+                  </p>
+                )}
+                {remplacement && (
+                  <p className="notice-suite">
+                    Élection suivie du remplacement par le suppléant{nomSuppleant ? <>
+                      {", "}
+                      {ficheSuppleant && ficheSuppleant.slug !== f.slug
+                        ? <a href={`/parlementaires/${encodeURIComponent(ficheSuppleant.slug)}`}>{nomSuppleant}</a>
+                        : nomSuppleant}
+                    </> : ""} (art. LO176 du Code électoral)
+                  </p>
+                )}
+                {organes.length > 0 && (
+                  <details open={!m.fin}>
+                    <summary>{organes.length} commission{organes.length > 1 ? "s" : ""} et délégation{organes.length > 1 ? "s" : ""}</summary>
+                    <ListeOrganes items={organes} />
+                  </details>
+                )}
               </li>
             );
-          }
-          if (!m) return null;
-          const pendant = appartenances.filter((a) => a.chambre === m.chambre && chevauche(a, m, 7) && (!m.elu_id || a.elu_id === m.elu_id));
-          const groupes = successifs(pendant.filter((a) => a.type === "groupe"));
-          // Hors mandat en cours, on écarte les passages de moins de 15 jours (suppléances).
-          const organes = fusionner(pendant.filter((a) => a.type !== "groupe")).filter((a) => !m.fin || !a.fin || chevauche(a, a, 15));
-          const fiche = fiches.find((x) => x.chambre === m.chambre);
-          return (
-            <li key={`${m.chambre}-${m.debut}-${i}`}>
-              <p className="parcours-titre">
-                <span>
-                  <strong>{m.libelle}</strong>
-                  {m.circonscription && m.chambre !== "europarl" ? `, ${ordinaux(m.circonscription)}` : ""}
-                  {fiche && fiche.slug !== f.slug && <>, <a href={`/parlementaires/${encodeURIComponent(fiche.slug)}`}>voir la fiche</a></>}
-                </span>
-                <span className="meta">{periodeMandat(m)}</span>
-              </p>
-              {groupes.length > 0 && (
-                <p className="meta" style={{ margin: "2px 0" }}>
-                  {groupes.map((g, j) => <span key={j}>{j ? " puis " : "Groupe "}{g}</span>)}
-                </p>
-              )}
-              {organes.length > 0 && (
-                <details open={!m.fin}>
-                  <summary>{organes.length} commission{organes.length > 1 ? "s" : ""} et délégation{organes.length > 1 ? "s" : ""}</summary>
-                  <ListeOrganes items={organes} />
-                </details>
-              )}
-            </li>
-          );
-        })}
-      </ol>
-      {chrono.length === 0 && <p className="meta">Mandats non disponibles.</p>}
+          })}
+        </ol>
+        {chrono.length === 0 && <p className="meta">Mandats non disponibles.</p>}
 
-      {commeCollab && (
-        <p className="card" style={{ maxWidth: "none" }}>
-          Avant ou après ses mandats, {nom} figure aussi sur les listes de collaborateurs parlementaires
-          ({commeCollab.chambres.split(" ").map((c) => CHAMBRE_LONG[c]).join(", ")}, {commeCollab.premiere_date.slice(0, 4)}
-          {commeCollab.derniere_date.slice(0, 4) !== commeCollab.premiere_date.slice(0, 4) ? `-${commeCollab.derniere_date.slice(0, 4)}` : ""}).{" "}
-          <a href={`/collab/${commeCollab.slug}`}>Voir son parcours de {f.civilite === "Mme" ? "collaboratrice" : "collaborateur"}</a>
-          <span className="meta">, rapprochement par le nom, sans chevauchement avec ses mandats</span>
-        </p>
-      )}
-
-      <h2 id="collaborateurs">Collaborateurs</h2>
-      {f.actif ? (
-        <>
-          <h3>Équipe parlementaire actuelle</h3>
-          {collabs.length === 0 ? (
-            <p className="meta">Aucun collaborateur recensé sur la période en cours.</p>
-          ) : (
-            <table className="stats stats-zebres">
-              <thead><tr><th>Collaborateur</th><th>Fonction</th></tr></thead>
-              <tbody>
-                {collabs.map((c, i) => (
-                  <tr key={i}>
-                    <td>
-                      <a href={`/collab/k/${encodeURIComponent(c.collab_cle)}`}>{prenomNom(c.collab_prenom, c.collab_nom)}</a>
-                      {c.statut === "conge_sans_solde" && <span className="meta"> (congé)</span>}
-                    </td>
-                    <td>{c.fonction || "Collaborateur"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </>
-      ) : (
-        <p className="meta">
-          {nbCollabs > 0
-            ? "Mandat terminé : aucune équipe en exercice. Les collaborateurs ayant travaillé sous ce mandat figurent dans les mouvements ci-dessous et dans l'historique complet."
-            : "Aucun collaborateur recensé pour ce parlementaire."}
-        </p>
-      )}
-      <h3>{f.actif ? "Derniers mouvements" : "Historique des mouvements"}</h3>
-      {mouvements.length === 0 ? <p className="meta">Aucun mouvement enregistré.</p> : <ListeMouvements mouvements={mouvements} />}
-      <p>
-        {f.actif && <a className="btn secondaire" href={`/collab?elu=${encodeURIComponent(f.slug)}`}>Contacts et export de l&apos;équipe</a>}
-        {(f.actif || nbCollabs > 0) && (
-          <>
-            {f.actif && " "}
-            <a className="btn secondaire" href={`/parlementaires/${encodeURIComponent(f.slug)}/historique`}>Consulter l&apos;historique complet des collaborateurs</a>
-          </>
+        {commeCollab && (
+          <p className="card" style={{ maxWidth: "none" }}>
+            Avant ou après ses mandats, {nom} figure aussi sur les listes de collaborateurs parlementaires
+            ({commeCollab.chambres.split(" ").map((c) => CHAMBRE_LONG[c]).join(", ")}, {commeCollab.premiere_date.slice(0, 4)}
+            {commeCollab.derniere_date.slice(0, 4) !== commeCollab.premiere_date.slice(0, 4) ? `-${commeCollab.derniere_date.slice(0, 4)}` : ""}).{" "}
+            <a href={`/collab/${commeCollab.slug}`}>Voir son parcours de {f.civilite === "Mme" ? "collaboratrice" : "collaborateur"}</a>
+            <span className="meta">, rapprochement par le nom, sans chevauchement avec ses mandats</span>
+          </p>
         )}
-      </p>
-      <PubGoogle />
+
+        <h2 id="collaborateurs">Collaborateurs</h2>
+        {f.actif ? (
+          <>
+            <h3>Équipe parlementaire actuelle</h3>
+            {collabs.length === 0 ? (
+              <p className="meta">Aucun collaborateur recensé sur la période en cours.</p>
+            ) : (
+              <table className="stats stats-zebres">
+                <thead><tr><th>Collaborateur</th><th>Fonction</th></tr></thead>
+                <tbody>
+                  {collabs.map((c, i) => (
+                    <tr key={i}>
+                      <td>
+                        <a href={`/collab/k/${encodeURIComponent(c.collab_cle)}`}>{prenomNom(c.collab_prenom, c.collab_nom)}</a>
+                        {c.statut === "conge_sans_solde" && <span className="meta"> (congé)</span>}
+                      </td>
+                      <td>{c.fonction || "Collaborateur"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </>
+        ) : (
+          <p className="meta">
+            {nbCollabs > 0
+              ? "Mandat terminé : aucune équipe en exercice. Les collaborateurs ayant travaillé sous ce mandat figurent dans les mouvements ci-dessous et dans l'historique complet."
+              : "Aucun collaborateur recensé pour ce parlementaire."}
+          </p>
+        )}
+        <h3>{f.actif ? "Derniers mouvements" : "Historique des mouvements"}</h3>
+        {mouvements.length === 0 ? <p className="meta">Aucun mouvement enregistré.</p> : <ListeMouvements mouvements={mouvements} />}
+        <p>
+          {f.actif && <a className="btn secondaire" href={`/collab?elu=${encodeURIComponent(f.slug)}`}>Contacts et export de l&apos;équipe</a>}
+          {(f.actif || nbCollabs > 0) && (
+            <>
+              {f.actif && " "}
+              <a className="btn secondaire" href={`/parlementaires/${encodeURIComponent(f.slug)}/historique`}>Consulter l&apos;historique complet des collaborateurs</a>
+            </>
+          )}
+        </p>
+        <PubGoogle />
+        </div>
+
+        <aside className="fiche-repere" aria-labelledby="titre-repere">
+          <h2 id="titre-repere">Repères</h2>
+          {resumeFiche && <p className="lead resume-repere">{resumeFiche}</p>}
+          <dl>
+            {lignesReperes.map(([label, valeur], i) => (
+              <div className="ligne-repere" key={i}>
+                <dt>{label}</dt>
+                <dd>{valeur}</dd>
+              </div>
+            ))}
+          </dl>
+        </aside>
+      </div>
     </>
   );
 }
