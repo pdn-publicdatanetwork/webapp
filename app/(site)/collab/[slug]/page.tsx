@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CHAMBRE_LONG, prenomNom } from "@/lib/format";
 import { libellePeriode, moisAnnee } from "@/lib/periodes";
-import { collaborateurDepuisSlug, parlementaireDepuisId, parlementairesParElu, periodesCollab } from "@/lib/referentiel";
+import { collaborateurDepuisSlug, parlementaireDepuisId, parlementairesParElu, personne, periodesCollab, suppleanceDuCollab } from "@/lib/referentiel";
 import { nomAffiche } from "@/lib/format";
 import { slugCollectif } from "@/lib/collectifs";
 import { groupesDuCollab } from "@/lib/equipesGroupesData";
@@ -68,6 +68,17 @@ export default async function FicheCollab({ params }: Props) {
   // Rapprochement par la clé de nom (affectations n'a pas de collab_id).
   const groupesGroupement = await groupesDuCollab(c.collab_cle).catch(() => []);
   const ministresGouv = new Map((await ministresParIds([...new Set(cabinets.map((p) => p.ministre_id))]).catch(() => [])).map((x) => [x.id, x]));
+  // Suppléance parlementaire (table suppleances : saisie rédaction puis
+  // réconciliation quotidienne du JORF, cf. collaborateurs #4 et #8) : la
+  // personne est le suppléant d'un député. Tant que la suppléance n'a pas de
+  // date de début, le remplacement n'a pas pris effet (ex. suspendu par un
+  // recours devant le Conseil constitutionnel, art. LO137 du code électoral).
+  const suppleance = await suppleanceDuCollab(c.prenom, c.nom).catch(() => null);
+  const depute = suppleance ? await parlementaireDepuisId(suppleance.elu_id).catch(() => null) : null;
+  const fichesDepute = depute ? await personne(depute.personne_id).catch(() => null) : null;
+  const anDepute = fichesDepute ? fichesDepute.fiches.find((x) => x.chambre === "assemblee") ?? null : null;
+  const nomDepute = depute ? prenomNom(depute.prenom, depute.nom) : "un député";
+  const artDepute = /^[AEIOUYÉÈÊÀÎÔÛ]/i.test(nomDepute) || /^un /.test(nomDepute) ? "d'" : "de ";
   const role = c.genre === "F" ? "Collaboratrice parlementaire" : c.genre === "H" ? "Collaborateur parlementaire" : "Collaborateur(rice) parlementaire";
 
   return (
@@ -103,6 +114,32 @@ export default async function FicheCollab({ params }: Props) {
           </a>
           {commeElu.actif ? ", en fonction" : commeElu.fin_mandat ? `, jusqu'en ${commeElu.fin_mandat.slice(0, 4)}` : ""}.
           <span className="meta"> Rapprochement par le nom, sans chevauchement entre ses mandats et ses postes de collaborateur.</span>
+        </p>
+      )}
+
+      {/* Suppléance parlementaire : la personne est le suppléant d'un député
+          (table suppleances). Tant que la suppléance n'a pas de date de
+          début, le remplacement n'a pas pris effet, par exemple suspendu par
+          un recours devant le Conseil constitutionnel : la fiche le dit
+          explicitement plutôt que de laisser croire à un siège acquis. */}
+      {suppleance && (
+        <p className="card" style={{ maxWidth: "none" }}>
+          <strong>Suppléance parlementaire : </strong>
+          {nom} est {c.genre === "H" ? "le suppléant" : "la suppléante"} {artDepute}
+          {depute
+            ? <a href={`/parlementaires/${encodeURIComponent(depute.slug)}`}>{nomDepute}</a>
+            : nomDepute}
+          {anDepute && anDepute.circonscription
+            ? `, ancien${anDepute.civilite === "Mme" ? "ne" : ""} député${anDepute.civilite === "Mme" ? "e" : ""} pour ${anDepute.circonscription}`
+            : ""}
+          {suppleance.debut ? `, remplacement depuis ${moisAnnee(suppleance.debut)}` : ""}.
+          {" "}{suppleance.cause_debut}.
+          {!suppleance.debut && (
+            <> {c.genre === "F" ? "Elle" : "Il"} n{"'"}a donc pas encore pris ses fonctions de député{c.genre === "F" ? "e" : ""}.</>
+          )}
+          {suppleance.source && (
+            <span className="meta"> (source : {suppleance.source})</span>
+          )}
         </p>
       )}
 
