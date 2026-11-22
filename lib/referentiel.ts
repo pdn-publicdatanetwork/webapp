@@ -13,7 +13,7 @@ export type Parlementaire = {
   photo_url: string; url_officielle: string; slug: string; premier_mandat: string; fin_mandat: string; email: string;
   motif_fin_mandat: string | null; suppleant_id: string | null; suppleant: string | null; date_deces: string | null;
 };
-export type Mandat = { personne_id: string; chambre: Chambre; elu_id: string; debut: string; fin: string; libelle: string; circonscription: string; legislature: string; cause_fin: string };
+export type Mandat = { personne_id: string; chambre: Chambre; elu_id: string; debut: string; fin: string; libelle: string; circonscription: string; legislature: string; cause_fin: string; cause_debut: string | null; remplace_id: string | null };
 export type Appartenance = { personne_id: string; chambre: Chambre; elu_id: string; type: string; code: string; libelle: string; sigle: string; fonction: string; debut: string; fin: string };
 export type Ministre = { id: string; personne_id: string; fonction: string; portefeuille: string; gouvernement: string; rang: string; debut: string; fin: string; source: string };
 export type Collaborateur = {
