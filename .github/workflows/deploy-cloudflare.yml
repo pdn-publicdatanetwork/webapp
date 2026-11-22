@@ -56,7 +56,7 @@ jobs:
           cat .cf-env >> "$GITHUB_ENV"
           rm -f .cf-env rapport.json
       - run: npm install --no-audit --no-fund
-      - run: npm install --no-save --legacy-peer-deps @opennextjs/cloudflare wrangler
+      - run: npm install --no-save --legacy-peer-deps @opennextjs/cloudflare@1.20.17 wrangler
       - name: Build OpenNext (www)
         run: |
           set -o pipefail
@@ -115,7 +115,7 @@ jobs:
           cat .cf-env >> "$GITHUB_ENV"
           rm -f .cf-env rapport.json
       - run: npm install --no-audit --no-fund
-      - run: npm install --no-save --legacy-peer-deps @opennextjs/cloudflare wrangler
+      - run: npm install --no-save --legacy-peer-deps @opennextjs/cloudflare@1.20.17 wrangler
       - name: Build OpenNext (jobs)
         run: |
           set -o pipefail
