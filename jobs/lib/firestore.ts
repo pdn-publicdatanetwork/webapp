@@ -1,7 +1,7 @@
 
 import { randomUUID } from "crypto";
-import { cert, getApps, initializeApp } from "firebase-admin/app";
-import { getFirestore, initializeFirestore, type Firestore } from "firebase-admin/firestore";
+import { cert, getApps, initializeApp } from "dp-firebase-admin/app";
+import { getFirestore, initializeFirestore, type Firestore, type DocumentSnapshot } from "dp-firebase-admin/firestore";
 
 // Base Firestore des offres d'emploi (projet Firebase « dataparl-jobs »).
 // L'identifiant du document est l'empreinte sha256 (fingerprint) : la collecte
@@ -32,7 +32,7 @@ function db(): Firestore {
 
 const aujourdHui = () => new Date().toISOString().slice(0, 10);
 
-function enOffre(snap: FirebaseFirestore.DocumentSnapshot): Offre {
+function enOffre(snap: DocumentSnapshot): Offre {
   const d = (snap.data() ?? {}) as Offre;
   return { ...d, id: (d.id as string) ?? snap.id, fingerprint: snap.id };
 }
@@ -44,7 +44,8 @@ const parDateAsc = (champ: string) => (a: Offre, b: Offre) =>
 
 // Offres publiées (validées, actives, non expirées), plus récentes d'abord.
 // « publie_le » porte la date de publication ORIGINALE de l'annonce (extraite
-// de la source par la collecte), jamais le jour où on l'a scrapée.
+// de la source par la colle
+cte), jamais le jour où on l'a scrapée.
 export async function offresPubliques(): Promise<Offre[]> {
   const snaps = await db().collection("job_offers").where("review_status", "==", "approved").limit(500).get();
   return snaps.docs
@@ -90,7 +91,8 @@ export async function fileRevue(): Promise<Offre[]> {
 }
 
 export async function offresActivesAdmin(): Promise<Offre[]> {
-  const snaps = await db().collection("job_offers").where("review_status", "==", "approved").limit(500).get();
+  const snaps = await db().collection("job_offers").where("review_status", "==", "appr
+oved").limit(500).get();
   return snaps.docs
     .map(enOffre)
     .filter((o) => o.statut === "active")
@@ -143,7 +145,8 @@ export async function desinscritAlerte(email: string): Promise<void> {
 // informations de contact extraites et les compétences détectées.
 export async function deposerCvInfos(champs: Record<string, unknown>): Promise<void> {
   await db()
-    .collection("cv_deposits")
+    .coll
+ection("cv_deposits")
     .add({ ...champs, created_at: new Date().toISOString() });
 }
 
@@ -184,7 +187,8 @@ export async function deciderOffre(
 // jobs_evenements. Aucune donnée personnelle n'est stockée.
 export async function noterEvenement(type: string, chemin: string, page = "", compte = "") {
   const jour = new Date().toISOString().slice(0, 10);
-  await db().collection("jobs_evenements").add({
+  await db().collection("jobs_evene
+ments").add({
     type,
     chemin: chemin.slice(0, 200),
     page: page.slice(0, 200),
@@ -226,7 +230,8 @@ export async function lireEvenements(jours = 30): Promise<{ type: string; chemin
 // best effort : la suppression du compte auth reste la source de vérité.
 export async function supprimerDonneesCompte(email: string): Promise<void> {
   const adresse = email.trim().toLowerCase();
-  await db().collection("alert_subscriptions").doc(adresse).delete();
+  await db().collection
+("alert_subscriptions").doc(adresse).delete();
   const snaps = await db().collection("cv_deposits").where("compte", "==", adresse).limit(500).get();
   for (const doc of snaps.docs) {
     await doc.ref.delete();

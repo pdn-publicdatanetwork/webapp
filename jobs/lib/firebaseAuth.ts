@@ -1,5 +1,5 @@
-import { cert, getApps, initializeApp } from "firebase-admin/app";
-import { getAuth, type Auth } from "firebase-admin/auth";
+import { cert, getApps, initializeApp } from "dp-firebase-admin/app";
+import { getAuth, type Auth } from "dp-firebase-admin/auth";
 
 // SDK Firebase côté serveur pour l'authentification (projet dataparl-auth),
 // initialisé à la demande depuis FIREBASE_AUTH_SERVICE_ACCOUNT (JSON de la
@@ -45,7 +45,8 @@ function configClé(): Record<string, unknown> {
   if (!brut) throw new Error("FIREBASE_AUTH_SERVICE_ACCOUNT absent");
   let conf: Record<string, unknown>;
   try {
-    conf = JSON.parse(brut) as Record<string, unknown>;
+    conf = JSO
+N.parse(brut) as Record<string, unknown>;
   } catch (e) {
     throw new Error(`FIREBASE_AUTH_SERVICE_ACCOUNT : JSON invalide (${(e as Error).message.slice(0, 120)})`);
   }
