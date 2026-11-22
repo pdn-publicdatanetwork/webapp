@@ -1,0 +1,44 @@
+name: Nettoyage migration
+
+# Menage final apres la bascule Cloudflare (22/11/2026) : supprime les
+# workflows et fichiers marqueurs ponctuels de la migration, puis se
+# supprime lui-meme. Declenche par .nettoyage.txt.
+
+on:
+  push:
+    branches: [main]
+    paths: [".nettoyage.txt"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nettoyage-migration
+  cancel-in-progress: false
+
+jobs:
+  menage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Suppression des artifacts de migration
+        run: |
+          set -euo pipefail
+          git config user.name "DatParl CI"
+          git config user.email "publicdatanetwork@gmail.com"
+          git rm -rq app/api/cron/env-push-cloudflare .github/sonde || true
+          git rm -q .github/workflows/bascule-domains.yml \
+            .github/workflows/env-push-cloudflare.yml \
+            .github/workflows/repare-imports.yml \
+            .github/workflows/sonde-travailleurs.yml \
+            .repare-imports.txt .sonde-travailleurs.txt .trigger-deploy.txt \
+            .trigger-envpush.txt .build-trigger .deploy-trigger || true
+          git commit -m "chore: suppression des artifacts de migration Cloudflare (workflows et marqueurs ponctuels)" || echo "rien a supprimer"
+          git push
+          # auto-suppression du workflow et de son marqueur
+          git rm -q .nettoyage.txt .github/workflows/nettoyage-migration.yml
+          git commit -m "chore: suppression du workflow de nettoyage (auto)" || echo "deja propre"
+          git push
