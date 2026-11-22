@@ -12,12 +12,12 @@ export { esc, texteVersHtml } from "./gabarit";
 //     hash du jeton est stocké) ;
 //   - est rangé dans la table emails (visible dans la webmail).
 //
-// Relais de secours : si Resend refuse ou échoue, on retente via Postmark
-// (domaine vérifié dataparl.com) puis Mailgun (dataparl.info, région UE).
+// Relais de secours : si Resend refuse ou échoue, on retente via Cloudflare
+// Email Service (zone dataparl.com, même compte Cloudflare que le site).
 // La boîte d'expédition est conservée, seul le domaine change :
-// @dataparl.fr = @dataparl.com (cf. politique éditoriale). Un relais dont
-// le jeton n'est pas configuré est simplement sauté ; si les trois échouent,
-// l'erreur agrégée est renvoyée à l'appelant.
+// @dataparl.fr = @dataparl.com (cf. politique éditoriale). Un relais non
+// configuré est simplement sauté ; si les deux échouent, l'erreur agrégée
+// est renvoyée à l'appelant.
 
 export type TypeEnvoi = "transactionnel" | "webmail" | "auto" | "alerte" | "communique" | "mailing";
 
@@ -45,7 +45,7 @@ export type Resultat = { ok: true; resendId: string } | { ok: false; error: stri
 
 export const hashJeton = (t: string) => createHash("sha256").update(t).digest("hex");
 
-type Fournisseur = "resend" | "postmark" | "mailgun";
+type Fournisseur = "resend" | "cloudflare";
 type SortieEnvoi = { ok: true; fournisseur: Fournisseur; id: string } | { ok: false; erreur: string };
 
 // Remplace le domaine dataparl.fr par celui vérifié chez le relais.
@@ -55,8 +55,8 @@ const fromPourDomaine = (from: string, domaine: string) =>
 const detailErreur = async (r: Response): Promise<string> => {
   const detail = await r.text();
   try {
-    const j = JSON.parse(detail) as { message?: string; Message?: string };
-    const msg = j.message ?? j.Message ?? "";
+    const j = JSON.parse(detail) as { message?: string; Message?: string; errors?: { message?: string }[] };
+    const msg = j.message ?? j.Message ?? j.errors?.[0]?.message ?? "";
     return `${r.status}${msg ? ` : ${msg}` : ""}`;
   } catch {
     /* corps non JSON */
@@ -79,52 +79,44 @@ const envoiResend = async (
   return { ok: true, fournisseur: "resend", id: ((await r.json()) as { id: string }).id };
 };
 
-const envoiPostmark = async (
-  m: Message, from: string, headers: Record<string, string>, html: string, text: string
-): Promise<SortieEnvoi> => {
-  const jeton = secretOptionnel("POSTMARK_SERVER_TOKEN");
-  if (!jeton) return { ok: false, erreur: "Postmark désactivé (jeton absent)" };
-  const r = await fetch("https://api.postmarkapp.com/email", {
-    method: "POST",
-    headers: { Accept: "application/json", "X-Postmark-Server-Token": jeton, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      From: fromPourDomaine(from, "dataparl.com"),
-      To: m.to,
-      Cc: m.cc?.length ? m.cc : undefined,
-      Subject: m.subject,
-      HTMLBody: html,
-      TextBody: text,
-      ReplyTo: m.replyTo || undefined,
-      MessageStream: "outbound",
-      Headers: Object.entries(headers).map(([Name, Value]) => ({ Name, Value })),
-    }),
-  });
-  if (!r.ok) return { ok: false, erreur: `Postmark ${await detailErreur(r)}` };
-  return { ok: true, fournisseur: "postmark", id: ((await r.json()) as { MessageID: string }).MessageID };
+// "Nom" <adresse> → { address, name } pour l'API Cloudflare (texte nu
+// accepté, objet requis pour les adresses nommées).
+const analyseAdresse = (a: string): string | { address: string; name?: string } => {
+  const r = a.match(/^\s*(?:"([^"]*)"|([^<>"']*?))\s*<\s*([^>]+)\s*>\s*$/);
+  if (!r) return a.trim();
+  const nom = (r[1] ?? r[2] ?? "").trim();
+  const adresse = r[3].trim();
+  return nom ? { address: adresse, name: nom } : adresse;
 };
 
-const envoiMailgun = async (
+// Cloudflare Email Service (bêta) : envoi transactionnel REST sur le domaine
+// dataparl.com (zone du même compte Cloudflare que le site). Inactif tant
+// que CF_ACCOUNT_ID et CF_EMAIL_SENDING_TOKEN ne sont pas posés sur le
+// Worker : le relais est simplement sauté.
+const envoiCloudflare = async (
   m: Message, from: string, headers: Record<string, string>, html: string, text: string
 ): Promise<SortieEnvoi> => {
-  const jeton = secretOptionnel("MAILGUN_API_KEY");
-  if (!jeton) return { ok: false, erreur: "Mailgun désactivé (jeton absent)" };
-  const corps = new URLSearchParams({
-    from: fromPourDomaine(from, "dataparl.info"),
-    to: m.to.join(","),
-    ...(m.cc?.length ? { cc: m.cc.join(",") } : {}),
-    subject: m.subject,
-    html,
-    text,
-  });
-  for (const [k, v] of Object.entries(headers)) corps.set(`h:${k}`, v);
-  if (m.replyTo) corps.set("h:Reply-To", m.replyTo);
-  const r = await fetch("https://api.eu.mailgun.net/v3/dataparl.info/messages", {
+  const accountId = secretOptionnel("CF_ACCOUNT_ID");
+  const jeton = secretOptionnel("CF_EMAIL_SENDING_TOKEN");
+  if (!accountId || !jeton) return { ok: false, erreur: "Cloudflare désactivé (jeton absent)" };
+  const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/email/sending/send`, {
     method: "POST",
-    headers: { Authorization: `Basic ${Buffer.from(`api:${jeton}`).toString("base64")}` },
-    body: corps,
+    headers: { Authorization: `Bearer ${jeton}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      to: m.to.map(analyseAdresse),
+      cc: m.cc?.length ? m.cc.map(analyseAdresse) : undefined,
+      from: analyseAdresse(fromPourDomaine(from, "dataparl.com")),
+      subject: m.subject, html, text, headers,
+      ...(m.replyTo ? { replyTo: m.replyTo } : {}),
+    }),
   });
-  if (!r.ok) return { ok: false, erreur: `Mailgun ${await detailErreur(r)}` };
-  return { ok: true, fournisseur: "mailgun", id: ((await r.json()) as { id: string }).id };
+  if (!r.ok) return { ok: false, erreur: `Cloudflare ${await detailErreur(r)}` };
+  const d = await r.json().catch(() => ({}) as { success?: boolean; errors?: { message?: string }[]; result?: { message_id?: string } });
+  if (!d.success) {
+    const msg = d.errors?.[0]?.message ?? "envoi refusé";
+    return { ok: false, erreur: `Cloudflare : ${msg}` };
+  }
+  return { ok: true, fournisseur: "cloudflare", id: d.result?.message_id ?? "" };
 };
 
 export async function expedier(m: Message): Promise<Resultat> {
@@ -147,15 +139,14 @@ export async function expedier(m: Message): Promise<Resultat> {
 
   const tentatives: Array<() => Promise<SortieEnvoi>> = [
     () => envoiResend(m, from, headers, html, text),
-    () => envoiPostmark(m, from, headers, html, text),
-    () => envoiMailgun(m, from, headers, html, text),
+    () => envoiCloudflare(m, from, headers, html, text),
   ];
   const erreurs: string[] = [];
   for (const tenter of tentatives) {
     const r = await tenter();
     if (r.ok) {
       // resend_id : identifiant du message chez le fournisseur qui l'a réellement
-      // accepté (Resend, Postmark ou Mailgun) ; source l'indique.
+      // accepté (Resend ou Cloudflare Email Service) ; source l'indique.
       const { error } = await authAdmin().from("emails").insert({
         direction: "out", communication_type: m.type, from_addr: m.from ?? MAIL_FROM, to_addr: m.to.join(", "),
         cc_addr: m.cc?.length ? m.cc.join(", ") : null, reply_to: m.replyTo ?? null,

@@ -50,7 +50,6 @@ nouveau compte Cloudflare (ni tmcws, ni martytheo).
 | NEXT_PUBLIC_TURNSTILE_SITEKEY | non | idem |
 | NEXT_PUBLIC_LIENS_BASE | non | idem |
 | NEXT_PUBLIC_MEDIA_BASE | non | idem |
-| NEXT_PUBLIC_DPCHAT_URL | non | idem |
 | NEXT_PUBLIC_ADSENSE_CLIENT | non | idem |
 | NEXT_PUBLIC_ADSENSE_SLOT | non | idem |
 | NEXT_PUBLIC_APPLIXIR_API_KEY | non | idem |

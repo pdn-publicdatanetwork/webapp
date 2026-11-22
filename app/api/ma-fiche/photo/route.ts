@@ -4,6 +4,7 @@ import { statutDemande } from "@/lib/association";
 import { dataAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 // Photo de profil de la fiche : upload par la personne associée à la fiche
 // vérifiée, stockage dans le bucket photos-profils (data). L'URL publique
@@ -18,7 +19,9 @@ export const dynamic = "force-dynamic";
 const TAILLE_MAX = 2 * 1024 * 1024;
 const BUCKET = "photos-profils";
 const MEDIA_BASE = (process.env.NEXT_PUBLIC_MEDIA_BASE ?? "https://media.dataparl.fr").replace(/\/$/, "");
-const DPCHAT_URL = (process.env.DPCHAT_URL ?? "https://chat.dataparl.fr").replace(/\/$/, "");
+const MISTRAL_CHAT = "https://api.mistral.ai/v1/chat/completions";
+const MODEL_VISION = process.env.MISTRAL_MODEL_VISION ?? "pixtral-12b-2409";
+
 
 function extensionValide(f: File): "jpg" | "png" | "webp" | null {
   const t = f.type;
@@ -62,22 +65,39 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "fichier image invalide" }, { status: 400 });
   }
 
-  // Anti-troll : le service vision de dpchat vérifie que l'image représente
-  // une personne (ni logo, ni meme, ni photo d'objet). En cas
-  // d'indisponibilité du service, l'upload passe (jamais de blocage sur une
-  // panne tierce) et l'incident est journalisé.
-  const cle = process.env.CLE_EXTRACTION_CV ?? "";
-  if (cle) {
+  // Anti-troll : le modèle vision de Mistral vérifie que l'image représente
+  // une personne (ni logo, ni meme, ni photo d'objet). Contrôle porté depuis
+  // dpchat (résilié avec Vercel) directement dans ce worker ; l'image n'est
+  // ni stockée ni journalisée. En cas d'indisponibilité de l'API, l'upload
+  // passe (jamais de blocage sur une panne tierce) et l'incident est
+  // journalisé.
+  const apiKeyVision = process.env.MISTRAL_API_KEY;
+  if (apiKeyVision) {
     try {
-      const v = await fetch(`${DPCHAT_URL}/api/verifier-photo`, {
+      const v = await fetch(MISTRAL_CHAT, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-cle-cv": cle },
-        body: JSON.stringify({ image: Buffer.from(octets).toString("base64") }),
-        signal: AbortSignal.timeout(30000),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKeyVision}` },
+        body: JSON.stringify({
+          model: MODEL_VISION,
+          temperature: 0,
+          max_tokens: 4,
+          messages: [{
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "Cette image est-elle une photographie representant une ou plusieurs personnes (visage humain reel) ? Reponds uniquement OUI ou NON.",
+              },
+              { type: "image_url", image_url: `data:image/jpeg;base64,${Buffer.from(octets).toString("base64")}` },
+            ],
+          }],
+        }),
+        signal: AbortSignal.timeout(25000),
       });
       if (v.ok) {
         const d = await v.json().catch(() => ({}));
-        if (d.personne === false) {
+        const reponse = String(d.choices?.[0]?.message?.content ?? "").toUpperCase();
+        if (!reponse.includes("OUI")) {
           return NextResponse.json({ error: "La photo doit représenter une personne : choisissez un portrait net de vous." }, { status: 422 });
         }
       } else {
