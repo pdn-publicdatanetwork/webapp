@@ -1,0 +1,50 @@
+name: Reparation imports dp-firebase-admin
+
+# Ponctuel (un seul usage prevu) : le commit 43986f1a a pousse des contenus
+# avec des retours a la ligne parasites insere au milieu de lignes longues
+# (transport d'API fallacieux). Ce workflow restaure les 4 fichiers
+# consommateurs depuis 536c5b62085dd2a11822a385db96542d4784ee44 (dernier
+# etat sain), reapplique les remplacements firebase-admin -> dp-firebase-admin
+# de facon deterministe, verifie, puis committe. Les fichiers .d.mts du shim
+# ajoutes par 43986f1a sont corrects et ne sont pas touches.
+
+on:
+  push:
+    branches: [main]
+    paths: [".repare-imports.txt"]
+
+permissions:
+  contents: write
+
+jobs:
+  repare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restauration depuis 536c5b62 + remplacements
+        run: |
+          git checkout 536c5b62085dd2a11822a385db96542d4784ee44 -- lib/firebaseAuthAdmin.ts lib/jobsFirestore.ts jobs/lib/firebaseAuth.ts jobs/lib/firestore.ts
+          sed -i 's|"firebase-admin/app"|"dp-firebase-admin/app"|' lib/firebaseAuthAdmin.ts lib/jobsFirestore.ts jobs/lib/firebaseAuth.ts jobs/lib/firestore.ts
+          sed -i 's|"firebase-admin/auth"|"dp-firebase-admin/auth"|' lib/firebaseAuthAdmin.ts jobs/lib/firebaseAuth.ts
+          sed -i 's|import { getFirestore, initializeFirestore, type Firestore } from "firebase-admin/firestore";|import { getFirestore, initializeFirestore, type Firestore, type DocumentSnapshot } from "dp-firebase-admin/firestore";|' lib/jobsFirestore.ts jobs/lib/firestore.ts
+          sed -i 's|function enOffre(snap: FirebaseFirestore.DocumentSnapshot): Offre {|function enOffre(snap: DocumentSnapshot): Offre {|' lib/jobsFirestore.ts jobs/lib/firestore.ts
+          grep -q 'dp-firebase-admin/app' lib/firebaseAuthAdmin.ts
+          grep -q 'dp-firebase-admin/firestore' lib/jobsFirestore.ts
+          grep -q 'dp-firebase-admin/auth' jobs/lib/firebaseAuth.ts
+          grep -q 'dp-firebase-admin/firestore' jobs/lib/firestore.ts
+          if grep -n 'firebase-admin/' lib/firebaseAuthAdmin.ts lib/jobsFirestore.ts jobs/lib/firebaseAuth.ts jobs/lib/firestore.ts | grep -v 'dp-firebase-admin'; then
+            echo "il reste des imports firebase-admin non remplaces" >&2
+            exit 1
+          fi
+          git config user.name "Public Data Network PDN"
+          git config user.email "hello@cavaparlement.eu"
+          git add lib/firebaseAuthAdmin.ts lib/jobsFirestore.ts jobs/lib/firebaseAuth.ts jobs/lib/firestore.ts
+          if git diff --cached --quiet; then
+            echo "rien a faire (deja repare)"
+            exit 0
+          fi
+          git commit -m "fix: restauration des 4 consommateurs dp-firebase-admin depuis 536c5b62 (lignes cassees par le commit precedent) + remplacements sed determines"
+          git push
