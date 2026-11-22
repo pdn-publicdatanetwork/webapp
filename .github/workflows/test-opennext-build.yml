@@ -1,8 +1,8 @@
 name: Test build OpenNext Cloudflare
 
-# Validation migration Vercel -> Cloudflare Workers (OpenNext) :
-# compile www (racine) et jobs (jobs/) sans deploy. En cas d'echec, la fin
-# du log est postee dans l'issue #174 pour lecture hors API logs.
+# v3 : tout le flux est journalise (tee -a) et le verdict est tolerant a
+# l'absence de log : la cause exacte de l'echec est toujours postee dans
+# l'issue #174, meme si la panne survient des le npm install.
 on:
   push:
     branches: [test-opennext]
@@ -12,7 +12,6 @@ permissions:
   contents: read
   issues: write
 
-jobs:
   build-www:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -21,24 +20,30 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm ci
-      - run: npm install --no-save @opennextjs/cloudflare wrangler
+      - run: |
+          set -o pipefail
+          npm ci 2>&1 | tee -a build.log
+      - run: |
+          set -o pipefail
+          npm install --no-save @opennextjs/cloudflare wrangler 2>&1 | tee -a build.log
       - name: Build OpenNext (www)
         run: |
           set -o pipefail
-          npx opennextjs-cloudflare build 2>&1 | tee build.log
+          npx opennextjs-cloudflare build 2>&1 | tee -a build.log
       - name: Verdict www
         if: always()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           JOB_STATUS: ${{ job.status }}
         run: |
-          if [ "$JOB_STATUS" = "success" ]; then
+          if [ "$(echo ${{env.JOB_STATUS}})" = "success" ]; then
             echo -n "BUILD WWW OK" > verdict.txt
+          elif [ -f build.log ]; then
+            python3 -c "log=open('build.log',errors='replace').read(); txt='ECHEC BUILD WWW :\n\n\u0060\u0060\u0060\n'+log[-24000:]+'\n\u0060\u0060\u0060'; open('verdict.txt','w').write(txt)"
           else
-            python3 -c "import sys; log=open('build.log',errors='replace').read(); txt='ECHEC BUILD WWW :\n\n\`\`\`\n'+log[-24000:]+'\n\`\`\`'; open('verdict.txt','w').write(txt)"
+            echo -n "ECHEC BUILD WWW sans log : la panne a eu lieu avant toute commande tee (npm install ?)" > verdict.txt
           fi
-          gh api repos/pdn-publicdatanetwork/webapp/issues/174/comments -f body=@verdict.txt
+          gh api repos/pdn-publicdatanetwork/webapp/issues/174/comments -F body=@verdict.txt
   build-jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -50,21 +55,27 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install --no-package-lock
-      - run: npm install --no-save @opennextjs/cloudflare wrangler
+      - run: |
+          set -o pipefail
+          npm install --no-package-lock 2>&1 | tee -a build.log
+      - run: |
+          set -o pipefail
+          npm install --no-save @opennextjs/cloudflare wrangler 2>&1 | tee -a build.log
       - name: Build OpenNext (jobs)
         run: |
           set -o pipefail
-          npx opennextjs-cloudflare build 2>&1 | tee build.log
+          npx opennextjs-cloudflare build 2>&1 | tee -a build.log
       - name: Verdict jobs
         if: always()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           JOB_STATUS: ${{ job.status }}
         run: |
-          if [ "$JOB_STATUS" = "success" ]; then
+          if [ "$(echo ${{env.JOB_STATUS}})" = "success" ]; then
             echo -n "BUILD JOBS OK" > verdict.txt
+          elif [ -f build.log ]; then
+            python3 -c "log=open('build.log',errors='replace').read(); txt='ECHEC BUILD JOBS :\n\n\u0060\u0060\u0060\n'+log[-24000:]+'\n\u0060\u0060\u0060'; open('verdict.txt','w').write(txt)"
           else
-            python3 -c "import sys; log=open('build.log',errors='replace').read(); txt='ECHEC BUILD JOBS :\n\n\`\`\`\n'+log[-24000:]+'\n\`\`\`'; open('verdict.txt','w').write(txt)"
+            echo -n "ECHEC BUILD JOBS sans log : la panne a eu lieu avant toute commande tee (npm install ?)" > verdict.txt
           fi
-          gh api repos/pdn-publicdatanetwork/webapp/issues/174/comments -f body=@verdict.txt
+          gh api repos/pdn-publicdatanetwork/webapp/issues/174/comments -F body=@verdict.txt
