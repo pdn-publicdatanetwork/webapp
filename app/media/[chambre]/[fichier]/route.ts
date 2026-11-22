@@ -6,10 +6,11 @@ import { parlementaireDepuisId, personne, type Parlementaire } from "@/lib/refer
 // /media/<chambre>/<id>_<credit>_<taille>.png (media.dataparl.fr/<chambre>/…).
 // L'image vient du site de l'institution (AN, Sénat, PE) ; le crédit est
 // dans le nom et l'en-tête, le fichier se garde donc un an en cache.
-// NOTE 22/11/2026 — depuis la migration Cloudflare Workers : sharp (module
+// NOTE 22/11/2026 — migrations Cloudflare Workers : sharp (module
 // natif) ne peut pas tourner dans un Worker ; le recadrage serveur a donc
 // été retiré et l'image officielle est servie telle quelle (déjà carrée pour
-// les trois institutions). URLs, crédits et en-têtes inchangés.
+// les trois institutions). URLs, crédits et en-têtes inchangés. L'option
+// fetch redirect:"error" (Vercel) fait échouer tout fetch dans workerd : retirée.
 export const dynamic = "force-dynamic";
 
 const absente = () => new Response("Photo introuvable", { status: 404, headers: { "Cache-Control": "public, s-maxage=3600" } });
@@ -55,7 +56,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ chambre
         : [cible.photo_url];
   for (const source of candidates) {
     try {
-      const r = await fetch(source, { headers: { "User-Agent": "DataParl (https://www.dataparl.fr)" }, signal: AbortSignal.timeout(8000), redirect: "error" });
+      const r = await fetch(source, { headers: { "User-Agent": "DataParl (https://www.dataparl.fr)" }, signal: AbortSignal.timeout(8000) });
       const type = r.headers.get("content-type") ?? "";
       if (!r.ok || !type.startsWith("image/")) continue;
       const octets = await r.arrayBuffer();

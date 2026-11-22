@@ -7,6 +7,7 @@ import { analyserLogoGroupe, logoSource } from "@/lib/media";
 // (datan.fr), qui les publie par législature ; ils sont mis en cache un an.
 // NOTE 22/11/2026 — migration Cloudflare Workers : sharp ne peut pas y
 // tourner (module natif) ; le logo est servi tel quel (petite image).
+// L'option fetch redirect:"error" (Vercel) fait échouer tout fetch dans workerd : retirée.
 export const dynamic = "force-dynamic";
 
 const absent = () => new Response("Logo introuvable", { status: 404, headers: { "Cache-Control": "public, s-maxage=3600" } });
@@ -18,7 +19,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ fichier
   const source = logoSource(f.chambre, f.sigle);
   if (!source) return absent();
   try {
-    const r = await fetch(source, { headers: { "User-Agent": "DataParl (https://www.dataparl.fr)" }, signal: AbortSignal.timeout(8000), redirect: "error" });
+    const r = await fetch(source, { headers: { "User-Agent": "DataParl (https://www.dataparl.fr)" }, signal: AbortSignal.timeout(8000) });
     const type = r.headers.get("content-type") ?? "";
     if (!r.ok || !type.startsWith("image/")) return absent();
     const octets = await r.arrayBuffer();
