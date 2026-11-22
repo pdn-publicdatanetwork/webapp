@@ -7,8 +7,7 @@ export const dynamic = "force-dynamic";
 // Limite connue (identique au reste du site) : le compte vient du client ;
 // la vérification serveur de la session Supabase reste à brancher.
 
-// Comptes autorisés : le compte admin de DataParl' (table staff, seul membre
-// theo@dataparl.fr). Variable optionnelle ADMIN_JOBS_EMAILS (séparée par des
+// Comptes autorisés : le compte admin de DataParl' (table staff, compte unique de l'équipe). Variable optionnelle ADMIN_JOBS_EMAILS (séparée par des
 // virgules) pour ajouter d'autres comptes sans redéployer le code.
 const AUTORISES = (process.env.ADMIN_JOBS_EMAILS ?? "theo@dataparl.fr")
   .split(",")

@@ -8,7 +8,7 @@ import { AUTH_FIREBASE_ACTIF, sessionFirebase } from "@/lib/sessionFirebase";
 import { CHAMBRE_NOM } from "@/lib/jobsTexte";
 
 // Back-office DataParl' Jobs : réservé au compte admin de DataParl'
-// (théo@dataparl.fr, table staff). Variable optionnelle côté serveur :
+// (compte équipe, table staff). Variable optionnelle côté serveur :
 // ADMIN_JOBS_EMAILS. Back-office DataParl' Jobs : relecture des offres (file de revue,
 // publiées, archives). Réservé à l'équipe (compte @dataparl.fr).
 // Notifications Slack si SLACK_WEBHOOK_URL est configuré côté Vercel.

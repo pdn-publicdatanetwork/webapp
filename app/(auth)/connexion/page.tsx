@@ -13,7 +13,7 @@ import { controleEmail } from "@/lib/antiAbus";
 // équipe (admin.dataparl.fr) ; Google, GitHub et X pour les comptes du site
 // (www et media).
 
-// Toutes les adresses @dataparl.fr (theo, no-reply, hello, contact…) sont des
+// Toutes les adresses @dataparl.fr (equipe, no-reply, hello, contact…) sont des
 // boîtes de l'équipe et désignent le même compte unique : on les ramène à
 // l'adresse de ce compte avant tout appel à GoTrue, aussi bien pour l'envoi
 // du code que pour sa vérification (verifyOtp doit voir le même e-mail).
