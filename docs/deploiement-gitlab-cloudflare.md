@@ -2,7 +2,7 @@
 
 Objectif : quitter Vercel. Le code vit sur GitLab (nouveau compte
 « public data network »), le site tourne sur un Cloudflare Workers d'un
-nouveau compte Cloudflare (ni tmcws, ni martytheo).
+compte Cloudflare dédié, sans identité personnelle.
 
 ## Pourquoi ces fichiers
 
@@ -21,7 +21,7 @@ nouveau compte Cloudflare (ni tmcws, ni martytheo).
 
 ## 1. Créer le compte GitLab
 
-1. https://gitlab.com/users/sign_up (nouveau compte dédié, pas tmcws/martytheo).
+1. https://gitlab.com/users/sign_up (nouveau compte dédié, sans identité personnelle).
 2. Créer un groupe « public-data-network » (public).
 3. Créer le projet « dataparl » dans ce groupe.
 4. Importer le dépôt : New project > Import project > GitHub, ou ajouter le
