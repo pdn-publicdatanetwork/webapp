@@ -24,7 +24,19 @@ const CRONS: Record<string, string> = {
 export default {
   async fetch(req, env, ctx) {
     const { default: handler } = (await import("./.open-next/worker.js")) as any;
-    return handler.fetch(req, env, ctx);
+    try {
+      return await handler.fetch(req, env, ctx);
+    } catch (e) {
+      // Diagnostic 500 : erreur journalisee (Workers Logs) et renvoyee en
+      // clair UNIQUEMENT si l en-tete x-debug porte CRON_SECRET. Sans
+      // l en-tete : reponse 500 generique, rien n est expose au public.
+      const pile = e instanceof Error ? e.name + ": " + e.message + "\n" + (e.stack ?? "") : String(e);
+      console.error("ERREUR WORKER WWW", req.url, pile);
+      if (env.CRON_SECRET && req.headers.get("x-debug") === env.CRON_SECRET) {
+        return new Response(pile, { status: 500, headers: { "content-type": "text/plain; charset=utf-8" } });
+      }
+      return new Response("Erreur interne", { status: 500 });
+    }
   },
   async scheduled(event, env, ctx) {
     const chemin = CRONS[event.cron];

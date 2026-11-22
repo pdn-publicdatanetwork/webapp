@@ -1,1 +1,1 @@
-Deploiement re-declenche apres l'enregistrement du sous-domaine workers.dev. Fichier anodin, sans effet fonctionnel.
+Redeploiement avec worker.ts diagnostic 500 (catch + pile tracee, x-debug gate).
