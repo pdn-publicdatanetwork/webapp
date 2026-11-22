@@ -1,1 +1,1 @@
-Relance 2 : correctif jq (simples quotes) + routes workers.dev deja en place, validation liste workflows deployee.
+Relance 3 : diagnostic API GitLab (code HTTP + corps erreur dans verdict).

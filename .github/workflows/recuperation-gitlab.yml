@@ -61,12 +61,14 @@ jobs:
           echo "::add-mask::$gt"
           echo "::add-mask::$ct"
           rm -f gitlab.json cf.json
-          if ! curl -fsS --max-time 60 -H "PRIVATE-TOKEN: $gt" "https://gitlab.com/api/v4/projects/88469399/variables?per_page=100" -o vars.json; then
-            echo "API GitLab: echec (PAT ou scope)" >&2
+          : > resum.txt
+          code=$(curl -s -o vars.json -w "%{http_code}" --max-time 60 -H "PRIVATE-TOKEN: $gt" "https://gitlab.com/api/v4/projects/88469399/variables?per_page=100")
+          if [ "$code" != "200" ]; then
+            echo "API GitLab: HTTP $code" | tee -a resum.txt
+            head -c 300 vars.json 2>/dev/null | tee -a resum.txt
             exit 1
           fi
-          test -s vars.json || { echo "vars.json vide" >&2; exit 1; }
-          : > resum.txt
+          test -s vars.json || { echo "vars.json vide" | tee -a resum.txt; exit 1; }
           push() {
             local w=$1 cw=$2 cg=$3 json=$4 val code
             val=$(jq -r --arg k "$cg" '.[] | select(.key == $k) | .value' vars.json)
