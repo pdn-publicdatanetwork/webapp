@@ -1,8 +1,8 @@
 name: Test build OpenNext Cloudflare
 
-# v4 : corrige la omission de la cle jobs: (v3). Tout le flux est
-# journalise (tee -a) et le verdict est tolerant a l'absence de log :
-# la cause exacte de l'echec est postee dans l'issue #174.
+# v5 : www -> npm install (lock desynchro avec package.json),
+# opennext installe avec --legacy-peer-deps (peer next >=16.4.5
+# vs projet en 16.4.3). Le build dira si l'incompatibilite est reelle.
 on:
   push:
     branches: [test-opennext]
@@ -16,19 +16,22 @@ jobs:
   build-www:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: .
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: npm (www)
+      - name: Install www
         run: |
           set -o pipefail
-          npm ci 2>&1 | tee -a build.log
-      - name: npm (www)
+          npm install --no-audit --no-fund 2>&1 | tee -a build.log
+      - name: Install opennext
         run: |
           set -o pipefail
-          npm install --no-save @opennextjs/cloudflare wrangler 2>&1 | tee -a build.log
+          npm install --no-save --legacy-peer-deps @opennextjs/cloudflare wrangler 2>&1 | tee -a build.log
       - name: Build OpenNext (www)
         run: |
           set -o pipefail
@@ -58,14 +61,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: npm (jobs)
+      - name: Install jobs
         run: |
           set -o pipefail
-          npm install --no-package-lock 2>&1 | tee -a build.log
-      - name: npm (jobs)
+          npm install --no-package-lock --no-audit --no-fund 2>&1 | tee -a build.log
+      - name: Install opennext jobs
         run: |
           set -o pipefail
-          npm install --no-save @opennextjs/cloudflare wrangler 2>&1 | tee -a build.log
+          npm install --no-save --legacy-peer-deps @opennextjs/cloudflare wrangler 2>&1 | tee -a build.log
       - name: Build OpenNext (jobs)
         run: |
           set -o pipefail
