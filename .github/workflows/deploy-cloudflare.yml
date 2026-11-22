@@ -4,8 +4,9 @@ name: Deploy Cloudflare Workers
 # sur main : construit les deux apps puis publie les Workers (www: « dataparl »,
 # jobs: « dataparl-jobs »). Zéro secret GitHub : le token Cloudflare et les
 # variables de build viennent de la route /api/cron/ci-jeton-cloudflare après
-# validation du jeton OIDC (pattern ci-jeton, incident du 17/11). Les secrets
-# d'exécution sont posés directement sur les Workers via l'API Cloudflare.
+# validation du jeton OIDC (pattern ci-jeton, incident du 17/11). La route est
+# servie par Vercel prod : le workflow attend jusqu'à 12 min qu'elle soit prete
+# (retry tous les 15 s) car Vercel deploye le push en parallele.
 # Build : opennextjs-cloudflare build lance lui-même next build en mode
 # webpack + standalone (compatible Next 16 malgré Turbopack par défaut).
 # En cas d'échec, la fin du log est postée dans l'issue #174.
@@ -27,7 +28,7 @@ concurrency:
 jobs:
   www:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -38,8 +39,20 @@ jobs:
           oidc=$(curl -fsS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
             "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=dataparl-ci" \
             | python3 -c "import json,sys; sys.stdout.write(json.load(sys.stdin)['value'])")
-          curl -fsS -H "x-oidc: $oidc" \
-            "https://www.dataparl.fr/api/cron/ci-jeton-cloudflare?app=www" -o rapport.json
+          rapport=""
+          for i in $(seq 1 48); do
+            if curl -fsS -H "x-oidc: $oidc" \
+              "https://www.dataparl.fr/api/cron/ci-jeton-cloudflare?app=www" -o rapport.json; then
+              rapport=ok
+              break
+            fi
+            echo "route CI pas encore prete (essai $i/48), nouvelle tentative dans 15 s"
+            sleep 15
+          done
+          if [ -z "$rapport" ]; then
+            echo "route ci-jeton-cloudflare indisponible apres 12 min" >&2
+            exit 1
+          fi
           python3 - <<'PY'
 import json
 d = json.load(open("rapport.json"))
@@ -75,7 +88,7 @@ PY
           gh api repos/pdn-publicdatanetwork/webapp/issues/174/comments -F body=@verdict.txt
   jobs:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     defaults:
       run:
         working-directory: jobs
@@ -89,8 +102,20 @@ PY
           oidc=$(curl -fsS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
             "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=dataparl-ci" \
             | python3 -c "import json,sys; sys.stdout.write(json.load(sys.stdin)['value'])")
-          curl -fsS -H "x-oidc: $oidc" \
-            "https://www.dataparl.fr/api/cron/ci-jeton-cloudflare?app=jobs" -o rapport.json
+          rapport=""
+          for i in $(seq 1 48); do
+            if curl -fsS -H "x-oidc: $oidc" \
+              "https://www.dataparl.fr/api/cron/ci-jeton-cloudflare?app=jobs" -o rapport.json; then
+              rapport=ok
+              break
+            fi
+            echo "route CI pas encore prete (essai $i/48), nouvelle tentative dans 15 s"
+            sleep 15
+          done
+          if [ -z "$rapport" ]; then
+            echo "route ci-jeton-cloudflare indisponible apres 12 min" >&2
+            exit 1
+          fi
           python3 - <<'PY'
 import json
 d = json.load(open("rapport.json"))
