@@ -1,1 +1,1 @@
-Relance 3 : diagnostic API GitLab (code HTTP + corps erreur dans verdict).
+Relance 4 : correctifs payload jq (simples quotes) + local json par defaut, dry-run local complet OK.
