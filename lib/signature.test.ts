@@ -15,11 +15,11 @@ test("signature : nom, poste, logo cliquable, échappement", () => {
 
 test("profil .mobileconfig (Web Clip)", () => {
   let n = 0;
-  const p = profilWebClip({ email: "Theo@dataparl.fr", url: "https://webmail.dataparl.fr/", iconeBase64: "QUJD", uuid: () => `UUID-${++n}` });
+  const p = profilWebClip({ email: "equipe@dataparl.fr", url: "https://webmail.dataparl.fr/", iconeBase64: "QUJD", uuid: () => `UUID-${++n}` });
   assert.match(p, /<string>com\.apple\.webClip\.managed<\/string>/);
   assert.match(p, /<key>URL<\/key><string>https:\/\/webmail\.dataparl\.fr\/<\/string>/);
   assert.match(p, /<data>QUJD<\/data>/);
-  assert.match(p, /fr\.dataparl\.messagerie\.theo-dataparl-fr/);
+  assert.match(p, /fr\.dataparl\.messagerie\.equipe-dataparl-fr/);
   assert.match(p, /DataParl&apos; Mail/);
   assert.notEqual(p.indexOf("UUID-1"), -1);
   assert.notEqual(p.indexOf("UUID-2"), -1);

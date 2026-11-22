@@ -56,7 +56,7 @@ function ClesDAcces() {
       ) : <p className="meta">Aucune clé d&apos;accès pour l&apos;instant.</p>}
       {data && !data.disponible ? <p className="meta">À enregistrer depuis admin.dataparl.fr ou webmail.dataparl.fr.</p> : <>
         <label htmlFor="cle-nom">Nom de l&apos;appareil</label>
-        <input id="cle-nom" type="text" value={nom} onChange={(e) => setNom(e.target.value)} placeholder="MacBook de Théo" maxLength={60} />
+        <input id="cle-nom" type="text" value={nom} onChange={(e) => setNom(e.target.value)} placeholder="MacBook de la team" maxLength={60} />
         {etat && <p className={etat.ok ? "ok" : "erreur"}>{etat.t}</p>}
         <button className="secondaire" onClick={ajouter}>Ajouter cet appareil</button>
       </>}
@@ -149,7 +149,7 @@ export default function MonEspace() {
                   <input type="text" id="p-nom" value={brouillon.nom_famille} onChange={(e) => setBrouillon({ ...brouillon, nom_famille: e.target.value })} autoComplete="family-name" /></div>
               </div>
               <label htmlFor="p-affiche">Nom affiché</label>
-              <input type="text" id="p-affiche" value={brouillon.nom} onChange={(e) => setBrouillon({ ...brouillon, nom: e.target.value })} placeholder="ex. Théo de DataParl'" />
+              <input type="text" id="p-affiche" value={brouillon.nom} onChange={(e) => setBrouillon({ ...brouillon, nom: e.target.value })} placeholder="ex. Camille de DataParl'" />
               <p className="meta" style={{ marginTop: 4 }}>Nom d&apos;expéditeur de tes emails et nom dans l&apos;espace admin.</p>
               <label htmlFor="p-poste">Poste</label>
               <input type="text" id="p-poste" value={brouillon.poste} onChange={(e) => setBrouillon({ ...brouillon, poste: e.target.value })} placeholder={LIBELLE_ROLE[role]} />

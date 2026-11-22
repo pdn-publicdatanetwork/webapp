@@ -27,7 +27,7 @@ export async function envoyerDepuisWebmail(a: Admin, b: Brouillon, permis: strin
   if (!permis.includes(from)) return { ok: false, error: "adresse d'expédition non autorisée" };
   const r = await expedier({
     from, to: b.to, cc: b.cc, subject: b.subject, corpsHtml: texteVersHtml(b.text), text: b.text,
-    // Depuis sa propre adresse : son nom affiché (ex. « Théo de DataParl' »).
+    // Depuis sa propre adresse : son nom affiché (ex. « Camille de DataParl' »).
     nomExpediteur: from === a.email.toLowerCase() && a.github ? a.github : undefined,
     inReplyTo: b.inReplyTo, references: b.references, type: "webmail",
   });

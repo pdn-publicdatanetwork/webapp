@@ -32,5 +32,5 @@ test("machines observées dans le balayage du 14/11/2026 : silence", () => {
 test("adresses et en-têtes : clés en minuscules, nos propres adresses en silence", () => {
   assert.deepEqual(entetes({ "In-Reply-To": "<x>" }), { "in-reply-to": "<x>" });
   assert.deepEqual(entetes([{ name: "List-Id", value: "l" }]), { "list-id": "l" });
-  assert.equal(doitRepondre({ ...base, from: "Théo <theo@dataparl.fr>" }), false);
+  assert.equal(doitRepondre({ ...base, from: "Équipe DataParl' <equipe@dataparl.fr>" }), false);
 });

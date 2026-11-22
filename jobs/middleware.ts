@@ -43,7 +43,7 @@ function ipExemptee(ip: string, ips: string[]): boolean {
   });
 }
 
-// Page de maintenance (design Théo, 10/11/2026) : autonome, aucune requête
+// Page de maintenance (design maison, 10/11/2026) : autonome, aucune requête
 // externe (pas de CDN, pas de webfonts) pour respecter « sans pistage ».
 // Le formulaire « M'avertir » passe par /maintenance/prevenir ci-dessous.
 const PAGE_MAINTENANCE = `<!doctype html>
