@@ -1,1 +1,2 @@
 Declencheur du workflow env-push-cloudflare. Modifier ce fichier (par ex. ajouter un caractere) pour relancer le push des secrets vers les Workers.
+Relance 2 (22/11/2026 11h30) : apres retrait du cron horaire anti-abus de vercel.json (bloque le build Vercel en plan Hobby ; le cron horaire est desormais couvert par le cron du Worker Cloudflare dataparl).
