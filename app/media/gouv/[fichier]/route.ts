@@ -1,15 +1,16 @@
-import sharp from "sharp";
 import { CREDIT } from "@/lib/media";
 import { dataQuery } from "@/lib/data";
 
 // Portrait officiel d'une personnalité du Gouvernement, servi par DataParl' :
 // /media/gouv/<slug>_gouv_<taille>.png (media.dataparl.fr/gouv/…), où <slug>
 // est le profil info.gouv.fr (ex. philippe-tabarot). Les pages HTML d'info.gouv.fr
-// sont protégées par un défi Cloudflare illisible depuis Vercel : l'URL de
+// sont protégées par un défi Cloudflare illisible depuis un serveur : l'URL de
 // l'image officielle et le crédit du photographe sont donc recensés dans la
 // table ministres (colonnes infogouv_photo / infogouv_credit) et l'image est
 // lue sur le CDN d'info.gouv.fr, lui, accessible. Le crédit est transmis dans
 // l'en-tête X-Credit.
+// NOTE 22/11/2026 — migration Cloudflare Workers : sharp ne peut pas y
+// tourner (module natif) ; l'image officielle est servie telle quelle.
 export const dynamic = "force-dynamic";
 
 const absente = () => new Response("Photo introuvable", { status: 404, headers: { "Cache-Control": "public, s-maxage=3600" } });
@@ -30,14 +31,14 @@ export async function GET(_req: Request, { params }: { params: Promise<{ fichier
     if (!photo) return absente();
     const credit = rows[0]?.infogouv_credit?.slice(0, 120) ?? null;
     const r = await fetch(photo, { headers: { "User-Agent": "DataParl (https://www.dataparl.fr)" }, signal: AbortSignal.timeout(8000) });
-    if (!r.ok || !(r.headers.get("content-type") ?? "").startsWith("image/")) return absente();
-    const brut = Buffer.from(await r.arrayBuffer());
-    if (brut.length > 8_000_000) return absente();
-    const png = await sharp(brut).resize(taille, taille, { fit: "cover", position: "top" }).png({ compressionLevel: 9, palette: true }).toBuffer();
-    return new Response(new Uint8Array(png), {
+    const type = r.headers.get("content-type") ?? "";
+    if (!r.ok || !type.startsWith("image/")) return absente();
+    const octets = await r.arrayBuffer();
+    if (octets.byteLength === 0 || octets.byteLength > 8_000_000) return absente();
+    return new Response(octets, {
       headers: {
         "Content-Disposition": `inline; filename="${slug}_gouv_${taille}.png"`,
-        "Content-Type": "image/png", "Cache-Control": "public, max-age=31536000, immutable",
+        "Content-Type": type, "Cache-Control": "public, max-age=31536000, immutable",
         "X-Credit": encodeURIComponent(`Photo : ${CREDIT.gouv}${credit ? " : " + credit : ""}`),
         "Access-Control-Allow-Origin": "*", "X-Robots-Tag": "noarchive",
       },
