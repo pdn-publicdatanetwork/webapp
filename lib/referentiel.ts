@@ -164,3 +164,20 @@ export async function collaborateurDeLaPersonne(personneId: string): Promise<Col
   const { rows } = await dataQuery<Collaborateur>("collaborateurs", new URLSearchParams({ select: "*", personne_id: `eq.${personneId}`, limit: "1" }), 3600);
   return rows[0] ?? null;
 }
+
+// Suppléance parlementaire (table suppleances : saisie rédaction puis
+// reconciliation quotidienne du JORF, cf. collaborateurs #4 et #8). Le
+// rapprochement se fait par le nom du suppléant, à exactement une ligne :
+// un homonyme entraine plusieurs lignes possibles -> pas d'affichage.
+export type Suppleance = {
+  id: string; elu_id: string; elu_personne_id: string | null; suppleant_elu_id: string | null;
+  suppleant_nom: string; suppleant_prenom: string; suppleant_personne_id: string | null;
+  suppleant_etait_collab: boolean | null; chambre: Chambre; debut: string; fin: string;
+  cause_debut: string; cause_fin: string | null; source: string | null; confiance: string | null;
+};
+export async function suppleanceDuCollab(prenom: string, nom: string): Promise<Suppleance | null> {
+  const or = `(and(suppleant_nom.ilike.${nom},suppleant_prenom.ilike.${prenom}),and(suppleant_nom.ilike.${prenom},suppleant_prenom.ilike.${nom}))`;
+  const { rows } = await dataQuery<Suppleance>("suppleances",
+    new URLSearchParams({ select: "id,elu_id,elu_personne_id,suppleant_elu_id,suppleant_nom,suppleant_prenom,suppleant_personne_id,suppleant_etait_collab,chambre,debut,fin,cause_debut,cause_fin,source,confiance", or, limit: "5" }), 3600);
+  return rows.length === 1 ? rows[0] : null;
+}
