@@ -115,6 +115,7 @@ export default async function Bio({ params }: Props) {
     chambre: "gouvernement" as const, elu_id: "", personne_id: f.personne_id,
     libelle: g.fonction, circonscription: g.portefeuille || "", legislature: "",
     debut: g.debut, fin: g.fin, cause_fin: "",
+    cause_debut: null, remplace_id: null,
   }));
   const parcours: Etape[] = ([...mandats, ...mandatsManuels, ...mandatsGouv] as Etape[]).sort((a, b) => (b.debut || "").localeCompare(a.debut || ""));
 
