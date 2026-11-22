@@ -4,12 +4,11 @@ name: Deploy Cloudflare Workers
 # sur main : construit les deux apps puis publie les Workers (www: « dataparl »,
 # jobs: « dataparl-jobs »). Zéro secret GitHub : le token Cloudflare et les
 # variables de build viennent de la route /api/cron/ci-jeton-cloudflare après
-# validation du jeton OIDC (pattern ci-jeton, incident du 17/11). La route est
-# servie par Vercel prod : le workflow attend jusqu'à 12 min qu'elle soit prete
-# (retry tous les 15 s) car Vercel deploye le push en parallele.
+# validation du jeton OIDC GitHub (audience « dataparl-ci »). Le workflow
+# attend jusqu'à 12 min que la route (servie par Vercel prod) soit prete :
+# jeton OIDC re-minte a CHAQUE essai (validite 5 min) + curl --max-time.
 # Build : opennextjs-cloudflare build lance lui-même next build en mode
-# webpack + standalone (compatible Next 16 malgré Turbopack par défaut).
-# En cas d'échec, la fin du log est postée dans l'issue #174.
+# webpack + standalone (compatible Next 16). Echecs postes dans l'issue #174.
 
 on:
   push:
@@ -36,17 +35,17 @@ jobs:
           node-version: 22
       - name: Identité CI + variables de déploiement
         run: |
-          oidc=$(curl -fsS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=dataparl-ci" \
-            | python3 -c "import json,sys; sys.stdout.write(json.load(sys.stdin)['value'])")
           rapport=""
           for i in $(seq 1 48); do
-            if curl -fsS -H "x-oidc: $oidc" \
+            oidc=$(curl -fsS --connect-timeout 15 --max-time 30 -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+              "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=dataparl-ci" \
+              | python3 -c "import json,sys; sys.stdout.write(json.load(sys.stdin)['value'])") || continue
+            if curl -fsS --connect-timeout 15 --max-time 30 -H "x-oidc: $oidc" \
               "https://www.dataparl.fr/api/cron/ci-jeton-cloudflare?app=www" -o rapport.json; then
               rapport=ok
               break
             fi
-            echo "route CI pas encore prete (essai $i/48), nouvelle tentative dans 15 s"
+            echo "route CI pas prete ou refusessee (essai $i/48), nouvelle tentative dans 15 s"
             sleep 15
           done
           if [ -z "$rapport" ]; then
@@ -72,14 +71,16 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           JOB_STATUS: ${{ job.status }}
         run: |
+          printf "DEPLOY WWW : " > verdict.txt
           if [ "$JOB_STATUS" = "success" ]; then
-            echo -n "DEPLOY WWW OK" > verdict.txt
+            echo "OK" >> verdict.txt
           else
+            echo "ECHEC" >> verdict.txt
             : > comb.log
             cat build.log deploy.log 2>/dev/null >> comb.log || true
-            python3 -c "log=open('comb.log',errors='replace').read(); txt='ECHEC DEPLOY WWW : \n\n\u0060\u0060\u0060\n'+log[-24000:]+'\n\u0060\u0060\u0060'; open('verdict.txt','w').write(txt)"
+            python3 -c "log=open('comb.log',errors='replace').read(); txt=' \n\n\u0060\u0060\u0060\n'+log[-24000:]+'\n\u0060\u0060\u0060'; open('verdict.txt','a').write(txt)" || echo "(log illisible)" >> verdict.txt
           fi
-          gh api repos/pdn-publicdatanetwork/webapp/issues/174/comments -F body=@verdict.txt
+          gh api repos/pdn-publicdatanetwork/webapp/issues/174/comments -F body=@verdict.txt || echo "publication verdict impossible"
   jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
@@ -93,17 +94,17 @@ jobs:
           node-version: 22
       - name: Identité CI + variables de déploiement
         run: |
-          oidc=$(curl -fsS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=dataparl-ci" \
-            | python3 -c "import json,sys; sys.stdout.write(json.load(sys.stdin)['value'])")
           rapport=""
           for i in $(seq 1 48); do
-            if curl -fsS -H "x-oidc: $oidc" \
+            oidc=$(curl -fsS --connect-timeout 15 --max-time 30 -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+              "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=dataparl-ci" \
+              | python3 -c "import json,sys; sys.stdout.write(json.load(sys.stdin)['value'])") || continue
+            if curl -fsS --connect-timeout 15 --max-time 30 -H "x-oidc: $oidc" \
               "https://www.dataparl.fr/api/cron/ci-jeton-cloudflare?app=jobs" -o rapport.json; then
               rapport=ok
               break
             fi
-            echo "route CI pas encore prete (essai $i/48), nouvelle tentative dans 15 s"
+            echo "route CI pas prete ou refusessee (essai $i/48), nouvelle tentative dans 15 s"
             sleep 15
           done
           if [ -z "$rapport" ]; then
@@ -129,11 +130,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           JOB_STATUS: ${{ job.status }}
         run: |
+          printf "DEPLOY JOBS : " > verdict.txt
           if [ "$JOB_STATUS" = "success" ]; then
-            echo -n "DEPLOY JOBS OK" > verdict.txt
+            echo "OK" >> verdict.txt
           else
+            echo "ECHEC" >> verdict.txt
             : > comb.log
             cat build.log deploy.log 2>/dev/null >> comb.log || true
-            python3 -c "log=open('comb.log',errors='replace').read(); txt='ECHEC DEPLOY JOBS : \n\n\u0060\u0060\u0060\n'+log[-24000:]+'\n\u0060\u0060\u0060'; open('verdict.txt','w').write(txt)"
+            python3 -c "log=open('comb.log',errors='replace').read(); txt=' \n\n\u0060\u0060\u0060\n'+log[-24000:]+'\n\u0060\u0060\u0060'; open('verdict.txt','a').write(txt)" || echo "(log illisible)" >> verdict.txt
           fi
-          gh api repos/pdn-publicdatanetwork/webapp/issues/174/comments -F body=@verdict.txt
+          gh api repos/pdn-publicdatanetwork/webapp/issues/174/comments -F body=@verdict.txt || echo "publication verdict impossible"

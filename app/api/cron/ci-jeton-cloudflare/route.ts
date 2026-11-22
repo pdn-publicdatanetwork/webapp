@@ -9,7 +9,9 @@ export const maxDuration = 60;
 // (migration Vercel -> Cloudflare Workers, 22/11/2026). Même architecture
 // zéro-secret GitHub que /api/cron/ci-jeton : le workflow prouve son identité
 // par jeton OIDC GitHub éphémère (audience « dataparl-ci »), cette route valide
-// le jeton (JWKS GitHub + claims) puis sert selon ?app=www|jobs :
+// le jeton (JWKS GitHub + claims — NOTE: le claim job_workflow_ref envoyé par
+// GitHub contient le suffixe « @refs/heads/main ») puis sert selon
+// ?app=www|jobs :
 //   - token API Cloudflare : ci_secrets.cle « cloudflare_deploy_token »,
 //   - account id : ci_secrets.cle « cloudflare_account_id »,
 //   - variables de build NEXT_PUBLIC_* (JSON) : « cloudflare_build_vars_www »
@@ -22,7 +24,7 @@ const ISSUER = "https://token.actions.githubusercontent.com";
 const AUDIENCE = "dataparl-ci";
 const REPO = "pdn-publicdatanetwork/webapp";
 const REF_AUTORISE = "refs/heads/main";
-const WORKFLOW_DEPLOY = "pdn-publicdatanetwork/webapp/.github/workflows/deploy-cloudflare.yml";
+const WORKFLOW_DEPLOY = "pdn-publicdatanetwork/webapp/.github/workflows/deploy-cloudflare.yml@refs/heads/main";
 
 const b64url = (s: string) => Buffer.from(s.replace(/-/g, "+").replace(/_/g, "/"), "base64");
 
