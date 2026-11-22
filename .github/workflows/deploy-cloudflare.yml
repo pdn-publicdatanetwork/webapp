@@ -41,7 +41,7 @@ jobs:
               "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=dataparl-ci" \
               | python3 -c "import json,sys; sys.stdout.write(json.load(sys.stdin)['value'])") || continue
             if curl -fsS --connect-timeout 15 --max-time 30 -H "x-oidc: $oidc" \
-              "https://www.dataparl.fr/api/cron/ci-jeton-cloudflare?app=www" -o rapport.json; then
+              "https://dataparl.dataparl.workers.dev/api/cron/ci-jeton-cloudflare?app=www" -o rapport.json; then
               rapport=ok
               break
             fi
@@ -100,7 +100,7 @@ jobs:
               "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=dataparl-ci" \
               | python3 -c "import json,sys; sys.stdout.write(json.load(sys.stdin)['value'])") || continue
             if curl -fsS --connect-timeout 15 --max-time 30 -H "x-oidc: $oidc" \
-              "https://www.dataparl.fr/api/cron/ci-jeton-cloudflare?app=jobs" -o rapport.json; then
+              "https://dataparl.dataparl.workers.dev/api/cron/ci-jeton-cloudflare?app=jobs" -o rapport.json; then
               rapport=ok
               break
             fi

@@ -64,7 +64,7 @@ jobs:
           test -n "$jeton"
           code=$(curl -sSf -o /tmp/ci-jeton.json -w "%{http_code}" \
             -H "x-oidc: $jeton" \
-            "https://www.dataparl.fr/api/cron/ci-jeton")
+            "https://dataparl.dataparl.workers.dev/api/cron/ci-jeton")
           v=$(jq -r '.token // empty' /tmp/ci-jeton.json)
           rm -f /tmp/ci-jeton.json
           test -n "$v"
@@ -138,7 +138,7 @@ jobs:
           test -n "$APP_SECRET"
           code=$(curl -sS -o /tmp/alerte-jobs.json -w "%{http_code}" \
             -H "Authorization: Bearer $APP_SECRET" \
-            "https://www.dataparl.fr/api/cron/alertes-jobs")
+            "https://dataparl.dataparl.workers.dev/api/cron/alertes-jobs")
           cat /tmp/alerte-jobs.json; echo
           grep -q '"ok"' /tmp/alerte-jobs.json
           test "$code" = 200

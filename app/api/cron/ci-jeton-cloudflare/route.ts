@@ -5,7 +5,8 @@ import { authAdmin } from "@/lib/supabaseAdmin";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-// Remise des identifiants Cloudflare au workflow « Deploy Cloudflare Workers »
+// Remise des identifiants Cloudflare aux workflows « Deploy Cloudflare Workers »
+// et « Recuperation secrets GitLab » (both sur main uniquement)
 // (migration Vercel -> Cloudflare Workers, 22/11/2026). Même architecture
 // zéro-secret GitHub que /api/cron/ci-jeton : le workflow prouve son identité
 // par jeton OIDC GitHub éphémère (audience « dataparl-ci »), cette route valide
@@ -24,7 +25,10 @@ const ISSUER = "https://token.actions.githubusercontent.com";
 const AUDIENCE = "dataparl-ci";
 const REPO = "pdn-publicdatanetwork/webapp";
 const REF_AUTORISE = "refs/heads/main";
-const WORKFLOW_DEPLOY = "pdn-publicdatanetwork/webapp/.github/workflows/deploy-cloudflare.yml@refs/heads/main";
+const WORKFLOWS_AUTORISES = [
+  "pdn-publicdatanetwork/webapp/.github/workflows/deploy-cloudflare.yml@refs/heads/main",
+  "pdn-publicdatanetwork/webapp/.github/workflows/recuperation-gitlab.yml@refs/heads/main",
+];
 
 const b64url = (s: string) => Buffer.from(s.replace(/-/g, "+").replace(/_/g, "/"), "base64");
 
@@ -92,7 +96,7 @@ async function validerJetonsOidc(jetons: string): Promise<Verdict> {
   if (typeof charge.exp !== "number" || charge.exp < Math.floor(Date.now() / 1000)) return refus("exp", charge);
   if (charge.repository !== REPO) return refus("repository", charge);
   if (charge.ref !== REF_AUTORISE) return refus("ref", charge);
-  if (charge.job_workflow_ref !== WORKFLOW_DEPLOY) return refus("workflow", charge);
+  if (typeof charge.job_workflow_ref !== "string" || !WORKFLOWS_AUTORISES.includes(charge.job_workflow_ref)) return refus("workflow", charge);
   return { ok: true, claims: charge };
 }
 
