@@ -1,12 +1,16 @@
 name: Test build OpenNext Cloudflare
 
-# Validation ponctuelle : la migration Vercel -> Cloudflare Workers (OpenNext)
-# n'a jamais ete buildee. Ce workflow compile les deux apps (www + jobs)
-# sur une branche de test, sans deploy, sans secret.
+# Validation migration Vercel -> Cloudflare Workers (OpenNext) :
+# compile www (racine) et jobs (jobs/) sans deploy. En cas d'echec, la fin
+# du log est postee dans l'issue #174 pour lecture hors API logs.
 on:
   push:
     branches: [test-opennext]
   workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
 
 jobs:
   build-www:
@@ -19,10 +23,22 @@ jobs:
           node-version: 22
       - run: npm ci
       - run: npm install --no-save @opennextjs/cloudflare wrangler
-      - run: npx opennextjs-cloudflare build
-      - name: Artefact de controle
-        run: ls .open-next && du -sh .open-next
-
+      - name: Build OpenNext (www)
+        run: |
+          set -o pipefail
+          npx opennextjs-cloudflare build 2>&1 | tee build.log
+      - name: Verdict www
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          if [ "$JOB_STATUS" = "success" ]; then
+            echo -n "BUILD WWW OK" > verdict.txt
+          else
+            python3 -c "import sys; log=open('build.log',errors='replace').read(); txt='ECHEC BUILD WWW :\n\n\`\`\`\n'+log[-24000:]+'\n\`\`\`'; open('verdict.txt','w').write(txt)"
+          fi
+          gh api repos/pdn-publicdatanetwork/webapp/issues/174/comments -f body=@verdict.txt
   build-jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -36,6 +52,19 @@ jobs:
           node-version: 22
       - run: npm install --no-package-lock
       - run: npm install --no-save @opennextjs/cloudflare wrangler
-      - run: npx opennextjs-cloudflare build
-      - name: Artefact de controle
-        run: ls .open-next && du -sh .open-next
+      - name: Build OpenNext (jobs)
+        run: |
+          set -o pipefail
+          npx opennextjs-cloudflare build 2>&1 | tee build.log
+      - name: Verdict jobs
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          if [ "$JOB_STATUS" = "success" ]; then
+            echo -n "BUILD JOBS OK" > verdict.txt
+          else
+            python3 -c "import sys; log=open('build.log',errors='replace').read(); txt='ECHEC BUILD JOBS :\n\n\`\`\`\n'+log[-24000:]+'\n\`\`\`'; open('verdict.txt','w').write(txt)"
+          fi
+          gh api repos/pdn-publicdatanetwork/webapp/issues/174/comments -f body=@verdict.txt
