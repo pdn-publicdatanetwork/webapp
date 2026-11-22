@@ -1,12 +1,15 @@
 name: Reparation imports dp-firebase-admin
 
-# Ponctuel (un seul usage prevu) : le commit 43986f1a a pousse des contenus
-# avec des retours a la ligne parasites insere au milieu de lignes longues
-# (transport d'API fallacieux). Ce workflow restaure les 4 fichiers
-# consommateurs depuis 536c5b62085dd2a11822a385db96542d4784ee44 (dernier
-# etat sain), reapplique les remplacements firebase-admin -> dp-firebase-admin
-# de facon deterministe, verifie, puis committe. Les fichiers .d.mts du shim
-# ajoutes par 43986f1a sont corrects et ne sont pas touches.
+# Ponctuel. Passages 1 et 2 :
+# 1. restaure les 4 consommateurs depuis 536c5b62 (lignes cassees par un
+#    transport d'API fallacieux) et reapplique les remplacements
+#    firebase-admin -> dp-firebase-admin.
+# 2. duplique le shim dans jobs/shims/ : la dependance file: de jobs pointait
+#    hors du root Turbopack auto-detected (jobs/package-lock.json), et
+#    Turbopack refuse de resoudre les fichiers hors root ("Can't resolve
+#    dp-firebase-admin/app"). Avec jobs/shims/, le symlink cible reste
+#    dans jobs/. Le webapp www garde shims/ a la racine (dans son root).
+# Idempotent : peut etre relance sans dommage.
 
 on:
   push:
@@ -24,7 +27,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Restauration depuis 536c5b62 + remplacements
+      - name: Duplication du shim dans jobs/shims + remplacements
         run: |
           git checkout 536c5b62085dd2a11822a385db96542d4784ee44 -- lib/firebaseAuthAdmin.ts lib/jobsFirestore.ts jobs/lib/firebaseAuth.ts jobs/lib/firestore.ts
           sed -i 's|"firebase-admin/app"|"dp-firebase-admin/app"|' lib/firebaseAuthAdmin.ts lib/jobsFirestore.ts jobs/lib/firebaseAuth.ts jobs/lib/firestore.ts
@@ -39,12 +42,20 @@ jobs:
             echo "il reste des imports firebase-admin non remplaces" >&2
             exit 1
           fi
+          mkdir -p jobs/shims
+          rm -rf jobs/shims/dp-firebase-admin
+          cp -r shims/dp-firebase-admin jobs/shims/dp-firebase-admin
+          test -f jobs/shims/dp-firebase-admin/src/app.mjs
+          test -f jobs/shims/dp-firebase-admin/src/firestore.mjs
+          test -f jobs/shims/dp-firebase-admin/src/firestore.d.mts
+          sed -i 's|"file:../shims/dp-firebase-admin"|"file:shims/dp-firebase-admin"|' jobs/package.json
+          grep -q '"dp-firebase-admin": "file:shims/dp-firebase-admin"' jobs/package.json
           git config user.name "Public Data Network PDN"
           git config user.email "hello@cavaparlement.eu"
-          git add lib/firebaseAuthAdmin.ts lib/jobsFirestore.ts jobs/lib/firebaseAuth.ts jobs/lib/firestore.ts
+          git add lib/firebaseAuthAdmin.ts lib/jobsFirestore.ts jobs/lib/firebaseAuth.ts jobs/lib/firestore.ts jobs/shims jobs/package.json
           if git diff --cached --quiet; then
             echo "rien a faire (deja repare)"
             exit 0
           fi
-          git commit -m "fix: restauration des 4 consommateurs dp-firebase-admin depuis 536c5b62 (lignes cassees par le commit precedent) + remplacements sed determines"
+          git commit -m "fix(jobs): shim dp-firebase-admin duplique dans jobs/shims (dependance file: resolue dans le root Turbopack, plus de 'Can not resolve dp-firebase-admin/app')"
           git push
