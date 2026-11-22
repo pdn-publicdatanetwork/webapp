@@ -45,8 +45,7 @@ function configClé(): Record<string, unknown> {
   if (!brut) throw new Error("FIREBASE_AUTH_SERVICE_ACCOUNT absent");
   let conf: Record<string, unknown>;
   try {
-    conf = JSO
-N.parse(brut) as Record<string, unknown>;
+    conf = JSON.parse(brut) as Record<string, unknown>;
   } catch (e) {
     throw new Error(`FIREBASE_AUTH_SERVICE_ACCOUNT : JSON invalide (${(e as Error).message.slice(0, 120)})`);
   }

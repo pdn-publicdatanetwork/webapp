@@ -39,8 +39,7 @@ function configClé(): Record<string, unknown> {
     .replace(/\\r/g, "\n")
     .trim();
   const lignes = cle.split("\n").filter((l) => l.trim().length > 0);
-  if (lignes.length < 3 || !lignes[0].startsWith("-----BEGIN") || !/^-----END PRIV
-ATE KEY-----$/.test(lignes[lignes.length - 1].trim())) {
+  if (lignes.length < 3 || !lignes[0].startsWith("-----BEGIN") || !/^-----END PRIVATE KEY-----$/.test(lignes[lignes.length - 1].trim())) {
     throw new Error(`FIREBASE_AUTH_SERVICE_ACCOUNT : private_key de forme inattendue (${lignes.length} lignes, en-tête : ${(lignes[0] || "").slice(0, 32)})`);
   }
   // Le corps base64 est ré-assemblé : tout caractère parasite (espaces

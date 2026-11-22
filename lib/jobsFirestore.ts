@@ -44,8 +44,7 @@ const parDateAsc = (champ: string) => (a: Offre, b: Offre) =>
 
 // Offres publiées (validées, actives, non expirées), plus récentes d'abord.
 export async function offresPubliques(): Promise<Offre[]> {
-  const snaps = await db()
-.collection("job_offers").where("review_status", "==", "approved").limit(500).get();
+  const snaps = await db().collection("job_offers").where("review_status", "==", "approved").limit(500).get();
   return snaps.docs
     .map(enOffre)
     .filter((o) => o.statut === "active" && (!o.expire_le || o.expire_le >= aujourdHui()))
@@ -93,8 +92,7 @@ export async function offresActivesAdmin(): Promise<Offre[]> {
   return snaps.docs
     .map(enOffre)
     .filter((o) => o.statut === "active")
-    .sort(parDateDesc
-("publie_le"))
+    .sort(parDateDesc("publie_le"))
     .slice(0, 200);
 }
 
@@ -147,8 +145,7 @@ export async function inscritAlerte(email: string): Promise<void> {
   await db()
     .collection("alert_subscriptions")
     .doc(email)
-    .set({ email, actif: true, created_at: new Date().toISOString() }, { merg
-e: true });
+    .set({ email, actif: true, created_at: new Date().toISOString() }, { merge: true });
 }
 
 export async function desinscritAlerte(email: string): Promise<void> {
