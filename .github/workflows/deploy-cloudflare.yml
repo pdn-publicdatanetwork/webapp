@@ -1,0 +1,126 @@
+name: Deploy Cloudflare Workers
+
+# Migration Vercel -> Cloudflare Workers (OpenNext). Se déclenche à chaque push
+# sur main : construit les deux apps puis publie les Workers (www: « dataparl »,
+# jobs: « dataparl-jobs »). Zéro secret GitHub : le token Cloudflare et les
+# variables de build viennent de la route /api/cron/ci-jeton-cloudflare après
+# validation du jeton OIDC (pattern ci-jeton, incident du 17/11). Les secrets
+# d'exécution sont posés directement sur les Workers via l'API Cloudflare.
+# Build : opennextjs-cloudflare build lance lui-même next build en mode
+# webpack + standalone (compatible Next 16 malgré Turbopack par défaut).
+# En cas d'échec, la fin du log est postée dans l'issue #174.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  issues: write
+
+concurrency:
+  group: deploy-cloudflare
+  cancel-in-progress: false
+
+jobs:
+  www:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Identité CI + variables de déploiement
+        run: |
+          oidc=$(curl -fsS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=dataparl-ci" \
+            | python3 -c "import json,sys; sys.stdout.write(json.load(sys.stdin)['value'])")
+          curl -fsS -H "x-oidc: $oidc" \
+            "https://www.dataparl.fr/api/cron/ci-jeton-cloudflare?app=www" -o rapport.json
+          python3 - <<'PY'
+import json
+d = json.load(open("rapport.json"))
+lignes = ["CLOUDFLARE_API_TOKEN=" + d["token"], "CLOUDFLARE_ACCOUNT_ID=" + d["account_id"]]
+lignes += [k + "=" + str(v) for k, v in d.get("build_vars", {}).items() if v is not None]
+open(".cf-env", "w").write("\n".join(lignes) + "\n")
+PY
+          cat .cf-env >> "$GITHUB_ENV"
+          rm -f .cf-env rapport.json
+      - run: npm install --no-audit --no-fund
+      - run: npm install --no-save --legacy-peer-deps @opennextjs/cloudflare wrangler
+      - name: Build OpenNext (www)
+        run: |
+          set -o pipefail
+          npx opennextjs-cloudflare build 2>&1 | tee build.log
+      - name: Deploy www
+        run: |
+          set -o pipefail
+          npx wrangler deploy 2>&1 | tee deploy.log
+      - name: Verdict www
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          if [ "$JOB_STATUS" = "success" ]; then
+            echo -n "DEPLOY WWW OK" > verdict.txt
+          else
+            : > comb.log
+            cat build.log deploy.log 2>/dev/null >> comb.log || true
+            python3 -c "log=open('comb.log',errors='replace').read(); txt='ECHEC DEPLOY WWW : \n\n\u0060\u0060\u0060\n'+log[-24000:]+'\n\u0060\u0060\u0060'; open('verdict.txt','w').write(txt)"
+          fi
+          gh api repos/pdn-publicdatanetwork/webapp/issues/174/comments -F body=@verdict.txt
+  jobs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: jobs
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Identité CI + variables de déploiement
+        run: |
+          oidc=$(curl -fsS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=dataparl-ci" \
+            | python3 -c "import json,sys; sys.stdout.write(json.load(sys.stdin)['value'])")
+          curl -fsS -H "x-oidc: $oidc" \
+            "https://www.dataparl.fr/api/cron/ci-jeton-cloudflare?app=jobs" -o rapport.json
+          python3 - <<'PY'
+import json
+d = json.load(open("rapport.json"))
+lignes = ["CLOUDFLARE_API_TOKEN=" + d["token"], "CLOUDFLARE_ACCOUNT_ID=" + d["account_id"]]
+lignes += [k + "=" + str(v) for k, v in d.get("build_vars", {}).items() if v is not None]
+open(".cf-env", "w").write("\n".join(lignes) + "\n")
+PY
+          cat .cf-env >> "$GITHUB_ENV"
+          rm -f .cf-env rapport.json
+      - run: npm install --no-audit --no-fund
+      - run: npm install --no-save --legacy-peer-deps @opennextjs/cloudflare wrangler
+      - name: Build OpenNext (jobs)
+        run: |
+          set -o pipefail
+          npx opennextjs-cloudflare build 2>&1 | tee build.log
+      - name: Deploy jobs
+        run: |
+          set -o pipefail
+          npx wrangler deploy 2>&1 | tee deploy.log
+      - name: Verdict jobs
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          if [ "$JOB_STATUS" = "success" ]; then
+            echo -n "DEPLOY JOBS OK" > verdict.txt
+          else
+            : > comb.log
+            cat build.log deploy.log 2>/dev/null >> comb.log || true
+            python3 -c "log=open('comb.log',errors='replace').read(); txt='ECHEC DEPLOY JOBS : \n\n\u0060\u0060\u0060\n'+log[-24000:]+'\n\u0060\u0060\u0060'; open('verdict.txt','w').write(txt)"
+          fi
+          gh api repos/pdn-publicdatanetwork/webapp/issues/174/comments -F body=@verdict.txt
