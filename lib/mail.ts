@@ -13,7 +13,9 @@ export { esc, texteVersHtml } from "./gabarit";
 //   - est rangé dans la table emails (visible dans la webmail).
 //
 // Relais de secours : si Resend refuse ou échoue, on retente via Cloudflare
-// Email Service (zone dataparl.com, même compte Cloudflare que le site).
+// Email Service (domaine d'envoi mail.dataparl.com, sous-domaine embarqué
+// du même compte Cloudflare que le site ; la racine dataparl.com n'est pas
+// embarquée : l'API refuse toute autre adresse).
 // La boîte d'expédition est conservée, seul le domaine change :
 // @dataparl.fr = @dataparl.com (cf. politique éditoriale). Un relais non
 // configuré est simplement sauté ; si les deux échouent, l'erreur agrégée
@@ -90,7 +92,7 @@ const analyseAdresse = (a: string): string | { address: string; name?: string } 
 };
 
 // Cloudflare Email Service (bêta) : envoi transactionnel REST sur le domaine
-// dataparl.com (zone du même compte Cloudflare que le site). Inactif tant
+// d'envoi mail.dataparl.com. Inactif tant
 // que CF_ACCOUNT_ID et CF_EMAIL_SENDING_TOKEN ne sont pas posés sur le
 // Worker : le relais est simplement sauté.
 const envoiCloudflare = async (
@@ -105,7 +107,7 @@ const envoiCloudflare = async (
     body: JSON.stringify({
       to: m.to.map(analyseAdresse),
       cc: m.cc?.length ? m.cc.map(analyseAdresse) : undefined,
-      from: analyseAdresse(fromPourDomaine(from, "dataparl.com")),
+      from: analyseAdresse(fromPourDomaine(from, "mail.dataparl.com")),
       subject: m.subject, html, text, headers,
       ...(m.replyTo ? { replyTo: m.replyTo } : {}),
     }),
