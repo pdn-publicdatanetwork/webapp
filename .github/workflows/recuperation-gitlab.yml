@@ -30,42 +30,51 @@ concurrency:
 jobs:
   recup:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - name: Identites + push secrets
         run: |
           set -euo pipefail
           rapport=""
-          for i in $(seq 1 48); do
+          for i in $(seq 1 96); do
             oidc=$(curl -fsS --connect-timeout 15 --max-time 30 -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=dataparl-ci" | jq -r .value) || { sleep 15; continue; }
             test -n "$oidc" || { sleep 15; continue; }
             if curl -fsS --connect-timeout 15 --max-time 30 -H "x-oidc: $oidc" "https://dataparl.dataparl.workers.dev/api/cron/ci-jeton" -o gitlab.json && curl -fsS --connect-timeout 15 --max-time 30 -H "x-oidc: $oidc" "https://dataparl.dataparl.workers.dev/api/cron/ci-jeton-cloudflare?app=www" -o cf.json; then
               rapport=ok
               break
             fi
-            echo "routes CI pas pretes (essai $i/48)"
+            echo "routes CI pas pretes (essai $i/96)"
             sleep 15
           done
           if [ -z "$rapport" ]; then
-            echo "routes CI indisponibles apres 12 min" >&2
+            echo "routes CI indisponibles apres 24 min" >&2
             exit 1
           fi
+          test -s gitlab.json || { echo "gitlab.json vide" >&2; exit 1; }
+          test -s cf.json || { echo "cf.json vide" >&2; exit 1; }
           gt=$(jq -r .token gitlab.json)
           ct=$(jq -r .token cf.json)
           acc=$(jq -r .account_id cf.json)
-          test -n "$gt" && test -n "$ct" && test -n "$acc"
+          test -n "$gt" || { echo "PAT GitLab vide" >&2; exit 1; }
+          test -n "$ct" || { echo "token CF vide" >&2; exit 1; }
+          test -n "$acc" || { echo "account CF vide" >&2; exit 1; }
           echo "::add-mask::$gt"
           echo "::add-mask::$ct"
           rm -f gitlab.json cf.json
-          curl -fsS --max-time 60 -H "PRIVATE-TOKEN: $gt" "https://gitlab.com/api/v4/projects/88469399/variables?per_page=100" -o vars.json
+          if ! curl -fsS --max-time 60 -H "PRIVATE-TOKEN: $gt" "https://gitlab.com/api/v4/projects/88469399/variables?per_page=100" -o vars.json; then
+            echo "API GitLab: echec (PAT ou scope)" >&2
+            exit 1
+          fi
+          test -s vars.json || { echo "vars.json vide" >&2; exit 1; }
           : > resum.txt
           push() {
             local w=$1 cw=$2 cg=$3 json=$4 val code
-            val=$(jq -r --arg k "$cg" ".[] | select(.key == $k) | .value" vars.json)
+            val=$(jq -r --arg k "$cg" '.[] | select(.key == $k) | .value' vars.json)
             if [ -z "$val" ] || [ "$val" = "null" ]; then
               echo "$w/$cw ABSENT" | tee -a resum.txt
               return 0
             fi
+            echo "::add-mask::$val"
             if [ "$json" = "json" ]; then
               val=$(printf "%s" "$val" | jq -c .)
             fi

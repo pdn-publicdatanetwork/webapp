@@ -1,1 +1,1 @@
-Declencheur du workflow recuperation-gitlab. Modifier ce fichier pour relancer la recuperation des variables GitLab vers les secrets des Workers.
+Relance 2 : correctif jq (simples quotes) + routes workers.dev deja en place, validation liste workflows deployee.
