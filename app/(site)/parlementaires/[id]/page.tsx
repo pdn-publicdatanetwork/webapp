@@ -7,7 +7,6 @@ import PubGoogle from "@/app/_components/PubGoogle";
 import CrayonEdition from "@/app/_components/CrayonEdition";
 import { eluDepuisFiche, eluDepuisId, equipe, lienOfficiel, mouvementsElu, statsElu } from "@/lib/elus";
 import { FONCTIONS_SOCIETES } from "@/lib/exclusions";
-import { familleDe } from "@/lib/familles";
 import { CODE_CHAMBRE, CREDIT, photoAbsolue, urlLicence } from "@/lib/media";
 import { CHAMBRE_LONG, nomAffiche, prenomNom } from "@/lib/format";
 import { chevauche, fusionner, libellePeriode, moisAnnee } from "@/lib/periodes";
@@ -16,9 +15,15 @@ import { partFemmes, pct, tauxTurnover } from "@/lib/stats";
 import { hrefGroupe, hrefDepartement, hrefParti, sansGroupe } from "@/lib/collectifs";
 import { slugDepartement } from "@/lib/senatoriales";
 
+import "./fiche-elu.css";
+
 export const revalidate = 86400;
 
 type Props = { params: Promise<{ id: string }> };
+
+// Ordinaux typographiques : « 1re », « 3e » -> « 1ʳᵉ », « 3ᵉ » (charte éditoriale,
+// exposant unicode plutôt que <sup> : le texte reste copiable et sélectionnable).
+const ordinaux = (s: string) => s.replace(/\b1re\b/g, "1ʳᵉ").replace(/(\d+)e\b/g, "$1ᵉ");
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const id = decodeURIComponent((await params).id);
@@ -47,19 +52,6 @@ const TITRE: Record<string, [string, string]> = {
 };
 const titre = (f: Pick<Parlementaire, "chambre" | "civilite">) => TITRE[f.chambre][f.civilite === "Mme" ? 1 : 0];
 const ancien = (f: Pick<Parlementaire, "civilite">) => (f.civilite === "Mme" ? "Ancienne" : "Ancien");
-
-function Groupe({ chambre, sigle, libelle }: { chambre: string; sigle: string; libelle?: string }) {
-  if (!sigle) return null;
-  const fam = familleDe(chambre, sigle);
-  // « Aucun » n'est pas un groupe : pas de lien vers une fiche inexistante.
-  const href = sansGroupe(sigle) ? null : hrefGroupe(chambre, sigle);
-  const contenu = (
-    <>
-      Groupe {sigle}{fam && fam.code !== sigle ? <span className="meta"> (famille {fam.code})</span> : null}
-    </>
-  );
-  return href ? <a href={href} title={libelle || undefined}>{contenu}</a> : <span title={libelle || undefined}>{contenu}</span>;
-}
 
 function ListeOrganes({ items }: { items: Appartenance[] }) {
   if (!items.length) return null;
@@ -100,18 +92,23 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
   const indetermines = stats ? Math.max(0, stats.indetermines - societes) : 0;
   const nbCollabs = new Set(periodes.map((p) => p.collab_id)).size;
   const depuis = periodes.map((p) => p.debut).filter(Boolean).sort()[0];
-  const commissionsActuelles = fusionner(appartenances.filter((a) => a.chambre === f.chambre && a.elu_id === f.elu_id && a.type !== "groupe")).filter((a) => !a.fin);
   // Les autres fiches actives de la même personne (une fiche ancienne et inactive
   // (ex. député devenu sénateur) est déjà résumée par ses mandats ci-dessous,
   // et son URL renvoie vers la fiche active).
   const autres = fiches.filter((x) => x.chambre !== f.chambre && x.actif);
+  // Période affichée dans l'en-tête : en exercice, mandat complet ou fin seule.
+  const periodeAffichee = f.actif
+    ? `En fonction depuis ${moisAnnee(dernierDebut(mandats, f))}`
+    : f.fin_mandat
+      ? (f.premier_mandat ? `Mandat de ${moisAnnee(f.premier_mandat)} à ${moisAnnee(f.fin_mandat)}` : `Mandat terminé en ${moisAnnee(f.fin_mandat)}`)
+      : "";
   // Parcours chronologique unique : mandats parlementaires et fonctions
   // gouvernementales, du plus récent au plus ancien.
   type Etape = { mandat: Mandat | null; gouvern: Ministre | null };
   const chrono: Etape[] = [
     ...mandats.map((m) => ({ mandat: m, gouvern: null })),
     ...gouvernement.map((g) => ({ mandat: null, gouvern: g })),
-  ].sort((a, b) => (b.mandat?.debut ?? b.gouvern!.debut ?? "").localeCompare(a.mandat?.debut ?? a.gouvern!.debut ?? ""));
+  ].sort((a, b) => (b.mandat?.debut ?? b.gouvern!.debut ?? "").localeCompare(a.mandat?.debut ?? a.gouvern?.debut ?? ""));
 
   const jsonLd = {
     "@context": "https://schema.org", "@type": "Person", name: nom, givenName: f.prenom, familyName: f.nom,
@@ -139,7 +136,8 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
     copyrightNotice: `© ${CREDIT[codePhoto]}`,
     license: urlLicence(codePhoto) ?? undefined,
   } : null;
-  // Lien vers la page de crédit de la photo affichée sur la fiche (200 px).
+  // Lien vers la page de crédit de la photo affichée sur la fiche (200 px),
+  // affiché sous la photo plutôt qu'en pleine zone de texte.
   const imgCredit = `${codePhoto}/${f.slug}_${codePhoto}_200.png`;
 
   return (
@@ -148,24 +146,32 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(filAriane).replace(/</g, "\\u003c") }} />
       {jsonLdPhoto && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdPhoto).replace(/</g, "\\u003c") }} />}
       <div className="entete-elu">
-        <Photo chambre={f.chambre} slug={f.slug} src={f.photo_url} nom={nom} />
+        <figure className="photo-col">
+          <Photo chambre={f.chambre} slug={f.slug} src={f.photo_url} nom={nom} />
+          {photoPourLicence && (
+            <figcaption>
+              <a href={`/photo-credit?img=${encodeURIComponent(imgCredit)}`}>© {CREDIT[codePhoto]}</a>
+            </figcaption>
+          )}
+        </figure>
         <div>
-          <p className="meta" style={{ margin: 0 }}>{CHAMBRE_LONG[f.chambre]}{f.actif ? "" : `, ${ancien(f).toLowerCase()} mandat`}</p>
-          <h1 style={{ margin: "2px 0 6px" }}>{nom}</h1>
-          <p className="lead" style={{ margin: 0 }}>
-            {f.actif ? titre(f) : `${ancien(f)} ${titre(f).toLowerCase()}`}
-            {f.circonscription && f.chambre !== "europarl" ? `, ${f.circonscription}` : ""}
-            {f.actif && f.groupe ? <>, <Groupe chambre={f.chambre} sigle={f.groupe} libelle={f.groupe_libelle} /></> : null}
-          </p>
-          <p className="meta" style={{ marginTop: 6 }}>
-            {f.actif ? `En fonction depuis ${moisAnnee(dernierDebut(mandats, f))}` : f.fin_mandat ? `Mandat terminé en ${moisAnnee(f.fin_mandat)}` : ""}
-            {f.url_officielle && <>, <a href={f.url_officielle}>fiche officielle</a></>}
-            {photoPourLicence && <>, <a href={`/photo-credit?img=${encodeURIComponent(imgCredit)}`}>crédit photo</a></>}
-            {hrefDepartement(f.departement || f.circonscription, slugDepartement) && <>, <a href={hrefDepartement(f.departement || f.circonscription, slugDepartement)!}>fiche élus de {f.departement || f.circonscription}</a></>}
-            {!sansGroupe(f.groupe) && hrefGroupe(f.chambre, f.groupe) && <>, <a href={hrefGroupe(f.chambre, f.groupe)!}>fiche groupe {f.groupe}</a></>}
-            {!sansGroupe(f.groupe) && hrefParti(f.groupe) && <>, <a href={hrefParti(f.groupe)!}>fiche parti {f.groupe}</a></>}
-            {autres.map((x) => <span key={x.chambre}>, <a href={`/parlementaires/${encodeURIComponent(x.slug)}`}>fiche {CHAMBRE_LONG[x.chambre]}</a></span>)}
-          </p>
+          <h1 style={{ margin: "0 0 10px" }}>{nom}</h1>
+          <ul className="statut-puces">
+            <li>{f.actif ? titre(f) : `${ancien(f)} ${titre(f).toLowerCase()}`}</li>
+            {f.circonscription && f.chambre !== "europarl" && <li>{ordinaux(f.circonscription)}</li>}
+            {f.actif && f.groupe && <li>Groupe {f.groupe}</li>}
+          </ul>
+          {periodeAffichee && <p className="meta" style={{ margin: "0 0 12px" }}>{periodeAffichee}</p>}
+          <ul className="liens-secondaires">
+            {f.url_officielle && <li><a href={f.url_officielle}>Fiche officielle</a></li>}
+            {hrefDepartement(f.departement || f.circonscription, slugDepartement) && (
+              <li><a href={hrefDepartement(f.departement || f.circonscription, slugDepartement)!}>Élus de {f.departement || f.circonscription}</a></li>
+            )}
+            {!sansGroupe(f.groupe) && hrefGroupe(f.chambre, f.groupe) && <li><a href={hrefGroupe(f.chambre, f.groupe)!}>Groupe {f.groupe}</a></li>}
+            {!sansGroupe(f.groupe) && hrefParti(f.groupe) && <li><a href={hrefParti(f.groupe)!}>Parti {f.groupe}</a></li>}
+            {autres.map((x) => <li key={x.chambre}><a href={`/parlementaires/${encodeURIComponent(x.slug)}`}>{CHAMBRE_LONG[x.chambre]}</a></li>)}
+            <li><a href={`/parlementaires/${encodeURIComponent(f.slug)}/bio`}>Biographie</a></li>
+          </ul>
           <Partage compact url={`https://www.dataparl.fr/parlementaires/${encodeURIComponent(f.slug)}`} titre={nom}
             texte={`${nom} : son équipe de collaborateurs, ses arrivées et ses départs, sur DataParl'`} />
         </div>
@@ -174,13 +180,12 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
 
       <p className="lead" style={{ marginBottom: 0 }}>
         {nom}, {f.actif ? titre(f).toLowerCase() : `${ancien(f).toLowerCase()} ${titre(f).toLowerCase()}`}
-        {f.circonscription && f.chambre !== "europarl" ? ` pour ${f.circonscription}` : ""}
+        {f.circonscription && f.chambre !== "europarl" ? ` pour ${ordinaux(f.circonscription)}` : ""}
         {f.actif && f.groupe ? ` (groupe ${f.groupe})` : ""} : ici se trouvent son équipe de collaborateurs
-        parlementaires, ses mandats et commissions, les mouvements de son cabinet et{" "}
-        <a href={`/parlementaires/${encodeURIComponent(f.slug)}/bio`}>sa biographie</a>.
+        parlementaires, ses mandats et commissions et les mouvements de son cabinet.
       </p>
 
-      <div className="chiffres">
+      <div className="chiffres fiche">
         {stats && <>
           {f.chambre === "europarl" && !stats.premier_depart ? (
             <div>
@@ -206,69 +211,20 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
         )}
       </div>
 
-      {commissionsActuelles.length > 0 && (
-        <>
-          <h2>Commissions et délégations</h2>
-          <ListeOrganes items={commissionsActuelles} />
-        </>
-      )}
-
-      {f.actif && (
-        <>
-          <h2>Ses collaborateurs</h2>
-          {collabs.length === 0 ? (
-            <p className="meta">Aucun collaborateur dans la dernière publication officielle.</p>
-          ) : (
-            <table className="stats">
-              <thead><tr><th>Collaborateur</th><th>Fonction</th></tr></thead>
-              <tbody>
-                {collabs.map((c, i) => (
-                  <tr key={i}>
-                    <td>
-                      <a href={`/collab/k/${encodeURIComponent(c.collab_cle)}`}>{prenomNom(c.collab_prenom, c.collab_nom)}</a>
-                      {c.statut === "conge_sans_solde" && <span className="meta"> (congé)</span>}
-                    </td>
-                    <td>{c.fonction || "Collaborateur"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-          <p>
-            <a className="btn secondaire" href={`/collab?elu=${encodeURIComponent(f.slug)}`}>Contacts et export de l&apos;équipe</a>{" "}
-            <a className="btn secondaire" href={`/parlementaires/${encodeURIComponent(f.slug)}/historique`}>Historique des collaborateurs</a>{" "}
-            <a className="btn secondaire" href={`/parlementaires/${encodeURIComponent(f.slug)}/bio`}>Biographie</a>
-          </p>
-        </>
-      )}
-      {!f.actif && nbCollabs > 0 && (
-        <p><a className="btn secondaire" href={`/parlementaires/${encodeURIComponent(f.slug)}/historique`}>Historique des collaborateurs</a></p>
-      )}
-
-      {commeCollab && (
-        <p className="card" style={{ maxWidth: "none" }}>
-          Avant ou après ses mandats, {nom} figure aussi sur les listes de collaborateurs parlementaires
-          ({commeCollab.chambres.split(" ").map((c) => CHAMBRE_LONG[c]).join(", ")}, {commeCollab.premiere_date.slice(0, 4)}
-          {commeCollab.derniere_date.slice(0, 4) !== commeCollab.premiere_date.slice(0, 4) ? `-${commeCollab.derniere_date.slice(0, 4)}` : ""}).{" "}
-          <a href={`/collab/${commeCollab.slug}`}>Voir son parcours de {f.civilite === "Mme" ? "collaboratrice" : "collaborateur"}</a>
-          <span className="meta">, rapprochement par le nom, sans chevauchement avec ses mandats</span>
-        </p>
-      )}
-
       <h2>Parcours parlementaire et gouvernemental</h2>
-      <ol className="parcours">
+      <ol className="parcours parcours-notice">
         {chrono.map(({ mandat: m, gouvern: g }, i) => {
           if (g) {
             return (
               <li key={`gouv-${g.debut}-${i}`}>
                 <p className="parcours-titre">
-                  <strong>{g.fonction}</strong>
-                  <span className="meta">
-                    {", "}gouvernement {g.gouvernement}, {libellePeriode({ debut: g.debut, debut_connu: true, fin: g.fin, fin_connue: !!g.fin, en_cours: !g.fin })}
+                  <span>
+                    <strong>{g.fonction}</strong>
+                    {g.portefeuille ? `, ${g.portefeuille}` : ""}
                   </span>
+                  <span className="meta">gouvernement {g.gouvernement}, {libellePeriode({ debut: g.debut, debut_connu: true, fin: g.fin, fin_connue: !!g.fin, en_cours: !g.fin })}</span>
                 </p>
-                {g.portefeuille && <p className="meta" style={{ margin: "2px 0" }}>{g.portefeuille}</p>}
-                <p className="meta" style={{ margin: "2px 0" }}><a href={"/gouv/m/" + encodeURIComponent(g.id)}>Voir la fiche gouvernement et le cabinet</a></p>
+                <p className="meta" style={{ margin: "4px 0" }}><a href={"/gouv/m/" + encodeURIComponent(g.id)}>Voir la fiche gouvernement et le cabinet</a></p>
               </li>
             );
           }
@@ -281,10 +237,12 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
           return (
             <li key={`${m.chambre}-${m.debut}-${i}`}>
               <p className="parcours-titre">
-                <strong>{m.libelle}</strong>
-                {m.circonscription && m.chambre !== "europarl" ? `, ${m.circonscription}` : ""}
-                <span className="meta">, {periodeMandat(m)}</span>
-                {fiche && fiche.slug !== f.slug && <>, <a href={`/parlementaires/${encodeURIComponent(fiche.slug)}`}>voir la fiche</a></>}
+                <span>
+                  <strong>{m.libelle}</strong>
+                  {m.circonscription && m.chambre !== "europarl" ? `, ${ordinaux(m.circonscription)}` : ""}
+                  {fiche && fiche.slug !== f.slug && <>, <a href={`/parlementaires/${encodeURIComponent(fiche.slug)}`}>voir la fiche</a></>}
+                </span>
+                <span className="meta">{periodeMandat(m)}</span>
               </p>
               {groupes.length > 0 && (
                 <p className="meta" style={{ margin: "2px 0" }}>
@@ -301,11 +259,59 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
           );
         })}
       </ol>
-      {mandats.length === 0 && <p className="meta">Mandats non disponibles.</p>}
+      {chrono.length === 0 && <p className="meta">Mandats non disponibles.</p>}
 
-      <h2>Derniers mouvements</h2>
+      {commeCollab && (
+        <p className="card" style={{ maxWidth: "none" }}>
+          Avant ou après ses mandats, {nom} figure aussi sur les listes de collaborateurs parlementaires
+          ({commeCollab.chambres.split(" ").map((c) => CHAMBRE_LONG[c]).join(", ")}, {commeCollab.premiere_date.slice(0, 4)}
+          {commeCollab.derniere_date.slice(0, 4) !== commeCollab.premiere_date.slice(0, 4) ? `-${commeCollab.derniere_date.slice(0, 4)}` : ""}).{" "}
+          <a href={`/collab/${commeCollab.slug}`}>Voir son parcours de {f.civilite === "Mme" ? "collaboratrice" : "collaborateur"}</a>
+          <span className="meta">, rapprochement par le nom, sans chevauchement avec ses mandats</span>
+        </p>
+      )}
+
+      <h2 id="collaborateurs">Collaborateurs</h2>
+      {f.actif ? (
+        <>
+          <h3>Équipe parlementaire actuelle</h3>
+          {collabs.length === 0 ? (
+            <p className="meta">Aucun collaborateur recensé sur la période en cours.</p>
+          ) : (
+            <table className="stats stats-zebres">
+              <thead><tr><th>Collaborateur</th><th>Fonction</th></tr></thead>
+              <tbody>
+                {collabs.map((c, i) => (
+                  <tr key={i}>
+                    <td>
+                      <a href={`/collab/k/${encodeURIComponent(c.collab_cle)}`}>{prenomNom(c.collab_prenom, c.collab_nom)}</a>
+                      {c.statut === "conge_sans_solde" && <span className="meta"> (congé)</span>}
+                    </td>
+                    <td>{c.fonction || "Collaborateur"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </>
+      ) : (
+        <p className="meta">
+          {nbCollabs > 0
+            ? "Mandat terminé : aucune équipe en exercice. Les collaborateurs ayant travaillé sous ce mandat figurent dans les mouvements ci-dessous et dans l'historique complet."
+            : "Aucun collaborateur recensé pour ce parlementaire."}
+        </p>
+      )}
+      <h3>{f.actif ? "Derniers mouvements" : "Historique des mouvements"}</h3>
       {mouvements.length === 0 ? <p className="meta">Aucun mouvement enregistré.</p> : <ListeMouvements mouvements={mouvements} />}
-      <p><a href={`/parlementaires/${encodeURIComponent(f.slug)}/historique`}>Tout l&apos;historique (compte gratuit)</a></p>
+      <p>
+        {f.actif && <a className="btn secondaire" href={`/collab?elu=${encodeURIComponent(f.slug)}`}>Contacts et export de l&apos;équipe</a>}
+        {(f.actif || nbCollabs > 0) && (
+          <>
+            {f.actif && " "}
+            <a className="btn secondaire" href={`/parlementaires/${encodeURIComponent(f.slug)}/historique`}>Consulter l&apos;historique complet des collaborateurs</a>
+          </>
+        )}
+      </p>
       <PubGoogle />
     </>
   );
@@ -345,11 +351,19 @@ async function FicheSimple({ id }: { id: string }) {
       <p className="meta">{CHAMBRE_LONG[e.chambre]}</p>
       <h1>{nomAffiche(e.nom)}</h1>
       <p className="lead">{e.groupe ? `Groupe ${e.groupe}. ` : ""}{officiel && <a href={officiel}>Fiche officielle</a>}</p>
-      <h2>Ses collaborateurs</h2>
-      <table className="stats">
-        <tbody>{collabs.map((c, i) => <tr key={i}><td>{prenomNom(c.collab_prenom, c.collab_nom)}</td><td>{c.fonction || "Collaborateur"}</td></tr>)}</tbody>
+      <h2>Collaborateurs</h2>
+      <table className="stats stats-zebres">
+        <thead><tr><th>Collaborateur</th><th>Fonction</th></tr></thead>
+        <tbody>
+          {collabs.map((c, i) => (
+            <tr key={i}>
+              <td><a href={`/collab/k/${encodeURIComponent(c.collab_cle)}`}>{prenomNom(c.collab_prenom, c.collab_nom)}</a></td>
+              <td>{c.fonction || "Collaborateur"}</td>
+            </tr>
+          ))}
+        </tbody>
       </table>
-      <h2>Derniers mouvements</h2>
+      <h3>Derniers mouvements</h3>
       <ListeMouvements mouvements={mouvements} />
     </>
   );
