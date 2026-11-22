@@ -6,6 +6,8 @@ name: Deploy Cloudflare Workers
 # variables de build viennent de la route /api/cron/ci-jeton-cloudflare après
 # validation du jeton OIDC (pattern ci-jeton, incident du 17/11). Les secrets
 # d'exécution sont posés directement sur les Workers via l'API Cloudflare.
+# Build : Next 16 = Turbopack par défaut, OpenNext exige un build webpack,
+# donc next build --webpack puis opennextjs-cloudflare build --skipNextBuild.
 # En cas d'échec, la fin du log est postée dans l'issue #174.
 
 on:
@@ -36,22 +38,26 @@ jobs:
           oidc=$(curl -fsS -H "Authorization: Bearer ${{ACTIONS_ID_TOKEN_REQUEST_TOKEN}}" \
             "${{ACTIONS_ID_TOKEN_REQUEST_URL}}&audience=dataparl-ci" \
             | python3 -c "import json,sys; sys.stdout.write(json.load(sys.stdin)['value'])")
-          curl -fsS -H "x-oidc: ${{oidc}}" \
+          curl -fsS -H "x-oidc: ${{... }}" \
             "https://www.dataparl.fr/api/cron/ci-jeton-cloudflare?app=www" -o rapport.json
           python3 - <<'PY'
 import json
 d = json.load(open("rapport.json"))
 lignes = ["CLOUDFLARE_API_TOKEN=" + d["token"], "CLOUDFLARE_ACCOUNT_ID=" + d["account_id"]]
-lignes += [k + "=" + str(v) for k, v in d.get("build_vars", {}).items()]
+lignes += [k + "=" + str(v) for k, v in d.get("build_vars", {}).items() if v is not None]
 open(".cf-env", "w").write("\n".join(lignes) + "\n")
 PY
           cat .cf-env >> ${{GITHUB_ENV}}
-      - run: npm ci
-      - run: npm install --no-save @opennextjs/cloudflare wrangler
-      - name: Build OpenNext (www)
+      - run: npm install --no-audit --no-fund
+      - run: npm install --no-save --legacy-peer-deps @opennextjs/cloudflare wrangler
+      - name: Next build webpack (www)
         run: |
           set -o pipefail
-          npx opennextjs-cloudflare build 2>&1 | tee build.log
+          npx next build --webpack 2>&1 | tee build.log
+      - name: Bundle OpenNext (www)
+        run: |
+          set -o pipefail
+          npx opennextjs-cloudflare build --skipNextBuild 2>&1 | tee -a build.log
       - name: Deploy www
         run: |
           set -o pipefail
@@ -68,7 +74,7 @@ PY
             cat build.log deploy.log 2>/dev/null > comb.log || true
             python3 -c "log=open('comb.log',errors='replace').read(); txt='ECHEC DEPLOY WWW :\n\n\u0060\u0060\u0060\n'+log[-24000:]+'\n\u0060\u0060\u0060'; open('verdict.txt','w').write(txt)"
           fi
-          gh api repos/pdn-publicdatanetwork/webapp/issues/174/comments -f body=@verdict.txt
+          gh api repos/pdn-publicdatanetwork/webapp/issues/174/comments -F body=@verdict.txt
   jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -85,22 +91,26 @@ PY
           oidc=$(curl -fsS -H "Authorization: Bearer ${{ACTIONS_ID_TOKEN_REQUEST_TOKEN}}" \
             "${{ACTIONS_ID_TOKEN_REQUEST_URL}}&audience=dataparl-ci" \
             | python3 -c "import json,sys; sys.stdout.write(json.load(sys.stdin)['value'])")
-          curl -fsS -H "x-oidc: ${{oidc}}" \
+          curl -fsS -H "x-oidc: ${{... }}" \
             "https://www.dataparl.fr/api/cron/ci-jeton-cloudflare?app=jobs" -o rapport.json
           python3 - <<'PY'
 import json
 d = json.load(open("rapport.json"))
 lignes = ["CLOUDFLARE_API_TOKEN=" + d["token"], "CLOUDFLARE_ACCOUNT_ID=" + d["account_id"]]
-lignes += [k + "=" + str(v) for k, v in d.get("build_vars", {}).items()]
+lignes += [k + "=" + str(v) for k, v in d.get("build_vars", {}).items() if v is not None]
 open(".cf-env", "w").write("\n".join(lignes) + "\n")
 PY
           cat .cf-env >> ${{GITHUB_ENV}}
-      - run: npm install --no-package-lock
-      - run: npm install --no-save @opennextjs/cloudflare wrangler
-      - name: Build OpenNext (jobs)
+      - run: npm install --no-audit --no-fund
+      - run: npm install --no-save --legacy-peer-deps @opennextjs/cloudflare wrangler
+      - name: Next build webpack (jobs)
         run: |
           set -o pipefail
-          npx opennextjs-cloudflare build 2>&1 | tee build.log
+          npx next build --webpack 2>&1 | tee build.log
+      - name: Bundle OpenNext (jobs)
+        run: |
+          set -o pipefail
+          npx opennextjs-cloudflare build --skipNextBuild 2>&1 | tee -a build.log
       - name: Deploy jobs
         run: |
           set -o pipefail
@@ -117,4 +127,4 @@ PY
             cat build.log deploy.log 2>/dev/null > comb.log || true
             python3 -c "log=open('comb.log',errors='replace').read(); txt='ECHEC DEPLOY JOBS :\n\n\u0060\u0060\u0060\n'+log[-24000:]+'\n\u0060\u0060\u0060'; open('verdict.txt','w').write(txt)"
           fi
-          gh api repos/pdn-publicdatanetwork/webapp/issues/174/comments -f body=@verdict.txt
+          gh api repos/pdn-publicdatanetwork/webapp/issues/174/comments -F body=@verdict.txt
