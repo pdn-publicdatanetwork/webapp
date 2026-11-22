@@ -1,8 +1,8 @@
 name: Test build OpenNext Cloudflare
 
-# v3 : tout le flux est journalise (tee -a) et le verdict est tolerant a
-# l'absence de log : la cause exacte de l'echec est toujours postee dans
-# l'issue #174, meme si la panne survient des le npm install.
+# v4 : corrige la omission de la cle jobs: (v3). Tout le flux est
+# journalise (tee -a) et le verdict est tolerant a l'absence de log :
+# la cause exacte de l'echec est postee dans l'issue #174.
 on:
   push:
     branches: [test-opennext]
@@ -12,6 +12,7 @@ permissions:
   contents: read
   issues: write
 
+jobs:
   build-www:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -20,10 +21,12 @@ permissions:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: |
+      - name: npm (www)
+        run: |
           set -o pipefail
           npm ci 2>&1 | tee -a build.log
-      - run: |
+      - name: npm (www)
+        run: |
           set -o pipefail
           npm install --no-save @opennextjs/cloudflare wrangler 2>&1 | tee -a build.log
       - name: Build OpenNext (www)
@@ -39,9 +42,9 @@ permissions:
           if [ "$(echo ${{env.JOB_STATUS}})" = "success" ]; then
             echo -n "BUILD WWW OK" > verdict.txt
           elif [ -f build.log ]; then
-            python3 -c "log=open('build.log',errors='replace').read(); txt='ECHEC BUILD WWW :\n\n\u0060\u0060\u0060\n'+log[-24000:]+'\n\u0060\u0060\u0060'; open('verdict.txt','w').write(txt)"
+            python3 -c "log=open('build.log',errors='replace').read(); txt='ECHEC BUILD WWW:\n\n\u0060\u0060\u0060\n'+log[-24000:]+'\n\u0060\u0060\u0060'; open('verdict.txt','w').write(txt)"
           else
-            echo -n "ECHEC BUILD WWW sans log : la panne a eu lieu avant toute commande tee (npm install ?)" > verdict.txt
+            echo -n "ECHEC BUILD WWW sans log" > verdict.txt
           fi
           gh api repos/pdn-publicdatanetwork/webapp/issues/174/comments -F body=@verdict.txt
   build-jobs:
@@ -55,10 +58,12 @@ permissions:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: |
+      - name: npm (jobs)
+        run: |
           set -o pipefail
           npm install --no-package-lock 2>&1 | tee -a build.log
-      - run: |
+      - name: npm (jobs)
+        run: |
           set -o pipefail
           npm install --no-save @opennextjs/cloudflare wrangler 2>&1 | tee -a build.log
       - name: Build OpenNext (jobs)
@@ -74,8 +79,8 @@ permissions:
           if [ "$(echo ${{env.JOB_STATUS}})" = "success" ]; then
             echo -n "BUILD JOBS OK" > verdict.txt
           elif [ -f build.log ]; then
-            python3 -c "log=open('build.log',errors='replace').read(); txt='ECHEC BUILD JOBS :\n\n\u0060\u0060\u0060\n'+log[-24000:]+'\n\u0060\u0060\u0060'; open('verdict.txt','w').write(txt)"
+            python3 -c "log=open('build.log',errors='replace').read(); txt='ECHEC BUILD JOBS:\n\n\u0060\u0060\u0060\n'+log[-24000:]+'\n\u0060\u0060\u0060'; open('verdict.txt','w').write(txt)"
           else
-            echo -n "ECHEC BUILD JOBS sans log : la panne a eu lieu avant toute commande tee (npm install ?)" > verdict.txt
+            echo -n "ECHEC BUILD JOBS sans log" > verdict.txt
           fi
           gh api repos/pdn-publicdatanetwork/webapp/issues/174/comments -F body=@verdict.txt
