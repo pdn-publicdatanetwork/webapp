@@ -1,8 +1,8 @@
 name: Test build OpenNext Cloudflare
 
-# v6 : Next 16 = Turbopack par defaut, OpenNext exige un build
-# webpack. On lance donc next build --webpack puis
-# opennextjs-cloudflare build --skipNextBuild.
+# v7 : opennextjs-cloudflare build unique (il lance lui-meme
+# next build en mode webpack + standalone). open-next.config.ts et
+# jobs/wrangler.jsonc maintenant presentes sur la branche.
 on:
   push:
     branches: [test-opennext]
@@ -32,24 +32,20 @@ jobs:
         run: |
           set -o pipefail
           npm install --no-save --legacy-peer-deps @opennextjs/cloudflare wrangler 2>&1 | tee -a build.log
-      - name: Next build webpack (www)
+      - name: Build OpenNext (www)
         run: |
           set -o pipefail
-          npx next build --webpack 2>&1 | tee -a build.log
-      - name: Bundle OpenNext (www)
-        run: |
-          set -o pipefail
-          npx opennextjs-cloudflare build --skipNextBuild 2>&1 | tee -a build.log
+          npx opennextjs-cloudflare build 2>&1 | tee -a build.log
       - name: Verdict www
         if: always()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           JOB_STATUS: ${{ job.status }}
         run: |
-          if [ "$(echo ${{env.JOB_STATUS}})" = "success" ]; then
+          if [ "$JOB_STATUS" = "success" ]; then
             echo -n "BUILD WWW OK" > verdict.txt
           elif [ -f build.log ]; then
-            python3 -c "log=open('build.log',errors='replace').read(); txt='ECHEC BUILD WWW:\n\n\u0060\u0060\u0060\n'+log[-24000:]+'\n\u0060\u0060\u0060'; open('verdict.txt','w').write(txt)"
+            python3 -c "log=open('build.log',errors='replace').read(); txt='ECHEC BUILD WWW : \n\n\u0060\u0060\u0060\n'+log[-24000:]+'\n\u0060\u0060\u0060'; open('verdict.txt','w').write(txt)"
           else
             echo -n "ECHEC BUILD WWW sans log" > verdict.txt
           fi
@@ -73,24 +69,20 @@ jobs:
         run: |
           set -o pipefail
           npm install --no-save --legacy-peer-deps @opennextjs/cloudflare wrangler 2>&1 | tee -a build.log
-      - name: Next build webpack (jobs)
+      - name: Build OpenNext (jobs)
         run: |
           set -o pipefail
-          npx next build --webpack 2>&1 | tee -a build.log
-      - name: Bundle OpenNext (jobs)
-        run: |
-          set -o pipefail
-          npx opennextjs-cloudflare build --skipNextBuild 2>&1 | tee -a build.log
+          npx opennextjs-cloudflare build 2>&1 | tee -a build.log
       - name: Verdict jobs
         if: always()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           JOB_STATUS: ${{ job.status }}
         run: |
-          if [ "$(echo ${{env.JOB_STATUS}})" = "success" ]; then
+          if [ "$JOB_STATUS" = "success" ]; then
             echo -n "BUILD JOBS OK" > verdict.txt
           elif [ -f build.log ]; then
-            python3 -c "log=open('build.log',errors='replace').read(); txt='ECHEC BUILD JOBS:\n\n\u0060\u0060\u0060\n'+log[-24000:]+'\n\u0060\u0060\u0060'; open('verdict.txt','w').write(txt)"
+            python3 -c "log=open('build.log',errors='replace').read(); txt='ECHEC BUILD JOBS : \n\n\u0060\u0060\u0060\n'+log[-24000:]+'\n\u0060\u0060\u0060'; open('verdict.txt','w').write(txt)"
           else
             echo -n "ECHEC BUILD JOBS sans log" > verdict.txt
           fi
