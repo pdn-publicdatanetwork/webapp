@@ -119,3 +119,97 @@ ol.parcours-notice .parcours-titre .meta {
 table.stats-zebres tbody tr:nth-child(even) td {
   background: color-mix(in srgb, var(--ink) 3%, transparent);
 }
+
+/* Précision de fin de mandat (décès, invalidation) : ligne dédiée sous la
+   période, en couleur d'encre et puces fines ; l'invalidation passe en
+   alerte (charte : le rouge est réservé aux alertes). */
+ul.ligne-motif-fin {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 0;
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  color: var(--ink);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+ul.ligne-motif-fin > li + li::before {
+  content: "•";
+  margin: 0 8px;
+  font-size: 9px;
+  color: var(--muted);
+}
+ul.ligne-motif-fin .alerte-texte {
+  color: var(--alerte);
+  font-weight: 500;
+}
+
+/* Remplacement par le suppléant dans le parcours (art. LO176), mots du gabarit. */
+ol.parcours-notice .notice-suite {
+  margin: 6px 0 0;
+  font-size: 0.88rem;
+  color: var(--ink);
+}
+
+/* Grille « notice » : colonne principale à gauche, encadré Repères à droite. */
+.grille-fiche {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+  margin-top: 24px;
+}
+@media (max-width: 860px) {
+  .grille-fiche {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Encadré Repères : vraie carte de synthèse sobre, lignes dt/dd zébrées. */
+.fiche-repere {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 20px 22px;
+  box-shadow: var(--shadow-sm);
+}
+.fiche-repere h2 {
+  font-size: 1.05rem;
+  margin: 0 0 8px;
+}
+.fiche-repere .resume-repere {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  margin: 0 0 4px;
+}
+.fiche-repere dl {
+  margin: 10px 0 0;
+}
+.fiche-repere .ligne-repere {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 20px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+.fiche-repere .ligne-repere:nth-child(even) {
+  background: color-mix(in srgb, var(--ink) 3%, transparent);
+}
+.fiche-repere .ligne-repere:last-child {
+  border-bottom: 0;
+}
+.fiche-repere dt {
+  color: var(--muted);
+  font-weight: 400;
+}
+.fiche-repere dd {
+  margin: 0;
+  font-weight: 500;
+  color: var(--ink);
+  text-align: right;
+}
