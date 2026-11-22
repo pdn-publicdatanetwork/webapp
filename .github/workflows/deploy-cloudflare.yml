@@ -53,13 +53,7 @@ jobs:
             echo "route ci-jeton-cloudflare indisponible apres 12 min" >&2
             exit 1
           fi
-          python3 - <<'PY'
-import json
-d = json.load(open("rapport.json"))
-lignes = ["CLOUDFLARE_API_TOKEN=" + d["token"], "CLOUDFLARE_ACCOUNT_ID=" + d["account_id"]]
-lignes += [k + "=" + str(v) for k, v in d.get("build_vars", {}).items() if v is not None]
-open(".cf-env", "w").write("\n".join(lignes) + "\n")
-PY
+          jq -r '"CLOUDFLARE_API_TOKEN=" + .token, "CLOUDFLARE_ACCOUNT_ID=" + .account_id, (.build_vars // {} | to_entries[] | .key + "=" + (.value | tostring))' rapport.json > .cf-env
           cat .cf-env >> "$GITHUB_ENV"
           rm -f .cf-env rapport.json
       - run: npm install --no-audit --no-fund
@@ -116,13 +110,7 @@ PY
             echo "route ci-jeton-cloudflare indisponible apres 12 min" >&2
             exit 1
           fi
-          python3 - <<'PY'
-import json
-d = json.load(open("rapport.json"))
-lignes = ["CLOUDFLARE_API_TOKEN=" + d["token"], "CLOUDFLARE_ACCOUNT_ID=" + d["account_id"]]
-lignes += [k + "=" + str(v) for k, v in d.get("build_vars", {}).items() if v is not None]
-open(".cf-env", "w").write("\n".join(lignes) + "\n")
-PY
+          jq -r '"CLOUDFLARE_API_TOKEN=" + .token, "CLOUDFLARE_ACCOUNT_ID=" + .account_id, (.build_vars // {} | to_entries[] | .key + "=" + (.value | tostring))' rapport.json > .cf-env
           cat .cf-env >> "$GITHUB_ENV"
           rm -f .cf-env rapport.json
       - run: npm install --no-audit --no-fund
