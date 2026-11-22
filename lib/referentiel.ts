@@ -11,6 +11,7 @@ export type Parlementaire = {
   chambre: Chambre; elu_id: string; personne_id: string; cle: string; civilite: string; prenom: string; nom: string;
   date_naissance: string; actif: boolean; circonscription: string; departement: string; groupe: string; groupe_libelle: string;
   photo_url: string; url_officielle: string; slug: string; premier_mandat: string; fin_mandat: string; email: string;
+  motif_fin_mandat: string | null; suppleant_id: string | null; suppleant: string | null; date_deces: string | null;
 };
 export type Mandat = { personne_id: string; chambre: Chambre; elu_id: string; debut: string; fin: string; libelle: string; circonscription: string; legislature: string; cause_fin: string };
 export type Appartenance = { personne_id: string; chambre: Chambre; elu_id: string; type: string; code: string; libelle: string; sigle: string; fonction: string; debut: string; fin: string };
@@ -26,7 +27,7 @@ export type Periode = {
   fin: string; fin_connue: boolean; en_cours: boolean; fonction: string;
 };
 
-const COLS_PARL = "chambre,elu_id,personne_id,cle,civilite,prenom,nom,date_naissance,actif,circonscription,departement,groupe,groupe_libelle,photo_url,url_officielle,slug,premier_mandat,fin_mandat,email";
+const COLS_PARL = "chambre,elu_id,personne_id,cle,civilite,prenom,nom,date_naissance,actif,circonscription,departement,groupe,groupe_libelle,photo_url,url_officielle,slug,premier_mandat,fin_mandat,motif_fin_mandat,email,suppleant_id,suppleant,date_deces";
 const ID_OK = /^[\p{L}\p{N}_ -]{1,80}$/u;
 
 // Retrouve un parlementaire à partir de l'identifiant d'URL : PA… (AN), slug

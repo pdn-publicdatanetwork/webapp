@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import ListeMouvements from "@/app/_components/ListeMouvements";
 import Partage from "@/app/_components/Partage";
@@ -24,6 +25,40 @@ type Props = { params: Promise<{ id: string }> };
 // Ordinaux typographiques : « 1re », « 3e » -> « 1ʳᵉ », « 3ᵉ » (charte éditoriale,
 // exposant unicode plutôt que <sup> : le texte reste copiable et sélectionnable).
 const ordinaux = (s: string) => s.replace(/\b1re\b/g, "1ʳᵉ").replace(/(\d+)e\b/g, "$1ᵉ");
+
+// Date ISO du référentiel (2026-11-19) en JJ/MM/AAAA pour les repères d'état civil.
+const fmtDate = (iso: string) => { const p = iso.split("-"); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso; };
+
+// Motif de fin de mandat en mention courte pour la ligne de période (champ
+// motif_fin_mandat : causeFin de l'Assemblée, « Motif fin de mandat » du Sénat).
+// Libellés sources testés dans cet ordre, du plus précis au plus général.
+const MOTIF_COURT: [RegExp, string][] = [
+  [/législature/i, "fin de législature"],
+  [/décès|décédé/i, "décès"],
+  [/annulation de l['’]élection/i, "invalidation de l'élection par le Conseil constitutionnel"],
+  [/démission d['’]office/i, "démission d'office"],
+  [/déchéance/i, "déchéance"],
+  [/démission avant entrée/i, "démission avant entrée en fonction"],
+  [/incompatibilité/i, "démission pour incompatibilité"],
+  [/reprise de l['’]exercice/i, "reprise du mandat après le Gouvernement"],
+  [/démission/i, "démission"],
+  [/président de la république/i, "élection à la présidence de la République"],
+  [/gouvernement/i, "nomination au Gouvernement"],
+  [/prolongation/i, "prolongation d'une mission temporaire"],
+  [/sénat/i, "élection au Sénat"],
+  [/élu député|élection à l['’]assemblée/i, "élection à l'Assemblée nationale"],
+  [/européen/i, "élection au Parlement européen"],
+  [/ne se représent/i, "non-candidature à sa succession"],
+  [/non réélu/i, "non réélection"],
+  [/cessation/i, "cessation de mandat"],
+  [/membre du conseil constitutionnel/i, "nomination au Conseil constitutionnel"],
+];
+const motifCourt = (m: string | null): string => {
+  const s = (m ?? "").trim();
+  if (!s) return "";
+  for (const [motif, court] of MOTIF_COURT) if (motif.test(s)) return court;
+  return s.charAt(0).toLowerCase() + s.slice(1);
+};
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const id = decodeURIComponent((await params).id);
@@ -52,6 +87,27 @@ const TITRE: Record<string, [string, string]> = {
 };
 const titre = (f: Pick<Parlementaire, "chambre" | "civilite">) => TITRE[f.chambre][f.civilite === "Mme" ? 1 : 0];
 const ancien = (f: Pick<Parlementaire, "civilite">) => (f.civilite === "Mme" ? "Ancienne" : "Ancien");
+
+// Repères de l'en-tête : naissance, décès éventuel, suppléant (avec lien vers
+// sa fiche quand il a lui-même une fiche parlementaire) et identifiant public.
+function reperesElu(f: Parlementaire, ficheSuppleant: Parlementaire | null): ReactNode[] {
+  const r: ReactNode[] = [];
+  if (f.date_naissance) r.push(`${f.civilite === "Mme" ? "Née" : "Né"} le ${fmtDate(f.date_naissance)}`);
+  if (f.date_deces) r.push(`${f.civilite === "Mme" ? "décédée" : "décédé"} le ${fmtDate(f.date_deces)}`);
+  const nomSuppleant = f.suppleant || (ficheSuppleant ? prenomNom(ficheSuppleant.prenom, ficheSuppleant.nom) : "");
+  if (nomSuppleant) {
+    r.push(
+      <>
+        {f.civilite === "Mme" ? "Suppléante" : "Suppléant"} :{" "}
+        {ficheSuppleant && ficheSuppleant.slug !== f.slug
+          ? <a href={`/parlementaires/${encodeURIComponent(ficheSuppleant.slug)}`}>{nomSuppleant}</a>
+          : nomSuppleant}
+      </>
+    );
+  }
+  r.push(`identifiant : ${f.elu_id}`);
+  return r;
+}
 
 function ListeOrganes({ items }: { items: Appartenance[] }) {
   if (!items.length) return null;
@@ -96,11 +152,16 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
   // (ex. député devenu sénateur) est déjà résumée par ses mandats ci-dessous,
   // et son URL renvoie vers la fiche active).
   const autres = fiches.filter((x) => x.chambre !== f.chambre && x.actif);
+  // Motif de fin de mandat, en mention courte, pour la ligne de période des
+  // mandats clos. Suppléant : fiche parlementaire éventuelle, pour le lien.
+  const motif = !f.actif ? motifCourt(f.motif_fin_mandat) : "";
+  const ficheSuppleant = f.suppleant_id ? await parlementaireDepuisId(f.suppleant_id).catch(() => null) : null;
+  const reperes = reperesElu(f, ficheSuppleant);
   // Période affichée dans l'en-tête : en exercice, mandat complet ou fin seule.
   const periodeAffichee = f.actif
     ? `En fonction depuis ${moisAnnee(dernierDebut(mandats, f))}`
     : f.fin_mandat
-      ? (f.premier_mandat ? `Mandat de ${moisAnnee(f.premier_mandat)} à ${moisAnnee(f.fin_mandat)}` : `Mandat terminé en ${moisAnnee(f.fin_mandat)}`)
+      ? (f.premier_mandat ? `Mandat de ${moisAnnee(f.premier_mandat)} à ${moisAnnee(f.fin_mandat)}${motif ? `, ${motif}` : ""}` : `Mandat terminé en ${moisAnnee(f.fin_mandat)}${motif ? `, ${motif}` : ""}`)
       : "";
   // Parcours chronologique unique : mandats parlementaires et fonctions
   // gouvernementales, du plus récent au plus ancien.
@@ -162,6 +223,13 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
             {f.actif && f.groupe && <li>Groupe {f.groupe}</li>}
           </ul>
           {periodeAffichee && <p className="meta" style={{ margin: "0 0 12px" }}>{periodeAffichee}</p>}
+          {reperes.length > 0 && (
+            <p className="meta" style={{ margin: "0 0 12px" }}>
+              {reperes.map((r, i) => (
+                <span key={i}>{i > 0 ? ", " : ""}{r}</span>
+              ))}
+            </p>
+          )}
           <ul className="liens-secondaires">
             {f.url_officielle && <li><a href={f.url_officielle}>Fiche officielle</a></li>}
             {hrefDepartement(f.departement || f.circonscription, slugDepartement) && (
