@@ -6,8 +6,8 @@ name: Deploy Cloudflare Workers
 # variables de build viennent de la route /api/cron/ci-jeton-cloudflare après
 # validation du jeton OIDC (pattern ci-jeton, incident du 17/11). Les secrets
 # d'exécution sont posés directement sur les Workers via l'API Cloudflare.
-# Build : Next 16 = Turbopack par défaut, OpenNext exige un build webpack,
-# donc next build --webpack puis opennextjs-cloudflare build --skipNextBuild.
+# Build : opennextjs-cloudflare build lance lui-même next build en mode
+# webpack + standalone (compatible Next 16 malgré Turbopack par défaut).
 # En cas d'échec, la fin du log est postée dans l'issue #174.
 
 on:
@@ -51,14 +51,10 @@ PY
           rm -f .cf-env rapport.json
       - run: npm install --no-audit --no-fund
       - run: npm install --no-save --legacy-peer-deps @opennextjs/cloudflare wrangler
-      - name: Next build webpack (www)
+      - name: Build OpenNext (www)
         run: |
           set -o pipefail
-          npx next build --webpack 2>&1 | tee build.log
-      - name: Bundle OpenNext (www)
-        run: |
-          set -o pipefail
-          npx opennextjs-cloudflare build --skipNextBuild 2>&1 | tee -a build.log
+          npx opennextjs-cloudflare build 2>&1 | tee build.log
       - name: Deploy www
         run: |
           set -o pipefail
@@ -106,14 +102,10 @@ PY
           rm -f .cf-env rapport.json
       - run: npm install --no-audit --no-fund
       - run: npm install --no-save --legacy-peer-deps @opennextjs/cloudflare wrangler
-      - name: Next build webpack (jobs)
+      - name: Build OpenNext (jobs)
         run: |
           set -o pipefail
-          npx next build --webpack 2>&1 | tee build.log
-      - name: Bundle OpenNext (jobs)
-        run: |
-          set -o pipefail
-          npx opennextjs-cloudflare build --skipNextBuild 2>&1 | tee -a build.log
+          npx opennextjs-cloudflare build 2>&1 | tee build.log
       - name: Deploy jobs
         run: |
           set -o pipefail
