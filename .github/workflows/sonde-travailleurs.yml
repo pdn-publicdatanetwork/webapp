@@ -1,0 +1,71 @@
+name: Sonde Travailleurs
+
+# Diagnostic ponctuel : ouvre un tail (trace-v1) sur les deux Workers,
+# lance une batterie de curl -i (vrais statuts + en-tetes) et publie tout
+# dans l'issue #174. Declenche par .sonde-travailleurs.txt. Aucun secret
+# poste en clair : le token Cloudflare vient de la route CI (OIDC) et
+# n'apparait jamais dans la sortie.
+
+on:
+  push:
+    branches: [main]
+    paths: [".sonde-travailleurs.txt"]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sonde:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Token Cloudflare (OIDC -> route CI)
+        run: |
+          set -euo pipefail
+          oidc=$(curl -fsS --max-time 30 -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=dataparl-ci" \
+            | python3 -c "import json,sys; sys.stdout.write(json.load(sys.stdin)['value'])")
+          curl -fsS --max-time 30 -H "x-oidc: $oidc" \
+            "https://dataparl.dataparl.workers.dev/api/cron/ci-jeton-cloudflare?app=www" -o rapport.json
+          jq -r '"CF_TOKEN=" + .token, "CF_ACCOUNT=" + .account_id' rapport.json >> "$GITHUB_ENV"
+          rm -f rapport.json
+      - name: Tails en arriere-plan puis batterie de curls
+        run: |
+          cd .github/sonde
+          node tail.mjs dataparl 26000 > /tmp/tail_www.log 2>&1 &
+          node tail.mjs dataparl-jobs 26000 > /tmp/tail_jobs.log 2>&1 &
+          sleep 3
+          {
+            for u in \
+              "https://dataparl.dataparl.workers.dev/" \
+              "https://dataparl.dataparl.workers.dev/connexion" \
+              "https://dataparl.dataparl.workers.dev/jobs" \
+              "https://dataparl.dataparl.workers.dev/api/auth/session" \
+              "https://dataparl-jobs.dataparl.workers.dev/" \
+              "https://dataparl-jobs.dataparl.workers.dev/?a=1" \
+              "https://dataparl-jobs.dataparl.workers.dev/api/stats/resume" \
+              "https://dataparl-jobs.dataparl.workers.dev/admin"; do
+              echo "===== $u"
+              curl -sS -i --max-time 25 -H "user-agent: Mozilla/5.0 (sonde)" "$u" 2>&1 | head -c 700
+              echo
+              sleep 1
+            done
+          } > /tmp/sonde.log 2>&1 || true
+          cat /tmp/sonde.log
+          sleep 24
+          echo "===== TAIL WWW ====="; cat /tmp/tail_www.log || true
+          echo "===== TAIL JOBS ====="; cat /tmp/tail_jobs.log || true
+      - name: Publication dans #174
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf "SONDE TRAVAILLEURS (statuts + tails) par la CI, %s UTC\n\n" "$(date -u +%H:%M:%S)" > verdict.txt
+          printf '~~~\n' >> verdict.txt
+          cat /tmp/sonde.log /tmp/tail_www.log /tmp/tail_jobs.log 2>/dev/null >> verdict.txt || true
+          printf '~~~\n' >> verdict.txt
+          gh api repos/pdn-publicdatanetwork/webapp/issues/174/comments -F body=@verdict.txt || echo "publication impossible"
