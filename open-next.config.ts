@@ -1,7 +1,6 @@
-// Config OpenNext (Cloudflare). Pas d'import de types : le paquet open-next
-// est installé par la CI à la volée, tsc ne doit pas dépendre de lui.
-const config = {
-  default: {},
-};
+import { defineCloudflareConfig } from "@opennextjs/cloudflare";
 
-export default config;
+// Migration Cloudflare Workers : configuration OpenNext minimale.
+// (defineCloudflareConfig fournit les valeurs par defaut exigees par
+//  l'adaptateur depuis la v1.20+: export default obligatoire.)
+export default defineCloudflareConfig({});
