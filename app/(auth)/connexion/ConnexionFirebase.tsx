@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Turnstile, { reinitialiserTurnstile } from "./Turnstile";
 import { controleEmail } from "@/lib/antiAbus";
 import { authBrowser, sessionActuelle } from "@/lib/supabaseBrowser";
-import { connexionParLien, connexionPopup, emailLienMemorise, finaliserSession, lienConnexionActif, memoriserEmailLien, oublierEmailLien } from "@/lib/sessionFirebase";
+import { connexionParLien, connexionPopup, connexionRedirect, emailLienMemorise, finaliserSession, lienConnexionActif, memoriserEmailLien, oublierEmailLien, resultatRedirect } from "@/lib/sessionFirebase";
 
 // Porte Firebase (projet dataparl-auth), montée par page.tsx derrière le
 // flag NEXT_PUBLIC_AUTH_FIREBASE sur www., api., media. et admin. (l'espace
@@ -147,6 +147,19 @@ export default function ConnexionFirebase({ surAdmin = false }: { surAdmin?: boo
         setEtape("lien");
         return;
       }
+      // Retour d'une connexion en redirection pleine page (repli quand la
+      // popup ne s'ouvre pas) : finalisation directe.
+      const cred = await resultatRedirect();
+      if (cred) {
+        setEnCours(true);
+        try {
+          await finaliser(cred);
+        } catch {
+          setEnCours(false);
+          setMessage("Connexion impossible pour le moment. Réessaie dans un instant.");
+        }
+        return;
+      }
       // Déjà connecté (cookie de session .dataparl.fr) : on file droit au
       // compte, comme la porte GoTrue.
       const s = await sessionActuelle();
@@ -192,13 +205,25 @@ export default function ConnexionFirebase({ surAdmin = false }: { surAdmin?: boo
       const userFb = await connexionPopup(fournisseur);
       await finaliser(userFb);
     } catch (e) {
-      setEnCours(false);
       redirige.current = false;
       // Diagnostic : le code d'erreur Firebase (auth/…) est affiché et
       // journalisé dans la console, les causes sont indiscernables sinon
       // (domaine non autorisé, fournisseur désactivé, réseau bloqué…).
       const code = (e as { code?: string })?.code ?? "erreur-inconnue";
       console.error("Connexion Firebase refusée :", code, e);
+      // Popup bloquée, jamais ouverte ou annulée par une nouvelle tentative
+      // (auth/cancelled-popup-request) : repli en redirection pleine page,
+      // seul mode fiable sur mobile et dans les navigateurs intégrés.
+      if (code === "auth/popup-blocked" || code === "auth/cancelled-popup-request" || code === "auth/operation-not-supported-in-this-environment") {
+        try {
+          await connexionRedirect(fournisseur);
+          return; // la page navigue vers Google puis revient ici
+        } catch {
+          setEnCours(false);
+          return setMessage("Connexion Google impossible. Réessaie.");
+        }
+      }
+      setEnCours(false);
       setMessage(code === "auth/popup-closed-by-user" ? "Fenêtre fermée avant la fin. Réessaie." : `Connexion refusée (${code}). Réessaie.`);
     }
   }
