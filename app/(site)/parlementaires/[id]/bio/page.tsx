@@ -4,7 +4,7 @@ import ListeMouvements from "@/app/_components/ListeMouvements";
 import Photo from "@/app/_components/Photo";
 import { eluDepuisFiche, eluDepuisId, mouvementsElu } from "@/lib/elus";
 import { CHAMBRE_LONG, nomAffiche, prenomNom } from "@/lib/format";
-import { chevauche, libellePeriode, moisAnnee } from "@/lib/periodes";
+import { groupesDuMandat, libellePeriode, moisAnnee, siglesSuccessifs } from "@/lib/periodes";
 import { collaborateurDeLaPersonne, fonctionsGouvernement, parlementaireDepuisId, personne, type Appartenance, type Mandat, type Ministre, type Parlementaire } from "@/lib/referentiel";
 import { assainirHtml, estHtml } from "@/lib/htmlBio";
 import { editionsManuelles } from "@/lib/editionsManuelles";
@@ -94,8 +94,6 @@ export default async function Bio({ params }: Props) {
   // Mandats de la chambre courante, puis les autres chambres.
   const ici = mandats.filter((m) => m.chambre === f.chambre).sort((a, b) => a.debut.localeCompare(b.debut));
   const autres = mandats.filter((m) => m.chambre !== f.chambre);
-  const groupes = (m: Mandat) =>
-    appartenances.filter((a) => a.chambre === m.chambre && a.type === "groupe" && chevauche(a, m, 7) && (!m.elu_id || a.elu_id === m.elu_id));
   const dernier = ici[ici.length - 1];
   const commissions = appartenances.filter((a) => a.chambre === f.chambre && a.type !== "groupe" && (!a.fin || f.actif));
   // Éditions manuelles (admin.dataparl.fr/elus) : bio, mandats et fonctions.
@@ -217,7 +215,15 @@ export default async function Bio({ params }: Props) {
             );
           }
           const mandat = m as Mandat;
-          const g = mandat.chambre === f.chambre ? groupes(mandat).map((a) => a.sigle || a.libelle).filter(Boolean) : [];
+                    // Groupes successifs du mandat, chronologiques, sans les artefacts de
+          // renouvellement. Pour le mandat en cours dans la chambre active, le groupe
+          // officiel de la fiche (parlementaires.groupe, synchronisé chaque nuit)
+          // prime : un sigle historique jamais refermé (UMP après le renommage en LR
+          // au Sénat) ne doit jamais contredire l'en-tête de la page.
+          const gBruts = siglesSuccessifs(groupesDuMandat(appartenances, mandat));
+          const g = f.actif && !mandat.fin && mandat.chambre === f.chambre && f.groupe && !gBruts.includes(f.groupe)
+            ? [f.groupe]
+            : gBruts;
           const manuelItem = mandatsManuels.includes(mandat);
           return (
             <li key={`${mandat.chambre}-${mandat.debut}-${i}`}>
@@ -227,7 +233,7 @@ export default async function Bio({ params }: Props) {
                 <span className="meta">, {libellePeriode({ debut: mandat.debut, debut_connu: !!mandat.debut, fin: mandat.fin, fin_connue: !!mandat.fin, en_cours: !mandat.fin })}</span>
                 {manuelItem && <span className="puce">précisé par DataParl&apos;</span>}
               </p>
-              {g.length > 0 && <p className="meta" style={{ margin: "2px 0" }}>Groupe : {g.join(", ")}</p>}
+              {g.length > 0 && <p className="meta" style={{ margin: "2px 0" }}>Groupe : {g.join(" puis ")}</p>}
             </li>
           );
         })}

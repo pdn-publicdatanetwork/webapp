@@ -60,3 +60,49 @@ export function dureeMois(debut: string, fin: string): number | null {
   const d = new Date(debut), f = new Date(fin);
   return Math.max(0, Math.round((f.getTime() - d.getTime()) / (30.44 * 86400_000)));
 }
+
+// ─── Groupes politiques d'un mandat (fiches et biographies) ───
+// Les sources créent une appartenance « non-inscrit » à chaque renouvellement,
+// le temps que les groupes se forment (juillet 2024 à l'AN), et une vraie
+// quand l'élu quitte son groupe ; des renommages laissent aussi des sigles
+// jamais refermés, UMP resté ouvert après le passage au LR par exemple.
+// Ces artefacts ne doivent jamais s'afficher comme des groupes contradictoires.
+
+export type MandatGroupes = { chambre: string; elu_id: string; debut: string; fin: string };
+export type AppartenanceGroupe = { chambre: string; elu_id: string; type: string; sigle: string; libelle: string; debut: string; fin: string };
+
+const NON_INSCRIT = /^(ni|non.?inscrit|n['’]appartenant|ne figurant)/i;
+// Fenêtre de constitution des groupes : une non-inscription plus courte que ce
+// délai, suivie d'un vrai groupe, est un artefact de renouvellement.
+const TRANSITOIRE_JOURS = 30;
+
+// Appartenances de type groupe qui couvrent le mandat (chevauchement d'au
+// moins 7 jours), triées de la plus ancienne à la plus récente.
+export function groupesDuMandat(appartenances: AppartenanceGroupe[], mandat: MandatGroupes): AppartenanceGroupe[] {
+  return appartenances
+    .filter((a) => a.chambre === mandat.chambre && a.type === "groupe"
+      && chevauche(a, mandat, 7) && (!mandat.elu_id || a.elu_id === mandat.elu_id))
+    .sort((a, b) => (a.debut || "").localeCompare(b.debut || ""));
+}
+
+// Sigles successifs du mandat, dans l'ordre chronologique (« RN puis NI »).
+// Les non-inscriptions brèves suivies d'un groupe disparaissent : artefacts
+// de renouvellement. Une non-inscription finale, elle, reste : elle dit un
+// départ réel du groupe. Les doublons consécutifs sont fusionnés (« SOC puis
+// SOC » n'existe pas : bornes de législature qui se touchent).
+export function siglesSuccessifs(appartenances: AppartenanceGroupe[]): string[] {
+  const tries = [...appartenances].sort((a, b) => (a.debut || "").localeCompare(b.debut || ""));
+  const utiles = tries.filter((a, i) => {
+    const s = a.sigle || a.libelle || "";
+    if (!NON_INSCRIT.test(s)) return true;
+    if (i === tries.length - 1) return true;
+    if (!a.debut || !a.fin) return true;
+    return new Date(a.fin).getTime() - new Date(a.debut).getTime() >= TRANSITOIRE_JOURS * 86400_000;
+  });
+  const out: string[] = [];
+  for (const a of utiles) {
+    const s = (a.sigle || a.libelle || "").trim();
+    if (s && out[out.length - 1] !== s) out.push(s);
+  }
+  return out;
+}
