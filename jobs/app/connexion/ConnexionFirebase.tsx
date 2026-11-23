@@ -5,10 +5,12 @@ import { suitePropre } from "@/lib/authSupabase";
 import {
   connexionParLien,
   connexionPopup,
+  connexionRedirect,
   emailLienMemorise,
   finaliserSession,
   lienConnexionActif,
   memoriserEmailLien,
+  resultatRedirect,
   sessionFirebase,
 } from "@/lib/sessionFirebase";
 import Turnstile from "@/components/Turnstile";
@@ -46,6 +48,14 @@ export default function ConnexionFirebase() {
             if (!vivant) return;
             setEtat("lien-email");
           }
+          return;
+        }
+        // Retour d'une connexion en redirection pleine page (repli popup) :
+        // finalisation directe.
+        const cred = await resultatRedirect();
+        if (cred) {
+          if (!vivant) return;
+          await finaliser(Promise.resolve(cred));
           return;
         }
         const s = await sessionFirebase();
@@ -109,6 +119,20 @@ export default function ConnexionFirebase() {
       await finaliser(connexionPopup("google"));
     } catch (e) {
       const err = e as { code?: string; message?: string };
+      const code = err.code ?? "";
+      // Popup bloquée, jamais ouverte ou annulée par une nouvelle tentative
+      // (auth/cancelled-popup-request) : repli en redirection pleine page,
+      // seul mode fiable sur mobile et dans les navigateurs intégrés.
+      if (code === "auth/popup-blocked" || code === "auth/cancelled-popup-request" || code === "auth/operation-not-supported-in-this-environment") {
+        try {
+          await connexionRedirect();
+          return; // la page navigue vers Google puis revient ici
+        } catch {
+          setEtat("erreur");
+          setMessage("Connexion Google impossible.");
+          return;
+        }
+      }
       setEtat("erreur");
       setMessage(err.code ? `Connexion refusée (${err.code})` : err.message ?? "Connexion Google impossible.");
     }
