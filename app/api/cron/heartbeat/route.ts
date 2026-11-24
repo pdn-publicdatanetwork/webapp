@@ -5,8 +5,9 @@ import { authAdmin } from "@/lib/supabaseAdmin";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-// Remise des URL de heartbeat Better Stack aux workflows de collecte du repo
-// collaborateurs (22/11/2026). Même architecture zéro-secret GitHub que
+// Remise des URL de heartbeat Better Stack aux workflows de collecte (repo
+// collaborateurs pour suivi/pe/jorf, repo webapp pour les offres Jobs ; mise
+// en place 22-24/11/2026). Même architecture zéro-secret GitHub que
 // /api/cron/ci-jeton : le workflow prouve son identité par jeton OIDC GitHub
 // éphémère (audience « dataparl-ci »), cette route valide le jeton (JWKS
 // GitHub + claims — le claim job_workflow_ref contient le suffixe
@@ -35,6 +36,11 @@ const PIPELINES: Record<string, { depot: string; workflow: string; cle: string }
     depot: "publicdatanetwork-dataparl/collaborateurs",
     workflow: ".github/workflows/gouvernement-quotidien.yml",
     cle: "heartbeat_jorf",
+  },
+  jobs: {
+    depot: "pdn-publicdatanetwork/webapp",
+    workflow: ".github/workflows/collecte-jobs.yml",
+    cle: "heartbeat_offres_jobs",
   },
 };
 
