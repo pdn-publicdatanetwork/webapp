@@ -146,3 +146,34 @@ jobs:
         if: ${{ env.SKIP_PROMO_TELEGRAM != 'true' && inputs.skip_promo_telegram != true }}
         working-directory: repo
         run: node scripts/promotion-offres.mjs
+      # Heartbeat Better Stack (24/11/2026), pipeline offres Jobs : la route
+      # webapp /api/cron/heartbeat sert l'URL de ping (p=jobs) après
+      # validation du jeton OIDC de CE workflow. Ping uniquement sur run
+      # réussi : une collecte en échec ne doit pas masquer une panne, la
+      # grâce du monitor (12 h + 3 h) couvre largement les 2 runs/jour.
+      # Zéro-secret GitHub. La route répond en JSON ({ "url": … }) :
+      # extraire l'URL avec sed, jamais passer le corps brut à curl. Best
+      # effort, jamais bloquant.
+      - name: Heartbeat Better Stack (offres Jobs)
+        if: ${{ always() && job.status == 'success' }}
+        run: |
+          ok=0
+          for i in 1 2 3; do
+            oidc=$(curl -fsS --connect-timeout 15 --max-time 30 \
+              -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+              "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=dataparl-ci" \
+              | sed -n 's/.*"value":"\([^"]*\)".*/\1/p') || { sleep 10; continue; }
+            [ -n "$oidc" ] || { echo "essai $i : jeton OIDC non obtenu"; sleep 10; continue; }
+            route_code=$(curl -sS --max-time 30 -o /tmp/route.json -w "%{http_code}" \
+              -H "x-oidc: $oidc" \
+              "https://www.dataparl.fr/api/cron/heartbeat?p=jobs") || { sleep 10; continue; }
+            url=$(sed -n 's/.*"url":"\([^"]*\)".*/\1/p' /tmp/route.json)
+            case "${route_code:-000}:$url" in
+              2*:https://*) ;;
+              *) echo "essai $i : route heartbeat HTTP ${route_code:-000}"; sleep 10; continue ;;
+            esac
+            curl -fsS --max-time 30 "$url" && { ok=1; break; }
+            echo "essai $i : ping Better Stack échoué"
+            sleep 10
+          done
+          [ "$ok" = 1 ] || echo "::warning::Heartbeat Better Stack non envoyé après 3 essais (codes HTTP dans le log ci-dessus)."
