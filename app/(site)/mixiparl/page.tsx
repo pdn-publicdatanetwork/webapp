@@ -7,13 +7,13 @@ import RechercheStatElu from "@/app/_components/RechercheStatElu";
 import { familleDe, FAMILLES } from "@/lib/familles";
 import { CHAMBRE_LONG, idParlementaire, nomAffiche } from "@/lib/format";
 import {
-  agreger, equipeEligible, mixite, mixiteMoyenne, partFemmes, pct, segmentDe, statsElus, statsMixiteAnnuelle, tauxMixite,
+  agreger, ecartGenre, equipeEligible, mixite, mixiteMoyenne, partFemmes, pct, ptsEcartGenre, segmentDe, statsElus, statsMixiteAnnuelle, tauxMixite,
   type StatElu, type StatMixiteAnnuelle,
 } from "@/lib/stats";
 
 export const metadata: Metadata = {
   title: { absolute: "MixiParl' : le taux de mixité des équipes parlementaires" },
-  description: "Le taux de mixité des équipes de collaborateurs parlementaires : part de femmes et d'hommes, élu par élu, par groupe et par chambre.",
+  description: "Le taux de mixité des équipes de collaborateurs parlementaires : part de femmes et d'hommes, écart de genre, élu par élu, par groupe et par chambre.",
   alternates: { canonical: "/mixiparl" },
 };
 export const revalidate = 3600;
@@ -123,11 +123,11 @@ export default async function MixiParl() {
           <section key={c}>
             <h2>{CHAMBRE_LONG[c]}, par élu</h2>
             <RechercheStatElu id={`mixi-${c}`} placeholder={`Chercher un élu ${c === "assemblee" ? "de l'Assemblée" : "du Sénat"}`}
-              colonnes={["Femmes", "Hommes", "Taux de mixité"]}
+              colonnes={["Femmes", "Hommes", "Taux de mixité", "Écart de genre"]}
               lignes={de(c).map((r) => ({
                 nom: nomAffiche(r.elu_nom), groupe: r.elu_groupe,
                 href: `/parlementaires/${encodeURIComponent(idParlementaire(r.chambre, r.elu_id, r.elu_cle, r.elu_nom))}`,
-                valeurs: [String(r.femmes), String(r.hommes), equipeEligible(r) ? pct(tauxMixite(r)) : "–"],
+                valeurs: [String(r.femmes), String(r.hommes), equipeEligible(r) ? pct(tauxMixite(r)) : "–", equipeEligible(r) ? ptsEcartGenre(ecartGenre(r)) : "–"],
               }))} />
             <p><a href={`/mixiparl/${segmentDe(c)}/parlementaires`}>Voir les {eligibles.length} élus, de l&apos;équipe la plus mixte à la moins mixte →</a></p>
           </section>
@@ -140,7 +140,8 @@ export default async function MixiParl() {
         Assemblée : genre déduit du prénom ; les prénoms mixtes ou inconnus restent indéterminés
         {parChambre.assemblee ? ` (${parChambre.assemblee.indetermines} collaborateurs, soit ${pct(parChambre.assemblee.indetermines / parChambre.assemblee.effectif)})` : ""}.
         Parlement européen : suivi en pause.{" "}
-        <a href="/mixiparl/methode">La méthode complète, avec des exemples →</a>
+        <a href="/mixiparl/methode">La méthode complète, avec des exemples →</a>. Pourquoi cette mesure a un sens :{" "}
+        <a href="/mixiparl/postulat">le postulat →</a>
       </p>
       <script
         type="application/ld+json"

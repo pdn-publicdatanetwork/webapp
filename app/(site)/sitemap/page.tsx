@@ -50,6 +50,7 @@ export default async function PlanDuSite() {
         { href: "/vigiparl/timeline", libelle: "VigiParl' : année par année" },
         { href: "/mixiparl", libelle: "MixiParl' : mixité du Parlement" },
         { href: "/mixiparl/methode", libelle: "MixiParl' : méthode" },
+        { href: "/mixiparl/postulat", libelle: "MixiParl' : le postulat, pourquoi mesurer la mixité" },
         { href: "/mixiparl/timeline", libelle: "MixiParl' : année par année" },
         { href: "/alertes", libelle: "Alertes par email" },
       ],

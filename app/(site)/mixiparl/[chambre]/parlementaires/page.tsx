@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Tableur from "@/app/_components/Tableur";
 import ClassementTop from "@/app/_components/ClassementTop";
 import { CHAMBRE_LONG, idParlementaire, nomAffiche } from "@/lib/format";
-import { equipeEligible, pct, SEGMENT_CHAMBRE, statsElus, tauxMixite } from "@/lib/stats";
+import { ecartGenre, equipeEligible, libelleMajorite, pct, ptsEcartGenre, SEGMENT_CHAMBRE, statsElus, tauxMixite } from "@/lib/stats";
 
 export const revalidate = 3600;
 type Props = { params: Promise<{ chambre: string }>; searchParams: Promise<{ ordre?: string }> };
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!c) return {};
   return {
     title: "Mixité des équipes par élu : " + CHAMBRE_LONG[c],
-    description: "Le taux de mixité de l'équipe de chaque élu " + (LE_DE[c] ?? CHAMBRE_LONG[c]) + ".",
+    description: "Le taux de mixité et l'écart de genre de l'équipe de chaque élu " + (LE_DE[c] ?? CHAMBRE_LONG[c]) + ".",
     alternates: { canonical: "/mixiparl/" + seg + "/parlementaires" },
   };
 }
@@ -46,12 +46,12 @@ export default async function Page({ params, searchParams }: Props) {
     tries.sort((a, b) => (tauxMixite(a.r) ?? 0) - (tauxMixite(b.r) ?? 0) || (b.r.femmes + b.r.hommes) - (a.r.femmes + a.r.hommes) || a.rang - b.rang);
   }
   const base = "/mixiparl/" + seg + "/parlementaires";
-  const entetes = ["Rang", "Élu", "Groupe", "Équipe", "Femmes", "Hommes", "Part de femmes", "Taux de mixité"];
-  const donnees = tries.map(({ r, rang }) => [rang, nomAffiche(r.elu_nom), r.elu_groupe ?? "", r.femmes + r.hommes, r.femmes, r.hommes, pct(r.femmes / (r.femmes + r.hommes)), pct(tauxMixite(r))]);
+  const entetes = ["Rang", "Élu", "Groupe", "Équipe", "Femmes", "Hommes", "Part de femmes", "Taux de mixité", "Écart de genre"];
+  const donnees = tries.map(({ r, rang }) => [rang, nomAffiche(r.elu_nom), r.elu_groupe ?? "", r.femmes + r.hommes, r.femmes, r.hommes, pct(r.femmes / (r.femmes + r.hommes)), pct(tauxMixite(r)), ptsEcartGenre(ecartGenre(r)) + ", " + (libelleMajorite(r) ?? "")]);
   const liens = tries.map(({ r }) => [
     null,
     "/parlementaires/" + encodeURIComponent(idParlementaire(r.chambre, r.elu_id, r.elu_cle, r.elu_nom)),
-    null, null, null, null, null, null,
+    null, null, null, null, null, null, null,
   ]);
   return (
     <>
@@ -72,7 +72,9 @@ export default async function Page({ params, searchParams }: Props) {
       <p className="meta">
         Comment lire le taux de mixité : 100 % pour une équipe paritaire (autant de femmes que d&apos;hommes), 0 % pour
         une équipe entièrement féminine ou entièrement masculine. Il vaut 1 − |2 × part de femmes − 1| : une équipe
-        comptant 70 % de femmes affiche ainsi 60 %. La part de femmes reste affichée en complément dans la grille.
+        comptant 70 % de femmes affiche ainsi 60 %. La part de femmes reste affichée en complément dans la grille, avec
+        l&apos;<a href="/mixiparl/methode#ecart-de-genre">écart de genre</a> et son libellé : le sens du déséquilibre,
+        entre +100 points (équipe entièrement féminine) et −100 points (équipe entièrement masculine).
       </p>
       {top10.length > 0 && (
         <ClassementTop
