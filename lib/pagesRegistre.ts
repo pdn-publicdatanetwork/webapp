@@ -41,6 +41,7 @@ export const PAGES: PageSite[] = [
   { chemin: "/vigiparl/pe/parlementaires", titre: "VigiParl', Parlement européen, par élu", sitemap: true },
   { chemin: "/mixiparl", titre: "MixiParl'", sitemap: true },
   { chemin: "/mixiparl/methode", titre: "MixiParl', méthode", sitemap: true },
+  { chemin: "/mixiparl/postulat", titre: "MixiParl', le postulat", sitemap: true },
   { chemin: "/mixiparl/timeline", titre: "MixiParl', année par année", sitemap: true },
   { chemin: "/mixiparl/an/parlementaires", titre: "MixiParl', Assemblée, par élu", sitemap: true },
   { chemin: "/mixiparl/senat/parlementaires", titre: "MixiParl', Sénat, par élu", sitemap: true },

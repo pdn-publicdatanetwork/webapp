@@ -17,6 +17,7 @@ export const PAGES_SITE: PageSite[] = [
   { libelle: "Sources", detail: "Les publications officielles derrière chaque chiffre", href: "/methode/sources", mots: "sources publications officielles assemblee nationale senat agas licences citer" },
   { libelle: "Méthode VigiParl'", detail: "Comment le taux de renouvellement est calculé", href: "/vigiparl/methode", mots: "methode methodologie vigiparl calcul taux renouvellement" },
   { libelle: "Méthode MixiParl'", detail: "Comment la mixité est mesurée", href: "/mixiparl/methode", mots: "methode methodologie mixiparl genre parite calcul" },
+  { libelle: "Le postulat MixiParl'", detail: "Pourquoi mesurer la mixité des équipes", href: "/mixiparl/postulat", mots: "postulat pourquoi mesure employeur parlementaires egalite professionnelle discrimination index rixain" },
   { libelle: "Presse & médias", detail: "Données et accès pour les rédactions", href: "/presse", mots: "presse medias journalistes redaction citer" },
   { libelle: "Questions fréquentes", detail: "FAQ", href: "/faq", mots: "faq questions aide" },
   { libelle: "Contact", detail: "Nous écrire", href: "/contact", mots: "contact ecrire message" },
