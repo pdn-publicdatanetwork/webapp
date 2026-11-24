@@ -74,7 +74,7 @@ export async function statsFenetre(): Promise<StatFenetre[]> {
   return dataQueryTout<StatFenetre>("stats_fenetre_12m", new URLSearchParams({ select: "*" }), 3600);
 }
 
-export { equipeEligible, mixite, mixiteMoyenne, tauxMixite } from "./mixite";
+export { ecartGenre, equipeEligible, libelleMajorite, mixite, mixiteMoyenne, ptsEcartGenre, tauxMixite } from "./mixite";
 
 // Version de la méthode : toute évolution est datée et décrite ici.
 export const HISTORIQUE_METHODE: Record<"vigiparl" | "mixiparl", { date: string; texte: string }[]> = {
@@ -86,6 +86,7 @@ export const HISTORIQUE_METHODE: Record<"vigiparl" | "mixiparl", { date: string;
   mixiparl: [
     { date: "2026-10-01", texte: "Les équipes comptant un membre de genre indéterminé sont exclues des indicateurs de parité et de non-mixité (auparavant, seuls les membres de genre déterminé étaient comptés)." },
     { date: "2026-10-02", texte: "L'indicateur principal devient le taux de mixité (100 % à 50/50, 0 % pour une équipe non mixte) ; la part de femmes reste affichée en complément. Les chiffres sont présentés avec leurs sources dans la page, sans fichier à télécharger." },
+    { date: "2026-11-24", texte: "Nouvel indicateur complémentaire : l'écart de genre (part de femmes moins part d'hommes), affiché par équipe avec son libellé (parité, majorité féminine ou masculine), jamais moyenné ; les agrégats gardent la part de femmes. Encadré « Pourquoi pas l'indice de Blau ? » dans la méthode et nouvelle page Le postulat." },
   ],
 };
 

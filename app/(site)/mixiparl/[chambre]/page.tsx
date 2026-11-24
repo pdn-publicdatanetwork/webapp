@@ -5,7 +5,7 @@ import { CourbeMensuelle } from "@/app/_components/CourbesMensuelles";
 import { eluDepuisId, statsElu } from "@/lib/elus";
 import { historiqueMensuel } from "@/lib/indicateurs";
 import { CHAMBRE_LONG, idParlementaire, nomAffiche } from "@/lib/format";
-import { pct, tauxMixite } from "@/lib/stats";
+import { ecartGenre, libelleMajorite, pct, ptsEcartGenre, tauxMixite } from "@/lib/stats";
 
 export const revalidate = 86400;
 type Props = { params: Promise<{ chambre: string }> };
@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!e) return { title: "MixiParl'" };
   return {
     title: nomAffiche(e.nom) + " : la mixité de son équipe, mois par mois",
-    description: "Historique mensuel de la mixité de l'équipe de collaborateurs de " + nomAffiche(e.nom) + " : part de femmes et taux de mixité depuis le début du mandat.",
+    description: "Historique mensuel de la mixité de l'équipe de collaborateurs de " + nomAffiche(e.nom) + " : part de femmes, taux de mixité et écart de genre depuis le début du mandat.",
     alternates: { canonical: "/mixiparl/" + encodeURIComponent(idParlementaire(e.chambre, e.id, e.cle, e.nom)) },
   };
 }
@@ -62,6 +62,10 @@ export default async function Page({ params }: Props) {
           <strong>{dernier && eligible ? pct(tauxMixite(dernier), 1) : "–"}</strong>
           <span>taux de mixité (100 % à 50/50)</span>
         </div>
+        <div>
+          <strong>{dernier && eligible ? ptsEcartGenre(ecartGenre(dernier)) : "–"}</strong>
+          <span>{dernier && eligible ? "écart de genre : " + libelleMajorite(dernier) : "écart de genre (0 à la parité)"}</span>
+        </div>
       </div>
       {!eligible && <p className="meta">L&apos;indicateur de mixité compte pour les équipes de 2 personnes ou plus : l&apos;équipe actuelle n&apos;est pas (ou plus) éligible, la série reste néanmoins tracée.</p>}
 
@@ -74,7 +78,7 @@ export default async function Page({ params }: Props) {
 
           <div className="defile">
             <table className="stats">
-              <thead><tr><th>Mois</th><th className="num">Femmes</th><th className="num">Hommes</th><th className="num">Part de femmes</th><th className="num">Taux de mixité</th><th className="num">Arrivées</th><th className="num">Départs</th></tr></thead>
+              <thead><tr><th>Mois</th><th className="num">Femmes</th><th className="num">Hommes</th><th className="num">Part de femmes</th><th className="num">Taux de mixité</th><th className="num">Écart de genre</th><th className="num">Arrivées</th><th className="num">Départs</th></tr></thead>
               <tbody>
                 {points.slice().reverse().map((p) => (
                   <tr key={p.mois}>
@@ -83,6 +87,7 @@ export default async function Page({ params }: Props) {
                     <td className="num">{p.hommes}</td>
                     <td className="num">{partFemmes(p.femmes, p.hommes) === null ? "–" : pct(partFemmes(p.femmes, p.hommes))}</td>
                     <td className="num">{tauxMixite(p) === null ? "–" : pct(tauxMixite(p), 0)}</td>
+                    <td className="num">{ecartGenre(p) === null ? "–" : ptsEcartGenre(ecartGenre(p))}</td>
                     <td className="num">{p.arrivees || "–"}</td>
                     <td className="num">{p.departs || "–"}</td>
                   </tr>
