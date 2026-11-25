@@ -6,5 +6,27 @@
   "compatibility_flags": ["nodejs_compat"],
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
   "observability": { "enabled": true },
-  "triggers": { "crons": ["30 7 * * *", "0 8 * * *", "45 7 * * *", "30 10 * * *", "15 * * * *"] }
+  "triggers": { "crons": ["30 7 * * *", "0 8 * * *", "45 7 * * *", "30 10 * * *", "15 * * * *"] },
+
+  // Cache partagé entre isolates (correctif de fond de la panne du 25/11) :
+  // sans ces liaisons, unstable_cache ne dédupliquait que par isolate et
+  // presque chaque rendu de page partait réellement vers Supabase.
+  "services": [
+    { "binding": "WORKER_SELF_REFERENCE", "service": "dataparl" }
+  ],
+  // Cache incrémental OpenNext : bucket R2 à créer AVANT le merge
+  // (dashboard Cloudflare > R2 > Create bucket, nom : dataparl-next-cache).
+  "r2_buckets": [
+    { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "dataparl-next-cache" }
+  ],
+  // File de revalidation dédupliquée (Durable Object), migrations appliquées
+  // automatiquement au premier wrangler deploy.
+  "durable_objects": {
+    "bindings": [
+      { "name": "NEXT_CACHE_DO_QUEUE", "class_name": "DOQueueHandler" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["DOQueueHandler"] }
+  ]
 }
