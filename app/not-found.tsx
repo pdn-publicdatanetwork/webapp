@@ -1,8 +1,6 @@
-import ListeMouvements from "./_components/ListeMouvements";
 import Logo from "./_components/Logo";
 import PhraseRejetee from "./_components/PhraseRejetee";
 import RechercheGlobale from "./_components/RechercheGlobale";
-import { derniersMouvements, type Mouvement } from "@/lib/data";
 
 // Urne vide : dessin original, trait marine, fente sur le dessus.
 function UrneVide() {
@@ -18,8 +16,13 @@ function UrneVide() {
   );
 }
 
-export default async function NotFound() {
-  const recents: Mouvement[] = await derniersMouvements(3).catch(() => []);
+// Page 404 volontairement 100% statique. Diagnostic du 25/11 : des robots sans
+// JavaScript rendaient cette page 2000 à 4100 fois par heure, et chaque rendu
+// exécutait derniersMouvements(3) vers Supabase (le cache unstable_cache n'est
+// pas partage entre isolates Workers depuis la migration Cloudflare). Une 404
+// ne doit plus couter des requetes de base de donnees : le bloc « Pendant ce
+// temps, au Parlement » est retire, l'urne et la recherche restent.
+export default function NotFound() {
   return (
     <div className="page">
       <header className="site"><div className="wrap"><Logo /></div></header>
@@ -37,12 +40,6 @@ export default async function NotFound() {
           </ul>
           <a className="btn" href="https://www.dataparl.fr/">Retour à l&apos;accueil</a>
         </div>
-        {recents.length > 0 && (
-          <div className="wrap" style={{ marginTop: 40 }}>
-            <h2>Pendant ce temps, au Parlement</h2>
-            <ListeMouvements mouvements={recents} />
-          </div>
-        )}
       </main>
     </div>
   );
