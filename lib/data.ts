@@ -115,24 +115,73 @@ export async function compteAffectations(): Promise<Record<string, number>> {
 
 export type Elu = { chambre: Mouvement["chambre"]; cle: string; id: string; nom: string; groupe: string; n_collabs: number };
 
+// Filtre « après le curseur » pour dataQueryTout : strictement après le
+// tuple des colonnes de la cle, dans l'ordre du tri. Les valeurs sont
+// entre guillemets : une clef peut contenir virgules ou parenthèses,
+// que PostgREST lirait littéralement sinon.
+function apresCurseur(colonnes: string[], valeurs: string[]): string {
+  const v = (s: string) => `"${s.replace(/"/g, "")}"`;
+  const branches: string[] = [];
+  for (let i = 0; i < colonnes.length; i++) {
+    const memes = colonnes.slice(0, i).map((c, j) => `${c}.eq.${v(valeurs[j])}`);
+    branches.push([...memes, `${colonnes[i]}.gt.${v(valeurs[i])}`].join(","));
+  }
+  return branches.length === 1 ? branches[0] : `or(${branches.map((b) => `and(${b})`).join(",")})`;
+}
+
 // PostgREST plafonne chaque réponse (1 000 lignes par défaut) : on pagine.
-export async function dataQueryTout<T>(table: string, params: URLSearchParams, revalidate = 3600, page = 1000): Promise<T[]> {
+// Sans cleCurseur, pagination par OFFSET (tables qui tiennent en une ou
+// deux pages). Avec cleCurseur (les colonnes d'une cle ordonnée, la cle
+// primaire de la table par exemple, dans le même ordre que params), la
+// page ne demande que les lignes strictement après la dernière reçue :
+// Postgres suit l'index jusqu'au curseur au lieu de relire les pages déjà
+// servies. Pendant la saturation du 25/11, les pages OFFSET d'affectations
+// répondaient jusqu'à 114 s et s'annulaient en série.
+export async function dataQueryTout<T>(
+  table: string,
+  params: URLSearchParams,
+  revalidate = 3600,
+  page = 1000,
+  cleCurseur?: string[],
+): Promise<T[]> {
   const out: T[] = [];
-  for (let offset = 0; offset < 100_000; offset += page) {
+  if (!cleCurseur) {
+    for (let offset = 0; offset < 100_000; offset += page) {
+      const p = new URLSearchParams(params);
+      p.set("limit", String(page));
+      p.set("offset", String(offset));
+      const { rows } = await dataQuery<T>(table, p, revalidate);
+      out.push(...rows);
+      if (rows.length < page) break;
+    }
+    return out;
+  }
+  // Mode curseur : les colonnes de la cle doivent être dans le select et
+  // dans params.order ; la boucle s'arrête si une page est incomplète.
+  let curseur: string[] | null = null;
+  for (let i = 0; i < 1_000; i++) {
     const p = new URLSearchParams(params);
     p.set("limit", String(page));
-    p.set("offset", String(offset));
+    if (curseur) p.set("or", apresCurseur(cleCurseur, curseur));
     const { rows } = await dataQuery<T>(table, p, revalidate);
     out.push(...rows);
     if (rows.length < page) break;
+    const derniere = rows[rows.length - 1] as unknown as Record<string, unknown>;
+    if (!cleCurseur.every((c) => c in derniere)) break;
+    curseur = cleCurseur.map((c) => String(derniere[c]));
   }
   return out;
 }
 
 export async function referentiel(): Promise<Elu[]> {
-  const p = new URLSearchParams({ select: "chambre,elu_cle,elu_id,elu_nom,elu_groupe", order: "chambre,elu_cle,collab_cle" });
+  // collab_cle sert de curseur entre les pages (cle primaire d'affectations :
+  // chambre, elu_cle, collab_cle) ; le contenu renvoyé ne change pas.
+  const p = new URLSearchParams({
+    select: "chambre,elu_cle,elu_id,elu_nom,elu_groupe,collab_cle",
+    order: "chambre,elu_cle,collab_cle",
+  });
   const rows = await dataQueryTout<{ chambre: Elu["chambre"]; elu_cle: string; elu_id: string; elu_nom: string; elu_groupe: string }>(
-    "affectations", p,
+    "affectations", p, 3600, 1000, ["chambre", "elu_cle", "collab_cle"],
   );
   const parCle = new Map<string, Elu>();
   for (const r of rows) {
