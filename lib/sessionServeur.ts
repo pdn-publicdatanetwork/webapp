@@ -64,6 +64,9 @@ export function lireSessionCookie(req: Request): SessionFirebaseCookie | null {
 // appel que la session client lib/sessionFirebase.ts). La session rafraîchie
 // est renvoyée pour être reposée en cookie : garder l'ancien refresh token
 // posé par le navigateur ne serait plus cohérent après rotation.
+// Garde-fou du 25/11 : le rafraîchissement est plafonné à 5 s. Un securetoken
+// injoignable vaut session anonyme (le catch existe déjà) au lieu d'une
+// requête tenue plusieurs minutes par l'API Google.
 async function jetonEffectif(s: SessionFirebaseCookie): Promise<{ jeton: string; sessionAPoser: SessionFirebaseCookie | null } | null> {
   if (s.it && s.exp > Date.now() / 1000 + 60) return { jeton: s.it, sessionAPoser: null };
   try {
@@ -71,6 +74,7 @@ async function jetonEffectif(s: SessionFirebaseCookie): Promise<{ jeton: string;
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ grantType: "refresh_token", refreshToken: s.rt }),
+      signal: AbortSignal.timeout(5_000),
     });
     if (!r.ok) return null; // refresh refusé : jeton révoqué, compte désactivé…
     // L'API securetoken répond en snake_case (id_token, refresh_token,
