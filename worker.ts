@@ -4,6 +4,14 @@
 // Chaque cron appelle la même route Next.js qu'auparavant, en interne, avec
 // l'en-tête Authorization attendu par les routes (CRON_SECRET, secret Worker).
 
+// Durable Object de la file de revalidation (queue: doQueue dans
+// open-next.config.ts, binding NEXT_CACHE_DO_QUEUE dans wrangler.jsonc).
+// wrangler exige que la classe soit exportée par le point d'entrée du
+// Worker : sans cet export, le deploy alerte que le Durable Object sera
+// inappelable au runtime (vu dans le run du 25/11 19h04 UTC).
+import { DOQueueHandler } from "@opennextjs/cloudflare/durable-objects/queue";
+export { DOQueueHandler };
+
 interface Env {
   CRON_SECRET: string;
   [cle: string]: unknown;
