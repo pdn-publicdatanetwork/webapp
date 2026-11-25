@@ -20,7 +20,7 @@ export function authAdmin(): SupabaseClient {
   if (!admin) {
     admin = createClient(AUTH_SUPABASE_URL, secret("AUTH_SUPABASE_SERVICE_ROLE_KEY"), {
       auth: { persistSession: false, autoRefreshToken: false },
-      fetch: fetchAvecDelai,
+      global: { fetch: fetchAvecDelai },
     });
   }
   return admin;
@@ -35,7 +35,7 @@ export function dataAdmin(): SupabaseClient {
   if (!data) {
     data = createClient(DATA_SUPABASE_URL, secret("DATA_SUPABASE_SERVICE_ROLE_KEY"), {
       auth: { persistSession: false, autoRefreshToken: false },
-      fetch: fetchAvecDelai,
+      global: { fetch: fetchAvecDelai },
     });
   }
   return data;
