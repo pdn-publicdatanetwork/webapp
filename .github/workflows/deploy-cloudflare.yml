@@ -61,6 +61,11 @@ jobs:
         run: |
           set -o pipefail
           npx opennextjs-cloudflare build 2>&1 | tee build.log
+      - name: Bucket R2 du cache OpenNext (idempotent)
+        # Correctif de fond de la panne du 25/11 : le bucket doit exister avant
+        # le deploy (binding NEXT_INC_CACHE_R2_BUCKET). wrangler sort en erreur
+        # s'il est deja present : ce n'est pas un echec, le deploy tranche.
+        run: npx wrangler r2 bucket create dataparl-next-cache || true
       - name: Deploy www
         run: |
           set -o pipefail
