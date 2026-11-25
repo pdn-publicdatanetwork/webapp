@@ -2,6 +2,17 @@ import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { AUTH_SUPABASE_URL, DATA_SUPABASE_URL, secret } from "./env";
 
+// Garde-fou du 25/11 : tous les appels supabase-js (GoTrue, écritures de la
+// base data) passent par fetch. Un appel suspendu ne doit pas figer la
+// requête du Worker www qui l'attend : pendant la panne du 25/11, des appels
+// en attente ont tenu des réponses plusieurs minutes. Plafond aligné sur les
+// lectures PostgREST de lib/data.ts (comptes et écritures : 10 s suffisent).
+const DELAI_MS = 10_000;
+
+function fetchAvecDelai(input: RequestInfo | URL, init?: RequestInit) {
+  return fetch(input, { ...init, signal: AbortSignal.timeout(DELAI_MS) });
+}
+
 // Client service_role de dataparl-auth : uniquement côté serveur.
 let admin: SupabaseClient | null = null;
 
@@ -9,6 +20,7 @@ export function authAdmin(): SupabaseClient {
   if (!admin) {
     admin = createClient(AUTH_SUPABASE_URL, secret("AUTH_SUPABASE_SERVICE_ROLE_KEY"), {
       auth: { persistSession: false, autoRefreshToken: false },
+      fetch: fetchAvecDelai,
     });
   }
   return admin;
@@ -23,6 +35,7 @@ export function dataAdmin(): SupabaseClient {
   if (!data) {
     data = createClient(DATA_SUPABASE_URL, secret("DATA_SUPABASE_SERVICE_ROLE_KEY"), {
       auth: { persistSession: false, autoRefreshToken: false },
+      fetch: fetchAvecDelai,
     });
   }
   return data;
