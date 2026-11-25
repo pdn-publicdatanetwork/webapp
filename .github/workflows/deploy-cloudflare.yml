@@ -10,6 +10,11 @@ name: Deploy Cloudflare Workers
 # Build : opennextjs-cloudflare build lance lui-même next build en mode
 # webpack + standalone (compatible Next 16). Echecs postes dans l'issue #174.
 
+# Cas des runs en echec sans verdict poste : echec de demarrage des
+# jobs (le verdict, en if: always(), ne part que si son job a demarre).
+# Le contenu de main n entre pas en cause : relancer par un push, le dernier
+# commit de main etant deja sain.
+
 on:
   push:
     branches: [main]
