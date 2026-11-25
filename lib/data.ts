@@ -31,6 +31,19 @@ export const COLONNES_PUBLIQUES =
   "id,date_event,chambre,type,collab_cle,collab_nom,collab_prenom,collab_civilite,elu_cle,elu_id,elu_nom,elu_groupe," +
   "elu_origine_nom,elu_origine_groupe,fonction,contexte,source,confiance";
 
+// Délai maximal d'une lecture PostgREST. Garde-fou du 25/11 : ce jour là, le
+// projet Supabase data a répondu 30 s à 3 min par requête REST pendant une
+// quinzaine de minutes (Postgres en statement timeout en boucle), et chaque
+// page du Worker www attendait son fetch sans limite : site entier figé, cf.
+// migration-cloudflare. Un fetch de lecture attend DELAI_REQUETE_MS au
+// maximum, retente une fois si le délai explose (lecture GET idempotente),
+// puis échoue vite : la page rend une erreur au lieu de suspendre le
+// visiteur plusieurs minutes, et la charge n'empile pas.
+const DELAI_REQUETE_MS = 15_000;
+
+// Erreur de statut HTTP : réponse saine mais refusée, inutile de retenter.
+class ErreurHttp extends Error {}
+
 // Requête PostgREST brute. Jamais mise en cache par le fetch lui-même :
 // le Data Cache de fetch ignore les requêtes portant un en-tête Authorization
 // (comportement documenté de Next). Le cache passe par unstable_cache
@@ -38,14 +51,24 @@ export const COLONNES_PUBLIQUES =
 // la page (statique, ISR ou dynamique : page 404, recherche, comptes…).
 async function requeteBrute(table: string, requete: string): Promise<{ rows: unknown[]; total: number | null }> {
   const url = `${DATA_SUPABASE_URL}/rest/v1/${table}?${requete}`;
-  const r = await fetch(url, {
-    headers: { apikey: DATA_SUPABASE_KEY, Authorization: `Bearer ${DATA_SUPABASE_KEY}`, Prefer: "count=estimated" },
-    cache: "no-store",
-  });
-  if (!r.ok) throw new Error(`dataparl ${table} : HTTP ${r.status}`);
-  const range = r.headers.get("content-range");
-  const total = range && range.includes("/") && !range.endsWith("*") ? Number(range.split("/")[1]) : null;
-  return { rows: (await r.json()) as unknown[], total };
+  let dernierEchec: unknown = null;
+  for (let essai = 1; essai <= 2; essai++) {
+    try {
+      const r = await fetch(url, {
+        headers: { apikey: DATA_SUPABASE_KEY, Authorization: `Bearer ${DATA_SUPABASE_KEY}`, Prefer: "count=estimated" },
+        cache: "no-store",
+        signal: AbortSignal.timeout(DELAI_REQUETE_MS),
+      });
+      if (!r.ok) throw new ErreurHttp(`dataparl ${table} : HTTP ${r.status}`);
+      const range = r.headers.get("content-range");
+      const total = range && range.includes("/") && !range.endsWith("*") ? Number(range.split("/")[1]) : null;
+      return { rows: (await r.json()) as unknown[], total };
+    } catch (e) {
+      if (e instanceof ErreurHttp) throw e;
+      dernierEchec = e; // délai dépassé ou réseau coupé : nouvelle tentative
+    }
+  }
+  throw new Error(`dataparl ${table} : indisponible après ${DELAI_REQUETE_MS} ms`, { cause: dernierEchec });
 }
 
 // Lecture avec cache serveur persistant (clé : table + requête). Une lecture
