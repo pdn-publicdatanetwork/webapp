@@ -1,7 +1,6 @@
 import EnteteSiteRoute from "../_components/EnteteSiteRoute";
 import PiedDePageRoute from "./jobs/_components/FooterJobs";
 import RetourHaut from "../_components/RetourHaut";
-import CrayonPage from "../_components/CrayonPage";
 import EnqueteInvite from "../_components/EnqueteInvite";
 
 // Carte DataParl' Jobs de la grille Explorer : palette du module (violet et lavande),
@@ -21,7 +20,6 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       <main><div className="wrap">{children}</div></main>
       <PiedDePageRoute />
       <RetourHaut />
-      <CrayonPage />
       <EnqueteInvite />
     </div>
   );
