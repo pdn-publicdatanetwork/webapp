@@ -5,9 +5,10 @@ import { authAdmin } from "@/lib/supabaseAdmin";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-// Remise des identifiants Cloudflare aux workflows « Deploy Cloudflare Workers »
-// et « Recuperation secrets GitLab » (both sur main uniquement)
-// (migration Vercel -> Cloudflare Workers, 22/11/2026). Même architecture
+// Remise des identifiants Cloudflare au workflow « Deploy Cloudflare Workers »
+// (main uniquement ; le workflow GitLab qui lautilisait aussi a été supprimé
+// le 26/11/2026 et retiré de la liste blanche, migration Vercel -> Cloudflare
+// Workers, 22/11/2026). Même architecture
 // zéro-secret GitHub que /api/cron/ci-jeton : le workflow prouve son identité
 // par jeton OIDC GitHub éphémère (audience « dataparl-ci »), cette route valide
 // le jeton (JWKS GitHub + claims — NOTE: le claim job_workflow_ref envoyé par
@@ -25,9 +26,10 @@ const ISSUER = "https://token.actions.githubusercontent.com";
 const AUDIENCE = "dataparl-ci";
 const REPO = "pdn-publicdatanetwork/webapp";
 const REF_AUTORISE = "refs/heads/main";
+// Liste exacte : seul le workflow de déploiement est habilité. Aucune
+// correspondance par préfixe (audit du 26/11).
 const WORKFLOWS_AUTORISES = [
   "pdn-publicdatanetwork/webapp/.github/workflows/deploy-cloudflare.yml@refs/heads/main",
-  "pdn-publicdatanetwork/webapp/.github/workflows/recuperation-gitlab.yml@refs/heads/main",
 ];
 
 const b64url = (s: string) => Buffer.from(s.replace(/-/g, "+").replace(/_/g, "/"), "base64");
