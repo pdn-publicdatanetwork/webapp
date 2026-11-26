@@ -1,4 +1,5 @@
 import { after, NextResponse } from "next/server";
+import { jetonMaintenanceValide } from "@/lib/jetonMaintenance";
 import { CODE, destinationValide, genererCode } from "@/lib/liens";
 import { authAdmin } from "@/lib/supabaseAdmin";
 import { canaux, creerPost, type ModePost } from "@/lib/buffer";
@@ -100,7 +101,7 @@ async function modalBoitePage(dossier: string, page: number) {
 export async function POST(req: Request) {
   const attendu = process.env.MAINTENANCE_TOKEN ?? "";
   const u = new URL(req.url);
-  if (!attendu || u.searchParams.get("t") !== attendu) {
+  if (!jetonMaintenanceValide(req, attendu, u)) {
     return NextResponse.json({ text: "Non autorisé." }, { status: 401 });
   }
   const corps = new URLSearchParams(await req.text());

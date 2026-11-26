@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { jetonMaintenanceValide } from "@/lib/jetonMaintenance";
 import { publierHome } from "@/lib/slackHome";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,7 @@ export const maxDuration = 30;
 export async function POST(req: Request) {
   const attendu = process.env.MAINTENANCE_TOKEN ?? "";
   const u = new URL(req.url);
-  if (!attendu || u.searchParams.get("t") !== attendu) {
+  if (!jetonMaintenanceValide(req, attendu, u)) {
     return NextResponse.json({ text: "Non autorisé." }, { status: 401 });
   }
   const charge = (await req.json().catch(() => null)) as {

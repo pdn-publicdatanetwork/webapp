@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { jetonMaintenanceValide } from "@/lib/jetonMaintenance";
 import { EXPEDITEURS, idCourt, lire, lister } from "@/lib/slackMail";
 import { publierHome } from "@/lib/slackHome";
 
@@ -26,8 +27,7 @@ export async function POST(req: Request) {
   const attendu = process.env.MAINTENANCE_TOKEN ?? "";
   const u = new URL(req.url);
   const params = new URLSearchParams(await req.text());
-  const recu = u.searchParams.get("t") ?? params.get("token") ?? "";
-  if (!attendu || recu !== attendu) {
+  if (!jetonMaintenanceValide(req, attendu, u, params)) {
     return NextResponse.json({ text: "Non autorisén" }, { status: 401 });
   }
   const args = (params.get("text") ?? "").trim();

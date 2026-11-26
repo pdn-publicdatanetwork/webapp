@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { jetonMaintenanceValide } from "@/lib/jetonMaintenance";
 import { compterDossiers, envoyerDepuisSlack, lister, lire, supprimer } from "@/lib/slackMail";
 import { modalBoite, modalEnvoi, TAILLE_PAGE_MAIL, vueMessage } from "@/lib/slackHome";
 import { ouvrirModal, publierHomeMail } from "@/lib/mailappClient";
@@ -60,7 +61,7 @@ async function rafraichirHome(userId: string | undefined) {
 export async function POST(req: Request) {
   const attendu = process.env.MAINTENANCE_TOKEN ?? "";
   const u = new URL(req.url);
-  if (!attendu || u.searchParams.get("t") !== attendu) {
+  if (!jetonMaintenanceValide(req, attendu, u)) {
     return NextResponse.json({ text: "Non autorisé." }, { status: 401 });
   }
   const corps = new URLSearchParams(await req.text());
