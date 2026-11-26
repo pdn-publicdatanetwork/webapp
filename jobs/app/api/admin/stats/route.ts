@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 // agrégats globaux + tendances offre par offre (vues de la fiche et clics
 // « postuler » : Contacter l'équipe, Envoyer ma candidature, Copier l'adresse).
 
-const AUTORISES = (process.env.ADMIN_JOBS_EMAILS ?? "theo@dataparl.fr")
+const AUTORISES = (process.env.ADMIN_JOBS_EMAILS ?? "pdn@dataparl.fr")
   .split(",")
   .map((c) => c.trim().toLowerCase())
   .filter(Boolean);

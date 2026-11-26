@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 // Comptes autorisés : le compte admin de DataParl' (table staff, compte unique de l'équipe). Variable optionnelle ADMIN_JOBS_EMAILS (séparée par des
 // virgules) pour ajouter d'autres comptes sans redéployer le code.
-const AUTORISES = (process.env.ADMIN_JOBS_EMAILS ?? "theo@dataparl.fr")
+const AUTORISES = (process.env.ADMIN_JOBS_EMAILS ?? "pdn@dataparl.fr")
   .split(",")
   .map((c) => c.trim().toLowerCase())
   .filter(Boolean);

@@ -20,7 +20,7 @@ import { SITE_URL } from "@/lib/env";
 // public.journal_liens_connexion (IP, user-agent, hôte, origine) pour
 // identifier l'origine des envois, base aussi de l'anti-abus.
 
-const EMAIL_EQUIPE = "theo@dataparl.fr";
+const EMAIL_EQUIPE = "pdn@dataparl.fr";
 const PORTE_AUTH = "https://auth.dataparl.fr";
 const RE_HOTE = /^[\w-]+(\.[\w-]+)*\.dataparl\.fr$/;
 const Corps = z.object({

@@ -17,7 +17,7 @@ import { controleEmail } from "@/lib/antiAbus";
 // boîtes de l'équipe et désignent le même compte unique : on les ramène à
 // l'adresse de ce compte avant tout appel à GoTrue, aussi bien pour l'envoi
 // du code que pour sa vérification (verifyOtp doit voir le même e-mail).
-const EMAIL_EQUIPE = "theo@dataparl.fr";
+const EMAIL_EQUIPE = "pdn@dataparl.fr";
 function emailConnexion(saisi: string): string {
   const e = saisi.trim().toLowerCase();
   return e.endsWith("@dataparl.fr") ? EMAIL_EQUIPE : e;

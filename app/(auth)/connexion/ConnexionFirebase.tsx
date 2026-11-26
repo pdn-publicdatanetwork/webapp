@@ -17,7 +17,7 @@ import { connexionParLien, connexionPopup, emailLienMemorise, finaliserSession, 
 
 const CGU_OK = "dp_cgu_acceptees";
 const IDENTITE = "dp_identite";
-const EMAIL_EQUIPE = "theo@dataparl.fr";
+const EMAIL_EQUIPE = "pdn@dataparl.fr";
 
 function IconeGoogle() {
   return (

@@ -121,7 +121,7 @@ export default function Page() {
 
   if (email === undefined) return <div className="max-w-xl mx-auto py-20 text-center text-sm text-slate-400">Chargement…</div>;
   if (!email) return <Mur titre="Back-office réservé à l&apos;équipe" texte="Connectez-vous avec votre compte DataParl&apos; pour relire les offres." />;
-  if (email.toLowerCase() !== "theo@dataparl.fr") {
+  if (email.toLowerCase() !== "pdn@dataparl.fr") {
     return <Mur titre="Accès réservé au compte admin" texte="Le back-office est accessible uniquement avec le compte admin DataParl&apos;." />;
   }
 
