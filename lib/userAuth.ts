@@ -31,7 +31,11 @@ export async function utilisateurFirebase(token: string): Promise<User | null> {
   const claims = await authFirebase().verifyIdToken(token, false).catch(() => null);
   const email = claims?.email;
   if (!email) return null;
-  let u = await compteAuthParEmail(email);
+
+  // Un e-mail non vérifié côté Firebase ne doit jamais être réconcilié avec le
+  // compte Postgres correspondant : un compte créé avec l'adresse d'un tiers
+  // ne doit pas donner accès à son contenu (audit du 26/11).
+  if (claims?.email_verified !== true) return null;  let u = await compteAuthParEmail(email);
   if (!u) {
     // Nouvel arrivant Firebase : le compte Postgres est créé ici, sinon
     // l'échange de session (/api/auth/session) 401 avant d'atteindre le

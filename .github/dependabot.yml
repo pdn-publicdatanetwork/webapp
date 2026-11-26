@@ -1,0 +1,17 @@
+# Mises à jour automatiques de dépendances (audit de sécurité du 26/11) :
+# alertes de vulnérabilités et PRs de mise à niveau hebdomadaires.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      developpement:
+        dependency-type: "development"
+      production:
+        dependency-type: "production"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

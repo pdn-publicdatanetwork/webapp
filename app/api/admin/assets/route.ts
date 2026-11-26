@@ -10,6 +10,12 @@ export const dynamic = "force-dynamic";
 
 const BUCKET = "assets";
 
+// Types servis au public depuis media.dataparl.fr : liste blanche uniquement.
+// Le Content-Type annoncé par le client ne doit jamais être repris tel quel :
+// un HTML ou un SVG déposé par un compte d'équipe s'exécuterait depuis un
+// sous-domaine du site (audit du 26/11). Tout le reste part en octet-stream.
+const TYPES_SERVIS = new Set(["image/png", "image/jpeg", "image/webp", "image/gif", "image/avif", "application/pdf"]);
+
 const api = (p: string) => `${DATA_SUPABASE_URL}/storage/v1${p}`;
 const tete = (json: boolean) => {
   const c = secret("DATA_SUPABASE_SERVICE_ROLE_KEY");
@@ -69,10 +75,12 @@ export async function POST(req: Request) {
     for (const f of fichiers) {
       const nom = safe(f.name);
       if (!nom) throw new Error(`nom de fichier refusé : ${f.name}`);
+      const typeAnnonce = (f.type || "").split(";")[0].trim().toLowerCase();
+      const typeServi = TYPES_SERVIS.has(typeAnnonce) ? typeAnnonce : "application/octet-stream";
       const chemin = `${dossier}/${nom}`;
       const r = await fetch(api(`/object/${BUCKET}/${chemin}`), {
         method: "POST",
-        headers: { ...tete(false), "Content-Type": f.type || "application/octet-stream", "x-upsert": "true" },
+        headers: { ...tete(false), "Content-Type": typeServi, "x-upsert": "true" },
         body: await f.arrayBuffer(),
       });
       if (!r.ok) throw new Error(`dépôt de ${f.name} échoué : ${(await r.text()).slice(0, 200)}`);

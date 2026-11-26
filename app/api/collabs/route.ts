@@ -14,7 +14,7 @@ type Ligne = {
   collab_cle: string; collab_nom: string; collab_prenom: string; collab_civilite: string; fonction: string; statut: string;
 };
 
-const TEXTE = /^[\p{L}\p{N} .'’()/&_-]{1,80}$/u;
+const TEXTE = /^[\p{L}\p{N} .'’/&_-]{1,80}$/u; // pas de parenthèses : le texte alimente des expressions or()/and() PostgREST
 const q_ = (v: string) => `"${v.replace(/"/g, "")}"`;
 
 // Équipes actuelles, avec adresses déduites. Réservé aux comptes connectés.
