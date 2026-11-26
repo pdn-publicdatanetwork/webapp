@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 // Remise des identifiants Cloudflare au workflow « Deploy Cloudflare Workers »
-// (main uniquement ; le workflow GitLab qui lautilisait aussi a été supprimé
+// (main uniquement ; le workflow GitLab qui l'utilisait aussi a été supprimé
 // le 26/11/2026 et retiré de la liste blanche, migration Vercel -> Cloudflare
 // Workers, 22/11/2026). Même architecture
 // zéro-secret GitHub que /api/cron/ci-jeton : le workflow prouve son identité
