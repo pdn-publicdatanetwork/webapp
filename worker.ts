@@ -31,6 +31,15 @@ const CRONS: Record<string, string> = {
 
 export default {
   async fetch(req, env, ctx) {
+    // Page de maintenance : servie par le Worker de secours dataparl-maintenance
+    // (liaison de service MAINTENANCE, wrangler.jsonc) — actus de maintenance en
+    // direct (maintenance_etat) et inscriptions « prévenu du retour ». Si la
+    // liaison est absente, on retombe sur la route Next.js interne.
+    const cheminMaintenance = new URL(req.url).pathname;
+    if (cheminMaintenance === "/maintenance" || cheminMaintenance.startsWith("/maintenance/")) {
+      const maintenance = (env as { MAINTENANCE?: { fetch: typeof fetch } }).MAINTENANCE;
+      if (maintenance) return maintenance.fetch(req);
+    }
     const { default: handler } = (await import("./.open-next/worker.js")) as any;
     try {
       return await handler.fetch(req, env, ctx);

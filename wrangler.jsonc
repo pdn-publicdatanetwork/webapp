@@ -12,7 +12,8 @@
   // sans ces liaisons, unstable_cache ne dédupliquait que par isolate et
   // presque chaque rendu de page partait réellement vers Supabase.
   "services": [
-    { "binding": "WORKER_SELF_REFERENCE", "service": "dataparl" }
+    { "binding": "WORKER_SELF_REFERENCE", "service": "dataparl" },
+    { "binding": "MAINTENANCE", "service": "dataparl-maintenance" }
   ],
   // Cache incrémental OpenNext : bucket R2 à créer AVANT le merge
   // (dashboard Cloudflare > R2 > Create bucket, nom : dataparl-next-cache).

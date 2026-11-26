@@ -235,10 +235,14 @@ export async function proxy(req: NextRequest) {
       path === "/informations-legales" || path.startsWith("/informations-legales/") ||
       path === "/api/mail" || path.startsWith("/api/mail/");
     if (!autorise) {
+      // Redirection (et non réécriture) vers /maintenance : la page vit dans le
+      // Worker de secours dataparl-maintenance (interception dans worker.ts via
+      // la liaison de service MAINTENANCE), qui affiche les actus de maintenance
+      // en direct (motif, retour prévu, maintenance_etat).
       const url = req.nextUrl.clone();
       url.pathname = "/maintenance";
       url.search = "";
-      const res2 = NextResponse.rewrite(url);
+      const res2 = NextResponse.redirect(url, 307);
       res2.headers.set("Retry-After", "3600");
       return res2;
     }

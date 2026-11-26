@@ -32,14 +32,14 @@ export async function GET(req: Request) {
 // Bascule de la maintenance : coupe/rouvre le site (table maintenance_etat,
 // effective en ≤ 30 s via le proxy et dpchat), synchronise la page de statut
 // Better Stack (status.dataparl.fr) et envoie une copie Slack.
-const Bascule = z.object({ active: z.boolean(), motif: z.string().max(300).optional() });
+const Bascule = z.object({ active: z.boolean(), motif: z.string().max(300).optional(), retour: z.string().max(60).optional() });
 
 export async function PUT(req: Request) {
   return avecAdmin(req, async (a) => {
     const p = Bascule.safeParse(await corps(req));
     if (!p.success) return erreur(400, "requête invalide");
     const par = (a as { email?: string }).email ?? "admin";
-    const r = await basculeMaintenance(p.data.active, par, p.data.motif);
+    const r = await basculeMaintenance(p.data.active, par, p.data.motif, p.data.retour);
     await audit(a, "maintenance.bascule", p.data.active ? "on" : "off");
     return r;
   }, "comptes");

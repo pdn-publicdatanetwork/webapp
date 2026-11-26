@@ -15,7 +15,7 @@ type Prevenu = {
 
 type Etat = {
   active: boolean; ouvert_le: string | null; ferme_le: string | null;
-  par: string | null; motif: string | null;
+  par: string | null; motif: string | null; retour_prevu_le: string | null;
 };
 
 type Donnees = {
@@ -29,6 +29,7 @@ export default function PrevenusMaintenance() {
   const [recherche, setRecherche] = useState("");
   const [page, setPage] = useState(0);
   const [motif, setMotif] = useState("");
+  const [retour, setRetour] = useState("");
   const [message, setMessage] = useState("");
   const [occupe, setOccupe] = useState(false);
   const { data, err, recharger } = useRessource<Donnees>(
@@ -40,7 +41,7 @@ export default function PrevenusMaintenance() {
     setOccupe(true);
     setMessage("");
     try {
-      const r = await api("/api/admin/maintenance", { method: "PUT", body: { active, motif: motif || undefined } }) as
+      const r = await api("/api/admin/maintenance", { method: "PUT", body: { active, motif: motif || undefined, retour: retour || undefined } }) as
         { betterstack?: { ok: boolean; message: string } } | undefined;
       setMessage(r?.betterstack?.message ?? "Bascule enregistrée.");
       recharger();
@@ -85,9 +86,12 @@ export default function PrevenusMaintenance() {
           <td className="meta">
             {data && (data.etat.active ? dateHeure(data.etat.ouvert_le) : dateHeure(data.etat.ferme_le))}
             {data?.etat.par ? ` : ${data.etat.par}` : ""}
+            {data?.etat.active && data.etat.retour_prevu_le ? <> (retour prévu : {dateHeure(data.etat.retour_prevu_le)})</> : null}
           </td>
           <td>
             <input type="text" placeholder="Motif (affiché sur status.dataparl.fr)" value={motif} onChange={(e) => setMotif(e.target.value)} />
+            {" "}
+            <input type="datetime-local" title="Retour prévu (affiché sur la page de maintenance)" value={retour} onChange={(e) => setRetour(e.target.value)} />
             {" "}
             {data?.etat.active
               ? <button disabled={occupe} onClick={() => basculer(false)}>Rouvrir le site</button>

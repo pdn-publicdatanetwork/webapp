@@ -14,12 +14,12 @@ import { copieSlack, SLACK_MAINTENANCE } from "./slack";
 
 export type EtatMaintenance = {
   active: boolean; ouvert_le: string | null; ferme_le: string | null;
-  par: string | null; motif: string | null;
+  par: string | null; motif: string | null; retour_prevu_le: string | null;
 };
 
 export async function lireMaintenance(): Promise<EtatMaintenance> {
   const { data, error } = await authAdmin().from("maintenance_etat")
-    .select("active, ouvert_le, ferme_le, par, motif").eq("id", 1).single();
+    .select("active, ouvert_le, ferme_le, par, motif, retour_prevu_le").eq("id", 1).single();
   if (error) throw error;
   return data as EtatMaintenance;
 }
@@ -98,11 +98,15 @@ export async function betterstackMaintenance(active: boolean, motif?: string): P
 
 // ── Bascule ────────────────────────────────────────────────────────────────
 
-export async function basculeMaintenance(active: boolean, par: string, motif?: string) {
+export async function basculeMaintenance(active: boolean, par: string, motif?: string, retour?: string) {
   const etat = await lireMaintenance();
   const maintenant = new Date().toISOString();
   const patch: Record<string, unknown> = { active, par, motif: motif?.trim() || null };
   if (active) patch.ouvert_le = maintenant; else patch.ferme_le = maintenant;
+  // Retour prévu : affiché en direct sur la page de maintenance (Worker).
+  // Effacé à la réouverture (plus pertinent une fois le site de retour).
+  patch.retour_prevu_le = active && retour && !isNaN(Date.parse(retour))
+    ? new Date(retour).toISOString() : null;
   const { error } = await authAdmin().from("maintenance_etat").update(patch).eq("id", 1);
   if (error) throw error;
 
