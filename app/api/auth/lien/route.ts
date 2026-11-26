@@ -82,8 +82,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "demande refusée" }, { status: 400, headers: cors });
   }
 
+  // F2 (audit du 26/11) : captcha OBLIGATOIRE, y compris si le secret
+  // n'est pas configuré (fail-closed) : jamais de lien sans vérification.
   const cleTurnstile = process.env.TURNSTILE_SECRET_KEY;
-  if (cleTurnstile) {
+  if (!cleTurnstile) {
+    await journaliser(req, email, hote, "captcha_indisponible", false);
+    return NextResponse.json({ error: "vérification de sécurité indisponible" }, { status: 503, headers: cors });
+  }
+  {
     if (!corps.data.captchaToken) {
       await journaliser(req, email, hote, "captcha_manquant", false);
       return NextResponse.json({ error: "vérification de sécurité manquante" }, { status: 400, headers: cors });
