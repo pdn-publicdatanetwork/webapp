@@ -15,6 +15,7 @@ import { collaborateurDeLaPersonne, fonctionsGouvernement, parlementaireDepuisId
 import { partFemmes, pct, tauxTurnover } from "@/lib/stats";
 import { hrefGroupe, hrefDepartement, hrefParti, sansGroupe } from "@/lib/collectifs";
 import { slugDepartement } from "@/lib/senatoriales";
+import { editionsManuelles } from "@/lib/editionsManuelles";
 
 import "./fiche-elu.css";
 
@@ -111,6 +112,13 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
   if (!f) return <FicheSimple id={id} />;
 
   const { fiches, mandats, appartenances } = await personne(f.personne_id);
+  // Fonctions manuelles actives (bureau : présidente de l'Assemblée,
+  // vice-présidents, questeurs...) : créées dans l'espace d'administration,
+  // elles complètent les appartenances synchronisées sans les écraser.
+  const editions = await editionsManuelles(f.personne_id).catch(() => null);
+  const fonctionsBureau = (editions?.fonctions ?? [])
+    .filter((x) => x.actif && x.type === "fonction" && !x.fin)
+    .map((x) => ({ id: x.id, libelle: x.fonction }));
   const e = eluDepuisFiche(f);
   const [collabs, mouvements, stats, periodes, commeCollab, gouvernement] = await Promise.all([
     f.actif ? equipe(e) : Promise.resolve([]),
@@ -245,6 +253,7 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
           <h1 style={{ margin: "0 0 10px" }}>{nom}</h1>
           <ul className="statut-puces">
             <li>{f.actif ? titre(f) : `${ancien(f)} ${titre(f).toLowerCase()}`}</li>
+            {fonctionsBureau.map((x) => <li key={x.id}>{x.libelle}</li>)}
             {f.circonscription && f.chambre !== "europarl" && <li>{ordinaux(f.circonscription)}</li>}
             {f.actif && f.groupe && <li>Groupe {f.groupe}</li>}
           </ul>
