@@ -169,6 +169,22 @@ export async function connexionPopup(fournisseur: "google"): Promise<any> {
   return r.user;
 }
 
+// Repli redirection pleine page : utilisé quand la popup ne s'ouvre pas ou
+// n'aboutit pas (bloqueurs, navigateurs intégrés, mobile, requête pendante
+// annulée par une nouvelle tentative). Au retour, resultatRedirect()
+// finalise comme après une popup.
+export async function connexionRedirect(): Promise<void> {
+  const { auth, mod } = await sdk();
+  await mod.signInWithRedirect(auth, new mod.GoogleAuthProvider());
+}
+
+// Résultat d'un retour de redirection pleine page (null si aucune en cours).
+export async function resultatRedirect(): Promise<any | null> {
+  const { auth, mod } = await sdk();
+  const r = await mod.getRedirectResult(auth);
+  return r?.user ?? null;
+}
+
 export async function lienConnexionActif(): Promise<boolean> {
   const { auth, mod } = await sdk();
   return mod.isSignInWithEmailLink(auth, window.location.href);
