@@ -8,8 +8,21 @@ if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
     dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
     environment: process.env.NODE_ENV,
     tracesSampleRate: 0.1, // 10 % des sessions suivies (perfs), quota libre
-    // Ne jamais envoyer les données personnelles des visiteurs dans l'URL :
-    sendDefaultPii: false,
+    // Ne jamais envoyer les données personnelles des visiteurs (SDK v11 :
+    // sendDefaultPii remplacé par dataCollection, garde-fous v10 conservés) :
+    dataCollection: {
+      userInfo: false,
+      cookies: false,
+      httpHeaders: {
+        request: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+        response: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+      },
+      httpBodies: [],
+      urlQueryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+      genAI: { inputs: false, outputs: false },
+      databaseQueryData: false,
+      graphQL: { document: false, variables: false },
+    },
   });
 }
 
