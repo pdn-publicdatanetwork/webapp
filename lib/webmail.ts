@@ -1,7 +1,7 @@
 import "server-only";
 import { audit, type Admin } from "./adminAuth";
 import { traiterEmailAssociation } from "./association";
-import { adresseNue, doitRepondre, entetes } from "./autoReponse";
+import { adresseNue, doitRepondre, entetes, estRapportDmarc } from "./autoReponse";
 import { EXPEDITEURS, secret } from "./env";
 import { esc, expedier, texteVersHtml } from "./mail";
 import { authAdmin } from "./supabaseAdmin";
@@ -63,10 +63,12 @@ async function lireRecu(emailId: string): Promise<{ m: Recu | null; erreur?: str
   }
 }
 
-// Range un email reçu dans « Reçus » et envoie l'accusé de réception s'il y
-// a lieu. Idempotent (resend_id unique). Si le corps ne peut pas être lu, le
-// message est quand même enregistré à partir du webhook (expéditeur, objet,
-// destinataires) et le corps sera récupéré à l'ouverture (completerCorps).
+// Range un email reçu dans « Reçus » et envoie l'accusé de réception s'il y a
+// lieu. Les rapports DMARC agrégés partent dans le dossier dédié « dmarc »,
+// invisible en webmail (ni notification Slack, ni accusé). Idempotent
+// (resend_id unique). Si le corps ne peut pas être lu, le message est quand
+// même enregistré à partir du webhook (expéditeur, objet, destinataires) et le
+// corps sera récupéré à l'ouverture (completerCorps).
 export async function importerRecu(emailId: string, apercu: ApercuRecu = {}): Promise<{ corps: boolean; erreur?: string }> {
   const { m: complet, erreur } = await lireRecu(emailId);
   if (!complet && !apercu.from) throw new Error(erreur ?? "email illisible");
@@ -76,18 +78,22 @@ export async function importerRecu(emailId: string, apercu: ApercuRecu = {}): Pr
     message_id: apercu.message_id ?? null, created_at: apercu.created_at ?? new Date().toISOString(), attachments: apercu.attachments ?? [],
   };
   const h = entetes(m.headers);
+  const dmarc = estRapportDmarc({ from: m.from, subject: m.subject ?? "", headers: h });
   const { data, error } = await authAdmin().from("emails").upsert({
     direction: "in", communication_type: "webmail", from_addr: m.from, to_addr: (m.to ?? []).join(", "),
     cc_addr: m.cc?.length ? m.cc.join(", ") : null, reply_to: m.reply_to?.length ? m.reply_to.join(", ") : null,
     subject: m.subject ?? "", body_html: m.html ?? null, body_text: m.text ?? null,
     message_id: m.message_id ?? h["message-id"] ?? null, in_reply_to: h["in-reply-to"] ?? null,
     resend_id: m.id, attachments: (m.attachments ?? []).map((p) => ({ id: p.id, filename: p.filename, content_type: p.content_type, size: p.size ?? null })),
-    folder: "inbox", read: false, date: m.created_at, source: "resend",
+    folder: dmarc ? "dmarc" : "inbox", read: false, date: m.created_at, source: "resend",
   }, { onConflict: "resend_id", ignoreDuplicates: true }).select("id");
   // Même Message-ID déjà rangé (un email adressé à deux de nos adresses) : déjà là.
   if (error && (error as { code?: string }).code === "23505") return { corps: !!complet, erreur };
   if (error) throw error;
   if (!data?.length) return { corps: !!complet, erreur }; // déjà importé : pas de second accusé
+  // Rapport DMARC : rangé dans son dossier, rien de plus (pas de notification
+  // Slack, pas de parcours d'association, pas d'accusé : mail machine).
+  if (dmarc) return { corps: !!complet, erreur };
   // Notification Slack (canal #mail) : best-effort, jamais bloquante.
   try {
     const { notifierRecu } = await import("./slackNotify");
@@ -149,7 +155,7 @@ Si tu as quelque chose à ajouter, réponds simplement à cet email.
 L'équipe DataParl'
 
 Ton message :
-${extrait.split("\n").map((l) => `> ${l}`).join("\n")}`;
+${extrait.split("\n").map((l) => "> ${l}").join("\n")}`;
   const corpsHtml = `<p style="margin:0 0 16px">${esc(bonjour)}</p>
 <p style="margin:0 0 16px">Merci pour ton message : il est bien arrivé chez DataParl'. On le lit et on te répond dès que possible, en général sous quelques jours ouvrés.</p>
 <p style="margin:0 0 16px">Si tu as quelque chose à ajouter, réponds simplement à cet email.</p>
