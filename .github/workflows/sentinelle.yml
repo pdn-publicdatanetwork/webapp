@@ -40,12 +40,7 @@ jobs:
           WF_MSG: ${{ github.event.workflow_run.head_commit.message }}
         run: |
           set -euo pipefail
-          corps=$(printf 'Échec du workflow « %s » sur main.
-
-Commit : `%s` (%s)
-Run : %s
-
-Coller ce lien à Vibe (Le Chat) pour diagnostic et correctif.' "$WF_NAME" "$WF_SHA" "$WF_MSG" "$WF_URL")
+          corps=$(printf 'Échec du workflow « %s » sur main.\n\nCommit : `%s` (%s)\nRun : %s\n\nColler ce lien à Vibe (Le Chat) pour diagnostic et correctif.' "$WF_NAME" "$WF_SHA" "$WF_MSG" "$WF_URL")
           gh api --method POST "repos/$REPO/issues/205/comments" -f body="$corps"
 
       - name: Jeton OIDC GitHub
@@ -53,8 +48,7 @@ Coller ce lien à Vibe (Le Chat) pour diagnostic et correctif.' "$WF_NAME" "$WF_
         run: |
           set -euo pipefail
           test -n "$ACTIONS_ID_TOKEN_REQUEST_TOKEN"
-          jeton=$(curl -sSf -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=dataparl-sentinelle" | jq -r .value)
+          jeton=$(curl -sSf -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=dataparl-sentinelle" | jq -r .value)
           test -n "$jeton"
           echo "jwt=$jeton" >> "$GITHUB_OUTPUT"
 
@@ -70,9 +64,5 @@ Coller ce lien à Vibe (Le Chat) pour diagnostic et correctif.' "$WF_NAME" "$WF_
           WF_MSG: ${{ github.event.workflow_run.head_commit.message }}
         run: |
           set -euo pipefail
-          charge=$(jq -n --arg repo "$REPO" --arg workflow "$WF_NAME" --arg run_url "$WF_URL" --arg sha "$WF_SHA" --arg commit "$WF_MSG" \
-            '{repo: $repo, workflow: $workflow, run_url: $run_url, sha: $sha, commit: $commit}')
-          curl -sSf -X POST "$URL/alerte" \
-            -H "Authorization: Bearer $JWT" \
-            -H "Content-Type: application/json" \
-            -d "$charge"
+          charge=$(jq -n --arg repo "$REPO" --arg workflow "$WF_NAME" --arg run_url "$WF_URL" --arg sha "$WF_SHA" --arg commit "$WF_MSG" '{repo: $repo, workflow: $workflow, run_url: $run_url, sha: $sha, commit: $commit}')
+          curl -sSf -X POST "$URL/alerte" -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" -d "$charge"
