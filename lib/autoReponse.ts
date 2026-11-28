@@ -37,6 +37,14 @@ export function estScam(de: string): boolean {
   return SCAMS.has(de) || DOMAINES_SCAM.some((d) => de.endsWith("@" + d) || de.endsWith("." + d));
 }
 
+// Rapport DMARC agrégé (rua) : bilan quotidien qu'un fournisseur de messagerie
+// (google.com, microsoft.com, yahoo.fr, laposte.net…) adresse à l'éditeur du
+// domaine. Machine à machine : jamais de réponse (déjà le cas par défaut) et
+// rangé hors webmail par importerRecu (folder « dmarc », invisible en Reçus).
+export function estRapportDmarc(e: Entrant): boolean {
+  return e.subject.toLowerCase().includes("report domain:") || adresseNue(e.from).includes("dmarc");
+}
+
 export function doitRepondre(e: Entrant): boolean {
   const de = adresseNue(e.from);
   if (!de.includes("@")) return false;
