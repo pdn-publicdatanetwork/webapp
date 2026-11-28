@@ -10,7 +10,7 @@ import { eluDepuisFiche, eluDepuisId, equipe, lienOfficiel, mouvementsElu, stats
 import { FONCTIONS_SOCIETES } from "@/lib/exclusions";
 import { CODE_CHAMBRE, CREDIT, photoAbsolue, urlLicence } from "@/lib/media";
 import { CHAMBRE_LONG, nomAffiche, prenomNom } from "@/lib/format";
-import { chevauche, fusionner, libellePeriode, moisAnnee } from "@/lib/periodes";
+import { chevauche, fusionner, groupesDuMandat, libellePeriode, moisAnnee, siglesSuccessifs } from "@/lib/periodes";
 import { collaborateurDeLaPersonne, fonctionsGouvernement, parlementaireDepuisId, periodesElu, personne, type Appartenance, type Mandat, type Ministre, type Parlementaire } from "@/lib/referentiel";
 import { partFemmes, pct, tauxTurnover } from "@/lib/stats";
 import { hrefGroupe, hrefDepartement, hrefParti, sansGroupe } from "@/lib/collectifs";
@@ -181,7 +181,14 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
   const groupesChambre = appartenances
     .filter((a) => a.chambre === f.chambre && a.type === "groupe" && (a.sigle || a.libelle))
     .sort((a, b) => (a.debut || "").localeCompare(b.debut || ""));
-  const dernierGroupe = groupesChambre[groupesChambre.length - 1];
+  // Repères : dernier groupe connu de la chambre. Pour un élu en fonction, le
+  // groupe officiel de la fiche (parlementaires.groupe, synchronisé chaque
+  // nuit) prime : un renommage laisse parfois le sigle historique ouvert
+  // (UMP pour le groupe LR du Sénat), qui contredirait l'en-tête.
+  const groupeUtile = f.actif && f.groupe ? groupesChambre.find((a) => (a.sigle || a.libelle) === f.groupe) : undefined;
+  const dernierGroupe = f.actif && f.groupe
+    ? groupeUtile ?? { chambre: f.chambre, elu_id: f.elu_id, personne_id: f.personne_id, type: "groupe", code: "", libelle: f.groupe_libelle || f.groupe, sigle: f.groupe, fonction: "", debut: "", fin: "" }
+    : groupesChambre[groupesChambre.length - 1];
   const premierMandatAffiche = f.premier_mandat || mandats.map((m) => m.debut).filter(Boolean).sort()[0] || "";
   const derFin = f.fin_mandat || [...mandats].sort((a, b) => (b.fin || b.debut).localeCompare(a.fin || a.debut))[0]?.fin || "";
   const lignesReperes: [string, ReactNode][] = [];
@@ -338,7 +345,14 @@ export default async function Parlementaire({ params }: { params: Promise<{ id: 
             // du remplacé pour la mention « Remplace … ».
             const causeDebut = (m.cause_debut || "").toLowerCase();
             const remplace = causeDebut.startsWith("remplacement") && m.remplace_id ? remplaces.get(m.remplace_id) ?? null : null;
-            const groupes = successifs(pendant.filter((a) => a.type === "groupe"));
+                        // Groupes successifs du mandat, chronologiques, sans artefacts ; pour le
+            // mandat en cours dans la chambre active, le groupe officiel de la fiche
+            // prime sur les sigles jamais refermés (UMP pour le groupe LR du Sénat,
+            // par exemple).
+            const gBruts = siglesSuccessifs(groupesDuMandat(appartenances, m));
+            const groupes = f.actif && !m.fin && m.chambre === f.chambre && f.groupe && !gBruts.includes(f.groupe)
+              ? [f.groupe]
+              : gBruts;
             // Hors mandat en cours, on écarte les passages de moins de 15 jours (suppléances).
             const organes = fusionner(pendant.filter((a) => a.type !== "groupe")).filter((a) => !m.fin || !a.fin || chevauche(a, a, 15));
             const fiche = fiches.find((x) => x.chambre === m.chambre);
@@ -472,16 +486,6 @@ function dernierDebut(mandats: Mandat[], f: Parlementaire): string {
   let debut = m[0]?.debut ?? f.premier_mandat;
   for (const x of tous) if (x.fin && debut && Math.abs(new Date(debut).getTime() - new Date(x.fin).getTime()) < 5 * 86400_000) debut = x.debut;
   return debut;
-}
-
-// Groupes successifs dans l'ordre chronologique, sans répétition consécutive.
-function successifs(groupes: Appartenance[]): string[] {
-  const out: string[] = [];
-  for (const g of [...groupes].sort((a, b) => a.debut.localeCompare(b.debut))) {
-    const s = g.sigle || g.libelle;
-    if (s && out[out.length - 1] !== s) out.push(s);
-  }
-  return out;
 }
 
 function periodeMandat(m: Mandat): string {
