@@ -16,7 +16,7 @@ test("règle par défaut : silence pour tout inconnu, même un premier message",
 test("scams confirmés : jamais de réponse", () => {
   assert.equal(doitRepondre({ ...base, from: "edp@coinn.trade" }), false);
   assert.equal(doitRepondre({ ...base, from: "debicamil@gmail.com" }), false);
-  assert.equal(estScam("facture@promo.coint.trade"), true);
+  assert.equal(estScam("facture@promo.coinn.trade"), true);
 });
 
 test("machines observées dans le balayage du 14/11/2026 : silence", () => {
